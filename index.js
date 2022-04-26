@@ -128,7 +128,7 @@ async function handleLine(line) {
                 functions[functionCounter].name = resolveName(url);
                 functions[functionCounter].dependencies = [];
                 functions[functionCounter].code += 
-                    `\nexport default function (req, res) {\n`;
+                    `\nexport default async function (req, res) {\n`;
             }
             else if (braces.length > 0) {
                 functions[functionCounter].code += line + '\n';
