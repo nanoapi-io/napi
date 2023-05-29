@@ -3,7 +3,12 @@ import { createInterface } from "readline";
 import { fileURLToPath } from "url";
 import path from "path";
 
-const DIST_PATH = path.join(fileURLToPath(import.meta.url), '../', '../', 'dist');
+const DIST_PATH = path.join(
+  fileURLToPath(import.meta.url),
+  "../",
+  "../",
+  "dist"
+);
 
 // General TODOs:
 // - Handle other http methods
@@ -113,9 +118,14 @@ export class Compiler {
           this.functions[this.functionCounter].url = url;
           this.functions[this.functionCounter].name = this.resolveName(url);
           this.functions[this.functionCounter].dependencies = [];
+          // TODO: Params may not be on this line
+          const reqName = this.extractRequestParamName(line);
+          const resName = this.extractResponseParamName(line);
+          this.functions[this.functionCounter].requestParamName = reqName;
+          this.functions[this.functionCounter].responseParamName = resName;
           this.functions[
             this.functionCounter
-          ].code += `\nexports.handler = async function (req, res) {\n`;
+          ].code += `\nasync function main(${reqName}, ${resName}) {\n`;
         } else if (this.braces.length > 0) {
           this.functions[this.functionCounter].code += line + "\n";
         }
@@ -141,6 +151,23 @@ export class Compiler {
   resolveName(url) {
     // TODO: Potentially remove leading _ by calling .shift after split
     return url.split("/").join("_");
+  }
+
+  // TODO: Could they be called anything else? How do we handle that?
+  extractRequestParamName(line) {
+    let lineArr = line.split(",");
+    if (line.includes("next")) {
+      return lineArr[lineArr.length - 3].split("(")[1].trim();
+    }
+    return lineArr[lineArr.length - 2].split("(")[1].trim();
+  }
+
+  extractResponseParamName(line) {
+    let lineArr = line.split(",");
+    if (line.includes("next")) {
+      return lineArr[lineArr.length - 2].trim();
+    }
+    return lineArr[lineArr.length - 1].split(")")[0].trim();
   }
 
   collectDependency(dependency) {
@@ -236,6 +263,8 @@ export class Compiler {
       writer.write(
         `// @napi:methods=GET` + "\n" + `// @napi:url=${api.url}` + "\n"
       );
+      // Write response overwrites
+      writer.write("function responseOverwrite(values) { return values; }\n");
 
       // include code of dependencies...
       for (let dep of api.dependencies) {
@@ -252,6 +281,18 @@ export class Compiler {
       // finally write main code.
       console.log(api.code);
       writer.write(api.code);
+      writer.write(
+        "\n" +
+          `exports.handler = async function (event, context) {` +
+          "\n" +
+          `    context.json = responseOverwrite;` +
+          "\n" +
+          `    context.send = responseOverwrite;` +
+          "\n" +
+          `    return main(event, context);` +
+          "\n" +
+          `};`
+      );
       writer.close();
     }
   }
