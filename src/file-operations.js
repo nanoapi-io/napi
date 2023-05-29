@@ -115,7 +115,7 @@ export class Compiler {
           this.functions[this.functionCounter].dependencies = [];
           this.functions[
             this.functionCounter
-          ].code += `\nexport default async function (req, res) {\n`;
+          ].code += `\nexports.handler = async function (req, res) {\n`;
         } else if (this.braces.length > 0) {
           this.functions[this.functionCounter].code += line + "\n";
         }
