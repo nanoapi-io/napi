@@ -24,7 +24,7 @@ export class Compiler {
     this.collectFunction = false;
     this.functionCounter = 0;
     this.functions = [];
-    this.variables = [];
+    this.variables = {};
     this.dependencies = {};
     this.braces = [];
     this.lineReader = createInterface({
@@ -118,6 +118,7 @@ export class Compiler {
           this.functions[this.functionCounter].url = url;
           this.functions[this.functionCounter].name = this.resolveName(url);
           this.functions[this.functionCounter].dependencies = [];
+          this.functions[this.functionCounter].method = this.resolveMethod(line);
           // TODO: Params may not be on this line
           const reqName = this.extractRequestParamName(line);
           const resName = this.extractResponseParamName(line);
@@ -227,8 +228,14 @@ export class Compiler {
     });
   }
 
+  resolveMethod(line) {
+    if (line.includes("get")) return "GET";
+    if (line.includes("post")) return "POST";
+  }
+
   isEndpoint(line) {
-    return line.includes(".get");
+    return line.includes(".get(")
+      || line.includes(".post(");
   }
 
   isDependency(line) {
@@ -261,7 +268,7 @@ export class Compiler {
       // Write header including http method and url
       // TODO: Handle other methods
       writer.write(
-        `// @napi:methods=GET` + "\n" + `// @napi:url=${api.url}` + "\n"
+        `// @napi:methods=${api.method}` + "\n" + `// @napi:url=${api.url}` + "\n"
       );
       // Write response overwrites
       writer.write("function responseOverwrite(values) { return values; }\n");
