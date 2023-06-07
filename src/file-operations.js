@@ -271,7 +271,16 @@ export class Compiler {
         `// @napi:methods=${api.method}` + "\n" + `// @napi:url=${api.url}` + "\n"
       );
       // Write response overwrites
-      writer.write("function responseOverwrite(values) { return values; }\n");
+      writer.write("function responseOverwrite(values) {" + 
+        "\n" + "  return {" +
+        "\n" + "    statusCode: 200," +
+        "\n" + "    headers: {" +
+        "\n" + "        'Content-Type': '*/*'," +
+        "\n" + "    }," +
+        "\n" + "    body: JSON.stringify(values)," +
+        "\n" + "    isBase64Encoded: false" +
+        "\n" + "  }" +
+      "}\n");
 
       // include code of dependencies...
       for (let dep of api.dependencies) {
