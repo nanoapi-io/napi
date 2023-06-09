@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "prettier": "^2.8.8",
     "yargs": "^17.7.2"
   }
 }

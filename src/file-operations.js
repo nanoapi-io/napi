@@ -2,6 +2,7 @@ import { createReadStream, createWriteStream, mkdir } from "fs";
 import { createInterface } from "readline";
 import { fileURLToPath } from "url";
 import path from "path";
+import { format } from "prettier";
 
 const DIST_PATH = path.join(
   fileURLToPath(import.meta.url),
@@ -118,7 +119,8 @@ export class Compiler {
           this.functions[this.functionCounter].url = url;
           this.functions[this.functionCounter].name = this.resolveName(url);
           this.functions[this.functionCounter].dependencies = [];
-          this.functions[this.functionCounter].method = this.resolveMethod(line);
+          this.functions[this.functionCounter].method =
+            this.resolveMethod(line);
           // TODO: Params may not be on this line
           const reqName = this.extractRequestParamName(line);
           const resName = this.extractResponseParamName(line);
@@ -234,8 +236,7 @@ export class Compiler {
   }
 
   isEndpoint(line) {
-    return line.includes(".get(")
-      || line.includes(".post(");
+    return line.includes(".get(") || line.includes(".post(");
   }
 
   isDependency(line) {
@@ -263,24 +264,21 @@ export class Compiler {
     // For each endpoint...
     for (let api of this.functions) {
       let createdNamespaces = [];
-      const writer = createWriteStream(path.join(DIST_PATH, api.name + ".js"));
+      const filepath = path.join(DIST_PATH, api.name + ".js");
+      const writer = createWriteStream(filepath);
 
       // Write header including http method and url
       // TODO: Handle other methods
       writer.write(
-        `// @napi:methods=${api.method}` + "\n" + `// @napi:url=${api.url}` + "\n"
+        `// @napi:methods=${api.method}` +
+          "\n" +
+          `// @napi:url=${api.url}` +
+          "\n"
       );
       // Write response overwrites
-      writer.write("function responseOverwrite(values) {" + 
-        "\n" + "  return {" +
-        "\n" + "    statusCode: 200," +
-        "\n" + "    headers: {" +
-        "\n" + "        'Content-Type': '*/*'," +
-        "\n" + "    }," +
-        "\n" + "    body: JSON.stringify(values)," +
-        "\n" + "    isBase64Encoded: false" +
-        "\n" + "  }" +
-      "}\n");
+      writer.write(
+        this.formatFunction(this.getResponseOverwriteFunction()) + "\n"
+      );
 
       // include code of dependencies...
       for (let dep of api.dependencies) {
@@ -297,19 +295,42 @@ export class Compiler {
       // finally write main code.
       console.log(api.code);
       writer.write(api.code);
-      writer.write(
-        "\n" +
-          `exports.handler = async function (event, context) {` +
-          "\n" +
-          `    context.json = responseOverwrite;` +
-          "\n" +
-          `    context.send = responseOverwrite;` +
-          "\n" +
-          `    return main(event, context);` +
-          "\n" +
-          `};`
-      );
+      writer.write(this.formatFunction(this.getStringHandlerFunction()));
       writer.close();
     }
+  }
+
+  formatFunction(functionString) {
+    return format(functionString, { parser: "babel" });
+  }
+
+  getResponseOverwriteFunction() {
+    return (
+      "" +
+      function responseOverwrite(values) {
+        return {
+          statusCode: 200,
+          headers: {
+            "Content-Type": "*/*",
+          },
+          body: JSON.stringify(values),
+          isBase64Encoded: false,
+        };
+      }
+    );
+  }
+
+  getStringHandlerFunction() {
+    return (
+      "exports.handler = " +
+      async function (event, context) {
+        context.json = responseOverwrite;
+        context.send = responseOverwrite;
+        if (event.body) {
+          event.body = JSON.parse(event.body);
+        }
+        return main(event, context);
+      }
+    );
   }
 }
