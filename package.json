@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "eslint . --fix",
@@ -16,12 +17,20 @@
   "devDependencies": {
     "@eslint/js": "^9.11.1",
     "@types/eslint__js": "^8.42.3",
+    "@types/node": "^18.19.54",
+    "@types/yargs": "^17.0.33",
     "eslint": "^9.11.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "3.3.3",
+    "ts-node": "^10.9.2",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.8.0",
     "vitest": "^2.1.1"
+  },
+  "dependencies": {
+    "dependency-tree": "^11.0.1",
+    "glob": "^11.0.0",
+    "yargs": "^17.7.2"
   }
 }
