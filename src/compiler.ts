@@ -3,27 +3,29 @@ import fs from "fs";
 import dependencyTree from "dependency-tree";
 import { NanoAPIAnnotation } from "./helper/types";
 import { getAnnotationsFromFile } from "./helper/file";
-
 export class Compiler {
   entrypoint: string;
-  excludeDirs: string[];
+  targetDir: string;
   outputDir: string;
+  splitDirName: string;
+  annotationIndex: number;
   constructor(
     entrypoint: string, // Path to the entrypoint file
-    excludeDirs: string[], // Array of paths to exclude from the dependency tree
+    targetDir: string, // Path to the target directory
     outputDir: string // Path to the output directory
   ) {
     this.entrypoint = entrypoint;
-    this.excludeDirs = excludeDirs;
+    this.targetDir = targetDir || path.dirname(entrypoint);
     this.outputDir = outputDir;
+    this.splitDirName = "nanoapi-split";
+    this.annotationIndex = 0;
   }
 
   run() {
     console.log("Running compiler...");
     const tree = this.getDependencyTree();
-
-    this.createOutputFolder();
-
+    this.cleanupOutputDir();
+    this.createOutputDir();
     this.iterateOverTree(tree);
   }
 
@@ -39,28 +41,25 @@ export class Compiler {
   //   }
   getDependencyTree() {
     const directory = path.dirname(this.entrypoint);
-
     const tree = dependencyTree({
       filename: this.entrypoint,
       directory: directory,
-      filter: (filePath) =>
-        !this.excludeDirs.some((dir) => filePath.includes(dir)),
+      filter: (filePath) => filePath.includes(this.targetDir),
     });
-
-    console.log(tree);
-
+    console.log(JSON.stringify(tree));
     return tree;
   }
 
-  async createOutputFolder() {
-    if (!fs.existsSync(this.outputDir)) {
-      fs.mkdirSync(this.outputDir);
+  async cleanupOutputDir() {
+    const splitDirectory = path.join(this.outputDir, this.splitDirName);
+    if (fs.existsSync(splitDirectory)) {
+      fs.rmSync(splitDirectory, { recursive: true });
     }
+  }
 
-    const splitDirectory = path.join(this.outputDir, "nanoapi-split");
-    if (!fs.existsSync(splitDirectory)) {
-      fs.mkdirSync(splitDirectory);
-    }
+  async createOutputDir() {
+    const splitDirectory = path.join(this.outputDir, this.splitDirName);
+    fs.mkdirSync(splitDirectory, { recursive: true });
   }
 
   async iterateOverTree(
@@ -75,12 +74,9 @@ export class Compiler {
         tree as dependencyTree.TreeInnerNode,
         "@nanoapi"
       );
-
       for (const annotation of annotations) {
-        //   this.splitPath(tree, parentFiles, filePath, annotation);
-        console.log(annotation);
+        this.splitPath(annotation);
       }
-
       // if value is not a string, it means it's a nested object
       // so we should call this function recursively to go over the rest of the tree
       if (typeof value !== "string") {
@@ -90,22 +86,25 @@ export class Compiler {
     }
   }
 
-  splitPath(
-    tree: dependencyTree.Tree,
-    parentfilePaths: string[],
-    filePath: string,
-    annotation: NanoAPIAnnotation
-  ) {
-    console.log("Splitting path...");
-    console.log(parentfilePaths);
-    console.log(filePath);
-    console.log(annotation);
+  splitPath(annotation: NanoAPIAnnotation) {
+    const splitDirectory = path.join(this.outputDir, this.splitDirName);
+    const annotationDirectory = path.join(
+      splitDirectory,
+      this.annotationIndex.toString()
+    );
+    this.annotationIndex++;
 
-    parentfilePaths.forEach((parentFilePath) => {
-      //   console.log(tree);
-      //   console.log(111111, parentFilePath);
-    });
+    fs.mkdirSync(annotationDirectory, { recursive: true });
+    for (const filePath of annotation.filePaths) {
+      const relativeFileNamePath = path.relative(this.targetDir, filePath);
 
-    // Create a new folder for the API
+      const destinationPath = path.join(
+        annotationDirectory,
+        relativeFileNamePath
+      );
+
+      fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+      fs.copyFileSync(filePath, destinationPath);
+    }
   }
 }

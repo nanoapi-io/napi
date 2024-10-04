@@ -1,7 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Compiler } from "./compiler";
-import { a } from "vitest/dist/chunks/suite.CcK46U-P";
 
 const argv = yargs(hideBin(process.argv))
   .options({
@@ -11,11 +10,11 @@ const argv = yargs(hideBin(process.argv))
       alias: "e",
       description: "Entrypoint file",
     },
-    excludeDirs: {
-      type: "array",
-      default: ["node_modules"],
-      alias: "exclude",
-      description: "Directories to exclude from the dependency tree",
+    targetDir: {
+      type: "string",
+      default: "",
+      alias: "t",
+      description: "Target directory",
     },
     output: {
       type: "string",
@@ -26,9 +25,5 @@ const argv = yargs(hideBin(process.argv))
   })
   .parseSync();
 
-const compiler = new Compiler(
-  argv.entrypoint,
-  argv.excludeDirs as string[],
-  argv.output
-);
+const compiler = new Compiler(argv.entrypoint, argv.targetDir, argv.output);
 compiler.run();
