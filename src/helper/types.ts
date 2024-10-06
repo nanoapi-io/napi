@@ -3,3 +3,7 @@ export interface NanoAPIAnnotation {
   path: string;
   filePaths: string[];
 }
+
+export interface Dependencies {
+  [key: string]: Dependencies;
+}
