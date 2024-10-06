@@ -105,15 +105,24 @@ export function resolveFilePath(
   importPath: string,
   currentFile: string,
 ): string | null {
+  const currentFileExt = path.extname(currentFile);
+  const importExt = path.extname(importPath);
+
   if (importPath.startsWith(".")) {
-    const extensions = [".ts", ".js", ".jsx", ".tsx"];
-    for (const ext of extensions) {
-      const resolvedPath = path.resolve(
-        path.dirname(currentFile),
-        `${importPath}${ext}`,
-      );
+    if (importExt) {
+      // If import path has an extension, resolve directly
+      const resolvedPath = path.resolve(path.dirname(currentFile), importPath);
       if (fs.existsSync(resolvedPath)) {
         return resolvedPath;
+      }
+    } else {
+      // If import path does not have an extension, try current file's extension first
+      const resolvedPathWithCurrentExt = path.resolve(
+        path.dirname(currentFile),
+        `${importPath}${currentFileExt}`,
+      );
+      if (fs.existsSync(resolvedPathWithCurrentExt)) {
+        return resolvedPathWithCurrentExt;
       }
     }
   }
