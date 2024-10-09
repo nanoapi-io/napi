@@ -2,11 +2,11 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import splitCommandHandler from "./commands/split";
 import path from "path";
-import { annotateCommandHandler } from "./commands/annotate";
+import annotateOpenAICommandHandler from "./commands/annotate";
 
 yargs(hideBin(process.argv))
   .command(
-    "annotate [entrypoint]",
+    "annotate openai [entrypoint]",
     "Annotate a program, needed for splitting",
     (yargs) => {
       return yargs
@@ -21,6 +21,12 @@ yargs(hideBin(process.argv))
             alias: "t",
             description: "Target directory",
           },
+          apiKey: {
+            type: "string",
+            default: "",
+            alias: "k",
+            description: "OpenAI API key",
+          },
         });
     },
     (argv) => {
@@ -28,12 +34,16 @@ yargs(hideBin(process.argv))
         console.error("Missing entrypoint file");
         process.exit(1);
       }
+      if (!argv.apiKey) {
+        console.error("Missing OpenAI API key");
+        process.exit(1);
+      }
       const entrypoint = path.resolve(argv.entrypoint);
       const targetDir = argv.targetDir
         ? path.resolve(argv.targetDir)
         : path.dirname(entrypoint);
 
-      annotateCommandHandler(entrypoint, targetDir);
+      annotateOpenAICommandHandler(entrypoint, targetDir, argv.apiKey);
     },
   )
   .command(
