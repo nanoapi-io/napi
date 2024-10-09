@@ -37,7 +37,7 @@ export async function getAnnotationsFromFile(
   parentFilePaths: string[],
   filePath: string,
   tree: dependencyTree.TreeInnerNode,
-  searchText: string,
+  searchText: string
 ) {
   const fileStream = fs.createReadStream(filePath);
 
@@ -54,7 +54,7 @@ export async function getAnnotationsFromFile(
         parentFilePaths,
         filePath,
         tree,
-        line,
+        line
       );
       if (annotation) {
         annotations.push(annotation);
@@ -69,9 +69,9 @@ function parseNanoAPIAnnotation(
   parentFilePaths: string[],
   filePathstring: string,
   tree: dependencyTree.TreeInnerNode,
-  annotationString: string,
+  annotationString: string
 ) {
-  const regex = /\/\/\s*@nanoapi\s+(\w+)\s+(\/\S+)/;
+  const regex = /\/\/\s*@nanoapi\s+(\w+)\s+(\/\S+)/; // e.g., // @nanoapi GET /api/users
   const match = annotationString.match(regex);
   if (!match) {
     return undefined;
@@ -103,7 +103,7 @@ function getFilePathsFromTree(tree: dependencyTree.Tree) {
 // Resolve file paths from import/require statements
 export function resolveFilePath(
   importPath: string,
-  currentFile: string,
+  currentFile: string
 ): string | null {
   const currentFileExt = path.extname(currentFile);
   const importExt = path.extname(importPath);
@@ -119,7 +119,7 @@ export function resolveFilePath(
       // If import path does not have an extension, try current file's extension first
       const resolvedPathWithCurrentExt = path.resolve(
         path.dirname(currentFile),
-        `${importPath}${currentFileExt}`,
+        `${importPath}${currentFileExt}`
       );
       if (fs.existsSync(resolvedPathWithCurrentExt)) {
         return resolvedPathWithCurrentExt;
