@@ -2,9 +2,9 @@ import dependencyTree from "dependency-tree";
 import { NanoAPIAnnotation } from "./types";
 import fs from "fs";
 import path from "path";
-import readline from "readline";
 import Javascript from "tree-sitter-javascript";
 import Typescript from "tree-sitter-typescript";
+import Parser from "tree-sitter";
 
 export function cleanupOutputDir(outputDir: string) {
   const splitDirectory = path.join(outputDir, "nanoapi-split");
@@ -33,34 +33,39 @@ export function getParserLanguageFromFile(filePath: string) {
   }
 }
 
-export async function getAnnotationsFromFile(
+export function getAnnotationsFromFile(
   parentFilePaths: string[],
   filePath: string,
-  tree: dependencyTree.TreeInnerNode,
-  searchText: string
+  dependencyTree: dependencyTree.TreeInnerNode,
 ) {
-  const fileStream = fs.createReadStream(filePath);
+  const language = getParserLanguageFromFile(filePath);
+  const parser = new Parser();
+  parser.setLanguage(language);
 
-  const rl = readline.createInterface({
-    input: fileStream,
-    crlfDelay: Infinity,
-  });
+  const sourceCode = fs.readFileSync(filePath, "utf8");
+  const tree = parser.parse(sourceCode);
 
   const annotations: NanoAPIAnnotation[] = [];
 
-  for await (const line of rl) {
-    if (line.includes(searchText)) {
-      const annotation = parseNanoAPIAnnotation(
-        parentFilePaths,
-        filePath,
-        tree,
-        line
-      );
-      if (annotation) {
-        annotations.push(annotation);
+  function traverse(node: Parser.SyntaxNode) {
+    if (node.type === "comment") {
+      const comment = node.text;
+      if (comment.includes("@nanoapi")) {
+        const annotation = parseNanoAPIAnnotation(
+          parentFilePaths,
+          filePath,
+          dependencyTree,
+          comment,
+        );
+        if (annotation) {
+          annotations.push(annotation);
+        }
       }
     }
+    node.children.forEach((child) => traverse(child));
   }
+
+  traverse(tree.rootNode);
 
   return annotations;
 }
@@ -69,7 +74,7 @@ function parseNanoAPIAnnotation(
   parentFilePaths: string[],
   filePathstring: string,
   tree: dependencyTree.TreeInnerNode,
-  annotationString: string
+  annotationString: string,
 ) {
   const regex = /\/\/\s*@nanoapi\s+(\w+)\s+(\/\S+)/; // e.g., // @nanoapi GET /api/users
   const match = annotationString.match(regex);
@@ -88,6 +93,10 @@ function parseNanoAPIAnnotation(
   } as NanoAPIAnnotation;
 }
 
+export function getCommentFromNanoAPIAnnotation(annotation: NanoAPIAnnotation) {
+  return `@nanoapi ${annotation.method} ${annotation.path}`;
+}
+
 function getFilePathsFromTree(tree: dependencyTree.Tree) {
   const filePaths: string[] = [];
   for (const [key, value] of Object.entries(tree)) {
@@ -103,7 +112,7 @@ function getFilePathsFromTree(tree: dependencyTree.Tree) {
 // Resolve file paths from import/require statements
 export function resolveFilePath(
   importPath: string,
-  currentFile: string
+  currentFile: string,
 ): string | null {
   const currentFileExt = path.extname(currentFile);
   const importExt = path.extname(importPath);
@@ -119,7 +128,7 @@ export function resolveFilePath(
       // If import path does not have an extension, try current file's extension first
       const resolvedPathWithCurrentExt = path.resolve(
         path.dirname(currentFile),
-        `${importPath}${currentFileExt}`
+        `${importPath}${currentFileExt}`,
       );
       if (fs.existsSync(resolvedPathWithCurrentExt)) {
         return resolvedPathWithCurrentExt;

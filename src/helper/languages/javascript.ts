@@ -1,4 +1,6 @@
 import Parser from "tree-sitter";
+import { NanoAPIAnnotation } from "../types";
+import { getCommentFromNanoAPIAnnotation } from "../file";
 
 // extract the dependencies from the AST
 export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
@@ -8,7 +10,7 @@ export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "import_statement") {
       const stringNode = node.namedChildren.find(
-        (n: Parser.SyntaxNode) => n.type === "string"
+        (n: Parser.SyntaxNode) => n.type === "string",
       );
       if (stringNode) {
         const importName = stringNode.text.slice(1, -1); // Remove quotes
@@ -27,10 +29,46 @@ export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
   return dependencies;
 }
 
+export function removeJavascriptAnnotations(
+  rootNode: Parser.SyntaxNode,
+  sourceCode: string,
+  annotationToKeep: NanoAPIAnnotation,
+): string {
+  let updatedSourceCode = sourceCode;
+  const annotationComment = getCommentFromNanoAPIAnnotation(annotationToKeep);
+
+  function traverse(node: Parser.SyntaxNode) {
+    if (node.type === "comment") {
+      const commentText = node.text;
+      if (commentText.includes("@nanoapi")) {
+        if (!commentText.includes(annotationComment)) {
+          const nextNode = node.nextNamedSibling;
+          if (!nextNode) {
+            throw new Error("Could not find next node");
+          }
+          // delete this node (comment) and the next node (api endpoint)
+          updatedSourceCode = updatedSourceCode.replace(
+            sourceCode.substring(node.startIndex, nextNode.endIndex + 1),
+            "",
+          );
+        }
+      }
+    }
+
+    node.children.forEach((child) => {
+      traverse(child);
+    });
+  }
+
+  traverse(rootNode);
+
+  return updatedSourceCode;
+}
+
 export function removeInvalidJavascriptFileImports(
   rootNode: Parser.SyntaxNode,
   sourceCode: string,
-  invalidDependencies: string[]
+  invalidDependencies: string[],
 ) {
   let updatedSourceCode = sourceCode;
   const removedImportsNames: string[] = [];
@@ -46,24 +84,24 @@ export function removeInvalidJavascriptFileImports(
     }
 
     const importClause = importStatement.namedChildren.find(
-      (n) => n.type === "import_clause"
+      (n) => n.type === "import_clause",
     );
     if (!importClause) {
       throw new Error("Invalid import statement, missing import clause");
     }
 
     let importIdentifier = importClause.namedChildren.find(
-      (n) => n.type === "identifier"
+      (n) => n.type === "identifier",
     );
     if (!importIdentifier) {
       const namespacImport = importClause.namedChildren.find(
-        (n) => n.type === "namespace_import"
+        (n) => n.type === "namespace_import",
       );
       if (!namespacImport) {
         throw new Error("Invalid import statement, missing import identifier");
       }
       importIdentifier = namespacImport.namedChildren.find(
-        (n) => n.type === "identifier"
+        (n) => n.type === "identifier",
       );
       if (!importIdentifier) {
         throw new Error("Invalid import statement, missing import identifier");
@@ -74,6 +112,7 @@ export function removeInvalidJavascriptFileImports(
   }
 
   function traverse(node: Parser.SyntaxNode) {
+    // TODO this handles import, we also need to handle require statements
     if (node.type === "import_statement") {
       const stringNode = node.namedChildren.find((n) => n.type === "string");
       if (stringNode) {
@@ -85,15 +124,13 @@ export function removeInvalidJavascriptFileImports(
           // Remove the import statement
           updatedSourceCode = updatedSourceCode.replace(
             sourceCode.substring(node.startIndex, node.endIndex + 1),
-            ""
+            "",
           );
         }
       }
     }
 
-    node.children.forEach((child) => {
-      traverse(child);
-    });
+    node.children.forEach((child) => traverse(child));
   }
 
   traverse(rootNode);
@@ -101,10 +138,10 @@ export function removeInvalidJavascriptFileImports(
   return { updatedSourceCode, removedImportsNames };
 }
 
-export function removeJavascriptImportUsage(
+export function removeJavascriptDeletedImportUsage(
   rootNode: Parser.SyntaxNode,
   sourceCode: string,
-  removedImportsNames: string[]
+  removedImportsNames: string[],
 ): string {
   let updatedSourceCode = sourceCode;
 
@@ -122,7 +159,7 @@ export function removeJavascriptImportUsage(
       // Remove the expression statement
       updatedSourceCode = updatedSourceCode.replace(
         sourceCode.substring(parent.startIndex, parent.endIndex + 1),
-        ""
+        "",
       );
     }
 
@@ -132,6 +169,108 @@ export function removeJavascriptImportUsage(
   }
 
   traverse(rootNode);
+
+  return updatedSourceCode;
+}
+
+export function removeUnusedJavascriptImports(
+  rootNode: Parser.SyntaxNode,
+  sourceCode: string,
+) {
+  let updatedSourceCode = sourceCode;
+
+  // Step 1: find all the import statements node
+  const importStatements: Parser.SyntaxNode[] = [];
+
+  function traverseGetImports(node: Parser.SyntaxNode) {
+    if (node.type === "import_statement") {
+      importStatements.push(node);
+    }
+
+    node.children.forEach((child) => {
+      traverseGetImports(child);
+    });
+  }
+  traverseGetImports(rootNode);
+
+  importStatements.forEach((importStatement) => {
+    // Step 2: get all import identifiers from the import
+    const importIdentifiers: Parser.SyntaxNode[] = [];
+
+    function traverseGetImportIdentifiers(node: Parser.SyntaxNode) {
+      if (node.type === "identifier") {
+        importIdentifiers.push(node);
+      }
+
+      node.children.forEach((child) => {
+        traverseGetImportIdentifiers(child);
+      });
+    }
+    traverseGetImportIdentifiers(importStatement);
+
+    let removeImportStatement = false;
+    const importSpecifiersToRemove: Parser.SyntaxNode[] = [];
+
+    importIdentifiers.forEach((importIdentifier) => {
+      // Step 3: check if the import identifier is used in the source code
+      let isUsed = false;
+
+      function traverseCheckIfUsed(node: Parser.SyntaxNode) {
+        if (
+          node.id !== importIdentifier.id &&
+          node.type === "identifier" &&
+          node.text === importIdentifier.text
+        ) {
+          isUsed = true;
+        }
+
+        node.children.forEach((child) => {
+          traverseCheckIfUsed(child);
+        });
+      }
+      traverseCheckIfUsed(rootNode);
+
+      // if used, we continue to the next import identifier
+      if (isUsed) {
+        return;
+      }
+
+      // Step 4: check if parent is import clause, eg: import express from "express";
+      // or if it is a namespace import, eg: import * as express from "express";
+      if (
+        importIdentifier.parent?.type === "import_clause" ||
+        importIdentifier.parent?.type === "namespace_import"
+      ) {
+        removeImportStatement = true;
+        // Step 5: check if parent is import specifier, eg: import { Router } from "express";
+      } else if (importIdentifier.parent?.type === "import_specifier") {
+        importSpecifiersToRemove.push(importIdentifier);
+      }
+    });
+
+    if (
+      removeImportStatement ||
+      importSpecifiersToRemove.length === importIdentifiers.length
+    ) {
+      updatedSourceCode = updatedSourceCode.replace(
+        sourceCode.substring(
+          importStatement.startIndex,
+          importStatement.endIndex + 1,
+        ),
+        "",
+      );
+    } else {
+      importSpecifiersToRemove.forEach((importSpecifier) => {
+        updatedSourceCode = updatedSourceCode.replace(
+          sourceCode.substring(
+            importSpecifier.startIndex,
+            importSpecifier.endIndex + 1,
+          ),
+          "",
+        );
+      });
+    }
+  });
 
   return updatedSourceCode;
 }

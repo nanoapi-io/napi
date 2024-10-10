@@ -1,9 +1,6 @@
 import path from "path";
 import fs from "fs";
-import {
-  getDependencyTree,
-  removeInvalidImportsAndUsages,
-} from "../helper/dependencies";
+import { getDependencyTree, cleanupFile } from "../helper/dependencies";
 import {
   cleanupOutputDir,
   createOutputDir,
@@ -11,7 +8,7 @@ import {
 } from "../helper/file";
 import { Dependencies, NanoAPIAnnotation } from "../helper/types";
 
-export default async function splitCommandHandler(
+export default function splitCommandHandler(
   entrypoint: string, // Path to the entrypoint file
   targetDir: string, // Path to the target directory
   outputDir: string, // Path to the output directory
@@ -23,7 +20,7 @@ export default async function splitCommandHandler(
   const tree = getDependencyTree(entrypoint);
   cleanupOutputDir(outputDir);
   createOutputDir(outputDir);
-  await iterateOverTree(tree);
+  iterateOverTree(tree);
   const annotationFilePath = path.join(
     outputDir,
     splitDirName,
@@ -31,24 +28,16 @@ export default async function splitCommandHandler(
   );
   fs.writeFileSync(annotationFilePath, JSON.stringify(annotationsMap));
 
-  async function iterateOverTree(
-    tree: Dependencies,
-    parentFiles: string[] = [],
-  ) {
+  function iterateOverTree(tree: Dependencies, parentFiles: string[] = []) {
     for (const [filePath, value] of Object.entries(tree)) {
-      const annotations = await getAnnotationsFromFile(
-        parentFiles,
-        filePath,
-        tree,
-        "@nanoapi",
-      );
+      const annotations = getAnnotationsFromFile(parentFiles, filePath, tree);
       for (const annotation of annotations) {
         splitPath(annotation);
       }
 
       if (typeof value !== "string") {
         const updatedParentFiles = [...parentFiles, filePath];
-        await iterateOverTree(value, updatedParentFiles);
+        iterateOverTree(value, updatedParentFiles);
       }
     }
   }
@@ -82,14 +71,14 @@ export default async function splitCommandHandler(
       fs.copyFileSync(filePath, destinationPath);
     }
 
-    removeInvalidImportsAndUsages(entrypointPath);
+    cleanupFile(entrypointPath, annotation);
     for (const filePath of annotation.filePaths) {
       const relativeFileNamePath = path.relative(targetDir, filePath);
       const destinationPath = path.join(
         annotationDirectory,
         relativeFileNamePath,
       );
-      removeInvalidImportsAndUsages(destinationPath);
+      cleanupFile(destinationPath, annotation);
     }
   }
 }
