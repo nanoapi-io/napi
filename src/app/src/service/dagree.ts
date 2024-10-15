@@ -9,7 +9,7 @@ export function layoutNodesAndEdges(
     nodeHeight: number;
   } = { nodeWidth: 300, nodeHeight: 100 }
 ) {
-  let direction = "TB";
+  const direction: string = "TB";
 
   const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 

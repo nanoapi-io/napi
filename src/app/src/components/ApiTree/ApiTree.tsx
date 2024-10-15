@@ -7,24 +7,24 @@ import {
   Edge,
 } from "@xyflow/react";
 import { Button, Skeleton } from "@radix-ui/themes";
-import { Endpoint } from "../../service/api/scan";
+import { Endpoint } from "../../service/api/types";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import { generateDarkColors } from "../../service/groupColor";
 import MethodNodeContent from "./MethodNodeContent";
 import GroupNodeContent from "./GroupNodeContent";
 
 export default function ApiTree(props: {
-  loading: boolean;
+  chartLoading: boolean;
+  busy: boolean;
   endpoints: Endpoint[];
+  onChangeEndpointGroup: (group: string, endpoint: Endpoint) => void;
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges] = useEdgesState<Edge>([]);
 
   useEffect(() => {
-    if (!props.loading) {
-      computeNodesAndEdgesFromEndpoints(props.endpoints);
-    }
-  }, [props.loading, props.endpoints]);
+    computeNodesAndEdgesFromEndpoints(props.endpoints);
+  }, [props.endpoints]);
 
   function computeNodesAndEdgesFromEndpoints(endpoints: Endpoint[]) {
     const newNodes: Node[] = [];
@@ -71,13 +71,7 @@ export default function ApiTree(props: {
           id: nodeId,
           position: { x: 0, y: 0 }, // Initial position, will be updated by Dagre
           data: {
-            label: (
-              <GroupNodeContent
-                nodeId={nodeId}
-                path={child.path}
-                onNodeClick={toggleNodeVisibility}
-              />
-            ),
+            label: <GroupNodeContent nodeId={nodeId} path={child.path} />,
           },
           type: "default",
         };
@@ -122,7 +116,15 @@ export default function ApiTree(props: {
           id: methodNodeId,
           position: { x: 0, y: 0 }, // Initial position, will be updated by layoutNodesAndEdges
           data: {
-            label: <MethodNodeContent endpoint={endpoint} />,
+            label: (
+              <MethodNodeContent
+                busy={props.busy}
+                endpoint={endpoint}
+                onChangeGroup={(group) =>
+                  props.onChangeEndpointGroup(group, endpoint)
+                }
+              />
+            ),
           },
           type: "default",
           style: { backgroundColor: `${color}` },
@@ -159,15 +161,7 @@ export default function ApiTree(props: {
     setEdges(layoutedEdges);
   }
 
-  function toggleNodeVisibility(nodeId: string) {
-    console.log("Toggling visibility for node", nodeId);
-  }
-
-  function handleOnClickMethodNode(endpoint: Endpoint) {
-    console.log("Clicked on method node", endpoint);
-  }
-
-  return props.loading ? (
+  return props.chartLoading ? (
     <div className="h-full flex flex-col justify-center items-center gap-5">
       <Skeleton width="200px" height="75px" />
       <div className="flex gap-5">
@@ -186,6 +180,7 @@ export default function ApiTree(props: {
       <Button
         className="absolute top-4 left-4 z-10"
         size="1"
+        disabled={props.busy}
         onClick={handleReposition}
       >
         Align

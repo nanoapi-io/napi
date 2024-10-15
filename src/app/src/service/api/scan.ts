@@ -1,9 +1,4 @@
-export type Endpoint = {
-  method: string;
-  path: string;
-  group?: string;
-  dependencies: string[];
-};
+import { Endpoint } from "./types";
 
 export async function scanCodebase(payload: {
   entrypoint: string;
@@ -18,7 +13,7 @@ export async function scanCodebase(payload: {
   //   });
 
   //   if (!response.ok || response.status !== 200) {
-  //     throw new Error("Failed to scan codebase");
+  //     throw new Error("Failed to scan endpoints");
   //   }
 
   //   const responseBody = (await response.json()) as Promise<Endpoint[]>;

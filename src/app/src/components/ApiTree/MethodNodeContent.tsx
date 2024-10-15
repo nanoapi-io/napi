@@ -1,10 +1,14 @@
 import { DataList } from "@radix-ui/themes";
 import MethodBadge from "../MethodBadge";
-import { Endpoint } from "../../service/api/scan";
+import { Endpoint } from "../../service/api/types";
 import GroupBadge from "../GroupBadge";
 import MethodNodeContentDialog from "./MethodNodeContentDialog";
 
-export default function MethodNodeContent(props: { endpoint: Endpoint }) {
+export default function MethodNodeContent(props: {
+  busy: boolean;
+  endpoint: Endpoint;
+  onChangeGroup: (group: string) => void;
+}) {
   return (
     <DataList.Root>
       <DataList.Item>
@@ -30,7 +34,11 @@ export default function MethodNodeContent(props: { endpoint: Endpoint }) {
       <DataList.Item>
         <DataList.Label className="text-white">Action</DataList.Label>
         <DataList.Value className="text-white">
-          <MethodNodeContentDialog endpoint={props.endpoint} />
+          <MethodNodeContentDialog
+            busy={props.busy}
+            endpoint={props.endpoint}
+            onChangeGroup={props.onChangeGroup}
+          />
         </DataList.Value>
       </DataList.Item>
     </DataList.Root>
