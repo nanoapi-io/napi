@@ -6,6 +6,7 @@ import LoadCodeBaseDialog from "../components/LoadCodeBaseDialog";
 import { toast } from "react-toastify";
 import { Endpoint } from "../service/api/types";
 import { groupEndpoints } from "../service/api/sync";
+import { splitCodebase } from "../service/api/split";
 
 export default function App() {
   const [chartLoading, setChartLoading] = useState<boolean>(false);
@@ -34,7 +35,6 @@ export default function App() {
         pending: "Loading codebase...",
       });
       await delay(250);
-      // setReferenceEndpoints(await endpointsPromise);
       setLocalEndpoints(await endpointsPromise);
       setIsOutOfSynced(false);
     } finally {
@@ -78,8 +78,26 @@ export default function App() {
       });
       await syncPromise;
       await delay(250);
-      // setReferenceEndpoints(localEndpoints);
       setIsOutOfSynced(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSplit() {
+    setBusy(true);
+    try {
+      const splitPromise = splitCodebase({
+        entrypoint,
+        targetDir,
+      });
+      toast.promise(splitPromise, {
+        success: "Successfully splited codebase",
+        error: "Failed to split codebase",
+        pending: "Splitting codebase...",
+      });
+      await splitPromise;
+      await delay(250);
     } finally {
       setBusy(false);
     }
@@ -112,7 +130,7 @@ export default function App() {
                 </Button>
               )}
               {!isOutOfSynced && (
-                <Button color="blue" disabled={busy}>
+                <Button color="blue" disabled={busy} onClick={handleSplit}>
                   Generate Split
                 </Button>
               )}
