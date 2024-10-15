@@ -121,7 +121,9 @@ export default function ApiTree(props: {
         const methodNode: Node = {
           id: methodNodeId,
           position: { x: 0, y: 0 }, // Initial position, will be updated by layoutNodesAndEdges
-          data: { label: <MethodNodeContent endpoint={endpoint} /> },
+          data: {
+            label: <MethodNodeContent endpoint={endpoint} />,
+          },
           type: "default",
           style: { backgroundColor: `${color}` },
         };
@@ -159,6 +161,10 @@ export default function ApiTree(props: {
 
   function toggleNodeVisibility(nodeId: string) {
     console.log("Toggling visibility for node", nodeId);
+  }
+
+  function handleOnClickMethodNode(endpoint: Endpoint) {
+    console.log("Clicked on method node", endpoint);
   }
 
   return props.loading ? (

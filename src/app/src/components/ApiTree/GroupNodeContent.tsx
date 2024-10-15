@@ -1,6 +1,6 @@
 import { Button } from "@radix-ui/themes";
 
-export default function MethodNodeContent(props: {
+export default function GroupNodeContent(props: {
   nodeId: string;
   path: string;
   onNodeClick: (nodeId: string) => void;

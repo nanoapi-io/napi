@@ -2,6 +2,7 @@ import { DataList } from "@radix-ui/themes";
 import MethodBadge from "../MethodBadge";
 import { Endpoint } from "../../service/api/scan";
 import GroupBadge from "../GroupBadge";
+import MethodNodeContentDialog from "./MethodNodeContentDialog";
 
 export default function MethodNodeContent(props: { endpoint: Endpoint }) {
   return (
@@ -26,6 +27,12 @@ export default function MethodNodeContent(props: { endpoint: Endpoint }) {
           </DataList.Value>
         </DataList.Item>
       )}
+      <DataList.Item>
+        <DataList.Label className="text-white">Action</DataList.Label>
+        <DataList.Value className="text-white">
+          <MethodNodeContentDialog endpoint={props.endpoint} />
+        </DataList.Value>
+      </DataList.Item>
     </DataList.Root>
   );
 }
