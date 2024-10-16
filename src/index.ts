@@ -3,6 +3,8 @@ import { hideBin } from "yargs/helpers";
 import splitCommandHandler from "./commands/split";
 import path from "path";
 import annotateOpenAICommandHandler from "./commands/annotate";
+import express from "express";
+import api from "./api";
 
 yargs(hideBin(process.argv))
   .command(
@@ -44,7 +46,7 @@ yargs(hideBin(process.argv))
         : path.dirname(entrypoint);
 
       annotateOpenAICommandHandler(entrypoint, targetDir, argv.apiKey);
-    },
+    }
   )
   .command(
     "split [entrypoint]",
@@ -82,6 +84,30 @@ yargs(hideBin(process.argv))
       const outputDir = argv.output ? path.resolve(argv.output) : process.cwd();
 
       splitCommandHandler(entrypoint, targetDir, outputDir);
+    }
+  )
+  .command(
+    "ui",
+    "open the NanoAPI UI",
+    (yargs) => {
+      return yargs;
     },
+    (argv) => {
+      // TODO serve the static file from the app_dist folder
+
+      console.log("Opening NanoAPI UI");
+
+      const app = express();
+
+      app.use(api);
+
+      app.use(express.static(path.join(__dirname, "app_dist")));
+
+      app.listen(3000, () => {
+        // TODO nice message and instruction on how to close the server
+        console.log("Server started at http://localhost:3000");
+        console.log("Press Ctrl+C to stop the server");
+      });
+    }
   )
   .parse();
