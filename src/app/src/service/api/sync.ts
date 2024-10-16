@@ -1,10 +1,6 @@
-import { Endpoint } from "./types";
+import { Endpoint } from './types';
 
-export async function groupEndpoints(payload: {
-  entrypoint: string;
-  targetDir?: string;
-  endpoints: Endpoint[];
-}) {
+export async function groupEndpoints(payload: { entrypoint: string; targetDir?: string; endpoints: Endpoint[] }) {
   // const response = await fetch("/api/sync", {
   //   method: "POST",
   //   headers: {
@@ -15,4 +11,5 @@ export async function groupEndpoints(payload: {
   // if (!response.ok || response.status !== 200) {
   //   throw new Error("Failed to sync endpoints");
   // }
+  console.log(payload);
 }
