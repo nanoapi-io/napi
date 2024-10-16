@@ -4,18 +4,18 @@ import { getDependencyTree, cleanupFile } from "../helper/dependencies";
 import {
   cleanupOutputDir,
   createOutputDir,
-  getAnnotationsFromFile,
+  getEndpointsFromFile,
 } from "../helper/file";
-import { Dependencies, NanoAPIAnnotation } from "../helper/types";
+import { Dependencies, Endpoint } from "../helper/types";
 
 export default function splitCommandHandler(
   entrypoint: string, // Path to the entrypoint file
   targetDir: string, // Path to the target directory
-  outputDir: string, // Path to the output directory
+  outputDir: string // Path to the output directory
 ) {
   const splitDirName = "nanoapi-split";
-  let annotationIndex = 0;
-  const annotationsMap: Record<number, { method: string; path: string }> = {};
+  let endpointIndex = 0;
+  const endpointMap: Record<number, { method?: string; path: string }> = {};
 
   const tree = getDependencyTree(entrypoint);
   cleanupOutputDir(outputDir);
@@ -24,15 +24,15 @@ export default function splitCommandHandler(
   const annotationFilePath = path.join(
     outputDir,
     splitDirName,
-    "annotations.json",
+    "annotations.json"
   );
-  fs.writeFileSync(annotationFilePath, JSON.stringify(annotationsMap));
+  fs.writeFileSync(annotationFilePath, JSON.stringify(endpointMap));
 
   function iterateOverTree(tree: Dependencies, parentFiles: string[] = []) {
     for (const [filePath, value] of Object.entries(tree)) {
-      const annotations = getAnnotationsFromFile(parentFiles, filePath, tree);
-      for (const annotation of annotations) {
-        splitPath(annotation);
+      const endpoints = getEndpointsFromFile(parentFiles, filePath, tree);
+      for (const endpoint of endpoints) {
+        splitPath(endpoint);
       }
 
       if (typeof value !== "string") {
@@ -42,43 +42,52 @@ export default function splitCommandHandler(
     }
   }
 
-  function splitPath(annotation: NanoAPIAnnotation) {
+  function splitPath(endpoint: Endpoint) {
     const splitDirectory = path.join(outputDir, splitDirName);
     const annotationDirectory = path.join(
       splitDirectory,
-      annotationIndex.toString(),
+      endpointIndex.toString()
     );
-    annotationsMap[annotationIndex] = {
-      method: annotation.method,
-      path: annotation.path,
+    endpointMap[endpointIndex] = {
+      method: endpoint.method,
+      path: endpoint.path,
     };
-    annotationIndex++;
+    endpointIndex++;
 
     fs.mkdirSync(annotationDirectory, { recursive: true });
     const entrypointPath = path.join(
       annotationDirectory,
-      path.basename(entrypoint),
+      path.basename(entrypoint)
     );
     fs.copyFileSync(entrypoint, entrypointPath);
-    for (const filePath of annotation.filePaths) {
+
+    for (const filePath of [
+      endpoint.filePath,
+      ...endpoint.parentFilePaths,
+      ...endpoint.childrenFilePaths,
+    ]) {
       const relativeFileNamePath = path.relative(targetDir, filePath);
       const destinationPath = path.join(
         annotationDirectory,
-        relativeFileNamePath,
+        relativeFileNamePath
       );
 
       fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
       fs.copyFileSync(filePath, destinationPath);
     }
 
-    cleanupFile(entrypointPath, annotation);
-    for (const filePath of annotation.filePaths) {
+    cleanupFile(entrypointPath, endpoint);
+    for (const filePath of [
+      endpoint.filePath,
+      ...endpoint.parentFilePaths,
+      ...endpoint.childrenFilePaths,
+    ]) {
       const relativeFileNamePath = path.relative(targetDir, filePath);
       const destinationPath = path.join(
         annotationDirectory,
-        relativeFileNamePath,
+        relativeFileNamePath
       );
-      cleanupFile(destinationPath, annotation);
+      cleanupFile(destinationPath, endpoint);
     }
   }
 }
