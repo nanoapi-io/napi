@@ -1,6 +1,5 @@
-import path from 'path';
 import { getDependencyTree } from '../helper/dependencies';
-import { getAnnotationsFromFile } from '../helper/file';
+import { getEndpointsFromFile } from '../helper/file';
 import { Dependencies } from '../helper/types';
 import { Endpoint } from './types';
 
@@ -12,16 +11,18 @@ export function scan(entrypoint: string, targetDir: string | undefined): Endpoin
 
   function iterateOverTree(tree: Dependencies, parentFiles: string[] = []) {
     for (const [filePath, value] of Object.entries(tree)) {
-      const annotations = getAnnotationsFromFile(parentFiles, filePath, tree);
+      const annotations = getEndpointsFromFile(parentFiles, filePath, tree);
       for (const annotation of annotations) {
         const endpoint = {
           method: annotation.method,
           path: annotation.path,
           group: annotation.group,
-          dependencies: annotation.filePaths.map((filePath) =>
-            targetDir ? path.relative(targetDir, filePath) : filePath,
-          ),
-        };
+          dependencies: {
+            handlerFile: annotation.filePath,
+            parentFiles: annotation.parentFilePaths,
+            childrenFiles: annotation.childrenFilePaths,
+          },
+        } as Endpoint;
         endpoints.push(endpoint);
       }
 

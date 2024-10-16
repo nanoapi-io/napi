@@ -19,7 +19,7 @@ export async function scanCodebase(payload: {
     throw new Error('Failed to scan endpoints');
   }
 
-  const responseBody = (await response.json()) as Promise<Endpoint[]>;
+  const responseBody = (await response.json()) as Promise<{ endpoints: Endpoint[] }>;
 
   return await responseBody;
 }
