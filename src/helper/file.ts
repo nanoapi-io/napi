@@ -1,5 +1,5 @@
 import dependencyTree from "dependency-tree";
-import { NanoAPIAnnotation } from "./types";
+import { Endpoint, NanoAPIAnnotation } from "./types";
 import fs from "fs";
 import path from "path";
 import Javascript from "tree-sitter-javascript";
@@ -33,10 +33,10 @@ export function getParserLanguageFromFile(filePath: string) {
   }
 }
 
-export function getAnnotationsFromFile(
+export function getEndpointsFromFile(
   parentFilePaths: string[],
   filePath: string,
-  dependencyTree: dependencyTree.TreeInnerNode,
+  dependencyTree: dependencyTree.TreeInnerNode
 ) {
   const language = getParserLanguageFromFile(filePath);
   const parser = new Parser();
@@ -45,21 +45,24 @@ export function getAnnotationsFromFile(
   const sourceCode = fs.readFileSync(filePath, "utf8");
   const tree = parser.parse(sourceCode);
 
-  const annotations: NanoAPIAnnotation[] = [];
+  const endpoints: Endpoint[] = [];
 
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "comment") {
       const comment = node.text;
-      if (comment.includes("@nanoapi")) {
-        const annotation = parseNanoAPIAnnotation(
-          parentFilePaths,
+
+      const annotation = getNanoApiFromCommentValue(comment);
+
+      if (annotation) {
+        const endpoint: Endpoint = {
+          path: annotation.path,
+          method: annotation.method,
+          group: annotation.group,
           filePath,
-          dependencyTree,
-          comment,
-        );
-        if (annotation) {
-          annotations.push(annotation);
-        }
+          parentFilePaths,
+          childrenFilePaths: getFilePathsFromTree(dependencyTree[filePath]),
+        };
+        endpoints.push(endpoint);
       }
     }
     node.children.forEach((child) => traverse(child));
@@ -67,34 +70,30 @@ export function getAnnotationsFromFile(
 
   traverse(tree.rootNode);
 
-  return annotations;
+  return endpoints;
 }
 
-function parseNanoAPIAnnotation(
-  parentFilePaths: string[],
-  filePathstring: string,
-  tree: dependencyTree.TreeInnerNode,
-  annotationString: string,
-) {
-  const regex = /\/\/\s*@nanoapi\s+(\w+)\s+(\/\S+)/; // e.g., // @nanoapi GET /api/users
-  const match = annotationString.match(regex);
-  if (!match) {
-    return undefined;
+export function getNanoApiFromCommentValue(comment: string) {
+  const nanoapiRegex = /@nanoapi|((method|path|group):([^ ]+))/g;
+  const matches = comment.match(nanoapiRegex);
+  // remove first match, which is the @nanoapi identifier
+  matches?.shift();
+
+  if (matches && matches.length > 0) {
+    return matches.reduce((acc, match) => {
+      // key, first element when split with ":"
+      const key = match.split(":")[0];
+      // value, everything else
+      const value = match.split(":").slice(1).join(":");
+      return { ...acc, [key]: value };
+    }, {} as NanoAPIAnnotation);
   }
 
-  return {
-    method: match[1],
-    path: match[2],
-    filePaths: [
-      ...parentFilePaths,
-      filePathstring,
-      ...getFilePathsFromTree(tree[filePathstring]),
-    ],
-  } as NanoAPIAnnotation;
+  return null;
 }
 
-export function getCommentFromNanoAPIAnnotation(annotation: NanoAPIAnnotation) {
-  return `@nanoapi ${annotation.method} ${annotation.path}`;
+export function getCommentFromNanoAPIAnnotation(endpoint: Endpoint) {
+  return `@nanoapi ${endpoint.method} ${endpoint.path}`;
 }
 
 function getFilePathsFromTree(tree: dependencyTree.Tree) {
@@ -112,7 +111,7 @@ function getFilePathsFromTree(tree: dependencyTree.Tree) {
 // Resolve file paths from import/require statements
 export function resolveFilePath(
   importPath: string,
-  currentFile: string,
+  currentFile: string
 ): string | null {
   const currentFileExt = path.extname(currentFile);
   const importExt = path.extname(importPath);
@@ -128,7 +127,7 @@ export function resolveFilePath(
       // If import path does not have an extension, try current file's extension first
       const resolvedPathWithCurrentExt = path.resolve(
         path.dirname(currentFile),
-        `${importPath}${currentFileExt}`,
+        `${importPath}${currentFileExt}`
       );
       if (fs.existsSync(resolvedPathWithCurrentExt)) {
         return resolvedPathWithCurrentExt;

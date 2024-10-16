@@ -8,12 +8,12 @@ import {
   removeUnusedJavascriptImports,
 } from "./languages/javascript";
 import { getParserLanguageFromFile, resolveFilePath } from "./file";
-import { Dependencies, NanoAPIAnnotation } from "./types";
+import { Dependencies, Endpoint } from "./types";
 
 // extract the dependencies from the AST
 export function getDependencyTree(
   filePath: string,
-  visited = new Set<string>(),
+  visited = new Set<string>()
 ) {
   const language = getParserLanguageFromFile(filePath);
   const parser = new Parser();
@@ -40,7 +40,7 @@ export function getDependencyTree(
   return dependencies;
 }
 
-export function cleanupFile(filePath: string, annotation: NanoAPIAnnotation) {
+export function cleanupFile(filePath: string, endpoint: Endpoint) {
   const language = getParserLanguageFromFile(filePath);
   const parser = new Parser();
   parser.setLanguage(language);
@@ -58,14 +58,14 @@ export function cleanupFile(filePath: string, annotation: NanoAPIAnnotation) {
   // Check if we can resolve the path for each dependency
   // If we cannot, we need to remove it
   const invalidDependencies = dependencies.filter(
-    (dep) => !resolveFilePath(dep, filePath),
+    (dep) => !resolveFilePath(dep, filePath)
   );
 
   if (["javascript", "typescript"].includes(language.name)) {
     const newSourceCode = removeJavascriptAnnotations(
       tree.rootNode,
       sourceCode,
-      annotation,
+      endpoint
     );
     tree = parser.parse(newSourceCode);
 
@@ -73,20 +73,20 @@ export function cleanupFile(filePath: string, annotation: NanoAPIAnnotation) {
       removeInvalidJavascriptFileImports(
         tree.rootNode,
         newSourceCode,
-        invalidDependencies,
+        invalidDependencies
       );
     tree = parser.parse(updatedSourceCode);
 
     let finalUpdatedSourceCode = removeJavascriptDeletedImportUsage(
       tree.rootNode,
       updatedSourceCode,
-      removedImportsNames,
+      removedImportsNames
     );
     tree = parser.parse(finalUpdatedSourceCode);
 
     finalUpdatedSourceCode = removeUnusedJavascriptImports(
       tree.rootNode,
-      finalUpdatedSourceCode,
+      finalUpdatedSourceCode
     );
 
     fs.writeFileSync(filePath, finalUpdatedSourceCode, "utf8");

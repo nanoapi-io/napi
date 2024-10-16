@@ -1,6 +1,6 @@
 import Parser from "tree-sitter";
-import { NanoAPIAnnotation } from "../types";
-import { getCommentFromNanoAPIAnnotation } from "../file";
+import { Endpoint } from "../types";
+import { getNanoApiFromCommentValue } from "../file";
 
 // extract the dependencies from the AST
 export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
@@ -10,7 +10,7 @@ export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "import_statement") {
       const stringNode = node.namedChildren.find(
-        (n: Parser.SyntaxNode) => n.type === "string",
+        (n: Parser.SyntaxNode) => n.type === "string"
       );
       if (stringNode) {
         const importName = stringNode.text.slice(1, -1); // Remove quotes
@@ -32,26 +32,28 @@ export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
 export function removeJavascriptAnnotations(
   rootNode: Parser.SyntaxNode,
   sourceCode: string,
-  annotationToKeep: NanoAPIAnnotation,
+  endpointToKeep: Endpoint
 ): string {
   let updatedSourceCode = sourceCode;
-  const annotationComment = getCommentFromNanoAPIAnnotation(annotationToKeep);
-
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "comment") {
       const commentText = node.text;
-      if (commentText.includes("@nanoapi")) {
-        if (!commentText.includes(annotationComment)) {
-          const nextNode = node.nextNamedSibling;
-          if (!nextNode) {
-            throw new Error("Could not find next node");
-          }
-          // delete this node (comment) and the next node (api endpoint)
-          updatedSourceCode = updatedSourceCode.replace(
-            sourceCode.substring(node.startIndex, nextNode.endIndex + 1),
-            "",
-          );
+      const annotationFromComment = getNanoApiFromCommentValue(commentText);
+      if (!annotationFromComment) return;
+
+      if (
+        annotationFromComment.path !== endpointToKeep.path ||
+        annotationFromComment.method !== endpointToKeep.method
+      ) {
+        const nextNode = node.nextNamedSibling;
+        if (!nextNode) {
+          throw new Error("Could not find next node");
         }
+        // delete this node (comment) and the next node (api endpoint)
+        updatedSourceCode = updatedSourceCode.replace(
+          sourceCode.substring(node.startIndex, nextNode.endIndex + 1),
+          ""
+        );
       }
     }
 
@@ -68,7 +70,7 @@ export function removeJavascriptAnnotations(
 export function removeInvalidJavascriptFileImports(
   rootNode: Parser.SyntaxNode,
   sourceCode: string,
-  invalidDependencies: string[],
+  invalidDependencies: string[]
 ) {
   let updatedSourceCode = sourceCode;
   const removedImportsNames: string[] = [];
@@ -84,24 +86,24 @@ export function removeInvalidJavascriptFileImports(
     }
 
     const importClause = importStatement.namedChildren.find(
-      (n) => n.type === "import_clause",
+      (n) => n.type === "import_clause"
     );
     if (!importClause) {
       throw new Error("Invalid import statement, missing import clause");
     }
 
     let importIdentifier = importClause.namedChildren.find(
-      (n) => n.type === "identifier",
+      (n) => n.type === "identifier"
     );
     if (!importIdentifier) {
       const namespacImport = importClause.namedChildren.find(
-        (n) => n.type === "namespace_import",
+        (n) => n.type === "namespace_import"
       );
       if (!namespacImport) {
         throw new Error("Invalid import statement, missing import identifier");
       }
       importIdentifier = namespacImport.namedChildren.find(
-        (n) => n.type === "identifier",
+        (n) => n.type === "identifier"
       );
       if (!importIdentifier) {
         throw new Error("Invalid import statement, missing import identifier");
@@ -124,7 +126,7 @@ export function removeInvalidJavascriptFileImports(
           // Remove the import statement
           updatedSourceCode = updatedSourceCode.replace(
             sourceCode.substring(node.startIndex, node.endIndex + 1),
-            "",
+            ""
           );
         }
       }
@@ -141,7 +143,7 @@ export function removeInvalidJavascriptFileImports(
 export function removeJavascriptDeletedImportUsage(
   rootNode: Parser.SyntaxNode,
   sourceCode: string,
-  removedImportsNames: string[],
+  removedImportsNames: string[]
 ): string {
   let updatedSourceCode = sourceCode;
 
@@ -159,7 +161,7 @@ export function removeJavascriptDeletedImportUsage(
       // Remove the expression statement
       updatedSourceCode = updatedSourceCode.replace(
         sourceCode.substring(parent.startIndex, parent.endIndex + 1),
-        "",
+        ""
       );
     }
 
@@ -175,7 +177,7 @@ export function removeJavascriptDeletedImportUsage(
 
 export function removeUnusedJavascriptImports(
   rootNode: Parser.SyntaxNode,
-  sourceCode: string,
+  sourceCode: string
 ) {
   let updatedSourceCode = sourceCode;
 
@@ -255,18 +257,18 @@ export function removeUnusedJavascriptImports(
       updatedSourceCode = updatedSourceCode.replace(
         sourceCode.substring(
           importStatement.startIndex,
-          importStatement.endIndex + 1,
+          importStatement.endIndex + 1
         ),
-        "",
+        ""
       );
     } else {
       importSpecifiersToRemove.forEach((importSpecifier) => {
         updatedSourceCode = updatedSourceCode.replace(
           sourceCode.substring(
             importSpecifier.startIndex,
-            importSpecifier.endIndex + 1,
+            importSpecifier.endIndex + 1
           ),
-          "",
+          ""
         );
       });
     }
