@@ -6,7 +6,7 @@ import { Dependencies } from "../helper/types";
 export default async function annotateOpenAICommandHandler(
   entrypoint: string, // Path to the entrypoint file
   targetDir: string, // Path to the target directory
-  openAIApiKey: string, // OpenAI API key
+  openAIApiKey: string // OpenAI API key
 ) {
   console.log("Annotating program...");
   console.log(targetDir);
@@ -55,7 +55,7 @@ export default async function annotateOpenAICommandHandler(
   messages.push({
     role: "user",
     content: `I want you to add the following annotation above each function that handle an API call (as a comment):
-    @nanoapi GET /\\/api\\/endpoint/
+    @nanoapi method:GET path:/\\/api\\/endpoint/
     You need to replace "GET" with the actual HTTP method.
     You need to replace "/\\/api\\/endpoint/" with a REGEX that match the actual endpoint path (full path).
     You are forbidden from changing the code. You can only add comments.
@@ -88,6 +88,6 @@ export default async function annotateOpenAICommandHandler(
   }
 
   console.log(
-    "Annotation complete. OpenAI can make mistakes, so please review the annotations.",
+    "Annotation complete. OpenAI can make mistakes, so please review the annotations."
   );
 }
