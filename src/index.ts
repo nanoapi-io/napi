@@ -5,6 +5,7 @@ import path from "path";
 import annotateOpenAICommandHandler from "./commands/annotate";
 import express from "express";
 import api from "./api";
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 yargs(hideBin(process.argv))
   .command(
@@ -101,7 +102,20 @@ yargs(hideBin(process.argv))
 
       app.use(api);
 
-      app.use(express.static(path.join(__dirname, "app_dist")));
+      if (process.env.NODE_ENV === "development") {
+        const targetServiceUrl =
+          process.env.APP_SERVICE_URL || "http://localhost:3001";
+
+        app.use(
+          "/",
+          createProxyMiddleware({
+            target: targetServiceUrl,
+            changeOrigin: true,
+          })
+        );
+      } else {
+        app.use(express.static(path.join(__dirname, "app_dist")));
+      }
 
       app.listen(3000, () => {
         // TODO nice message and instruction on how to close the server

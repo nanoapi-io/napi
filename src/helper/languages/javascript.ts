@@ -1,6 +1,6 @@
 import Parser from "tree-sitter";
 import { Endpoint } from "../types";
-import { getNanoApiFromCommentValue } from "../file";
+import { getNanoApiAnnotationFromCommentValue } from "../file";
 
 // extract the dependencies from the AST
 export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
@@ -38,7 +38,8 @@ export function removeJavascriptAnnotations(
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "comment") {
       const commentText = node.text;
-      const annotationFromComment = getNanoApiFromCommentValue(commentText);
+      const annotationFromComment =
+        getNanoApiAnnotationFromCommentValue(commentText);
       if (!annotationFromComment) return;
 
       if (

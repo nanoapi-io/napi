@@ -1,14 +1,13 @@
+import { z } from "zod";
 import { getDependencyTree } from "../helper/dependencies";
-import {
-  ScanCodebaseRequestPayload,
-  ScanCodebaseResponsePayload,
-} from "../helper/payloads";
+import { ScanCodebaseResponsePayload } from "../helper/payloads";
 import { iterateOverTree } from "../helper/tree";
+import { scanSchema } from "./helpers/validation";
 
 export function scan(
-  scanRequestPayload: ScanCodebaseRequestPayload
+  payload: z.infer<typeof scanSchema>
 ): ScanCodebaseResponsePayload {
-  const tree = getDependencyTree(scanRequestPayload.entrypointPath);
+  const tree = getDependencyTree(payload.entrypointPath);
 
   const endpoints = iterateOverTree(tree);
 

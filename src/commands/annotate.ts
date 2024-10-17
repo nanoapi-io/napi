@@ -9,7 +9,6 @@ export default async function annotateOpenAICommandHandler(
   openAIApiKey: string // OpenAI API key
 ) {
   console.log("Annotating program...");
-  console.log(targetDir);
   const tree = getDependencyTree(entrypoint);
 
   const openAIConfig = {

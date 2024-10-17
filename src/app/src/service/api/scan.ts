@@ -1,25 +1,24 @@
-import { Endpoint } from './types';
+import { Endpoint } from "./types";
 
 export async function scanCodebase(payload: {
-  entrypoint: string;
+  entrypointPath: string;
   targetDir?: string; // default to the entrypoint directory
 }) {
-  const response = await fetch('/api/scan', {
-    method: 'POST',
+  const response = await fetch("/api/scan", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      entrypointPath: payload.entrypoint,
-      targetDir: payload.targetDir,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok || response.status !== 200) {
-    throw new Error('Failed to scan endpoints');
+    throw new Error("Failed to scan endpoints");
   }
 
-  const responseBody = (await response.json()) as Promise<{ endpoints: Endpoint[] }>;
+  const responseBody = (await response.json()) as Promise<{
+    endpoints: Endpoint[];
+  }>;
 
   return await responseBody;
 }

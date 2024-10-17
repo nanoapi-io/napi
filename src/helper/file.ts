@@ -51,7 +51,7 @@ export function getEndpointsFromFile(
     if (node.type === "comment") {
       const comment = node.text;
 
-      const annotation = getNanoApiFromCommentValue(comment);
+      const annotation = getNanoApiAnnotationFromCommentValue(comment);
 
       if (annotation) {
         const endpoint: Endpoint = {
@@ -73,7 +73,7 @@ export function getEndpointsFromFile(
   return endpoints;
 }
 
-export function getNanoApiFromCommentValue(comment: string) {
+export function getNanoApiAnnotationFromCommentValue(comment: string) {
   const nanoapiRegex = /@nanoapi|((method|path|group):([^ ]+))/g;
   const matches = comment.match(nanoapiRegex);
   // remove first match, which is the @nanoapi identifier
@@ -92,8 +92,28 @@ export function getNanoApiFromCommentValue(comment: string) {
   return null;
 }
 
-export function getCommentFromNanoAPIAnnotation(endpoint: Endpoint) {
-  return `@nanoapi ${endpoint.method} ${endpoint.path}`;
+export function replaceCommentFromAnnotation(
+  comment: string,
+  annotation: NanoAPIAnnotation
+) {
+  const commentRegex = /@nanoapi\s*(.*)/g;
+
+  // Construct the new annotation string
+  let newAnnotation = "@nanoapi";
+  if (annotation.method) {
+    newAnnotation += ` method:${annotation.method}`;
+  }
+  if (annotation.path) {
+    newAnnotation += ` path:${annotation.path}`;
+  }
+  if (annotation.group) {
+    newAnnotation += ` group:${annotation.group}`;
+  }
+
+  // Replace the old annotation with the new annotation
+  const updatedComment = comment.replace(commentRegex, newAnnotation);
+
+  return updatedComment;
 }
 
 function getFilePathsFromTree(tree: dependencyTree.Tree) {
