@@ -1,12 +1,8 @@
-export type Dependencies = {
-  handlerFile: string;
-  parentFiles: string[];
-  childrenFiles: string[];
-};
-
-export type Endpoint = {
-  method: string;
+export interface Endpoint {
   path: string;
+  method: string;
   group?: string;
-  dependencies: Dependencies;
-};
+  filePath: string;
+  parentFilePaths: string[];
+  childrenFilePaths: string[];
+}

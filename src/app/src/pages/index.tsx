@@ -86,8 +86,9 @@ export default function App() {
     setBusy(true);
     try {
       const splitPromise = splitCodebase({
-        entrypoint,
+        entrypointPath: entrypoint,
         targetDir,
+        outputDir: targetDir,
       });
       toast.promise(splitPromise, {
         success: 'Successfully splited codebase',

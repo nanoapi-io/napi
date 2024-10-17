@@ -1,38 +1,16 @@
-import { getDependencyTree } from '../helper/dependencies';
-import { getEndpointsFromFile } from '../helper/file';
-import { Dependencies } from '../helper/types';
-import { Endpoint } from './types';
+import { getDependencyTree } from "../helper/dependencies";
+import {
+  ScanCodebaseRequestPayload,
+  ScanCodebaseResponsePayload,
+} from "../helper/payloads";
+import { iterateOverTree } from "../helper/tree";
 
-export function scan(entrypoint: string, targetDir: string | undefined): Endpoint[] {
-  const tree = getDependencyTree(entrypoint);
-  const endpoints: Endpoint[] = [];
+export function scan(
+  scanRequestPayload: ScanCodebaseRequestPayload
+): ScanCodebaseResponsePayload {
+  const tree = getDependencyTree(scanRequestPayload.entrypointPath);
 
-  iterateOverTree(tree);
+  const endpoints = iterateOverTree(tree);
 
-  function iterateOverTree(tree: Dependencies, parentFiles: string[] = []) {
-    for (const [filePath, value] of Object.entries(tree)) {
-      const annotations = getEndpointsFromFile(parentFiles, filePath, tree);
-      for (const annotation of annotations) {
-        const endpoint = {
-          method: annotation.method,
-          path: annotation.path,
-          group: annotation.group,
-          dependencies: {
-            handlerFile: annotation.filePath,
-            parentFiles: annotation.parentFilePaths,
-            childrenFiles: annotation.childrenFilePaths,
-          },
-        } as Endpoint;
-        endpoints.push(endpoint);
-      }
-
-      // Recursively process the tree
-      if (typeof value !== 'string') {
-        const updatedParentFiles = [...parentFiles, filePath];
-        iterateOverTree(value, updatedParentFiles);
-      }
-    }
-  }
-
-  return endpoints;
+  return { endpoints };
 }

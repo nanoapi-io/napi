@@ -73,13 +73,13 @@ export default function MethodNodeContentDialog(props: {
             <DataList.Value className="text-white">
               <div>
                 <strong>Handler File:</strong>
-                <div className="text-dark">{props.endpoint.dependencies.handlerFile}</div>
+                <div className="text-dark">{props.endpoint.filePath}</div>
               </div>
               <div>
                 <strong>Parent Files:</strong>
                 <ul>
-                  {props.endpoint.dependencies.parentFiles.length > 0 ? (
-                    props.endpoint.dependencies.parentFiles.map((parent, index) => (
+                  {props.endpoint.parentFilePaths.length > 0 ? (
+                    props.endpoint.parentFilePaths.map((parent, index) => (
                       <li key={index} className="text-dark">
                         {parent}
                       </li>
@@ -92,8 +92,8 @@ export default function MethodNodeContentDialog(props: {
               <div>
                 <strong>Children Files:</strong>
                 <ul>
-                  {props.endpoint.dependencies.childrenFiles.length > 0 ? (
-                    props.endpoint.dependencies.childrenFiles.map((child, index) => (
+                  {props.endpoint.childrenFilePaths.length > 0 ? (
+                    props.endpoint.childrenFilePaths.map((child, index) => (
                       <li key={index} className="text-dark">
                         {child}
                       </li>

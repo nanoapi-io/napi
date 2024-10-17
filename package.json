@@ -2,7 +2,11 @@
   "name": "nanoapi",
   "version": "1.0.0",
   "description": "",
+  "workspaces": [
+    "src/*"
+  ],
   "scripts": {
+    "app:dev": "npm run build --workspace src/app && ts-node src/index.ts",
     "dev": "ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
