@@ -131,7 +131,7 @@ export default function App() {
                 </Button>
               )}
               {!isOutOfSynced && (
-                <Button color="blue" disabled={busy} onClick={handleSplit}>
+                <Button color="plum" disabled={busy} onClick={handleSplit}>
                   Generate Split
                 </Button>
               )}
@@ -142,31 +142,20 @@ export default function App() {
           <DataList.Root>
             {entrypoint && (
               <DataList.Item>
-                <DataList.Label className="text-white">
-                  Entrypoint:
-                </DataList.Label>
-                <DataList.Value className="text-white font-bold">
-                  {entrypoint}
-                </DataList.Value>
+                <DataList.Label>Entrypoint:</DataList.Label>
+                <DataList.Value>{entrypoint}</DataList.Value>
               </DataList.Item>
             )}
             {outputDir && (
               <DataList.Item>
-                <DataList.Label className="text-white">
-                  Output directory:
-                </DataList.Label>
-                <DataList.Value className="text-white font-bold">
-                  {outputDir}
-                </DataList.Value>
+                <DataList.Label>Output directory:</DataList.Label>
+                <DataList.Value>{outputDir}</DataList.Value>
               </DataList.Item>
             )}
           </DataList.Root>
         )}
       </div>
-      <div
-        className="bg-dark-3 text-dark"
-        style={{ height: "calc(100vh - 170px)", width: "100hh" }}
-      >
+      <div style={{ height: "calc(100vh - 170px)", width: "100hh" }}>
         <ApiTree
           chartLoading={chartLoading}
           busy={busy}

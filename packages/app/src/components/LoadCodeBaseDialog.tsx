@@ -18,7 +18,7 @@ export default function LoadCodeBaseDialog(props: {
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
       <Dialog.Trigger>
-        <Button disabled={props.busy} color="purple">
+        <Button disabled={props.busy} color="plum">
           <svg
             width="15"
             height="15"

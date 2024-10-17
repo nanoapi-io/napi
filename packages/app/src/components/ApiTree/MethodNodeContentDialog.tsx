@@ -31,20 +31,20 @@ export default function MethodNodeContentDialog(props: {
         <Dialog.Description></Dialog.Description>
         <DataList.Root>
           <DataList.Item>
-            <DataList.Label className="text-dark">Method</DataList.Label>
-            <DataList.Value className="text-white">
+            <DataList.Label>Method</DataList.Label>
+            <DataList.Value>
               <MethodBadge method={props.endpoint.method} />
             </DataList.Value>
           </DataList.Item>
           <DataList.Item>
-            <DataList.Label className="text-dark">Path</DataList.Label>
-            <DataList.Value className="text-dark">
-              <div className="font-bold">{props.endpoint.path}</div>
+            <DataList.Label>Path</DataList.Label>
+            <DataList.Value>
+              <div>{props.endpoint.path}</div>
             </DataList.Value>
           </DataList.Item>
           <DataList.Item>
-            <DataList.Label className="text-dark">Group</DataList.Label>
-            <DataList.Value className="text-white">
+            <DataList.Label>Group</DataList.Label>
+            <DataList.Value>
               <form className="flex gap-2" onSubmit={handleApply}>
                 <TextField.Root
                   value={group}
@@ -75,40 +75,39 @@ export default function MethodNodeContentDialog(props: {
           </DataList.Item>
 
           <DataList.Item>
-            <DataList.Label className="text-dark">Dependencies</DataList.Label>
-            <DataList.Value className="text-white">
-              <div>
-                <strong>Handler File:</strong>
-                <div className="text-dark">{props.endpoint.filePath}</div>
-              </div>
-              <div>
-                <strong>Parent Files:</strong>
-                <ul>
-                  {props.endpoint.parentFilePaths.length > 0 ? (
-                    props.endpoint.parentFilePaths.map((parent, index) => (
-                      <li key={index} className="text-dark">
-                        {parent}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-dark">No parent files</li>
-                  )}
-                </ul>
-              </div>
-              <div>
-                <strong>Children Files:</strong>
-                <ul>
-                  {props.endpoint.childrenFilePaths.length > 0 ? (
-                    props.endpoint.childrenFilePaths.map((child, index) => (
-                      <li key={index} className="text-dark">
-                        {child}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-dark">No children files</li>
-                  )}
-                </ul>
-              </div>
+            <DataList.Label>Handler File:</DataList.Label>
+            <DataList.Value>
+              <div>{props.endpoint.filePath}</div>
+            </DataList.Value>
+          </DataList.Item>
+
+          <DataList.Item>
+            <DataList.Label>Parent Files:</DataList.Label>
+            <DataList.Value>
+              <ul>
+                {props.endpoint.parentFilePaths.length > 0 ? (
+                  props.endpoint.parentFilePaths.map((parent, index) => (
+                    <li key={index}>{parent}</li>
+                  ))
+                ) : (
+                  <li>No parent files</li>
+                )}
+              </ul>
+            </DataList.Value>
+          </DataList.Item>
+
+          <DataList.Item>
+            <DataList.Label>Children Files:</DataList.Label>
+            <DataList.Value>
+              <ul>
+                {props.endpoint.childrenFilePaths.length > 0 ? (
+                  props.endpoint.childrenFilePaths.map((child, index) => (
+                    <li key={index}>{child}</li>
+                  ))
+                ) : (
+                  <li>No children files</li>
+                )}
+              </ul>
             </DataList.Value>
           </DataList.Item>
         </DataList.Root>

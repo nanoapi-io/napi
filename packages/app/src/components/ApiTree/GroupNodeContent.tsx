@@ -3,5 +3,5 @@ export default function GroupNodeContent(props: {
   path: string;
 }) {
   // TODO collapse/expand logic
-  return <div className="text-dark font-bold">/{props.path}</div>;
+  return <div>/{props.path}</div>;
 }

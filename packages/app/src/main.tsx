@@ -34,7 +34,7 @@ ReactDOM.createRoot(rootElement).render(
     <Theme>
       <ReactFlowProvider>
         <>
-          <ToastContainer theme="dark" />
+          <ToastContainer />
           <RouterProvider router={router} />
         </>
       </ReactFlowProvider>

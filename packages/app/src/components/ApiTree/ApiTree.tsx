@@ -180,6 +180,8 @@ export default function ApiTree(props: {
       <Button
         className="absolute top-4 left-4 z-10"
         size="1"
+        variant="outline"
+        color="gray"
         disabled={props.busy}
         onClick={handleReposition}
       >
