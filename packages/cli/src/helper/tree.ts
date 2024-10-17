@@ -38,10 +38,10 @@ export function splitPath(
   endpoint: Endpoint,
   outputDirectory: string,
   entrypointPath: string,
-  targetDir: string,
   endpointMap: Record<number, { method?: string; path: string }>,
   endpointIndex: number,
 ) {
+  const targetDir = path.dirname(entrypointPath);
   const splitDirectory = path.join(outputDirectory, "nanoapi-split");
   const annotationDirectory = path.join(
     splitDirectory,

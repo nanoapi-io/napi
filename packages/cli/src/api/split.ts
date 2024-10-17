@@ -17,7 +17,6 @@ export function split(
   // Get the dependency tree
   const tree = getDependencyTree(payload.entrypointPath);
 
-  payload.targetDir = payload.targetDir || path.dirname(payload.entrypointPath);
   payload.outputDir = payload.outputDir || path.dirname(payload.entrypointPath);
 
   // Clean up and prepare the output directory
@@ -33,7 +32,6 @@ export function split(
       endpoint,
       payload.outputDir,
       payload.entrypointPath,
-      payload.targetDir,
       endpointMap,
       endpointIndex,
     );

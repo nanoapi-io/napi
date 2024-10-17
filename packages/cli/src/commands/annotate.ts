@@ -5,7 +5,6 @@ import { Dependencies } from "../helper/types";
 
 export default async function annotateOpenAICommandHandler(
   entrypoint: string, // Path to the entrypoint file
-  _targetDir: string, // Path to the target directory
   openAIApiKey: string, // OpenAI API key
 ) {
   console.log("Annotating program...");

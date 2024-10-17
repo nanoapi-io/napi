@@ -7,13 +7,13 @@ export function layoutNodesAndEdges(
   options: {
     nodeWidth: number;
     nodeHeight: number;
-  } = { nodeWidth: 300, nodeHeight: 100 }
+  } = { nodeWidth: 300, nodeHeight: 100 },
 ) {
   const direction = "TB";
 
   const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
 
-  // @ts-expect-error
+  // @ts-expect-error ignore ts(2367)
   const isHorizontal = direction === "LR";
   dagreGraph.setGraph({ rankdir: direction });
 

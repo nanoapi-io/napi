@@ -13,7 +13,7 @@ export default function App() {
   const [busy, setBusy] = useState<boolean>(false);
 
   const [entrypoint, setEntrypoint] = useState<string>("");
-  const [targetDir, setTargetDir] = useState<string | undefined>(undefined);
+  const [outputDir, setOutputDir] = useState<string | undefined>(undefined);
 
   const [isOutOfSynced, setIsOutOfSynced] = useState<boolean>(false);
   const [localEndpoints, setLocalEndpoints] = useState<Endpoint[]>([]);
@@ -22,15 +22,14 @@ export default function App() {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async function handleOnLoad(entrypoint: string, targetDir?: string) {
+  async function handleOnLoad(entrypoint: string, outputDir?: string) {
     setChartLoading(true);
     setBusy(true);
     try {
       setEntrypoint(entrypoint);
-      setTargetDir(targetDir);
+      setOutputDir(outputDir);
       const endpointsPromise = scanCodebase({
         entrypointPath: entrypoint,
-        targetDir,
       });
       toast.promise(endpointsPromise, {
         success: "Codebase loaded",
@@ -71,7 +70,6 @@ export default function App() {
     try {
       const syncPromise = syncEndpoints({
         entrypointPath: entrypoint,
-        targetDir,
         endpoints: localEndpoints,
       });
       toast.promise(syncPromise, {
@@ -92,8 +90,7 @@ export default function App() {
     try {
       const splitPromise = splitCodebase({
         entrypointPath: entrypoint,
-        targetDir,
-        outputDir: targetDir,
+        outputDir: outputDir,
       });
       toast.promise(splitPromise, {
         success: "Successfully splited codebase",
@@ -141,7 +138,7 @@ export default function App() {
             </>
           )}
         </div>
-        {(entrypoint || targetDir) && (
+        {(entrypoint || outputDir) && (
           <DataList.Root>
             {entrypoint && (
               <DataList.Item>
@@ -153,13 +150,13 @@ export default function App() {
                 </DataList.Value>
               </DataList.Item>
             )}
-            {targetDir && (
+            {outputDir && (
               <DataList.Item>
                 <DataList.Label className="text-white">
-                  Target directory:
+                  Output directory:
                 </DataList.Label>
                 <DataList.Value className="text-white font-bold">
-                  {targetDir}
+                  {outputDir}
                 </DataList.Value>
               </DataList.Item>
             )}

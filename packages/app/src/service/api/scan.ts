@@ -1,9 +1,6 @@
 import { Endpoint } from "./types";
 
-export async function scanCodebase(payload: {
-  entrypointPath: string;
-  targetDir?: string; // default to the entrypoint directory
-}) {
+export async function scanCodebase(payload: { entrypointPath: string }) {
   const response = await fetch("/api/scan", {
     method: "POST",
     headers: {

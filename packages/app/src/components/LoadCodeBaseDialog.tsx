@@ -3,15 +3,15 @@ import { FormEvent, useState } from "react";
 
 export default function LoadCodeBaseDialog(props: {
   busy: boolean;
-  onLoad: (entrypoint: string, targetDir?: string) => void;
+  onLoad: (entrypoint: string, outputDir?: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [entrypoint, setEntrypoint] = useState<string>("");
-  const [targetDir, setTargetDir] = useState<string>("");
+  const [outputDir, setOutputDir] = useState<string>("");
 
   function handleAction(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    props.onLoad(entrypoint, targetDir ? targetDir : undefined);
+    props.onLoad(entrypoint, outputDir || undefined);
     setIsOpen(false);
   }
 
@@ -56,13 +56,13 @@ export default function LoadCodeBaseDialog(props: {
               placeholder="Absolute path of the entrypoint of your application"
             />
             <TextField.Root
-              value={targetDir}
+              value={outputDir}
               onChange={(e) => {
-                setTargetDir(e.target.value);
+                setOutputDir(e.target.value);
               }}
               disabled={props.busy}
               type="text"
-              placeholder="Absolute path of the entrypoint of your application"
+              placeholder="Absolute path of the output directory of the split operation"
             />
           </div>
           <div className="flex justify-end gap-2 mt-2">

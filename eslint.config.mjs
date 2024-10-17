@@ -11,6 +11,11 @@ export default tseslint.config(
   ...tseslint.configs.stylistic,
   eslintPluginPrettierRecommended,
   {
-    ignores: ["**/node_modules", "packages/app/dist", "packages/cli/dist"],
+    ignores: [
+      "**/node_modules/**/*",
+      "dist",
+      "packages/app/dist",
+      "packages/cli/dist",
+    ],
   },
 );

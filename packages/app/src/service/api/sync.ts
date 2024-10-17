@@ -2,7 +2,6 @@ import { Endpoint } from "./types";
 
 export async function syncEndpoints(payload: {
   entrypointPath: string;
-  targetDir?: string;
   endpoints: Endpoint[];
 }) {
   const response = await fetch("/api/sync", {

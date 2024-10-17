@@ -18,12 +18,6 @@ yargs(hideBin(process.argv))
           type: "string",
         })
         .options({
-          targetDir: {
-            type: "string",
-            default: "",
-            alias: "t",
-            description: "Target directory",
-          },
           apiKey: {
             type: "string",
             default: "",
@@ -42,11 +36,8 @@ yargs(hideBin(process.argv))
         process.exit(1);
       }
       const entrypoint = path.resolve(argv.entrypoint);
-      const targetDir = argv.targetDir
-        ? path.resolve(argv.targetDir)
-        : path.dirname(entrypoint);
 
-      annotateOpenAICommandHandler(entrypoint, targetDir, argv.apiKey);
+      annotateOpenAICommandHandler(entrypoint, argv.apiKey);
     },
   )
   .command(
@@ -59,12 +50,6 @@ yargs(hideBin(process.argv))
           type: "string",
         })
         .options({
-          targetDir: {
-            type: "string",
-            default: "",
-            alias: "t",
-            description: "Target directory",
-          },
           output: {
             type: "string",
             default: "",
@@ -78,13 +63,11 @@ yargs(hideBin(process.argv))
         console.error("Missing entrypoint file");
         process.exit(1);
       }
+
       const entrypoint = path.resolve(argv.entrypoint);
-      const targetDir = argv.targetDir
-        ? path.resolve(argv.targetDir)
-        : path.dirname(entrypoint);
       const outputDir = argv.output ? path.resolve(argv.output) : process.cwd();
 
-      splitCommandHandler(entrypoint, targetDir, outputDir);
+      splitCommandHandler(entrypoint, outputDir);
     },
   )
   .command(

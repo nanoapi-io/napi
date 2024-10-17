@@ -25,7 +25,6 @@ export const splitSchema = z.object({
   entrypointPath: z.string().refine((val) => isValidFilePath(val), {
     message: "Invalid file path",
   }),
-  targetDir: z.string().optional(),
   outputDir: z.string().optional(),
 });
 

@@ -1,6 +1,5 @@
 export async function splitCodebase(payload: {
   entrypointPath: string;
-  targetDir?: string;
   outputDir?: string;
 }) {
   const response = await fetch("/api/split", {
