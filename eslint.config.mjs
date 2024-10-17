@@ -11,6 +11,6 @@ export default tseslint.config(
   ...tseslint.configs.stylistic,
   eslintPluginPrettierRecommended,
   {
-    ignores: ["node_modules", "dist", "app_dist", "nanoapi-split"],
-  }
+    ignores: ["**/node_modules", "packages/app/dist", "packages/cli/dist"],
+  },
 );

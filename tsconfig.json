@@ -1,13 +1,5 @@
 {
-  "compilerOptions": {
-    "target": "es2016",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "strict": true,
-    "outDir": "./dist",
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "src/**/*.test.ts", "src/app/**/*"]
+  "extends": "./tsconfig.base.json",
+  "include": ["packages/**/*"],
+  "exclude": ["node_modules/**/*", "dist/**/*"]
 }

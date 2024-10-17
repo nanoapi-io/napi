@@ -1,51 +1,28 @@
 {
   "name": "nanoapi",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
   "workspaces": [
-    "src/*"
+    "packages/*"
   ],
   "scripts": {
-    "dev:app": "npm run dev --workspace src/app",
-    "dev:cli": "NODE_ENV=development nodemon src/index.ts",
-    "build:app": "npm run build --workspace src/app",
-    "build:cli": "tsc",
-    "build:copy-app-build": "cp -r src/app/dist dist/app_dist",
-    "build": "npm run build:cli && npm run build:app &&  npm run build:copy-app-build",
+    "dev": "NODE_ENV=development run dev --workspaces",
+    "build:cleanup": "rm -rf dist",
+    "build:packages": "npm run build --workspaces && cp -r packages/cli/dist dist && cp -r packages/app/dist dist/app_dist",
+    "build:copy-dist": "cp -r packages/cli/dist dist && cp -r packages/app/dist dist/app_dist",
+    "build": "npm run build:cleanup && npm run build:packages && npm run build:copy-dist",
     "start": "node dist/index.js",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "test": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "^9.11.1",
-    "@types/eslint__js": "^8.42.3",
-    "@types/express": "^5.0.0",
-    "@types/node": "^18.19.54",
-    "@types/yargs": "^17.0.33",
-    "concurrently": "^9.0.1",
+    "concurrently": "^8.0.1",
     "eslint": "^9.11.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "nodemon": "^3.1.7",
     "prettier": "3.3.3",
-    "ts-node": "^10.9.2",
     "typescript": "^5.6.2",
-    "typescript-eslint": "^8.8.0",
     "vitest": "^2.1.1"
-  },
-  "dependencies": {
-    "dependency-tree": "^11.0.1",
-    "express": "^4.21.1",
-    "http-proxy-middleware": "^3.0.3",
-    "openai": "^4.67.2",
-    "tree-sitter": "^0.21.1",
-    "tree-sitter-javascript": "^0.23.0",
-    "tree-sitter-typescript": "^0.23.0",
-    "yargs": "^17.7.2",
-    "zod": "^3.23.8"
   }
 }

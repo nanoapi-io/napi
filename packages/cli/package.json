@@ -1,0 +1,31 @@
+{
+  "name": "cli",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^18.19.54",
+    "@types/yargs": "^17.0.33",
+    "nodemon": "^3.1.7",
+    "prettier": "3.3.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.8.0",
+    "vitest": "^2.1.1"
+  },
+  "dependencies": {
+    "dependency-tree": "^11.0.1",
+    "express": "^4.21.1",
+    "http-proxy-middleware": "^3.0.3",
+    "openai": "^4.67.2",
+    "tree-sitter": "^0.21.1",
+    "tree-sitter-javascript": "^0.23.0",
+    "tree-sitter-typescript": "^0.23.0",
+    "yargs": "^17.7.2",
+    "zod": "^3.23.8"
+  }
+}
