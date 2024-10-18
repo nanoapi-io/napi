@@ -6,6 +6,7 @@ import { hideBin } from "yargs/helpers";
 import api from "./api";
 import annotateOpenAICommandHandler from "./commands/annotate";
 import splitCommandHandler from "./commands/split";
+import { findAvailablePort, openInBrowser } from "./helper/server";
 
 yargs(hideBin(process.argv))
   .command(
@@ -76,7 +77,7 @@ yargs(hideBin(process.argv))
     (yargs) => {
       return yargs;
     },
-    () => {
+    async () => {
       console.log("Opening NanoAPI UI");
 
       const app = express();
@@ -98,10 +99,14 @@ yargs(hideBin(process.argv))
         app.use(express.static(path.join(__dirname, "../dist/app_dist")));
       }
 
-      app.listen(3000, () => {
-        // TODO nice message and instruction on how to close the server
-        console.log("Server started at http://localhost:3000");
+      const port = await findAvailablePort(3000);
+      app.listen(port, () => {
+        const url = `http://localhost:${port}`;
+        console.log(`Server started at ${url}`);
         console.log("Press Ctrl+C to stop the server");
+        if (process.env.NODE_ENV !== "development") {
+          openInBrowser(url);
+        }
       });
     },
   )
