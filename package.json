@@ -15,7 +15,8 @@
     "start": "node dist/index.js",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "test": "vitest"
+    "test": "vitest",
+    "release:build": "npm run build && pkg ./package.json"
   },
   "devDependencies": {
     "concurrently": "^8.0.1",
@@ -25,5 +26,16 @@
     "prettier": "3.3.3",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
+  },
+  "pkg": {
+    "assets": [
+      "node_modules/tree-sitter/**/*",
+      "node_modules/openai/**/*",
+      "dist/**/*"
+    ]
+  },
+  "bin": "dist/index.js",
+  "dependencies": {
+    "pkg": "^5.8.1"
   }
 }
