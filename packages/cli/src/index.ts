@@ -38,7 +38,7 @@ yargs(hideBin(process.argv))
       const entrypoint = path.resolve(argv.entrypoint);
 
       annotateOpenAICommandHandler(entrypoint, argv.apiKey);
-    }
+    },
   )
   .command(
     "split [entrypoint]",
@@ -68,7 +68,7 @@ yargs(hideBin(process.argv))
       const outputDir = argv.output ? path.resolve(argv.output) : process.cwd();
 
       splitCommandHandler(entrypoint, outputDir);
-    }
+    },
   )
   .command(
     "ui",
@@ -92,7 +92,7 @@ yargs(hideBin(process.argv))
           createProxyMiddleware({
             target: targetServiceUrl,
             changeOrigin: true,
-          })
+          }),
         );
       } else {
         app.use(express.static(path.join(__dirname, "../dist/app_dist")));
@@ -103,6 +103,6 @@ yargs(hideBin(process.argv))
         console.log("Server started at http://localhost:3000");
         console.log("Press Ctrl+C to stop the server");
       });
-    }
+    },
   )
   .parse();

@@ -1,22 +1,25 @@
 {
   "name": "nanoapi",
-  "version": "1.0.0",
-  "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/app",
+    "packages/cli"
   ],
   "scripts": {
     "dev:app": "npm run dev --workspace packages/app",
     "dev:cli": "NODE_ENV=development npm run dev --workspace packages/cli",
-    "build:cleanup": "rm -rf dist",
-    "build:packages": "npm run build --workspaces && cp -r packages/cli/dist dist && cp -r packages/app/dist dist/app_dist",
-    "build:copy-dist": "cp -r packages/cli/dist dist && cp -r packages/app/dist dist/app_dist",
-    "build": "npm run build:cleanup && npm run build:packages && npm run build:copy-dist",
-    "start": "node dist/index.js",
+    "build:cleanup": "rm -rf packages/cli/dist && rm -rf packages/app/dist",
+    "build:packages": "npm run build --workspaces",
+    "build:copy-dist": "cp -r packages/app/dist packages/cli/dist/app_dist",
+    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - packages/cli/dist/index.js > temp && mv temp packages/cli/dist/index.js && chmod +x packages/cli/dist/index.js",
+    "build": "npm run build:cleanup && npm run build:packages && npm run build:copy-dist && npm run build:add-shebang",
+    "start": "npm run start --workspace packages/cli",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "test": "vitest",
-    "release:build": "npm run build && pkg ./package.json"
+    "npm:publish": "npm run npm:publish --workspace packages/cli",
+    "binaries:cleanup": "rm -rf packages/cli/binaries",
+    "binaries:build": "npm run binaries:build --workspace packages/cli",
+    "binaries": "npm run binaries:cleanup && npm run binaries:build"
   },
   "devDependencies": {
     "concurrently": "^8.0.1",
@@ -26,16 +29,5 @@
     "prettier": "3.3.3",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"
-  },
-  "pkg": {
-    "assets": [
-      "node_modules/tree-sitter/**/*",
-      "node_modules/openai/**/*",
-      "dist/**/*"
-    ]
-  },
-  "bin": "dist/index.js",
-  "dependencies": {
-    "pkg": "^5.8.1"
   }
 }
