@@ -11,31 +11,46 @@ import { getParserLanguageFromFile, resolveFilePath } from "./file";
 import { Dependencies, Endpoint } from "./types";
 
 // extract the dependencies from the AST
-export function getDependencyTree(
-  filePath: string,
-  visited = new Set<string>(),
-) {
-  const language = getParserLanguageFromFile(filePath);
-  const parser = new Parser();
-  parser.setLanguage(language);
+export function getDependencyTree(filePath: string): Dependencies {
+  const dependencies: Dependencies = {};
 
-  const sourceCode = fs.readFileSync(filePath, "utf8");
-  const tree = parser.parse(sourceCode);
+  function buildTree(
+    currentFilePath: string,
+    visited = new Set<string>(),
+  ): Dependencies {
+    if (visited.has(currentFilePath)) {
+      return {};
+    }
+    visited.add(currentFilePath);
 
-  let imports: string[] = [];
-  if (["javascript", "typescript"].includes(language.name)) {
-    imports = extractJavascriptFileImports(tree.rootNode);
-  } else {
-    throw new Error(`Unsupported language: ${language.language}`);
+    const language = getParserLanguageFromFile(currentFilePath);
+    const parser = new Parser();
+    parser.setLanguage(language);
+
+    const sourceCode = fs.readFileSync(currentFilePath, "utf8");
+    const tree = parser.parse(sourceCode);
+
+    let imports: string[] = [];
+    if (["javascript", "typescript"].includes(language.name)) {
+      imports = extractJavascriptFileImports(tree.rootNode);
+    } else {
+      throw new Error(`Unsupported language: ${language.name}`);
+    }
+
+    const currentDependencies: Dependencies = {};
+
+    imports.forEach((importPath) => {
+      const resolvedPath = resolveFilePath(importPath, currentFilePath);
+      if (resolvedPath && fs.existsSync(resolvedPath)) {
+        currentDependencies[resolvedPath] = buildTree(resolvedPath, visited);
+      }
+    });
+
+    return currentDependencies;
   }
 
-  const dependencies: Dependencies = {};
-  imports.forEach((importPath) => {
-    const resolvedPath = resolveFilePath(importPath, filePath);
-    if (resolvedPath && fs.existsSync(resolvedPath)) {
-      dependencies[resolvedPath] = getDependencyTree(resolvedPath, visited);
-    }
-  });
+  // Initialize the dependency tree with the top parent file
+  dependencies[filePath] = buildTree(filePath);
 
   return dependencies;
 }
