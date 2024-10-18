@@ -1,11 +1,11 @@
+import express from "express";
+import { createProxyMiddleware } from "http-proxy-middleware";
+import path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import splitCommandHandler from "./commands/split";
-import path from "path";
-import annotateOpenAICommandHandler from "./commands/annotate";
-import express from "express";
 import api from "./api";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import annotateOpenAICommandHandler from "./commands/annotate";
+import splitCommandHandler from "./commands/split";
 
 yargs(hideBin(process.argv))
   .command(
@@ -38,7 +38,7 @@ yargs(hideBin(process.argv))
       const entrypoint = path.resolve(argv.entrypoint);
 
       annotateOpenAICommandHandler(entrypoint, argv.apiKey);
-    },
+    }
   )
   .command(
     "split [entrypoint]",
@@ -68,7 +68,7 @@ yargs(hideBin(process.argv))
       const outputDir = argv.output ? path.resolve(argv.output) : process.cwd();
 
       splitCommandHandler(entrypoint, outputDir);
-    },
+    }
   )
   .command(
     "ui",
@@ -92,10 +92,11 @@ yargs(hideBin(process.argv))
           createProxyMiddleware({
             target: targetServiceUrl,
             changeOrigin: true,
-          }),
+          })
         );
       } else {
-        app.use(express.static(path.join(__dirname, "app_dist")));
+        console.log(path.join(__dirname, "../dist/app_dist"));
+        app.use(express.static(path.join(__dirname, "../dist/app_dist")));
       }
 
       app.listen(3000, () => {
@@ -103,6 +104,6 @@ yargs(hideBin(process.argv))
         console.log("Server started at http://localhost:3000");
         console.log("Press Ctrl+C to stop the server");
       });
-    },
+    }
   )
   .parse();
