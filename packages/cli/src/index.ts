@@ -95,7 +95,6 @@ yargs(hideBin(process.argv))
           })
         );
       } else {
-        console.log(path.join(__dirname, "../dist/app_dist"));
         app.use(express.static(path.join(__dirname, "../dist/app_dist")));
       }
 
