@@ -2,7 +2,8 @@
   "name": "@nanoapi.io/nanoapi",
   "version": "1.0.7",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "bin": {
     "napi": "./dist/index.js"
