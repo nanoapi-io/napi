@@ -37,6 +37,9 @@ jobs:
       - name: Generate binaries
         run: npm run binaries
 
+      - name: Login to npm registry
+        run: npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
+
       - name: Run release-it
         run: npm run release -- --ci --${{ github.event.inputs.release_type }}
         env:
