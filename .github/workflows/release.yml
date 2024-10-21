@@ -37,21 +37,8 @@ jobs:
       - name: Generate binaries
         run: npm run binaries
 
-      - name: Run release process
-        run: |
-          npm run release -- --branches=main --release-as=${{ github.event.inputs.release_type }}
+      - name: Run release-it
+        run: npm run release -- --ci --${{ github.event.inputs.release_type }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Update Changelog
-        run: |
-          TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
-          echo "## [${{ github.event.inputs.release_type }}] - $TIMESTAMP" >> CHANGELOG.md
-          echo "${{ github.event.inputs.changelog }}" >> CHANGELOG.md
-          echo "" >> CHANGELOG.md
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: "[skip ci] update change log"
