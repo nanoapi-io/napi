@@ -20,23 +20,28 @@
     ],
     "outputPath": "binaries"
   },
-  "release": {
-    "branches": ["main"],
-    "plugins": [
-      "@semantic-release/commit-analyzer",
-      "@semantic-release/release-notes-generator",
-      "@semantic-release/changelog",
-      "@semantic-release/npm",
-      "@semantic-release/github",
-      [
-        "@semantic-release/git",
-        {
-          "assets": ["package.json", "CHANGELOG.md"],
-          "message":
-            "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-        }
+  "release-it": {
+    "$schema": "https://unpkg.com/release-it/schema/release-it.json",
+    "github": {
+      "release": true,
+      "assets": [
+        "./binaries/nanoapi-linux",
+        "./binaries/nanoapi-macos",
+        "./binaries/nanoapi-win.exe"
       ]
-    ]
+    },
+    "npm": {
+      "publish": true
+    },
+    "plugins": {
+      "@release-it/bumper": {
+        "in": "package.json",
+        "out": "package.json"
+      },
+      "@release-it/keep-a-changelog": {
+        "filename": "CHANGELOG.md"
+      }
+    }
   },
   "scripts": {
     "dev": "NODE_ENV=development nodemon src/index.ts",
@@ -45,19 +50,18 @@
     "test": "vitest",
     "npm:publish": "npm publish",
     "binaries:build": "pkg ./package.json",
-    "release": "npx semantic-release"
+    "release": "npx release-it"
   },
   "devDependencies": {
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
-    "@semantic-release/npm": "^12.0.1",
+    "@release-it/bumper": "^6.0.1",
+    "@release-it/keep-a-changelog": "^5.0.0",
     "@types/express": "^5.0.0",
     "@types/node": "^18.19.54",
     "@types/yargs": "^17.0.33",
     "nodemon": "^3.1.7",
     "pkg": "^5.8.1",
     "prettier": "3.3.3",
-    "semantic-release": "^24.1.3",
+    "release-it": "^17.10.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.8.0",
