@@ -35,7 +35,7 @@ jobs:
 
       - name: Run release process
         run: |
-          npm run release -- --branches=main --release-as ${{ github.event.inputs.release_type }}
+          npm run release --branches=main --release-as ${{ github.event.inputs.release_type }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
