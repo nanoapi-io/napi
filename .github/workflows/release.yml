@@ -31,7 +31,7 @@ jobs:
         run: npm run build
 
       - name: Generate binaries
-        run: npm run binaries --workspaces packages/cli
+        run: npm run binaries
 
       - name: Run release process
         run: |
