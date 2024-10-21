@@ -27,7 +27,7 @@
     "test": "vitest",
     "npm:publish": "npm publish",
     "binaries:build": "pkg ./package.json",
-    "release": "npm run semantic-release"
+    "release": "npm run release"
   },
   "release": {
     "branches": ["main"],
