@@ -1,6 +1,6 @@
 {
   "name": "@nanoapi.io/nanoapi",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publishConfig": {
     "access": "public"
   },
@@ -36,7 +36,8 @@
       ]
     },
     "npm": {
-      "publish": true
+      "publish": true,
+      "allowSameVersion": true
     },
     "plugins": {
       "@release-it/bumper": {
