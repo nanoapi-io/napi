@@ -1,5 +1,9 @@
 name: Release
 
+permissions:
+  contents: write
+  packages: write
+
 on:
   workflow_dispatch:
     inputs:
@@ -46,6 +50,8 @@ jobs:
           echo "## [${{ github.event.inputs.release_type }}] - $TIMESTAMP" >> CHANGELOG.md
           echo "${{ github.event.inputs.changelog }}" >> CHANGELOG.md
           echo "" >> CHANGELOG.md
-          git add CHANGELOG.md
-          git commit -m "Update changelog for release"
-          git push
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "[skip ci] update change log"
