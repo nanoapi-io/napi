@@ -2,8 +2,7 @@
   "name": "@nanoapi.io/nanoapi",
   "version": "1.0.7",
   "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org"
+    "access": "public"
   },
   "bin": {
     "napi": "./dist/index.js"
@@ -23,6 +22,10 @@
   },
   "release-it": {
     "$schema": "https://unpkg.com/release-it/schema/release-it.json",
+    "git": {
+      "commitMessage": "chore: release v${version}",
+      "tagName": "v${version}"
+    },
     "github": {
       "release": true,
       "assets": [
