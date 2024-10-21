@@ -1,7 +1,5 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.7]
 
-### Added
-
-- Keep-a-changelog plugin added.
+previous version
