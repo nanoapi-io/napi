@@ -42,7 +42,10 @@ jobs:
 
       - name: Update Changelog
         run: |
+          TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+          echo "## [${{ github.event.inputs.release_type }}] - $TIMESTAMP" >> CHANGELOG.md
           echo "${{ github.event.inputs.changelog }}" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
           git add CHANGELOG.md
           git commit -m "Update changelog for release"
           git push
