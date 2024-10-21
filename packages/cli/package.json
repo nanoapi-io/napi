@@ -20,15 +20,6 @@
     ],
     "outputPath": "binaries"
   },
-  "scripts": {
-    "dev": "NODE_ENV=development nodemon src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test": "vitest",
-    "npm:publish": "npm publish",
-    "binaries:build": "pkg ./package.json",
-    "release": "npm run release"
-  },
   "release": {
     "branches": ["main"],
     "plugins": [
@@ -46,6 +37,15 @@
         }
       ]
     ]
+  },
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "npm:publish": "npm publish",
+    "binaries:build": "pkg ./package.json",
+    "release": "npx semantic-release"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
