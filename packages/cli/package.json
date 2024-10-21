@@ -1,6 +1,6 @@
 {
   "name": "@nanoapi.io/nanoapi",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publishConfig": {
     "access": "public"
   },
@@ -24,7 +24,8 @@
     "$schema": "https://unpkg.com/release-it/schema/release-it.json",
     "git": {
       "commitMessage": "chore: release v${version}",
-      "tagName": "v${version}"
+      "tagName": "v${version}",
+      "requireCleanWorkingDir": false
     },
     "github": {
       "release": true,
