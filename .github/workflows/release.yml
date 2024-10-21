@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type: patch, minor, major"
+        required: true
+        default: patch
+      changelog:
+        description: "Changelog description"
+        required: true
+        default: "No changelog provided"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the cli
+        run: npm run build
+
+      - name: Generate binaries
+        run: npm run binaries --workspaces packages/cli
+
+      - name: Run release process
+        run: |
+          npm run release -- --branches=main --release-as ${{ github.event.inputs.release_type }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Update Changelog
+        run: |
+          echo "${{ github.event.inputs.changelog }}" >> CHANGELOG.md
+          git add CHANGELOG.md
+          git commit -m "Update changelog for release"
+          git push

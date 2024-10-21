@@ -19,7 +19,8 @@
     "npm:publish": "npm run npm:publish --workspace packages/cli",
     "binaries:cleanup": "rm -rf packages/cli/binaries",
     "binaries:build": "npm run binaries:build --workspace packages/cli",
-    "binaries": "npm run binaries:cleanup && npm run binaries:build"
+    "binaries": "npm run binaries:cleanup && npm run binaries:build",
+    "release": "npm run release --workspace packages/cli"
   },
   "devDependencies": {
     "concurrently": "^8.0.1",
