@@ -23,7 +23,7 @@
   "release-it": {
     "$schema": "https://unpkg.com/release-it/schema/release-it.json",
     "git": {
-      "commitMessage": "chore: release v${version}",
+      "commitMessage": "[skip ci] chore: release v${version}",
       "tagName": "v${version}",
       "requireCleanWorkingDir": false
     },
