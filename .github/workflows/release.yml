@@ -33,6 +33,11 @@ jobs:
       - name: Generate binaries
         run: npm run binaries
 
+      - name: Login with git
+        run: |
+          git config --global user.email "florian@nanoapi.io"
+          git config --global user.name "Florian Bigot"
+
       - name: Login to npm registry
         run: npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
 
