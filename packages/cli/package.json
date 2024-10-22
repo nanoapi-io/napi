@@ -1,6 +1,6 @@
 {
   "name": "@nanoapi.io/nanoapi",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "publishConfig": {
     "access": "public"
   },
@@ -30,9 +30,7 @@
     "github": {
       "release": true,
       "assets": [
-        "./binaries/nanoapi-linux",
-        "./binaries/nanoapi-macos",
-        "./binaries/nanoapi-win.exe"
+        "binaries/*"
       ]
     },
     "npm": {
