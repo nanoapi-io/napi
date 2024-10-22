@@ -1,6 +1,6 @@
 {
   "name": "@nanoapi.io/nanoapi",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "publishConfig": {
     "access": "public"
   },
@@ -45,7 +45,8 @@
         "out": "package.json"
       },
       "@release-it/keep-a-changelog": {
-        "filename": "CHANGELOG.md"
+        "filename": "CHANGELOG.md",
+        "addUnreleased": true
       }
     }
   },
