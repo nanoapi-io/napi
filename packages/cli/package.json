@@ -1,11 +1,11 @@
 {
   "name": "@nanoapi.io/nanoapi",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "publishConfig": {
     "access": "public"
   },
   "bin": {
-    "napi": "./dist/index.js"
+    "napi": "dist/index.js"
   },
   "pkg": {
     "assets": [

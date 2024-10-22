@@ -11,10 +11,6 @@ on:
         description: "Release type: patch, minor, major"
         required: true
         default: patch
-      changelog:
-        description: "Changelog description"
-        required: true
-        default: "No changelog provided"
 
 jobs:
   release:
