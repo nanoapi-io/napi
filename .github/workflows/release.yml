@@ -40,14 +40,6 @@ jobs:
       - name: Login to npm registry
         run: npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
 
-      - name: Update Changelog
-        run: |
-          sed -i "/## \[Unreleased\]/a\\
-          \n${{ github.event.inputs.changelog }}\n" ./packages/cli/CHANGELOG.md
-          git add ./packages/cli/CHANGELOG.md package.json
-          git commit -m "Update changelog and bump version for release"
-          git push
-
       - name: Run release-it
         run: npm run release -- --ci --${{ github.event.inputs.release_type }}
         env:
