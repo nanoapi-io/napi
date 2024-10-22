@@ -43,8 +43,8 @@ jobs:
       - name: Update Changelog
         run: |
           sed -i "/## \[Unreleased\]/a\\
-          \n${{ github.event.inputs.changelog }}\n" CHANGELOG.md
-          git add CHANGELOG.md package.json
+          \n${{ github.event.inputs.changelog }}\n" ./packages/cli/CHANGELOG.md
+          git add ./packages/cli/CHANGELOG.md package.json
           git commit -m "Update changelog and bump version for release"
           git push
 
