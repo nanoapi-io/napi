@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.0.11] - 2024-10-22
+
+unreleased version
+
 ## [1.0.10] - 2024-10-22
 
 unreleased version
