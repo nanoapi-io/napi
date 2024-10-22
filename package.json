@@ -1,16 +1,34 @@
 {
-  "name": "napi-compile",
-  "version": "1.0.0",
-  "description": "Application for compiling and tree-shaking node/express projects",
-  "main": "index.js",
-  "type": "module",
+  "name": "nanoapi",
+  "workspaces": [
+    "packages/app",
+    "packages/cli"
+  ],
   "scripts": {
-    "build": "node ."
+    "dev:app": "npm run dev --workspace packages/app",
+    "dev:cli": "NODE_ENV=development npm run dev --workspace packages/cli",
+    "build:cleanup": "rm -rf packages/cli/dist && rm -rf packages/app/dist",
+    "build:packages": "npm run build --workspaces",
+    "build:copy-dist": "cp -r packages/app/dist packages/cli/dist/app_dist",
+    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - packages/cli/dist/index.js > temp && mv temp packages/cli/dist/index.js && chmod +x packages/cli/dist/index.js",
+    "build": "npm run build:cleanup && npm run build:packages && npm run build:copy-dist && npm run build:add-shebang",
+    "start": "npm run start --workspace packages/cli",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "test": "vitest",
+    "npm:publish": "npm run npm:publish --workspace packages/cli",
+    "binaries:cleanup": "rm -rf packages/cli/binaries",
+    "binaries:build": "npm run binaries:build --workspace packages/cli",
+    "binaries": "npm run binaries:cleanup && npm run binaries:build",
+    "release": "npm run release --workspace packages/cli"
   },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "prettier": "^2.8.8",
-    "yargs": "^17.7.2"
+  "devDependencies": {
+    "concurrently": "^8.0.1",
+    "eslint": "^9.11.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "prettier": "3.3.3",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
   }
 }
