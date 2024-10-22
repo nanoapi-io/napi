@@ -1,6 +1,6 @@
 {
-  "name": "@nanoapi.io/nanoapi",
-  "version": "1.0.15",
+  "name": "@nanoapi.io/napi",
+  "version": "0.0.1",
   "publishConfig": {
     "access": "public"
   },

@@ -1,5 +1,5 @@
 {
-  "name": "nanoapi",
+  "name": "napi",
   "workspaces": [
     "packages/app",
     "packages/cli"
