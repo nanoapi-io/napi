@@ -46,7 +46,7 @@ async function promptForEntryPointPath(currentPath: string) {
 }
 
 export default async function initCommandHandler(workdir: string) {
-  if (!getConfigFromWorkDir(workdir)) {
+  if (getConfigFromWorkDir(workdir)) {
     const response = await prompts({
       type: "confirm",
       name: "confirm",
