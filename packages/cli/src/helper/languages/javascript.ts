@@ -97,13 +97,13 @@ export function removeInvalidJavascriptFileImports(
       (n) => n.type === "identifier",
     );
     if (!importIdentifier) {
-      const namespacImport = importClause.namedChildren.find(
+      const namespaceImport = importClause.namedChildren.find(
         (n) => n.type === "namespace_import",
       );
-      if (!namespacImport) {
+      if (!namespaceImport) {
         throw new Error("Invalid import statement, missing import identifier");
       }
-      importIdentifier = namespacImport.namedChildren.find(
+      importIdentifier = namespaceImport.namedChildren.find(
         (n) => n.type === "identifier",
       );
       if (!importIdentifier) {

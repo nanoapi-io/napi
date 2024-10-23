@@ -6,3 +6,8 @@ export interface Endpoint {
   parentFilePaths: string[];
   childrenFilePaths: string[];
 }
+
+export interface NapiConfig {
+  entrypoint: string;
+  out: string;
+}

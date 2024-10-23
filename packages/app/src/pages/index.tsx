@@ -1,14 +1,16 @@
-import { Button, DataList } from "@radix-ui/themes";
-import { useState } from "react";
+import { Button, DataList, Skeleton } from "@radix-ui/themes";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import ApiTree from "../components/ApiTree/ApiTree";
-import LoadCodeBaseDialog from "../components/LoadCodeBaseDialog";
 import { scanCodebase } from "../service/api/scan";
 import { splitCodebase } from "../service/api/split";
 import { syncEndpoints } from "../service/api/sync";
 import { Endpoint } from "../service/api/types";
+import { getConfig } from "../service/api/config";
 
 export default function App() {
+  const initialized = useRef(false);
+
   const [chartLoading, setChartLoading] = useState<boolean>(false);
   const [busy, setBusy] = useState<boolean>(false);
 
@@ -17,33 +19,6 @@ export default function App() {
 
   const [isOutOfSynced, setIsOutOfSynced] = useState<boolean>(false);
   const [localEndpoints, setLocalEndpoints] = useState<Endpoint[]>([]);
-
-  function delay(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  async function handleOnLoad(entrypoint: string, outputDir?: string) {
-    setChartLoading(true);
-    setBusy(true);
-    try {
-      setEntrypoint(entrypoint);
-      setOutputDir(outputDir);
-      const endpointsPromise = scanCodebase({
-        entrypointPath: entrypoint,
-      });
-      toast.promise(endpointsPromise, {
-        success: "Codebase loaded",
-        error: "Failed to load codebase",
-        pending: "Loading codebase...",
-      });
-      await delay(250);
-      setLocalEndpoints((await endpointsPromise).endpoints);
-      setIsOutOfSynced(false);
-    } finally {
-      setChartLoading(false);
-      setBusy(false);
-    }
-  }
 
   function handleChangeEndpointGroup(group: string, endpoint: Endpoint) {
     setBusy(true);
@@ -78,7 +53,6 @@ export default function App() {
         pending: "Syncing local changes...",
       });
       await syncPromise;
-      await delay(250);
       setIsOutOfSynced(false);
     } finally {
       setBusy(false);
@@ -98,17 +72,52 @@ export default function App() {
         pending: "Splitting codebase...",
       });
       await splitPromise;
-      await delay(250);
     } finally {
       setBusy(false);
     }
   }
 
+  useEffect(() => {
+    async function handleOnLoad() {
+      setChartLoading(true);
+      setBusy(true);
+      try {
+        const configPromise = getConfig();
+        toast.promise(configPromise, {
+          error: "Failed to load codebase",
+          pending: "Loading codebase...",
+        });
+
+        const napiConfig = await configPromise;
+        setEntrypoint(napiConfig.entrypoint);
+        setOutputDir(napiConfig.out);
+
+        const endpointsPromise = scanCodebase({
+          entrypointPath: napiConfig.entrypoint,
+        });
+        toast.promise(endpointsPromise, {
+          success: "Codebase loaded",
+          error: "Failed to load codebase",
+        });
+
+        setLocalEndpoints((await endpointsPromise).endpoints);
+        setIsOutOfSynced(false);
+      } finally {
+        setChartLoading(false);
+        setBusy(false);
+      }
+    }
+
+    if (!initialized.current) {
+      initialized.current = true;
+      handleOnLoad();
+    }
+  }, []);
+
   return (
     <div className="flex flex-col">
       <div className="mb-2 flex justify-between items-center gap-2">
         <div className="flex gap-2">
-          <LoadCodeBaseDialog busy={busy} onLoad={handleOnLoad} />
           {localEndpoints.length > 0 && (
             <>
               {isOutOfSynced && (
@@ -156,12 +165,29 @@ export default function App() {
         )}
       </div>
       <div style={{ height: "calc(100vh - 170px)", width: "100hh" }}>
-        <ApiTree
-          chartLoading={chartLoading}
-          busy={busy}
-          endpoints={localEndpoints}
-          onChangeEndpointGroup={handleChangeEndpointGroup}
-        />
+        {chartLoading ? (
+          <div className="h-full flex flex-col justify-center items-center gap-5">
+            <Skeleton width="200px" height="75px" />
+            <div className="flex gap-5">
+              <Skeleton width="200px" height="75px" />
+              <Skeleton width="200px" height="75px" />
+            </div>
+            <div className="flex gap-5">
+              <Skeleton width="200px" height="75px" />
+              <Skeleton width="200px" height="75px" />
+              <Skeleton width="200px" height="75px" />
+              <Skeleton width="200px" height="75px" />
+            </div>
+          </div>
+        ) : localEndpoints.length > 0 ? (
+          <ApiTree
+            busy={busy}
+            endpoints={localEndpoints}
+            onChangeEndpointGroup={handleChangeEndpointGroup}
+          />
+        ) : (
+          <div />
+        )}
       </div>
     </div>
   );
