@@ -8,7 +8,6 @@ export default function splitCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
   outputDir: string, // Path to the output directory
 ) {
-  const splitDirName = "nanoapi-split";
   let endpointIndex = 0;
   const endpointMap: Record<number, { method?: string; path: string }> = {};
 
@@ -27,10 +26,6 @@ export default function splitCommandHandler(
   }
 
   // Store the processed annotations in the output directory
-  const annotationFilePath = path.join(
-    outputDir,
-    splitDirName,
-    "annotations.json",
-  );
+  const annotationFilePath = path.join(outputDir, "annotations.json");
   fs.writeFileSync(annotationFilePath, JSON.stringify(endpointMap));
 }

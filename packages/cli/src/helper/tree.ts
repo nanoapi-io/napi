@@ -42,9 +42,8 @@ export function splitPath(
   endpointIndex: number,
 ) {
   const targetDir = path.dirname(entrypointPath);
-  const splitDirectory = path.join(outputDirectory, "nanoapi-split");
   const annotationDirectory = path.join(
-    splitDirectory,
+    outputDirectory,
     endpointIndex.toString(),
   );
 

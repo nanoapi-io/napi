@@ -6,7 +6,7 @@ import {
   Node,
   Edge,
 } from "@xyflow/react";
-import { Button, Skeleton } from "@radix-ui/themes";
+import { Button } from "@radix-ui/themes";
 import { Endpoint } from "../../service/api/types";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import { generateDarkColors } from "../../service/groupColor";
@@ -14,7 +14,6 @@ import MethodNodeContent from "./MethodNodeContent";
 import GroupNodeContent from "./GroupNodeContent";
 
 export default function ApiTree(props: {
-  chartLoading: boolean;
   busy: boolean;
   endpoints: Endpoint[];
   onChangeEndpointGroup: (group: string, endpoint: Endpoint) => void;
@@ -161,21 +160,7 @@ export default function ApiTree(props: {
     setEdges(layoutedEdges);
   }
 
-  return props.chartLoading ? (
-    <div className="h-full flex flex-col justify-center items-center gap-5">
-      <Skeleton width="200px" height="75px" />
-      <div className="flex gap-5">
-        <Skeleton width="200px" height="75px" />
-        <Skeleton width="200px" height="75px" />
-      </div>
-      <div className="flex gap-5">
-        <Skeleton width="200px" height="75px" />
-        <Skeleton width="200px" height="75px" />
-        <Skeleton width="200px" height="75px" />
-        <Skeleton width="200px" height="75px" />
-      </div>
-    </div>
-  ) : (
+  return (
     <div className="relative h-full">
       <Button
         className="absolute top-4 left-4 z-10"
