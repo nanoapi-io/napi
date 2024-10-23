@@ -16,7 +16,7 @@ export default function DefaultLayout({
           <img src="/logo.png" alt="logo" className="w-20 h-20" />
           <span className="text-3xl text-white">NanoAPI</span>
         </a>
-        <a href="https://docs.nanoapi.io" target="_blank">
+        <a href="https://nanoapi.io/docs" target="_blank">
           <Button color="plum">Documentation</Button>
         </a>
       </div>
