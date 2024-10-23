@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Fix confirm prompt when running init command
+
 ## [0.0.2] - 2024-10-23
 
 Add .napirc config
