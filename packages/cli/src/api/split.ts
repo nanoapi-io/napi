@@ -10,7 +10,6 @@ import { z } from "zod";
 export function split(
   payload: z.infer<typeof splitSchema>,
 ): SplitCodebaseResponsePayload {
-  const splitDirName = "nanoapi-split";
   let endpointIndex = 0;
   const endpointMap: Record<number, { method?: string; path: string }> = {};
 
@@ -39,12 +38,8 @@ export function split(
   }
 
   // Store the processed annotations in the output directory
-  const annotationFilePath = path.join(
-    payload.outputDir,
-    splitDirName,
-    "annotations.json",
-  );
-  fs.writeFileSync(annotationFilePath, JSON.stringify(endpointMap));
+  const annotationFilePath = path.join(payload.outputDir, "annotations.json");
+  fs.writeFileSync(annotationFilePath, JSON.stringify(endpointMap, null, 2));
 
   return { endpoints, success: true };
 }

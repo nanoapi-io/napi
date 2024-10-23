@@ -71,7 +71,7 @@ export default async function annotateOpenAICommandHandler(
 
   const chatCompletion = await openAIClient.chat.completions.create({
     messages: messages,
-    model: "gpt-4o-mini",
+    model: "gpt-4-turbo",
   });
 
   const responseContent = chatCompletion.choices[0].message.content as string;

@@ -7,15 +7,13 @@ import Typescript from "tree-sitter-typescript";
 import Parser from "tree-sitter";
 
 export function cleanupOutputDir(outputDir: string) {
-  const splitDirectory = path.join(outputDir, "nanoapi-split");
-  if (fs.existsSync(splitDirectory)) {
-    fs.rmSync(splitDirectory, { recursive: true });
+  if (fs.existsSync(outputDir)) {
+    fs.rmSync(outputDir, { recursive: true });
   }
 }
 
 export function createOutputDir(outputDir: string) {
-  const splitDirectory = path.join(outputDir, "nanoapi-split");
-  fs.mkdirSync(splitDirectory, { recursive: true });
+  fs.mkdirSync(outputDir, { recursive: true });
 }
 
 export function getParserLanguageFromFile(filePath: string) {
