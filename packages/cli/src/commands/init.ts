@@ -68,5 +68,5 @@ export default async function initCommandHandler(workdir: string) {
 
   createConfig(napiConfig, workdir);
 
-  console.log("Successfully created .napirc");
+  console.info("Successfully created .napirc");
 }

@@ -132,8 +132,8 @@ yargs(hideBin(process.argv))
       const port = await findAvailablePort(3000);
       app.listen(port, () => {
         const url = `http://localhost:${port}`;
-        console.log(`Server started at ${url}`);
-        console.log("Press Ctrl+C to stop the server");
+        console.info(`Server started at ${url}`);
+        console.info("Press Ctrl+C to stop the server");
         openInBrowser(url);
       });
     },

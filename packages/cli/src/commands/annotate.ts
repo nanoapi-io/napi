@@ -7,7 +7,7 @@ export default async function annotateOpenAICommandHandler(
   entrypoint: string, // Path to the entrypoint file
   openAIApiKey: string, // OpenAI API key
 ) {
-  console.log("Annotating program...");
+  console.info("Annotating program...");
   const tree = getDependencyTree(entrypoint);
 
   const openAIConfig = {
@@ -85,7 +85,7 @@ export default async function annotateOpenAICommandHandler(
     fs.writeFileSync(filePath, content);
   }
 
-  console.log(
+  console.info(
     "Annotation complete. OpenAI can make mistakes, so please review the annotations.",
   );
 }
