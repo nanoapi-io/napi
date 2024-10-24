@@ -1,26 +1,35 @@
-import { Button } from "@radix-ui/themes";
-
 export default function DefaultLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="px-5 bg-[#6C5CE7] flex items-center justify-between drop-shadow-lg">
+    <div className="flex flex-col min-h-screen bg-background-dark text-text-dark">
+      <div className="px-5 flex items-center gap-5">
         <a
-          className="flex items-center gap-1"
+          className="flex items-center gap-1 text-gray-dark no-underline	"
           href="https://nanoapi.io"
           target="_blank"
         >
           <img src="/logo.png" alt="logo" className="w-20 h-20" />
-          <span className="text-3xl text-white">NanoAPI</span>
+          <span className="text-3xl">NanoAPI</span>
         </a>
-        <a href="https://nanoapi.io/docs" target="_blank">
-          <Button color="plum">Documentation</Button>
+        <a
+          href="https://nanoapi.io/docs"
+          target="_blank"
+          className="text-gray-dark no-underline hover:underline"
+        >
+          Documentation
+        </a>
+        <a
+          href="https://nanoapi.io/docs/faqs"
+          target="_blank"
+          className="text-gray-dark no-underline hover:underline"
+        >
+          Help
         </a>
       </div>
-      <div className="flex-grow bg-[#F5F5F5] px-5 py-3">{children}</div>
+      <div className="flex-grow px-5">{children}</div>
     </div>
   );
 }
