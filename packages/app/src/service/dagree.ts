@@ -1,14 +1,19 @@
 import { Node, Edge, Position } from "@xyflow/react";
 import dagre from "@dagrejs/dagre";
 
-export function layoutNodesAndEdges(
-  nodes: Node[],
-  edges: Edge[],
-  options: {
-    nodeWidth: number;
-    nodeHeight: number;
-  } = { nodeWidth: 300, nodeHeight: 100 },
-) {
+function getNodeHeight(node: Node) {
+  if (node.type === "groupNode") {
+    return 100;
+  }
+  if (node.type === "endpointNode") {
+    return 200;
+  }
+  return 100;
+}
+
+export function layoutNodesAndEdges(nodes: Node[], edges: Edge[]) {
+  const nodeWidth = 300;
+
   const direction = "TB";
 
   const dagreGraph = new dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({}));
@@ -19,8 +24,8 @@ export function layoutNodesAndEdges(
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, {
-      width: options.nodeWidth,
-      height: options.nodeHeight,
+      width: nodeWidth,
+      height: getNodeHeight(node),
     });
   });
 
@@ -40,10 +45,10 @@ export function layoutNodesAndEdges(
         : ("bottom" as Position),
       // We are shifting the dagre node position (anchor=center center) to the top left
       // so it matches the React Flow node anchor point (top left).
-      width: options.nodeWidth,
+      width: nodeWidth,
       position: {
-        x: nodeWithPosition.x - options.nodeWidth / 2,
-        y: nodeWithPosition.y - options.nodeHeight / 2,
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - getNodeHeight(node) / 2,
       },
     };
 

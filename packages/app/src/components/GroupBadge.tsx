@@ -2,7 +2,11 @@ import { Badge } from "@radix-ui/themes";
 
 export default function GroupBadge(props: { name: string }) {
   return (
-    <Badge color="gray" variant="solid" radius="none" size="1">
+    <Badge
+      radius="full"
+      size="2"
+      className="text-text-dark bg-[#FFFFFF1A] border border-primary-dark"
+    >
       {props.name}
     </Badge>
   );
