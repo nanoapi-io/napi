@@ -33,10 +33,10 @@ ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Theme>
       <ReactFlowProvider>
-        <>
+        <div className="font-jakarta">
           <ToastContainer />
           <RouterProvider router={router} />
-        </>
+        </div>
       </ReactFlowProvider>
     </Theme>
   </React.StrictMode>,

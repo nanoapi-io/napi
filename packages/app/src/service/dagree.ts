@@ -6,7 +6,7 @@ function getNodeHeight(node: Node) {
     return 100;
   }
   if (node.type === "endpointNode") {
-    return 150;
+    return 200;
   }
   return 100;
 }

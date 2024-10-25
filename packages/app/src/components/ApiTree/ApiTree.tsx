@@ -102,7 +102,7 @@ export default function ApiTree(props: {
             source: parentId,
             target: nodeId,
             type: "customEdge",
-            animated: true,
+            animated: false,
           });
         }
 
@@ -150,7 +150,7 @@ export default function ApiTree(props: {
           source: parentId,
           target: methodNodeId,
           type: "step",
-          animated: true,
+          animated: false,
         });
       });
     }

@@ -7,6 +7,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        jakarta: ['"Plus Jakarta Sans"', "sans-serif"],
+      },
       colors: {
         background: {
           dark: "#0B0A32",
@@ -19,6 +22,10 @@ export default {
         surface: {
           dark: "#3A397C",
           light: "#3A397C",
+        },
+        secondarySurface: {
+          dark: "#25235C",
+          light: "#25235C",
         },
         border: {
           dark: "#3A397C",
