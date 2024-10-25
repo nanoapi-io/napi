@@ -1,10 +1,15 @@
 # How to Contribute to NanoAPI
 
+## Contributor License Agreement
+<!-- This section always comes first -->
+- By submitting code as an individual you agree to the [individual contributor license agreement](/CLA/INDIVIDUAL_CONTRIBUTOR_LICENSE_AGREEMENT.md).
+- By submitting code as an entity you agree to the [corporate contributor license agreement](/CLA/CORPORATE_CONTRIBUTOR_LICENSE_AGREEMENT.md).
+
+## Housekeeping
+
 First off, thank you for being here. You dropped this: 👑
 
 Here are some guidelines to help you get started contributing to NanoAPI.
-
-## Housekeeping
 
 1. Follow our [Code of Conduct](/.github/CODE_OF_CONDUCT.md).
 2. Check for open issues before creating a new one.
