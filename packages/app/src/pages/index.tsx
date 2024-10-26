@@ -117,7 +117,7 @@ export default function App() {
   return (
     <div className="flex flex-col">
       <div
-        className="bg-secondaryBackground-dark rounded-3xl overflow-hidden"
+        className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl overflow-hidden"
         style={{ height: "calc(100vh - 100px)", width: "100hh" }}
       >
         {chartLoading ? (
