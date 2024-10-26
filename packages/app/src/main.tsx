@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import ReactDOM from "react-dom/client";
 import { ReactFlowProvider } from "@xyflow/react";
 import { Theme } from "@radix-ui/themes";
@@ -11,6 +11,7 @@ import Index from "./pages/index";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import DefaultLayout from "./layout/default";
 import { ToastContainer } from "react-toastify";
+import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
 
 const router = createHashRouter([
   {
@@ -29,9 +30,11 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <Theme>
+function Main() {
+  const themeContext = useContext(ThemeContext);
+
+  return (
+    <Theme appearance={themeContext.theme}>
       <ReactFlowProvider>
         <div className="font-jakarta">
           <ToastContainer />
@@ -39,5 +42,13 @@ ReactDOM.createRoot(rootElement).render(
         </div>
       </ReactFlowProvider>
     </Theme>
+  );
+}
+
+ReactDOM.createRoot(rootElement).render(
+  <React.StrictMode>
+    <ThemeProvider>
+      <Main />
+    </ThemeProvider>
   </React.StrictMode>,
 );

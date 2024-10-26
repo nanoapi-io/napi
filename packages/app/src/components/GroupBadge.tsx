@@ -5,7 +5,7 @@ export default function GroupBadge(props: { name: string }) {
     <Badge
       radius="full"
       size="2"
-      className="text-text-dark bg-[#FFFFFF1A] border border-primary-dark"
+      className="text-text-light dark:text-text-dark bg-[#FFFFFF1A] border border-primary-light dark:border-primary-dark"
     >
       {props.name}
     </Badge>
