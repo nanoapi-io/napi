@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Change design
+
 ## [0.0.3] - 2024-10-23
 
 Fix confirm prompt when running init command
