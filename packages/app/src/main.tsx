@@ -37,7 +37,7 @@ function Main() {
     <Theme appearance={themeContext.theme}>
       <ReactFlowProvider>
         <div className="font-jakarta">
-          <ToastContainer />
+          <ToastContainer theme={themeContext.theme} />
           <RouterProvider router={router} />
         </div>
       </ReactFlowProvider>
