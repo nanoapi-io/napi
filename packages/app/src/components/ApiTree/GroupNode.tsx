@@ -1,6 +1,9 @@
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
+import { memo } from "react";
 
-export default function GroupNode(props: NodeProps<Node<{ path: string }>>) {
+export default memo(function GroupNode(
+  props: NodeProps<Node<{ path: string }>>,
+) {
   return (
     <>
       <div className="backdrop-blur-sm bg-[#FFFFFF1A] rounded-xl border border-border-light dark:border-border-dark">
@@ -18,4 +21,4 @@ export default function GroupNode(props: NodeProps<Node<{ path: string }>>) {
       </div>
     </>
   );
-}
+});

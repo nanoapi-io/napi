@@ -177,6 +177,15 @@ export default function ApiTree(props: {
     setEdges(layoutedEdges);
   }
 
+  function handleFitView() {
+    reactFlow.fitView();
+    updateZoom();
+  }
+
+  function updateZoom() {
+    setCurrentZoom(reactFlow.getZoom());
+  }
+
   useEffect(() => {
     const element = document.querySelector(".react-flow__panel") as HTMLElement;
     if (element) {
@@ -192,7 +201,7 @@ export default function ApiTree(props: {
       edges={edges}
       onNodesChange={onNodesChange}
       fitView
-      onViewportChange={() => setCurrentZoom(reactFlow.getZoom())} // TODO fix this, does not work
+      onViewportChange={updateZoom}
     >
       <div className="absolute bottom-4 inset-x-4 z-10 flex justify-around">
         <div className="flex gap-5 items-center">
@@ -233,7 +242,7 @@ export default function ApiTree(props: {
               variant="ghost"
               highContrast
               disabled={props.busy}
-              onClick={() => reactFlow.fitView()}
+              onClick={handleFitView}
             >
               <svg
                 width="20"

@@ -4,8 +4,9 @@ import { DataList } from "@radix-ui/themes";
 import EndpointNodeContentDialog from "./EndpointNodeContentDialog";
 import MethodBadge from "../MethodBadge";
 import GroupBadge from "../GroupBadge";
+import { memo } from "react";
 
-export default function EndpointNode(
+export default memo(function EndpointNode(
   props: NodeProps<
     Node<{
       busy: boolean;
@@ -70,4 +71,4 @@ export default function EndpointNode(
       </div>
     </>
   );
-}
+});
