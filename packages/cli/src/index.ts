@@ -18,11 +18,9 @@ if (process.env.NODE_ENV !== "development") {
   process.removeAllListeners("warning");
 }
 
-if (process.env.NAPI_DISABLE_TELEMETRY !== "true") {
-  trackEvent(TelemetryEvents.APP_START, {
-    message: "Napi started with Telemetry enabled",
-  });
-}
+trackEvent(TelemetryEvents.APP_START, {
+  message: "Napi started with Telemetry enabled",
+});
 
 yargs(hideBin(process.argv))
   .options({

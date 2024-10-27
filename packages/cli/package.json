@@ -74,6 +74,7 @@
     "vitest": "^2.1.1"
   },
   "dependencies": {
+    "axios": "^1.7.7",
     "dependency-tree": "^11.0.1",
     "express": "^4.21.1",
     "http-proxy-middleware": "^3.0.3",

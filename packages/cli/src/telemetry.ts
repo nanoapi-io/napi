@@ -1,9 +1,7 @@
-// telemetry.ts
+import axios from "axios";
 import { EventEmitter } from "events";
 import { existsSync, readFileSync, writeFileSync } from "fs";
-import { request } from "http";
 import { join } from "path";
-import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 
 export enum TelemetryEvents {
@@ -27,9 +25,9 @@ export interface TelemetryEvent {
 }
 
 const telemetry = new EventEmitter();
-// TODO: @erbesharat: Deploy mongoose script to GCF and update the endpoint
 const TELEMETRY_ENDPOINT =
-  process.env.TELEMETRY_ENDPOINT || "http://localhost:3000/telemetry";
+  process.env.TELEMETRY_ENDPOINT ||
+  "https://napi-watchdog-api-gateway-33ge7a49.nw.gateway.dev/telemetryHandler";
 const SESSION_FILE_PATH = join("/tmp", "napi_session_id");
 
 // getSessionId generates a new session ID and cache it in SESSION_FILE_PATH
@@ -56,40 +54,17 @@ telemetry.on("event", (data) => {
   sendTelemetryData(data);
 });
 
-const sendTelemetryData = (data: TelemetryEvent) => {
+const sendTelemetryData = async (data: TelemetryEvent) => {
   try {
-    const url = new URL(TELEMETRY_ENDPOINT);
-    const options = {
-      hostname: url.hostname,
-      port: url.port || (url.protocol === "https:" ? 443 : 80),
-      path: url.pathname,
-      method: "POST",
+    await axios.post(TELEMETRY_ENDPOINT, data, {
       headers: {
         "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(JSON.stringify(data)),
         "User-Agent": "napi",
       },
-    };
-
-    const req = request(options, (res) => {
-      let responseData = "";
-      res.on("data", (chunk) => {
-        responseData += chunk;
-      });
-
-      res.on("end", () => {
-        console.info(`Telemetry response: ${res.statusCode} - ${responseData}`);
-      });
+      timeout: 5000,
     });
-
-    req.on("error", (error) => {
-      console.error(`Failed to send telemetry data: ${error}`);
-    });
-
-    req.write(JSON.stringify(data));
-    req.end();
   } catch (error) {
-    console.error(`Error in telemetry setup: ${error}`);
+    console.error(`Failed to send telemetry data: ${error}`);
   }
 };
 
