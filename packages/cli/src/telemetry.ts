@@ -18,6 +18,14 @@ export enum TelemetryEvents {
   USER_ACTION = "user_action",
 }
 
+export interface TelemetryEvent {
+  sessionId: string;
+  eventId: TelemetryEvents;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  data: any;
+  timestamp: string;
+}
+
 const telemetry = new EventEmitter();
 // TODO: @erbesharat: Deploy mongoose script to GCF and update the endpoint
 const TELEMETRY_ENDPOINT =
@@ -48,7 +56,7 @@ telemetry.on("event", (data) => {
   sendTelemetryData(data);
 });
 
-const sendTelemetryData = (data: any) => {
+const sendTelemetryData = (data: TelemetryEvent) => {
   try {
     const url = new URL(TELEMETRY_ENDPOINT);
     const options = {
@@ -85,8 +93,9 @@ const sendTelemetryData = (data: any) => {
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const trackEvent = (eventId: TelemetryEvents, eventData: any) => {
-  const telemetryPayload = {
+  const telemetryPayload: TelemetryEvent = {
     sessionId: SESSION_ID,
     eventId,
     data: eventData,

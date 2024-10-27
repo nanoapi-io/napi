@@ -40,7 +40,7 @@ yargs(hideBin(process.argv))
     (argv) => {
       trackEvent(TelemetryEvents.INIT_COMMAND, { message: "Init command" });
       initCommandHandler(argv.workdir);
-    }
+    },
   )
   // Annotate openai command
   .command(
@@ -75,13 +75,13 @@ yargs(hideBin(process.argv))
 
       if (!apiKey) {
         console.error(
-          "Missing OpenAI API key. Please provide it via --apiKey or in a .napirc file using 'openaiApiKey' or 'openaiApiKeyFilePath'"
+          "Missing OpenAI API key. Please provide it via --apiKey or in a .napirc file using 'openaiApiKey' or 'openaiApiKeyFilePath'",
         );
         return;
       }
 
       annotateOpenAICommandHandler(napiConfig.entrypoint, apiKey);
-    }
+    },
   )
   // Split command
   .command(
@@ -100,7 +100,7 @@ yargs(hideBin(process.argv))
       }
 
       splitCommandHandler(napiConfig.entrypoint, napiConfig.out);
-    }
+    },
   )
   // Open UI command
   .command(
@@ -131,7 +131,7 @@ yargs(hideBin(process.argv))
           createProxyMiddleware({
             target: targetServiceUrl,
             changeOrigin: true,
-          })
+          }),
         );
       } else {
         app.use(express.static(path.join(__dirname, "../dist/app_dist")));
@@ -144,6 +144,6 @@ yargs(hideBin(process.argv))
         console.info("Press Ctrl+C to stop the server");
         openInBrowser(url);
       });
-    }
+    },
   )
   .parse();
