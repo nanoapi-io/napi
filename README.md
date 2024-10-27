@@ -134,6 +134,10 @@ app.listen(port, () => {
 });
 ```
 
+## Contributing and Development
+
+We welcome contributions from the community. Please read our [contributing guide](/.github/CONTRIBUTING.md) for more information.
+
 ## Status
 
 This project is in the early stages of development. We are actively working on the project and will be releasing new features and improvements regularly, which may include a rewrite into a more efficient and generic language like Rust or Go. Please check our issues and project board for more information.
@@ -147,3 +151,13 @@ This project is in the early stages of development. We are actively working on t
 - [ ] PHP support
 - [ ] Java support
 - [ ] C# support
+
+#### On Donating
+
+NanoAPI is a fair-source project. Because of this, we feel it would be unethical to keep any donations to ourselves. Instead, here is how we will handle donations:
+
+- Donations go into a pool
+- Money from the pool will be distributed to contributors
+- At the end of the year, any remaining money will be donated to a charity of the community's choice
+
+We will post regular updates on how much money is in the pool and how it is being distributed.
