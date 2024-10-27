@@ -203,15 +203,16 @@ export default function ApiTree(props: {
       fitView
       onViewportChange={updateZoom}
     >
-      <div className="absolute bottom-4 inset-x-4 z-10 flex justify-around">
-        <div className="flex gap-5 items-center">
-          <div className="bg-background-light dark:bg-background-dark flex gap-4 p-2 rounded-xl">
+      <div className="absolute bottom-6 inset-x-4 z-10 flex justify-around">
+        <div className="flex gap-3 items-center">
+          <div className="bg-background-light dark:bg-background-dark flex gap-4 pt-2 pb-1 px-3 rounded-lg">
             <Button
               size="1"
               variant="ghost"
               highContrast
               disabled={props.busy}
               onClick={props.onSync}
+              className="rounded-md"
             >
               {props.isOutOfSynced ? (
                 <svg
@@ -319,13 +320,14 @@ export default function ApiTree(props: {
           <Button
             color="pink"
             variant="solid"
-            size="2"
+            size="3"
             onClick={props.onSplit}
             disabled={props.busy || props.isOutOfSynced}
+            className={"max-h-9 px-2 py-0 rounded-lg"}
           >
             <svg
-              width="20"
-              height="20"
+              width="18"
+              height="18"
               viewBox="0 0 20 20"
               fill="currentColor"
               xmlns="http://www.w3.org/2000/svg"

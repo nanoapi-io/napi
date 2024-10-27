@@ -37,18 +37,19 @@ export default function DefaultLayout({
       </div>
       <div className="flex-grow px-5">
         <div className="flex gap-3">
-          <div className="flex flex-col justify-between bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl p-2">
+          <div className="flex flex-col justify-between bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl p-2 pb-5">
+            {/* This div forces the theme buttons to the bottom */}
             <div />
-            <div className="flex flex-col gap-2 border border-secondarySurface-light dark:border-secondarySurface-dark px-4 py-3 rounded-xl">
+            <div className="flex flex-col space-y-2 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 pt-2 pb-1 rounded-lg">
               <Button
                 variant="ghost"
                 size="1"
                 onClick={() => themeContext.changeTheme("light")}
-                className={
+                className={`p-2.5 rounded-md ${
                   themeContext.theme === "light"
                     ? "bg-secondarySurface-light"
                     : ""
-                }
+                }`}
               >
                 <svg
                   width="20"
@@ -70,11 +71,11 @@ export default function DefaultLayout({
                 variant="ghost"
                 size="1"
                 onClick={() => themeContext.changeTheme("dark")}
-                className={
+                className={`p-2.5 rounded-md ${
                   themeContext.theme === "dark"
                     ? "bg-secondarySurface-dark"
                     : ""
-                }
+                }`}
               >
                 <svg
                   width="20"
