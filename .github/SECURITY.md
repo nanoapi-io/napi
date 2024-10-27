@@ -1,3 +1,9 @@
 # Security Policy
 
-If you discover a security issue in this project, or have any concerns, please report them to [security@nanoapi.io](mailto:security@nanoapi.io). All security vulnerabilities will be promptly addressed within 72 hours.
+Please report any suspected security vulnerabilities privately to [security@nanoapi.io](mailto:security@nanoapi.io). Please do NOT create publicly viewable issues for suspected security vulnerabilities.
+
+We will acknowledge receipt of your vulnerability report as soon as possible and strive to send you regular updates about our progress. If you're curious about the status of your disclosure please feel free to email us again. If you want to encrypt your disclosure email please email us to ask for our PGP key.
+
+Please refrain from requesting compensation for reporting vulnerabilities. If you want we will publicly acknowledge your responsible disclosure. We also try to make the issue public after the vulnerability is announced. Usually bug reports are made public after 72 hours, if possible.
+
+You are not allowed to search for security vulnerabilities on any hosted service of NanoAPI without the consent of the party hosting it. NanoAPI is open source software and can be installed for testing and security issues on your own infrastructure.
