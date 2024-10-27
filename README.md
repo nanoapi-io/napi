@@ -4,8 +4,6 @@ Powerful CLI + UI for inspecting and refactoring an API codebase in any language
 
 > This project is under ongoing development. Check the [status section](#status) for more information on supported languages and frameworks.
 
-![demo](https://nanoapi.io/images/video/demo.gif)
-
 ## Features
 
 - **Inspect**: Analyze your codebase and understand the API endpoints, middleware, and other API-specific code
@@ -29,6 +27,27 @@ To understand better what we mean by the above, please take a look at our [docum
 - Auto-detect endpoint definitions, middleware, and other API-specific code without manual annotations
 - Clean, simple, and easy to use UI
 
+## Quick Start
+
+Ensure you have NodeJS >= 18 and NPM installed on your machine.
+
+```bash
+$ npm install -g @nanoapi-io/napi
+```
+
+To open the UI for your codebase, run the following commands:
+
+```bash
+$ napi init
+$ napi ui
+```
+
+### Example API Repos
+
+We are building a collection of example API repositories in each language so you can explore the project. This list will grow over time.
+
+- NodeJS: [nodejs-example-apis](https://github.com/nanoapi-io/nodejs-example-apis)
+
 # Usage
 
 ### Installation
@@ -43,15 +62,17 @@ $ npm install
 
 ### Usage
 
-To open the UI and inspect your codebase, run the following command:
+To open the UI and inspect your codebase, run the following commands:
 
 ```bash
-$ napi ui /path/to/entrypoint
+$ napi init
+$ napi ui
 ```
 
 ### Commands:
 ```
-  ui [entrypoint]  Inspect the codebase and understand the API endpoints, middleware, and other API-specific code
+  init                  Initialize the NanoAPI project
+  ui [entrypoint]       Inspect the codebase and understand the API endpoints, middleware, and other API-specific code
   split <entrypoint>    Transform the codebase into smaller, more manageable pieces at build time
 ```
 
@@ -140,7 +161,7 @@ We welcome contributions from the community. Please read our [contributing guide
 
 ## Status
 
-This project is in the early stages of development. We are actively working on the project and will be releasing new features and improvements regularly, which may include a rewrite into a more efficient and generic language like Rust or Go. Please check our issues and project board for more information.
+This project is in the early stages of development. We are actively working on the project and will be releasing new features and improvements regularly, which may include a rewrite into a more efficient and generic language like Rust or Go. Please check our issues and project board for more information, and don't for.
 
 - [x] Support for NodeJS/Typescript and ExpressJS
 - [x] Simple UI

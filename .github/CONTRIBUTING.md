@@ -23,18 +23,19 @@ Make use of the issue templates, and label your issues appropriately. If you’r
 
 ## How to Submit a Pull Request
 
-1. Ensure an issue exists for the changes you want to make.
-2. Fork the repository.
-3. Create a new branch.
-4. Make your changes.
-5. Test your changes.
-6. Push your changes to your fork.
+1. Don't panic.
+2. Ensure an issue exists for the changes you want to make.
+3. Fork the repository.
+4. Create a new branch.
+5. Make your changes.
+6. Test your changes.
+7. Push your changes to your fork.
    1. Make sure to rebase before pushing.
-7. Submit a pull request.
-8. Follow the template and fill in all the sections.
-9. Wait for feedback.
-10. Make changes if necessary.
-11. Celebrate your success after your PR gets merged. The Codex Astartes supports this action.
+8. Submit a pull request.
+9. Follow the template and fill in all the sections.
+10. Wait for feedback.
+11. Make changes if necessary.
+12. Celebrate your success after your PR gets merged. The Codex Astartes supports this action.
 
 ## Development Environment 
 
@@ -108,7 +109,17 @@ $ npm run lint
 
 We are currently formalizing the release process. For now, the NanoAPI team will handle making regular releases.
 
+To ensure releases run smoothly, put the content of your changes in our [CHANGELOG](/packages/cli/CHANGELOG.md) file.
+
 ### Documentation
 
 We are also building on the documentation process. For now, include any documentation changes in your PRs and we will add them into the main documentation.
+
+### Discussions vs Issues
+
+We use GitHub Discussions for general questions, ideas, and feedback. If you have a question, please use the Discussions tab. If you have a bug report or feature request, please use the Issues tab.
+
+------
+
+That's it for this guide for now. So long, and thanks for all the fish! 🚀
 
