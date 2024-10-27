@@ -5,10 +5,11 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { getApi } from "./api";
 import annotateOpenAICommandHandler from "./commands/annotate";
-import splitCommandHandler from "./commands/split";
-import { findAvailablePort, openInBrowser } from "./helper/server";
 import initCommandHandler from "./commands/init";
+import splitCommandHandler from "./commands/split";
 import { getConfigFromWorkDir, getOpenaiApiKeyFromConfig } from "./config";
+import { findAvailablePort, openInBrowser } from "./helper/server";
+import { TelemetryEvents, trackEvent } from "./telemetry";
 
 // remove all warning.
 // We need this because of some depreciation warning we have with 3rd party libraries
@@ -17,8 +18,11 @@ if (process.env.NODE_ENV !== "development") {
   process.removeAllListeners("warning");
 }
 
+trackEvent(TelemetryEvents.APP_START, {
+  message: "Napi started with Telemetry enabled",
+});
+
 yargs(hideBin(process.argv))
-  // Global options, used for all commands
   .options({
     workdir: {
       type: "string",
@@ -27,12 +31,12 @@ yargs(hideBin(process.argv))
       description: "working directory",
     },
   })
-  // Init command
   .command(
     "init",
     "initialize a nanoapi project",
     (yargs) => yargs,
     (argv) => {
+      trackEvent(TelemetryEvents.INIT_COMMAND, { message: "Init command" });
       initCommandHandler(argv.workdir);
     },
   )
@@ -40,17 +44,19 @@ yargs(hideBin(process.argv))
   .command(
     "annotate openai [entrypoint]",
     "Annotate a program, needed for splitting",
-    (yargs) => {
-      return yargs.options({
+    (yargs) =>
+      yargs.options({
         apiKey: {
           type: "string",
           default: "",
           alias: "k",
           description: "OpenAI API key",
         },
-      });
-    },
+      }),
     (argv) => {
+      trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+        message: "Annotate command",
+      });
       const napiConfig = getConfigFromWorkDir(argv.workdir);
 
       if (!napiConfig) {
@@ -79,10 +85,11 @@ yargs(hideBin(process.argv))
   .command(
     "split [entrypoint]",
     "Split a program into multiple ones",
-    (yargs) => {
-      return yargs;
-    },
+    (yargs) => yargs,
     (argv) => {
+      trackEvent(TelemetryEvents.SPLIT_COMMAND, {
+        message: "Split command",
+      });
       const napiConfig = getConfigFromWorkDir(argv.workdir);
 
       if (!napiConfig) {
@@ -97,10 +104,12 @@ yargs(hideBin(process.argv))
   .command(
     "ui",
     "open the NanoAPI UI",
-    (yargs) => {
-      return yargs;
-    },
+    (yargs) => yargs,
     async (argv) => {
+      trackEvent(TelemetryEvents.UI_OPEN, {
+        message: "UI command",
+      });
+
       const napiConfig = getConfigFromWorkDir(argv.workdir);
 
       if (!napiConfig) {
@@ -109,15 +118,12 @@ yargs(hideBin(process.argv))
       }
 
       const app = express();
-
       const api = getApi(napiConfig);
-
       app.use(api);
 
       if (process.env.NODE_ENV === "development") {
         const targetServiceUrl =
           process.env.APP_SERVICE_URL || "http://localhost:3001";
-
         app.use(
           "/",
           createProxyMiddleware({
