@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Add telemetry
+
 ## [0.0.4] - 2024-10-26
 
 Change design
