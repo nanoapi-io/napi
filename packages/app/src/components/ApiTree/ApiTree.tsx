@@ -323,7 +323,7 @@ export default function ApiTree(props: {
             size="3"
             onClick={props.onSplit}
             disabled={props.busy || props.isOutOfSynced}
-            className={'max-h-9 px-2 py-0 rounded-lg'}
+            className={"max-h-9 px-2 py-0 rounded-lg"}
           >
             <svg
               width="18"

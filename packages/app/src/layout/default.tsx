@@ -48,8 +48,8 @@ export default function DefaultLayout({
                 className={`p-2.5 rounded-md ${
                   themeContext.theme === "light"
                     ? "bg-secondarySurface-light"
-                    : ""}`
-                }
+                    : ""
+                }`}
               >
                 <svg
                   width="20"
@@ -74,8 +74,8 @@ export default function DefaultLayout({
                 className={`p-2.5 rounded-md ${
                   themeContext.theme === "dark"
                     ? "bg-secondarySurface-dark"
-                    : ""}`
-                }
+                    : ""
+                }`}
               >
                 <svg
                   width="20"
