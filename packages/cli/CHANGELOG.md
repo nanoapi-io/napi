@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+improve CI
+
 ## [0.0.7] - 2024-10-28
 
 Implement grouping
