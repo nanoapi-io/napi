@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { getDependencyTree } from "../helper/dependencies";
 import { ScanCodebaseResponsePayload } from "../helper/payloads";
-import { iterateOverTree } from "../helper/tree";
+import { getEndpontsFromTree } from "../helper/tree";
 import { scanSchema } from "./helpers/validation";
 
 export function scan(
@@ -9,7 +9,7 @@ export function scan(
 ): ScanCodebaseResponsePayload {
   const tree = getDependencyTree(payload.entrypointPath);
 
-  const endpoints = iterateOverTree(tree);
+  const endpoints = getEndpontsFromTree(tree);
 
   return { endpoints };
 }

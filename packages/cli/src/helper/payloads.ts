@@ -1,4 +1,4 @@
-import { Endpoint } from "./types";
+import { Endpoint, Group } from "./types";
 
 export interface ScanCodebaseRequestPayload {
   entrypointPath: string;
@@ -26,6 +26,6 @@ export interface SplitCodebaseRequestPayload {
 }
 
 export interface SplitCodebaseResponsePayload {
-  endpoints: Endpoint[];
+  groups: Group[];
   success: boolean;
 }

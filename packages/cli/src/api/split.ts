@@ -3,15 +3,17 @@ import path from "path";
 import { getDependencyTree } from "../helper/dependencies";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
 import { SplitCodebaseResponsePayload } from "../helper/payloads";
-import { iterateOverTree, splitPath } from "../helper/tree";
+import { getEndpontsFromTree, splitPath } from "../helper/tree";
 import { splitSchema } from "./helpers/validation";
 import { z } from "zod";
+import { GroupMap } from "../helper/types";
+import { getGroupsFromEndpoints } from "../helper/groups";
 
 export function split(
   payload: z.infer<typeof splitSchema>,
 ): SplitCodebaseResponsePayload {
-  let endpointIndex = 0;
-  const endpointMap: Record<number, { method?: string; path: string }> = {};
+  let groupIndex = 0;
+  const groupMap: GroupMap = {};
 
   // Get the dependency tree
   const tree = getDependencyTree(payload.entrypointPath);
@@ -22,24 +24,27 @@ export function split(
   cleanupOutputDir(payload.outputDir);
   createOutputDir(payload.outputDir);
 
-  // Iterate over the tree and process endpoints
-  const endpoints = iterateOverTree(tree);
+  // Iterate over the tree and get endpoints
+  const endpoints = getEndpontsFromTree(tree);
+
+  // Get groups from the endpoints
+  const groups = getGroupsFromEndpoints(endpoints);
 
   // Process each endpoint for splitting
-  for (const endpoint of endpoints) {
+  for (const group of groups) {
     splitPath(
-      endpoint,
+      group,
       payload.outputDir,
       payload.entrypointPath,
-      endpointMap,
-      endpointIndex,
+      groupMap,
+      groupIndex,
     );
-    endpointIndex++;
+    groupIndex++;
   }
 
   // Store the processed annotations in the output directory
   const annotationFilePath = path.join(payload.outputDir, "annotations.json");
-  fs.writeFileSync(annotationFilePath, JSON.stringify(endpointMap, null, 2));
+  fs.writeFileSync(annotationFilePath, JSON.stringify(groupMap, null, 2));
 
-  return { endpoints, success: true };
+  return { groups, success: true };
 }

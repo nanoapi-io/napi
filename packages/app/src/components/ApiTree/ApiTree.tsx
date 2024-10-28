@@ -146,7 +146,7 @@ export default function ApiTree(props: {
           id: `e-${parentId}-${methodNodeId}`,
           source: parentId,
           target: methodNodeId,
-          type: "step",
+          type: "customEdge",
           animated: false,
         });
       });
