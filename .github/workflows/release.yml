@@ -16,8 +16,17 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate token
+        id: generate_token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ secrets.WORKFLOWS_GITHUB_APP_ID }}
+          private_key: ${{ secrets.WORKFLOWS_GITHUB_APP_PRIVATE_KEY }}
+
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -44,5 +53,5 @@ jobs:
       - name: Run release-it
         run: npm run release -- --ci --${{ github.event.inputs.release_type }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
