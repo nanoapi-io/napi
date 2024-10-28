@@ -33,13 +33,6 @@ jobs:
       - name: Generate binaries
         run: npm run binaries
 
-      - name: Generate token
-        id: generate_token
-        uses: tibdex/github-app-token@v1
-        with:
-          app_id: ${{ secrets.WORKFLOWS_GITHUB_APP_ID }}
-          private_key: ${{ secrets.WORKFLOWS_GITHUB_APP_PRIVATE_KEY }}
-
       - name: Login with git
         run: |
           git config --global user.email "info@nanoapi.io"
@@ -51,5 +44,5 @@ jobs:
       - name: Run release-it
         run: npm run release -- --ci --${{ github.event.inputs.release_type }}
         env:
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
