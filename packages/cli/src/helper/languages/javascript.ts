@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { Endpoint } from "../types";
+import { Group } from "../types";
 import { getNanoApiAnnotationFromCommentValue } from "../file";
 
 // extract the dependencies from the AST
@@ -32,9 +32,10 @@ export function extractJavascriptFileImports(node: Parser.SyntaxNode) {
 export function removeJavascriptAnnotations(
   rootNode: Parser.SyntaxNode,
   sourceCode: string,
-  endpointToKeep: Endpoint,
+  groupToKeep: Group,
 ): string {
   let updatedSourceCode = sourceCode;
+
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "comment") {
       const commentText = node.text;
@@ -42,10 +43,13 @@ export function removeJavascriptAnnotations(
         getNanoApiAnnotationFromCommentValue(commentText);
       if (!annotationFromComment) return;
 
-      if (
-        annotationFromComment.path !== endpointToKeep.path ||
-        annotationFromComment.method !== endpointToKeep.method
-      ) {
+      const endpointToKeep = groupToKeep.endpoints.find(
+        (e) =>
+          e.path === annotationFromComment.path &&
+          e.method === annotationFromComment.method,
+      );
+
+      if (!endpointToKeep) {
         const nextNode = node.nextNamedSibling;
         if (!nextNode) {
           throw new Error("Could not find next node");

@@ -8,7 +8,7 @@ import {
   removeUnusedJavascriptImports,
 } from "./languages/javascript";
 import { getParserLanguageFromFile, resolveFilePath } from "./file";
-import { Dependencies, Endpoint } from "./types";
+import { Dependencies, Group } from "./types";
 
 // extract the dependencies from the AST
 export function getDependencyTree(filePath: string): Dependencies {
@@ -55,7 +55,7 @@ export function getDependencyTree(filePath: string): Dependencies {
   return dependencies;
 }
 
-export function cleanupFile(filePath: string, endpoint: Endpoint) {
+export function cleanupFile(filePath: string, group: Group) {
   const language = getParserLanguageFromFile(filePath);
   const parser = new Parser();
   parser.setLanguage(language);
@@ -80,7 +80,7 @@ export function cleanupFile(filePath: string, endpoint: Endpoint) {
     const newSourceCode = removeJavascriptAnnotations(
       tree.rootNode,
       sourceCode,
-      endpoint,
+      group,
     );
     tree = parser.parse(newSourceCode);
 

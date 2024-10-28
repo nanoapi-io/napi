@@ -123,7 +123,10 @@ function getFilePathsFromTree(tree: dependencyTree.Tree) {
     }
   }
 
-  return filePaths;
+  // remove duplicates
+  const uniqueFilePaths = [...new Set(filePaths)];
+
+  return uniqueFilePaths;
 }
 
 // Resolve file paths from import/require statements
