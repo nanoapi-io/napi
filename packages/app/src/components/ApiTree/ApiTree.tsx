@@ -14,6 +14,7 @@ import { Endpoint } from "../../service/api/types";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import { generateDarkColors } from "../../service/groupColor";
 import MethodBadge from "../MethodBadge";
+import CustomEdge from "./Edge";
 
 export default function ApiTree(props: {
   busy: boolean;
@@ -23,6 +24,10 @@ export default function ApiTree(props: {
   onSync: () => void;
   onSplit: () => void;
 }) {
+  const edgeTypes = {
+    customEdge: CustomEdge,
+  };
+
   const reactFlow = useReactFlow();
 
   const [currentZoom, setCurrentZoom] = useState<number>(reactFlow.getZoom());
@@ -90,7 +95,8 @@ export default function ApiTree(props: {
             id: `e-${parentId}-${nodeId}`,
             source: parentId,
             target: nodeId,
-            type: "step",
+            type: "customEdge",
+            animated: false,
           });
         }
 
@@ -192,6 +198,7 @@ export default function ApiTree(props: {
 
   return (
     <ReactFlow
+      edgeTypes={edgeTypes}
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
