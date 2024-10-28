@@ -5,7 +5,7 @@ import { getEndpointsFromFile } from "./file";
 import { Dependencies, Endpoint, Group, GroupMap } from "./types";
 
 // Helper function to process the tree and gather endpoints
-export function getGroupsFromTree(
+export function getEndpontsFromTree(
   tree: Dependencies,
   parentFiles: string[] = [],
   endpoints: Endpoint[] = [],
@@ -27,25 +27,11 @@ export function getGroupsFromTree(
     // Recursively process the tree
     if (typeof value !== "string") {
       const updatedParentFiles = [...parentFiles, filePath];
-      getGroupsFromTree(value, updatedParentFiles, endpoints);
+      getEndpontsFromTree(value, updatedParentFiles, endpoints);
     }
   }
 
-  const groups: Group[] = [];
-
-  for (const endpoint of endpoints) {
-    const group = groups.find((group) => group.name === endpoint.group);
-    if (group) {
-      group.endpoints.push(endpoint);
-    } else {
-      groups.push({
-        name: endpoint.group || "",
-        endpoints: [endpoint],
-      });
-    }
-  }
-
-  return groups;
+  return endpoints;
 }
 
 // Function to handle splitting and storing paths based on the split command logic
@@ -73,18 +59,18 @@ export function splitPath(
   );
   fs.copyFileSync(entrypointPath, entrypointCopyPath);
 
-  // Copy other files based on the dependencies, remove duplicates
-  const files = [
-    ...new Set(
-      ...group.endpoints.map((endpoint) => {
-        return [
-          endpoint.filePath,
-          ...endpoint.parentFilePaths,
-          ...endpoint.childrenFilePaths,
-        ];
-      }),
-    ),
-  ];
+  // Copy other files based on the dependencies
+  const endpointsFiles = group.endpoints.map((endpoint) => {
+    return [
+      endpoint.filePath,
+      ...endpoint.parentFilePaths,
+      ...endpoint.childrenFilePaths,
+    ];
+  });
+
+  // Flatten the array and remove duplicates
+  const files = Array.from(new Set(endpointsFiles.flat()));
+
   for (const filePath of files) {
     const relativeFileNamePath = path.relative(targetDir, filePath);
     const destinationPath = path.join(

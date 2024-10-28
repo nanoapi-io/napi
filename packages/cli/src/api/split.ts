@@ -3,10 +3,11 @@ import path from "path";
 import { getDependencyTree } from "../helper/dependencies";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
 import { SplitCodebaseResponsePayload } from "../helper/payloads";
-import { getGroupsFromTree, splitPath } from "../helper/tree";
+import { getEndpontsFromTree, splitPath } from "../helper/tree";
 import { splitSchema } from "./helpers/validation";
 import { z } from "zod";
 import { GroupMap } from "../helper/types";
+import { getGroupsFromEndpoints } from "../helper/groups";
 
 export function split(
   payload: z.infer<typeof splitSchema>,
@@ -23,8 +24,11 @@ export function split(
   cleanupOutputDir(payload.outputDir);
   createOutputDir(payload.outputDir);
 
-  // Iterate over the tree and get groups
-  const groups = getGroupsFromTree(tree);
+  // Iterate over the tree and get endpoints
+  const endpoints = getEndpontsFromTree(tree);
+
+  // Get groups from the endpoints
+  const groups = getGroupsFromEndpoints(endpoints);
 
   // Process each endpoint for splitting
   for (const group of groups) {

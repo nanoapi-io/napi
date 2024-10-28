@@ -9,12 +9,12 @@ import {
 } from "../helper/file";
 import { getDependencyTree } from "../helper/dependencies";
 import Parser from "tree-sitter";
-import { iterateOverTree } from "../helper/tree";
+import { getEndpontsFromTree } from "../helper/tree";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
   const tree = getDependencyTree(payload.entrypointPath);
 
-  const endpoints = iterateOverTree(tree);
+  const endpoints = getEndpontsFromTree(tree);
 
   const updatedEndpoints = endpoints.map((endpoint) => {
     const updatedEndpoint = payload.endpoints.find(

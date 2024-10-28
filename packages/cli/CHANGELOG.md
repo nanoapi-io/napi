@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+Implement grouping
+Fix minor UI issue with edges
+
 ## [0.0.6] - 2024-10-27
 
 Update design css
