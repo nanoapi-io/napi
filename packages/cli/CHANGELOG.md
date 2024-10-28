@@ -4,6 +4,10 @@
 
 improve CI
 
+## [0.0.10] - 2024-10-28
+
+improve CI
+
 ## [0.0.9] - 2024-10-28
 
 improve CI
