@@ -13,9 +13,7 @@ import { Button } from "@radix-ui/themes";
 import { Endpoint } from "../../service/api/types";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import { generateDarkColors } from "../../service/groupColor";
-import GroupNode from "./GroupNode";
-import EndpointNode from "./EndpointNode";
-import CustomEdge from "./Edge";
+import MethodBadge from "../MethodBadge";
 
 export default function ApiTree(props: {
   busy: boolean;
@@ -25,15 +23,6 @@ export default function ApiTree(props: {
   onSync: () => void;
   onSplit: () => void;
 }) {
-  const nodeTypes = {
-    groupNode: GroupNode,
-    endpointNode: EndpointNode,
-  };
-
-  const edgeTypes = {
-    customEdge: CustomEdge,
-  };
-
   const reactFlow = useReactFlow();
 
   const [currentZoom, setCurrentZoom] = useState<number>(reactFlow.getZoom());
@@ -90,9 +79,9 @@ export default function ApiTree(props: {
           id: nodeId,
           position: { x: 0, y: 0 }, // Initial position, will be updated by Dagre
           data: {
-            path: child.path,
+            label: <div>{child.path}</div>,
           },
-          type: "groupNode",
+          type: "default",
         };
         newNodes.push(node);
 
@@ -101,8 +90,7 @@ export default function ApiTree(props: {
             id: `e-${parentId}-${nodeId}`,
             source: parentId,
             target: nodeId,
-            type: "customEdge",
-            animated: false,
+            type: "step",
           });
         }
 
@@ -141,8 +129,17 @@ export default function ApiTree(props: {
             onChangeGroup: (group: string) =>
               props.onChangeEndpointGroup(group, endpoint),
             groupColor: color,
+            label: (
+              <div>
+                <div>
+                  <MethodBadge method={endpoint.method} />
+                </div>
+                <div>{endpoint.path}</div>
+              </div>
+            ),
           },
-          type: "endpointNode",
+          type: "default",
+          style: { backgroundColor: `${color}` },
         };
         newNodes.push(methodNode);
         newEdges.push({
@@ -195,8 +192,6 @@ export default function ApiTree(props: {
 
   return (
     <ReactFlow
-      nodeTypes={nodeTypes}
-      edgeTypes={edgeTypes}
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
