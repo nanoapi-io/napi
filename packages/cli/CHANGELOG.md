@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+Fix performance issue with reactflow due to blur background css
+add support for orientation switch of the graph (portrait/landscape)
+
 ## [0.0.11] - 2024-10-28
 
 improve CI

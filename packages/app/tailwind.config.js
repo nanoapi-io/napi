@@ -26,7 +26,7 @@ export default {
         },
         secondarySurface: {
           dark: "#25235C",
-          light: "#D1D5DB",
+          light: "#F0F1F3",
         },
         border: {
           dark: "#3A397C",
