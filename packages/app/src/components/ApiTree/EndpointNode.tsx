@@ -4,9 +4,8 @@ import { DataList } from "@radix-ui/themes";
 import EndpointNodeContentDialog from "./EndpointNodeContentDialog";
 import MethodBadge from "../MethodBadge";
 import GroupBadge from "../GroupBadge";
-import { memo } from "react";
 
-export default memo(function EndpointNode(
+export default function EndpointNode(
   props: NodeProps<
     Node<{
       busy: boolean;
@@ -17,58 +16,57 @@ export default memo(function EndpointNode(
   >,
 ) {
   return (
-    <>
-      <div className="backdrop-blur-sm bg-[#FFFFFF1A] rounded-xl border border-border-light dark:border-border-dark overflow-hidden">
-        <Handle
-          type="target"
-          position={Position.Top}
-          className="border border-gray-dark"
+    <div className="bg-secondarySurface-light dark:bg-secondarySurface-dark  rounded-xl border border-border-light dark:border-border-dark overflow-hidden">
+      <Handle
+        type="target"
+        position={props.targetPosition || Position.Top}
+        isConnectable={props.isConnectable}
+        className="border border-gray-dark"
+      />
+      <div
+        className="h-[5px]"
+        style={{ backgroundColor: props.data.groupColor }}
+      />
+      <div className="bg-background-light dark:bg-background-dark px-5 py-1 flex justify-between items-center">
+        <div>Action</div>
+        <EndpointNodeContentDialog
+          busy={props.data.busy}
+          endpoint={props.data.endpoint}
+          onChangeGroup={props.data.onChangeGroup}
         />
-        <div
-          className="h-[5px]"
-          style={{ backgroundColor: props.data.groupColor }}
-        />
-        <div className="bg-background-light dark:bg-background-dark px-5 py-1 flex justify-between items-center">
-          <div>Action</div>
-          <EndpointNodeContentDialog
-            busy={props.data.busy}
-            endpoint={props.data.endpoint}
-            onChangeGroup={props.data.onChangeGroup}
-          />
-        </div>
-        <div className="px-5 py-3">
-          <DataList.Root>
-            <DataList.Item>
-              <DataList.Label className="text-text-light dark:text-text-dark">
-                Method
-              </DataList.Label>
-              <DataList.Value>
-                <MethodBadge method={props.data.endpoint.method} />
-              </DataList.Value>
-            </DataList.Item>
-            <DataList.Item>
-              <DataList.Label className="text-text-light dark:text-text-dark">
-                Path
-              </DataList.Label>
-              <DataList.Value>
-                <div className="text-text-light dark:text-text-dark">
-                  {props.data.endpoint.path}
-                </div>
-              </DataList.Value>
-            </DataList.Item>
-            {props.data.endpoint.group && (
-              <DataList.Item>
-                <DataList.Label className="text-text-light dark:text-text-dark">
-                  Group
-                </DataList.Label>
-                <DataList.Value>
-                  <GroupBadge name={props.data.endpoint.group} />
-                </DataList.Value>
-              </DataList.Item>
-            )}
-          </DataList.Root>
-        </div>
       </div>
-    </>
+      <div className="px-5 py-3">
+        <DataList.Root>
+          <DataList.Item>
+            <DataList.Label className="text-text-light dark:text-text-dark">
+              Method
+            </DataList.Label>
+            <DataList.Value>
+              <MethodBadge method={props.data.endpoint.method} />
+            </DataList.Value>
+          </DataList.Item>
+          <DataList.Item>
+            <DataList.Label className="text-text-light dark:text-text-dark">
+              Path
+            </DataList.Label>
+            <DataList.Value>
+              <div className="text-text-light dark:text-text-dark">
+                {props.data.endpoint.path}
+              </div>
+            </DataList.Value>
+          </DataList.Item>
+          {props.data.endpoint.group && (
+            <DataList.Item>
+              <DataList.Label className="text-text-light dark:text-text-dark">
+                Group
+              </DataList.Label>
+              <DataList.Value>
+                <GroupBadge name={props.data.endpoint.group} />
+              </DataList.Value>
+            </DataList.Item>
+          )}
+        </DataList.Root>
+      </div>
+    </div>
   );
-});
+}

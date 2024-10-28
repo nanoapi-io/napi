@@ -36,10 +36,10 @@ export default function ApiTree(props: {
 
   const reactFlow = useReactFlow();
 
-  const [currentZoom, setCurrentZoom] = useState<number>(reactFlow.getZoom());
-
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges] = useEdgesState<Edge>([]);
+
+  const [direction, setDirection] = useState<"TB" | "LR">("TB");
 
   useEffect(() => {
     computeNodesAndEdgesFromEndpoints(props.endpoints);
@@ -162,16 +162,18 @@ export default function ApiTree(props: {
     const { nodes: layoutedNodes, edges: layoutedEdges } = layoutNodesAndEdges(
       newNodes,
       newEdges,
+      direction,
     );
 
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
   }
 
-  function handleReposition() {
+  function handleReposition(direction: "TB" | "LR") {
     const { nodes: layoutedNodes, edges: layoutedEdges } = layoutNodesAndEdges(
       nodes,
       edges,
+      direction,
     );
     setNodes(layoutedNodes);
     setEdges(layoutedEdges);
@@ -179,11 +181,12 @@ export default function ApiTree(props: {
 
   function handleFitView() {
     reactFlow.fitView();
-    updateZoom();
   }
 
-  function updateZoom() {
-    setCurrentZoom(reactFlow.getZoom());
+  function handleChangeDirection() {
+    const newDirection = direction === "TB" ? "LR" : "TB";
+    setDirection(newDirection);
+    handleReposition(newDirection);
   }
 
   useEffect(() => {
@@ -201,7 +204,6 @@ export default function ApiTree(props: {
       edges={edges}
       onNodesChange={onNodesChange}
       fitView
-      onViewportChange={updateZoom}
     >
       <div className="absolute bottom-6 inset-x-4 z-10 flex justify-around">
         <div className="flex gap-3 items-center">
@@ -264,7 +266,7 @@ export default function ApiTree(props: {
               variant="ghost"
               highContrast
               disabled={props.busy}
-              onClick={handleReposition}
+              onClick={() => handleReposition(direction)}
             >
               <svg
                 width="20"
@@ -275,6 +277,38 @@ export default function ApiTree(props: {
                 className="text-text-light dark:text-text-dark"
               >
                 <path d="M15 3c.552 0 1 .448 1 1v4c0 .552-.448 1-1 1h-2v2h4c.552 0 1 .448 1 1v3h2c.552 0 1 .448 1 1v4c0 .552-.448 1-1 1h-6c-.552 0-1-.448-1-1v-4c0-.552.448-1 1-1h2v-2H8v2h2c.552 0 1 .448 1 1v4c0 .552-.448 1-1 1H4c-.552 0-1-.448-1-1v-4c0-.552.448-1 1-1h2v-3c0-.552.448-1 1-1h4V9H9c-.552 0-1-.448-1-1V4c0-.552.448-1 1-1h6zM9 17H5v2h4v-2zm10 0h-4v2h4v-2zM14 5h-4v2h4V5z"></path>{" "}
+              </svg>
+            </Button>
+            <Button
+              size="1"
+              variant="ghost"
+              highContrast
+              disabled={props.busy}
+              onClick={handleChangeDirection}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="10 10 80 80"
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-text-light dark:text-text-dark"
+              >
+                <rect
+                  x="20"
+                  y="40"
+                  width="40"
+                  height="30"
+                  stroke="currentColor"
+                  stroke-width="7"
+                />
+                <rect
+                  x="45"
+                  y="15"
+                  width="30"
+                  height="40"
+                  stroke="currentColor"
+                  stroke-width="7"
+                />
               </svg>
             </Button>
             <Button
@@ -296,7 +330,6 @@ export default function ApiTree(props: {
                 <path d="M10.8333 7.5H5.83333C5.61232 7.5 5.40036 7.5878 5.24408 7.74408C5.0878 7.90036 5 8.11232 5 8.33333C5 8.55435 5.0878 8.76631 5.24408 8.92259C5.40036 9.07887 5.61232 9.16667 5.83333 9.16667H10.8333C11.0543 9.16667 11.2663 9.07887 11.4226 8.92259C11.5789 8.76631 11.6667 8.55435 11.6667 8.33333C11.6667 8.11232 11.5789 7.90036 11.4226 7.74408C11.2663 7.5878 11.0543 7.5 10.8333 7.5Z" />
               </svg>
             </Button>
-            <div>{(currentZoom * 100).toFixed(0)}%</div>
             <Button
               size="1"
               variant="ghost"
