@@ -136,7 +136,6 @@ export function resolveFilePath(
 ): string | null {
   const currentFileExt = path.extname(currentFile);
   const importExt = path.extname(importPath);
-
   if (importPath.startsWith(".")) {
     if (importExt) {
       // If import path has an extension, resolve directly
@@ -144,15 +143,27 @@ export function resolveFilePath(
       if (fs.existsSync(resolvedPath)) {
         return resolvedPath;
       }
-    } else {
-      // If import path does not have an extension, try current file's extension first
-      const resolvedPathWithCurrentExt = path.resolve(
-        path.dirname(currentFile),
-        `${importPath}${currentFileExt}`,
-      );
-      if (fs.existsSync(resolvedPathWithCurrentExt)) {
-        return resolvedPathWithCurrentExt;
+    }
+
+    // If import path does not have an extension, try current file's extension first
+    const resolvedPathWithCurrentExt = path.resolve(
+      path.dirname(currentFile),
+      `${importPath}${currentFileExt}`,
+    );
+    if (fs.existsSync(resolvedPathWithCurrentExt)) {
+      return resolvedPathWithCurrentExt;
+    }
+
+    // try to resolve with any extension
+    const resolvedPath = path.resolve(path.dirname(currentFile), importPath);
+    try {
+      const resolvedPathWithAnyExt = require.resolve(resolvedPath);
+      if (fs.existsSync(resolvedPathWithAnyExt)) {
+        return resolvedPathWithAnyExt;
       }
+    } catch {
+      // cannot resolve the path, return null
+      return null;
     }
   }
   // Skip external dependencies (e.g., node_modules)

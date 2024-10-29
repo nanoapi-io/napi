@@ -62,7 +62,8 @@ export default function ApiTree(props: {
 
     // Build the tree structure
     endpoints.forEach((endpoint) => {
-      const pathSegments = endpoint.path.split("/").filter(Boolean);
+      // Need to add an empty string to the beginning to make sure the index node is created "/"
+      const pathSegments = ["", ...endpoint.path.split("/").filter(Boolean)];
       let currentNode = tree;
 
       pathSegments.forEach((segment) => {
@@ -156,7 +157,7 @@ export default function ApiTree(props: {
     }
 
     // Start creating nodes and edges from the root of the tree
-    createNodesAndEdges(tree, "");
+    createNodesAndEdges(tree, "index");
 
     // Apply Dagre layout
     const { nodes: layoutedNodes, edges: layoutedEdges } = layoutNodesAndEdges(
@@ -294,7 +295,7 @@ export default function ApiTree(props: {
                 className="text-text-light dark:text-text-dark"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="7"
+                strokeWidth="7"
               >
                 <rect x="20" y="40" width="40" height="30" />
                 <rect x="45" y="15" width="30" height="40" />
