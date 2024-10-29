@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Fix some minor visual issue with some svg images
+
 ## [0.0.12] - 2024-10-28
 
 Fix performance issue with reactflow due to blur background css

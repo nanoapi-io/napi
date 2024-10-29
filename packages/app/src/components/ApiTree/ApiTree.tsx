@@ -292,23 +292,12 @@ export default function ApiTree(props: {
                 viewBox="10 10 80 80"
                 xmlns="http://www.w3.org/2000/svg"
                 className="text-text-light dark:text-text-dark"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="7"
               >
-                <rect
-                  x="20"
-                  y="40"
-                  width="40"
-                  height="30"
-                  stroke="currentColor"
-                  stroke-width="7"
-                />
-                <rect
-                  x="45"
-                  y="15"
-                  width="30"
-                  height="40"
-                  stroke="currentColor"
-                  stroke-width="7"
-                />
+                <rect x="20" y="40" width="40" height="30" />
+                <rect x="45" y="15" width="30" height="40" />
               </svg>
             </Button>
             <Button
