@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Try yo resolve file with any extension as last resort
+Add index route node in the FE graph
 Fix some minor visual issue with some svg images
 
 ## [0.0.12] - 2024-10-28
