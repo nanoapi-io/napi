@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Fix padding and size discrepancy with toolbar
+
 ## [0.0.13] - 2024-10-29
 
 Try yo resolve file with any extension as last resort
