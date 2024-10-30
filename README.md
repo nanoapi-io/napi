@@ -70,6 +70,7 @@ $ napi ui
 ```
 
 ### Commands:
+
 ```
   init                  Initialize the NanoAPI project
   ui [entrypoint]       Inspect the codebase and understand the API endpoints, middleware, and other API-specific code
@@ -87,9 +88,9 @@ You can also refactor your codebase by adding annotations to your code. Here is 
 ```typescript
 // src/api.js
 
-import * as express from 'express';
+import * as express from "express";
 
-import * as service from './service.js';
+import * as service from "./service.js";
 
 const app = express();
 const port = 3000;
@@ -97,33 +98,33 @@ const port = 3000;
 app.use(express.json());
 
 // @nanoapi endpoint:/api/v2/maths/time method:GET group:Time
-app.get('/api/v2/maths/time', (req, res) => {
-    const result = service.time();
-    return res.json({
-        result
-    });
+app.get("/api/v2/maths/time", (req, res) => {
+  const result = service.time();
+  return res.json({
+    result,
+  });
 });
 
 // @nanoapi endpoint:/api/v2/maths/addition method:POST group:Maths
-app.post('/api/v2/maths/addition', (req, res) => {
-    const { body } = req;
-    const result = service.addition(body.a, body.b);
-    return res.json({
-        result
-    });
+app.post("/api/v2/maths/addition", (req, res) => {
+  const { body } = req;
+  const result = service.addition(body.a, body.b);
+  return res.json({
+    result,
+  });
 });
 
 // @nanoapi endpoint:/api/v2/maths/subtraction method:POST group:Maths
-app.post('/api/v2/maths/subtraction', (req, res) => {
-    const { body } = req;
-    const result = service.subtraction(body.a, body.b);
-    return res.json({
-        result
-    });
+app.post("/api/v2/maths/subtraction", (req, res) => {
+  const { body } = req;
+  const result = service.subtraction(body.a, body.b);
+  return res.json({
+    result,
+  });
 });
 
 app.listen(port, () => {
-    console.log(`App listening on port: ${port}`);
+  console.log(`App listening on port: ${port}`);
 });
 ```
 
@@ -134,24 +135,24 @@ From the exmaple above, you will get the following output from running a build:
 ```typescript
 // dist/Time/src/api.js
 
-import * as express from 'express';
+import * as express from "express";
 
-import * as service from './service.js';
+import * as service from "./service.js";
 
 const app = express();
 const port = 3000;
 
 app.use(express.json());
 
-app.get('/api/v2/maths/time', (req, res) => {
-    const result = service.time();
-    return res.json({
-        result
-    });
+app.get("/api/v2/maths/time", (req, res) => {
+  const result = service.time();
+  return res.json({
+    result,
+  });
 });
 
 app.listen(port, () => {
-    console.log(`App listening on port: ${port}`);
+  console.log(`App listening on port: ${port}`);
 });
 ```
 
@@ -163,9 +164,10 @@ We welcome contributions from the community. Please read our [contributing guide
 
 This project is in the early stages of development. We are actively working on the project and will be releasing new features and improvements regularly, which may include a rewrite into a more efficient and generic language like Rust or Go. Please check our issues and project board for more information, and don't for.
 
-- [x] Support for NodeJS/Typescript and ExpressJS
+- [x] Limited support for NodeJS/Typescript (no require or dynamic imports, no decorators)
 - [x] Simple UI
-- [ ] NestJS support
+- [x] Support NodeJS require and dynamic imports
+- [ ] Full support for NodeJS/Typescript
 - [ ] Python support with Flask
 - [ ] Django support
 - [ ] Full python support
