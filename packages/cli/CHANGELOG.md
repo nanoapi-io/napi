@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Add support for require import in javascript
+
 ## [0.0.14] - 2024-10-30
 
 Fix padding and size discrepancy with toolbar
