@@ -208,7 +208,7 @@ export default function ApiTree(props: {
     >
       <div className="absolute bottom-6 inset-x-4 z-10 flex justify-around">
         <div className="flex gap-3 items-center">
-          <div className="bg-background-light dark:bg-background-dark flex gap-4 pt-2 pb-1 px-3 rounded-lg">
+          <div className="bg-background-light dark:bg-background-dark flex gap-4 py-2 px-3 rounded-md">
             <Button
               size="1"
               variant="ghost"
@@ -290,7 +290,7 @@ export default function ApiTree(props: {
               <svg
                 width="20"
                 height="20"
-                viewBox="10 10 80 80"
+                viewBox="10 10 80 70"
                 xmlns="http://www.w3.org/2000/svg"
                 className="text-text-light dark:text-text-dark"
                 fill="none"
