@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.14] - 2024-10-30
+
 Fix padding and size discrepancy with toolbar
 
 ## [0.0.13] - 2024-10-29
