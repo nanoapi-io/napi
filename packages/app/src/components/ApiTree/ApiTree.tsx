@@ -208,7 +208,7 @@ export default function ApiTree(props: {
     >
       <div className="absolute bottom-6 inset-x-4 z-10 flex justify-around">
         <div className="flex gap-3 items-center">
-          <div className="bg-background-light dark:bg-background-dark flex gap-4 py-2 px-3 rounded-md">
+          <div className="bg-background-light dark:bg-background-dark flex gap-4 py-2 px-3 rounded-lg">
             <Button
               size="1"
               variant="ghost"

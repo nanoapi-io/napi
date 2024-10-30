@@ -75,12 +75,23 @@ function removeInvalidFileImports(
       updatedSourceCode = updatedSourceCode.replace(
         sourceCode.substring(
           importStatement.startIndex,
-          importStatement.endIndex + 1,
+          importStatement.endIndex,
         ),
         "",
       );
     }
   });
+
+  return { updatedSourceCode, removedIdentifiers };
+}
+
+function removeInvalidFileRequires(
+  rootNode: Parser.SyntaxNode,
+  sourceCode: string,
+  invalidDependencies: string[],
+) {
+  let updatedSourceCode = sourceCode;
+  const removedIdentifiers: Parser.SyntaxNode[] = [];
 
   const requireStatements = getRequireDeclarations(rootNode);
   requireStatements.forEach((requireStatement) => {
@@ -95,7 +106,7 @@ function removeInvalidFileImports(
       updatedSourceCode = updatedSourceCode.replace(
         sourceCode.substring(
           requireStatement.startIndex,
-          requireStatement.endIndex + 1,
+          requireStatement.endIndex,
         ),
         "",
       );
@@ -112,30 +123,32 @@ function removeDeletedImportUsage(
 ): string {
   let updatedSourceCode = sourceCode;
 
-  function traverse(node: Parser.SyntaxNode) {
-    if (node.type === "identifier" && removedImportsNames.includes(node)) {
-      // find the next parent expression statement (can be several levels up)
-      let parent = node.parent;
-      while (parent && parent.type !== "expression_statement") {
-        parent = parent.parent;
-      }
-      if (!parent) {
-        throw new Error("Could not find parent expression statement");
+  removedImportsNames.forEach((removedImportsName) => {
+    function traverse(node: Parser.SyntaxNode) {
+      if (node.type === "identifier" && removedImportsName.text === node.text) {
+        // find the next parent expression statement (can be several levels up)
+        let parent = node.parent;
+        while (parent && parent.type !== "expression_statement") {
+          parent = parent.parent;
+        }
+        if (!parent) {
+          throw new Error("Could not find parent expression statement");
+        }
+
+        // Remove the expression statement
+        updatedSourceCode = updatedSourceCode.replace(
+          sourceCode.substring(parent.startIndex, parent.endIndex),
+          "",
+        );
       }
 
-      // Remove the expression statement
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(parent.startIndex, parent.endIndex + 1),
-        "",
-      );
+      node.children.forEach((child) => {
+        traverse(child);
+      });
     }
 
-    node.children.forEach((child) => {
-      traverse(child);
-    });
-  }
-
-  traverse(rootNode);
+    traverse(rootNode);
+  });
 
   return updatedSourceCode;
 }
@@ -181,7 +194,7 @@ function cleanUnusedImportsStatements(
 
     importIdentifiers.forEach((importIdentifier) => {
       const isUsed = isIdentifierUsed(rootNode, importIdentifier);
-      if (isUsed) {
+      if (!isUsed) {
         importIdentifiersToRemove.push(importIdentifier);
       }
     });
@@ -229,7 +242,7 @@ function cleanUnusedRequireDeclarations(
 
     requireIdentifiers.forEach((requireIdentifier) => {
       const isUsed = isIdentifierUsed(rootNode, requireIdentifier);
-      if (isUsed) {
+      if (!isUsed) {
         requireIdentifiersToRemove.push(requireIdentifier);
       }
     });
@@ -273,13 +286,23 @@ export function cleanupJavascriptFile(
 
   tree = parser.parse(updatedSourceCode);
 
-  const result = removeInvalidFileImports(
+  const resultAfterImportCleaning = removeInvalidFileImports(
     tree.rootNode,
     updatedSourceCode,
     invalidDependencies,
   );
-  updatedSourceCode = result.updatedSourceCode;
-  const removedIdentifiers = result.removedIdentifiers;
+  updatedSourceCode = resultAfterImportCleaning.updatedSourceCode;
+  const removedIdentifiers = resultAfterImportCleaning.removedIdentifiers;
+
+  tree = parser.parse(updatedSourceCode);
+
+  const resultAfterRequireCleaning = removeInvalidFileRequires(
+    tree.rootNode,
+    updatedSourceCode,
+    invalidDependencies,
+  );
+  updatedSourceCode = resultAfterRequireCleaning.updatedSourceCode;
+  removedIdentifiers.push(...resultAfterRequireCleaning.removedIdentifiers);
 
   tree = parser.parse(updatedSourceCode);
 

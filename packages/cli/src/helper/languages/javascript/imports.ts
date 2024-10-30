@@ -157,7 +157,11 @@ export function extractIdentifiersFromRequireDeclaration(
       return;
     }
 
-    if (node.type === "identifier") {
+    if (
+      ["identifier", "shorthand_property_identifier_pattern"].includes(
+        node.type,
+      )
+    ) {
       identifier.push(node);
     }
 
