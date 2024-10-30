@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Add support for dynamic import in javascript
+
 ## [0.0.15] - 2024-10-30
 
 Add support for require import in javascript

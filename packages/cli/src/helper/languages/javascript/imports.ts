@@ -8,9 +8,9 @@ export function getImportStatements(node: Parser.SyntaxNode) {
       importStatements.push(node);
     }
 
-    for (let i = 0; i < node.childCount; i++) {
-      traverse(node.child(i) as Parser.SyntaxNode);
-    }
+    node.children.forEach((child) => {
+      traverse(child);
+    });
   }
 
   traverse(node);
@@ -24,8 +24,7 @@ export function getRequireDeclarations(node: Parser.SyntaxNode) {
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "call_expression") {
       const requireNode = node.namedChildren.find(
-        (n: Parser.SyntaxNode) =>
-          n.type === "identifier" && n.text === "require",
+        (n) => n.type === "identifier" && n.text === "require",
       );
       if (requireNode) {
         let declarationNode = node;
@@ -57,9 +56,55 @@ export function getRequireDeclarations(node: Parser.SyntaxNode) {
       }
     }
 
-    for (let i = 0; i < node.childCount; i++) {
-      traverse(node.child(i) as Parser.SyntaxNode);
+    node.children.forEach((child) => {
+      traverse(child);
+    });
+  }
+
+  traverse(node);
+
+  return requireStatements;
+}
+
+export function getDynamicImportDeclarations(node: Parser.SyntaxNode) {
+  const requireStatements: Parser.SyntaxNode[] = [];
+
+  function traverse(node: Parser.SyntaxNode) {
+    if (node.type === "call_expression") {
+      const importNode = node.namedChildren.find((n) => n.type === "import");
+      if (importNode) {
+        let declarationNode = node;
+        while (true) {
+          if (
+            ["variable_declaration", "lexical_declaration"].includes(
+              declarationNode.type,
+            )
+          ) {
+            break;
+          }
+
+          if (!declarationNode.parent) {
+            break;
+          }
+          declarationNode = declarationNode.parent;
+        }
+
+        if (
+          declarationNode.type === "variable_declaration" ||
+          declarationNode.type === "lexical_declaration"
+        ) {
+          requireStatements.push(declarationNode);
+        } else {
+          throw new Error(
+            "Unexcpected error, Could not find require declaration",
+          );
+        }
+      }
     }
+
+    node.children.forEach((child) => {
+      traverse(child);
+    });
   }
 
   traverse(node);
@@ -70,9 +115,7 @@ export function getRequireDeclarations(node: Parser.SyntaxNode) {
 export function extractFileImportsFromImportStatements(
   importNode: Parser.SyntaxNode,
 ) {
-  const stringNode = importNode.namedChildren.find(
-    (n: Parser.SyntaxNode) => n.type === "string",
-  );
+  const stringNode = importNode.namedChildren.find((n) => n.type === "string");
   if (stringNode) {
     const importName = stringNode.text.slice(1, -1); // Remove quotes
     // check if stringNode is a file path, we ignore import from node_modules
@@ -90,19 +133,18 @@ export function extractFileImportsFromRequireDeclarations(
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "call_expression") {
       const requireNode = node.namedChildren.find(
-        (n: Parser.SyntaxNode) =>
-          n.type === "identifier" && n.text === "require",
+        (n) => n.type === "identifier" && n.text === "require",
       );
       if (requireNode) {
         const argumentsNode = node.namedChildren.find(
-          (n: Parser.SyntaxNode) => n.type === "arguments",
+          (n) => n.type === "arguments",
         );
         if (!argumentsNode) {
           throw new Error("Could not find arguments node");
         }
 
         const stringNode = argumentsNode.namedChildren.find(
-          (n: Parser.SyntaxNode) => n.type === "string",
+          (n) => n.type === "string",
         );
         if (!stringNode) {
           throw new Error("Could not find string node");
@@ -118,9 +160,52 @@ export function extractFileImportsFromRequireDeclarations(
       }
     }
 
-    for (let i = 0; i < node.childCount; i++) {
-      traverse(node.child(i) as Parser.SyntaxNode);
+    node.children.forEach((child) => {
+      traverse(child);
+    });
+  }
+
+  traverse(requireNode);
+
+  return fileImportName;
+}
+
+export function extractFileImportsFromDynamicImportDeclarations(
+  requireNode: Parser.SyntaxNode,
+) {
+  let fileImportName: string | undefined;
+
+  function traverse(node: Parser.SyntaxNode) {
+    if (node.type === "call_expression") {
+      const requireNode = node.namedChildren.find((n) => n.type === "import");
+      if (requireNode) {
+        const argumentsNode = node.namedChildren.find(
+          (n) => n.type === "arguments",
+        );
+        if (!argumentsNode) {
+          throw new Error("Could not find arguments node");
+        }
+
+        const stringNode = argumentsNode.namedChildren.find(
+          (n) => n.type === "string",
+        );
+        if (!stringNode) {
+          throw new Error("Could not find string node");
+        }
+
+        const importName = stringNode.text.slice(1, -1); // Remove quotes
+
+        // check if stringNode is a file path, we ignore import from node_modules
+        if (importName.startsWith(".")) {
+          fileImportName = importName;
+          return;
+        }
+      }
     }
+
+    node.children.forEach((child) => {
+      traverse(child);
+    });
   }
 
   traverse(requireNode);
@@ -136,9 +221,9 @@ export function extractIdentifiersFromImportStatement(node: Parser.SyntaxNode) {
       identifier.push(node);
     }
 
-    for (let i = 0; i < node.childCount; i++) {
-      traverse(node.child(i) as Parser.SyntaxNode);
-    }
+    node.children.forEach((child) => {
+      traverse(child);
+    });
   }
 
   traverse(node);
@@ -165,9 +250,38 @@ export function extractIdentifiersFromRequireDeclaration(
       identifier.push(node);
     }
 
-    for (let i = 0; i < node.childCount; i++) {
-      traverse(node.child(i) as Parser.SyntaxNode);
+    node.children.forEach((child) => {
+      traverse(child);
+    });
+  }
+
+  traverse(node);
+
+  return identifier;
+}
+
+export function extractIdentifiersFromDynamicImportDeclaration(
+  node: Parser.SyntaxNode,
+) {
+  const identifier: Parser.SyntaxNode[] = [];
+
+  function traverse(node: Parser.SyntaxNode) {
+    // We do not care about the identifier of the require call
+    if (node.type === "call_expression") {
+      return;
     }
+
+    if (
+      ["identifier", "shorthand_property_identifier_pattern"].includes(
+        node.type,
+      )
+    ) {
+      identifier.push(node);
+    }
+
+    node.children.forEach((child) => {
+      traverse(child);
+    });
   }
 
   traverse(node);
@@ -183,6 +297,7 @@ export function extractJavascriptFileImports(
 
   const importNodes = getImportStatements(tree.rootNode);
   const requireNodes = getRequireDeclarations(tree.rootNode);
+  const dynamicImportNodes = getDynamicImportDeclarations(tree.rootNode);
 
   const dependenciesFromImports: string[] = [];
   importNodes.forEach((node) => {
@@ -200,5 +315,17 @@ export function extractJavascriptFileImports(
     }
   });
 
-  return [...dependenciesFromImports, ...dependenciesFromRequires];
+  const dependenciesFromDynamicImports: string[] = [];
+  dynamicImportNodes.forEach((node) => {
+    const importName = extractFileImportsFromDynamicImportDeclarations(node);
+    if (importName) {
+      dependenciesFromDynamicImports.push(importName);
+    }
+  });
+
+  return [
+    ...dependenciesFromImports,
+    ...dependenciesFromRequires,
+    ...dependenciesFromDynamicImports,
+  ];
 }

@@ -8,6 +8,9 @@ import {
   extractFileImportsFromRequireDeclarations,
   extractIdentifiersFromImportStatement,
   extractIdentifiersFromRequireDeclaration,
+  getDynamicImportDeclarations,
+  extractFileImportsFromDynamicImportDeclarations,
+  extractIdentifiersFromDynamicImportDeclaration,
 } from "./imports";
 
 function removeAnnotations(
@@ -32,11 +35,16 @@ function removeAnnotations(
 
       if (!endpointToKeep) {
         const nextNode = node.nextNamedSibling;
+        // TODO test this piece of code with decorators on a nestjs project
+        // // We need to remove all decorators too
+        // while (nextNode && nextNode.type === "decorator") {
+        //   nextNode = nextNode.nextNamedSibling;
+        // }
         if (!nextNode) {
           throw new Error("Could not find next node");
         }
-        // TODO support decorator. Lots of framework uses these (eg: nestjs)
-        // delete this node (comment) and the next node (api endpoint)
+
+        // delete this node (comment) and the next node(s) (api endpoint)
         updatedSourceCode = updatedSourceCode.replace(
           sourceCode.substring(node.startIndex, nextNode.endIndex + 1),
           "",
@@ -107,6 +115,39 @@ function removeInvalidFileRequires(
         sourceCode.substring(
           requireStatement.startIndex,
           requireStatement.endIndex,
+        ),
+        "",
+      );
+    }
+  });
+
+  return { updatedSourceCode, removedIdentifiers };
+}
+
+function removeInvalidFileDynamicImports(
+  rootNode: Parser.SyntaxNode,
+  sourceCode: string,
+  invalidDependencies: string[],
+) {
+  let updatedSourceCode = sourceCode;
+  const removedIdentifiers: Parser.SyntaxNode[] = [];
+
+  const dynamicImportStatements = getDynamicImportDeclarations(rootNode);
+  dynamicImportStatements.forEach((dynamicImportStatement) => {
+    const importName = extractFileImportsFromDynamicImportDeclarations(
+      dynamicImportStatement,
+    );
+    if (importName && invalidDependencies.includes(importName)) {
+      const identifiers = extractIdentifiersFromDynamicImportDeclaration(
+        dynamicImportStatement,
+      );
+      removedIdentifiers.push(...identifiers);
+
+      // Remove the require statement
+      updatedSourceCode = updatedSourceCode.replace(
+        sourceCode.substring(
+          dynamicImportStatement.startIndex,
+          dynamicImportStatement.endIndex,
         ),
         "",
       );
@@ -274,6 +315,55 @@ function cleanUnusedRequireDeclarations(
   return updatedSourceCode;
 }
 
+function cleanUnusedDynamicImportDeclarations(
+  rootNode: Parser.SyntaxNode,
+  sourceCode: string,
+) {
+  let updatedSourceCode = sourceCode;
+
+  const dynamicImportDeclarations = getDynamicImportDeclarations(rootNode);
+
+  dynamicImportDeclarations.forEach((dynamicImportDeclaration) => {
+    const dynamicImportIdentifiers =
+      extractIdentifiersFromDynamicImportDeclaration(dynamicImportDeclaration);
+
+    const dynamicImportIdentifiersToRemove: Parser.SyntaxNode[] = [];
+
+    dynamicImportIdentifiers.forEach((dynamicImportIdentifier) => {
+      const isUsed = isIdentifierUsed(rootNode, dynamicImportIdentifier);
+      if (!isUsed) {
+        dynamicImportIdentifiersToRemove.push(dynamicImportIdentifier);
+      }
+    });
+
+    const removeDynamicImportDeclaration =
+      dynamicImportIdentifiersToRemove.length ===
+      dynamicImportIdentifiers.length;
+
+    if (removeDynamicImportDeclaration) {
+      updatedSourceCode = updatedSourceCode.replace(
+        sourceCode.substring(
+          dynamicImportDeclaration.startIndex,
+          dynamicImportDeclaration.endIndex + 1,
+        ),
+        "",
+      );
+    }
+
+    dynamicImportIdentifiersToRemove.forEach((dynamicImportIdentifier) => {
+      updatedSourceCode = updatedSourceCode.replace(
+        sourceCode.substring(
+          dynamicImportIdentifier.startIndex,
+          dynamicImportIdentifier.endIndex + 1,
+        ),
+        "",
+      );
+    });
+  });
+
+  return updatedSourceCode;
+}
+
 export function cleanupJavascriptFile(
   parser: Parser,
   sourceCode: string,
@@ -306,6 +396,18 @@ export function cleanupJavascriptFile(
 
   tree = parser.parse(updatedSourceCode);
 
+  const resultAfterDynamicImportCleaning = removeInvalidFileDynamicImports(
+    tree.rootNode,
+    updatedSourceCode,
+    invalidDependencies,
+  );
+  updatedSourceCode = resultAfterDynamicImportCleaning.updatedSourceCode;
+  removedIdentifiers.push(
+    ...resultAfterDynamicImportCleaning.removedIdentifiers,
+  );
+
+  tree = parser.parse(updatedSourceCode);
+
   updatedSourceCode = removeDeletedImportUsage(
     tree.rootNode,
     updatedSourceCode,
@@ -322,6 +424,13 @@ export function cleanupJavascriptFile(
   tree = parser.parse(updatedSourceCode);
 
   updatedSourceCode = cleanUnusedRequireDeclarations(
+    tree.rootNode,
+    updatedSourceCode,
+  );
+
+  tree = parser.parse(updatedSourceCode);
+
+  updatedSourceCode = cleanUnusedDynamicImportDeclarations(
     tree.rootNode,
     updatedSourceCode,
   );
