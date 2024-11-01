@@ -1,6 +1,9 @@
 import Parser from "tree-sitter";
 import { Group } from "../../types";
-import { getNanoApiAnnotationFromCommentValue } from "../../file";
+import {
+  getNanoApiAnnotationFromCommentValue,
+  removeIndexesFromSourceCode,
+} from "../../file";
 import {
   getImportStatements,
   extractFileImportsFromImportStatements,
@@ -14,11 +17,13 @@ import {
 } from "./imports";
 
 function removeAnnotations(
-  rootNode: Parser.SyntaxNode,
+  parser: Parser,
   sourceCode: string,
   groupToKeep: Group,
 ): string {
-  let updatedSourceCode = sourceCode;
+  const tree = parser.parse(sourceCode);
+
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
   function traverse(node: Parser.SyntaxNode) {
     if (node.type === "comment") {
@@ -34,21 +39,20 @@ function removeAnnotations(
       );
 
       if (!endpointToKeep) {
-        const nextNode = node.nextNamedSibling;
-        // TODO test this piece of code with decorators on a nestjs project
-        // // We need to remove all decorators too
-        // while (nextNode && nextNode.type === "decorator") {
-        //   nextNode = nextNode.nextNamedSibling;
-        // }
+        let nextNode = node.nextNamedSibling;
+        // We need to remove all decorators too
+        while (nextNode && nextNode.type === "decorator") {
+          nextNode = nextNode.nextNamedSibling;
+        }
         if (!nextNode) {
           throw new Error("Could not find next node");
         }
 
-        // delete this node (comment) and the next node(s) (api endpoint)
-        updatedSourceCode = updatedSourceCode.replace(
-          sourceCode.substring(node.startIndex, nextNode.endIndex + 1),
-          "",
-        );
+        // Remove this node (comment) and the next node(s) (api endpoint)
+        indexesToRemove.push({
+          startIndex: node.startIndex,
+          endIndex: nextNode.endIndex,
+        });
       }
     }
 
@@ -57,20 +61,28 @@ function removeAnnotations(
     });
   }
 
-  traverse(rootNode);
+  traverse(tree.rootNode);
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return updatedSourceCode;
 }
 
 function removeInvalidFileImports(
-  rootNode: Parser.SyntaxNode,
+  parser: Parser,
   sourceCode: string,
   invalidDependencies: string[],
 ) {
-  let updatedSourceCode = sourceCode;
+  const tree = parser.parse(sourceCode);
+
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
   const removedIdentifiers: Parser.SyntaxNode[] = [];
 
-  const importStatements = getImportStatements(rootNode);
+  const importStatements = getImportStatements(tree.rootNode);
 
   importStatements.forEach((importStatement) => {
     const importName = extractFileImportsFromImportStatements(importStatement);
@@ -80,28 +92,33 @@ function removeInvalidFileImports(
       removedIdentifiers.push(...identifiers);
 
       // Remove the import statement
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          importStatement.startIndex,
-          importStatement.endIndex,
-        ),
-        "",
-      );
+      indexesToRemove.push({
+        startIndex: importStatement.startIndex,
+        endIndex: importStatement.endIndex,
+      });
     }
   });
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return { updatedSourceCode, removedIdentifiers };
 }
 
 function removeInvalidFileRequires(
-  rootNode: Parser.SyntaxNode,
+  parser: Parser,
   sourceCode: string,
   invalidDependencies: string[],
 ) {
-  let updatedSourceCode = sourceCode;
+  const tree = parser.parse(sourceCode);
+
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
   const removedIdentifiers: Parser.SyntaxNode[] = [];
 
-  const requireStatements = getRequireDeclarations(rootNode);
+  const requireStatements = getRequireDeclarations(tree.rootNode);
   requireStatements.forEach((requireStatement) => {
     const importName =
       extractFileImportsFromRequireDeclarations(requireStatement);
@@ -111,28 +128,33 @@ function removeInvalidFileRequires(
       removedIdentifiers.push(...identifiers);
 
       // Remove the require statement
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          requireStatement.startIndex,
-          requireStatement.endIndex,
-        ),
-        "",
-      );
+      indexesToRemove.push({
+        startIndex: requireStatement.startIndex,
+        endIndex: requireStatement.endIndex,
+      });
     }
   });
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return { updatedSourceCode, removedIdentifiers };
 }
 
 function removeInvalidFileDynamicImports(
-  rootNode: Parser.SyntaxNode,
+  parser: Parser,
   sourceCode: string,
   invalidDependencies: string[],
 ) {
-  let updatedSourceCode = sourceCode;
+  const tree = parser.parse(sourceCode);
+
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
   const removedIdentifiers: Parser.SyntaxNode[] = [];
 
-  const dynamicImportStatements = getDynamicImportDeclarations(rootNode);
+  const dynamicImportStatements = getDynamicImportDeclarations(tree.rootNode);
   dynamicImportStatements.forEach((dynamicImportStatement) => {
     const importName = extractFileImportsFromDynamicImportDeclarations(
       dynamicImportStatement,
@@ -144,43 +166,61 @@ function removeInvalidFileDynamicImports(
       removedIdentifiers.push(...identifiers);
 
       // Remove the require statement
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          dynamicImportStatement.startIndex,
-          dynamicImportStatement.endIndex,
-        ),
-        "",
-      );
+      indexesToRemove.push({
+        startIndex: dynamicImportStatement.startIndex,
+        endIndex: dynamicImportStatement.endIndex,
+      });
     }
   });
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return { updatedSourceCode, removedIdentifiers };
 }
 
 function removeDeletedImportUsage(
-  rootNode: Parser.SyntaxNode,
+  parser: Parser,
   sourceCode: string,
   removedImportsNames: Parser.SyntaxNode[],
 ): string {
-  let updatedSourceCode = sourceCode;
+  const tree = parser.parse(sourceCode);
+
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
   removedImportsNames.forEach((removedImportsName) => {
     function traverse(node: Parser.SyntaxNode) {
       if (node.type === "identifier" && removedImportsName.text === node.text) {
         // find the next parent expression statement (can be several levels up)
         let parent = node.parent;
-        while (parent && parent.type !== "expression_statement") {
+
+        while (parent) {
+          if (parent && parent.type === "array") {
+            // remove iditenfier from the array
+            const endIndex =
+              sourceCode.substring(node.endIndex, node.endIndex) === ","
+                ? node.endIndex
+                : node.endIndex;
+            indexesToRemove.push({
+              startIndex: node.startIndex,
+              endIndex,
+            });
+            return;
+          }
+
+          if (parent && parent.type === "expression_statement") {
+            // Remove the expression statement
+            indexesToRemove.push({
+              startIndex: parent.startIndex,
+              endIndex: parent.endIndex,
+            });
+            return;
+          }
+
           parent = parent.parent;
         }
-        if (!parent) {
-          throw new Error("Could not find parent expression statement");
-        }
-
-        // Remove the expression statement
-        updatedSourceCode = updatedSourceCode.replace(
-          sourceCode.substring(parent.startIndex, parent.endIndex),
-          "",
-        );
       }
 
       node.children.forEach((child) => {
@@ -188,8 +228,13 @@ function removeDeletedImportUsage(
       });
     }
 
-    traverse(rootNode);
+    traverse(tree.rootNode);
   });
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return updatedSourceCode;
 }
@@ -219,13 +264,12 @@ function isIdentifierUsed(
   return isUsed;
 }
 
-function cleanUnusedImportsStatements(
-  rootNode: Parser.SyntaxNode,
-  sourceCode: string,
-) {
-  let updatedSourceCode = sourceCode;
+function cleanUnusedImportsStatements(parser: Parser, sourceCode: string) {
+  const tree = parser.parse(sourceCode);
 
-  const importStatements = getImportStatements(rootNode);
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
+  const importStatements = getImportStatements(tree.rootNode);
 
   importStatements.forEach((importStatement) => {
     const importIdentifiers =
@@ -234,7 +278,7 @@ function cleanUnusedImportsStatements(
     const importIdentifiersToRemove: Parser.SyntaxNode[] = [];
 
     importIdentifiers.forEach((importIdentifier) => {
-      const isUsed = isIdentifierUsed(rootNode, importIdentifier);
+      const isUsed = isIdentifierUsed(tree.rootNode, importIdentifier);
       if (!isUsed) {
         importIdentifiersToRemove.push(importIdentifier);
       }
@@ -244,36 +288,34 @@ function cleanUnusedImportsStatements(
       importIdentifiersToRemove.length === importIdentifiers.length;
 
     if (removeImportStatement) {
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          importStatement.startIndex,
-          importStatement.endIndex + 1,
-        ),
-        "",
-      );
+      indexesToRemove.push({
+        startIndex: importStatement.startIndex,
+        endIndex: importStatement.endIndex,
+      });
+    } else {
+      importIdentifiersToRemove.forEach((importIdentifier) => {
+        indexesToRemove.push({
+          startIndex: importIdentifier.startIndex,
+          endIndex: importIdentifier.endIndex,
+        });
+      });
     }
-
-    importIdentifiersToRemove.forEach((importIdentifier) => {
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          importIdentifier.startIndex,
-          importIdentifier.endIndex + 1,
-        ),
-        "",
-      );
-    });
   });
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return updatedSourceCode;
 }
 
-function cleanUnusedRequireDeclarations(
-  rootNode: Parser.SyntaxNode,
-  sourceCode: string,
-) {
-  let updatedSourceCode = sourceCode;
+function cleanUnusedRequireDeclarations(parser: Parser, sourceCode: string) {
+  const tree = parser.parse(sourceCode);
 
-  const requireDeclarations = getRequireDeclarations(rootNode);
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
+  const requireDeclarations = getRequireDeclarations(tree.rootNode);
 
   requireDeclarations.forEach((requireDeclaration) => {
     const requireIdentifiers =
@@ -282,7 +324,7 @@ function cleanUnusedRequireDeclarations(
     const requireIdentifiersToRemove: Parser.SyntaxNode[] = [];
 
     requireIdentifiers.forEach((requireIdentifier) => {
-      const isUsed = isIdentifierUsed(rootNode, requireIdentifier);
+      const isUsed = isIdentifierUsed(tree.rootNode, requireIdentifier);
       if (!isUsed) {
         requireIdentifiersToRemove.push(requireIdentifier);
       }
@@ -292,36 +334,37 @@ function cleanUnusedRequireDeclarations(
       requireIdentifiersToRemove.length === requireIdentifiers.length;
 
     if (removeRequireDeclaration) {
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          requireDeclaration.startIndex,
-          requireDeclaration.endIndex + 1,
-        ),
-        "",
-      );
+      indexesToRemove.push({
+        startIndex: requireDeclaration.startIndex,
+        endIndex: requireDeclaration.endIndex,
+      });
+    } else {
+      requireIdentifiersToRemove.forEach((requireIdentifier) => {
+        indexesToRemove.push({
+          startIndex: requireIdentifier.startIndex,
+          endIndex: requireIdentifier.endIndex,
+        });
+      });
     }
-
-    requireIdentifiersToRemove.forEach((requireIdentifier) => {
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          requireIdentifier.startIndex,
-          requireIdentifier.endIndex + 1,
-        ),
-        "",
-      );
-    });
   });
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return updatedSourceCode;
 }
 
 function cleanUnusedDynamicImportDeclarations(
-  rootNode: Parser.SyntaxNode,
+  parser: Parser,
   sourceCode: string,
 ) {
-  let updatedSourceCode = sourceCode;
+  const tree = parser.parse(sourceCode);
 
-  const dynamicImportDeclarations = getDynamicImportDeclarations(rootNode);
+  const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
+  const dynamicImportDeclarations = getDynamicImportDeclarations(tree.rootNode);
 
   dynamicImportDeclarations.forEach((dynamicImportDeclaration) => {
     const dynamicImportIdentifiers =
@@ -330,7 +373,7 @@ function cleanUnusedDynamicImportDeclarations(
     const dynamicImportIdentifiersToRemove: Parser.SyntaxNode[] = [];
 
     dynamicImportIdentifiers.forEach((dynamicImportIdentifier) => {
-      const isUsed = isIdentifierUsed(rootNode, dynamicImportIdentifier);
+      const isUsed = isIdentifierUsed(tree.rootNode, dynamicImportIdentifier);
       if (!isUsed) {
         dynamicImportIdentifiersToRemove.push(dynamicImportIdentifier);
       }
@@ -341,25 +384,24 @@ function cleanUnusedDynamicImportDeclarations(
       dynamicImportIdentifiers.length;
 
     if (removeDynamicImportDeclaration) {
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          dynamicImportDeclaration.startIndex,
-          dynamicImportDeclaration.endIndex + 1,
-        ),
-        "",
-      );
+      indexesToRemove.push({
+        startIndex: dynamicImportDeclaration.startIndex,
+        endIndex: dynamicImportDeclaration.endIndex,
+      });
+    } else {
+      dynamicImportIdentifiersToRemove.forEach((dynamicImportIdentifier) => {
+        indexesToRemove.push({
+          startIndex: dynamicImportIdentifier.startIndex,
+          endIndex: dynamicImportIdentifier.endIndex,
+        });
+      });
     }
-
-    dynamicImportIdentifiersToRemove.forEach((dynamicImportIdentifier) => {
-      updatedSourceCode = updatedSourceCode.replace(
-        sourceCode.substring(
-          dynamicImportIdentifier.startIndex,
-          dynamicImportIdentifier.endIndex + 1,
-        ),
-        "",
-      );
-    });
   });
+
+  const updatedSourceCode = removeIndexesFromSourceCode(
+    sourceCode,
+    indexesToRemove,
+  );
 
   return updatedSourceCode;
 }
@@ -370,34 +412,26 @@ export function cleanupJavascriptFile(
   group: Group,
   invalidDependencies: string[],
 ): string {
-  let tree = parser.parse(sourceCode);
-
-  let updatedSourceCode = removeAnnotations(tree.rootNode, sourceCode, group);
-
-  tree = parser.parse(updatedSourceCode);
+  let updatedSourceCode = removeAnnotations(parser, sourceCode, group);
 
   const resultAfterImportCleaning = removeInvalidFileImports(
-    tree.rootNode,
+    parser,
     updatedSourceCode,
     invalidDependencies,
   );
   updatedSourceCode = resultAfterImportCleaning.updatedSourceCode;
   const removedIdentifiers = resultAfterImportCleaning.removedIdentifiers;
 
-  tree = parser.parse(updatedSourceCode);
-
   const resultAfterRequireCleaning = removeInvalidFileRequires(
-    tree.rootNode,
+    parser,
     updatedSourceCode,
     invalidDependencies,
   );
   updatedSourceCode = resultAfterRequireCleaning.updatedSourceCode;
   removedIdentifiers.push(...resultAfterRequireCleaning.removedIdentifiers);
 
-  tree = parser.parse(updatedSourceCode);
-
   const resultAfterDynamicImportCleaning = removeInvalidFileDynamicImports(
-    tree.rootNode,
+    parser,
     updatedSourceCode,
     invalidDependencies,
   );
@@ -406,32 +440,18 @@ export function cleanupJavascriptFile(
     ...resultAfterDynamicImportCleaning.removedIdentifiers,
   );
 
-  tree = parser.parse(updatedSourceCode);
-
   updatedSourceCode = removeDeletedImportUsage(
-    tree.rootNode,
+    parser,
     updatedSourceCode,
     removedIdentifiers,
   );
 
-  tree = parser.parse(updatedSourceCode);
+  updatedSourceCode = cleanUnusedImportsStatements(parser, updatedSourceCode);
 
-  updatedSourceCode = cleanUnusedImportsStatements(
-    tree.rootNode,
-    updatedSourceCode,
-  );
-
-  tree = parser.parse(updatedSourceCode);
-
-  updatedSourceCode = cleanUnusedRequireDeclarations(
-    tree.rootNode,
-    updatedSourceCode,
-  );
-
-  tree = parser.parse(updatedSourceCode);
+  updatedSourceCode = cleanUnusedRequireDeclarations(parser, updatedSourceCode);
 
   updatedSourceCode = cleanUnusedDynamicImportDeclarations(
-    tree.rootNode,
+    parser,
     updatedSourceCode,
   );
 

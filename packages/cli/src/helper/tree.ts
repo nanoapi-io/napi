@@ -11,15 +11,15 @@ export function getEndpontsFromTree(
   endpoints: Endpoint[] = [],
 ) {
   for (const [filePath, value] of Object.entries(tree)) {
-    const annotations = getEndpointsFromFile(parentFiles, filePath, tree);
-    for (const annotation of annotations) {
+    const endpointsFromFile = getEndpointsFromFile(parentFiles, filePath, tree);
+    for (const endpointFromFile of endpointsFromFile) {
       const endpoint = {
-        method: annotation.method,
-        path: annotation.path,
-        group: annotation.group,
-        filePath: annotation.filePath,
-        parentFilePaths: annotation.parentFilePaths,
-        childrenFilePaths: annotation.childrenFilePaths,
+        method: endpointFromFile.method,
+        path: endpointFromFile.path,
+        group: endpointFromFile.group,
+        filePath: endpointFromFile.filePath,
+        parentFilePaths: endpointFromFile.parentFilePaths,
+        childrenFilePaths: endpointFromFile.childrenFilePaths,
       } as Endpoint;
       endpoints.push(endpoint);
     }

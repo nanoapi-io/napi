@@ -129,7 +129,6 @@ function getFilePathsFromTree(tree: dependencyTree.Tree) {
   return uniqueFilePaths;
 }
 
-// Resolve file paths from import/require statements
 export function resolveFilePath(
   importPath: string,
   currentFile: string,
@@ -168,4 +167,21 @@ export function resolveFilePath(
   }
   // Skip external dependencies (e.g., node_modules)
   return null;
+}
+
+export function removeIndexesFromSourceCode(
+  sourceCode: string,
+  indexesToRemove: { startIndex: number; endIndex: number }[],
+) {
+  let newSourceCode = sourceCode;
+
+  // sort to start removing from the of the file end
+  indexesToRemove.sort((a, b) => b.startIndex - a.startIndex);
+
+  indexesToRemove.forEach(({ startIndex, endIndex }) => {
+    newSourceCode =
+      newSourceCode.slice(0, startIndex) + newSourceCode.slice(endIndex);
+  });
+
+  return newSourceCode;
 }
