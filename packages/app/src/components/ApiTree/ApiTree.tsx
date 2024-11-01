@@ -92,6 +92,7 @@ export default function ApiTree(props: {
           position: { x: 0, y: 0 }, // Initial position, will be updated by Dagre
           data: {
             path: child.path,
+            isBeingDragged: false,
           },
           type: "groupNode",
         };
@@ -142,6 +143,7 @@ export default function ApiTree(props: {
             onChangeGroup: (group: string) =>
               props.onChangeEndpointGroup(group, endpoint),
             groupColor: color,
+            isBeingDragged: false,
           },
           type: "endpointNode",
         };
@@ -197,6 +199,26 @@ export default function ApiTree(props: {
     }
   }, []);
 
+  function onNodeDragStart(_event: React.MouseEvent, node: Node) {
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === node.id
+          ? { ...n, data: { ...n.data, isBeingDragged: true } }
+          : n,
+      ),
+    );
+  }
+
+  function onNodeDragStop(_event: React.MouseEvent, node: Node) {
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === node.id
+          ? { ...n, data: { ...n.data, isBeingDragged: false } }
+          : n,
+      ),
+    );
+  }
+
   return (
     <ReactFlow
       nodeTypes={nodeTypes}
@@ -204,6 +226,8 @@ export default function ApiTree(props: {
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
+      onNodeDragStart={onNodeDragStart}
+      onNodeDragStop={onNodeDragStop}
       fitView
     >
       <div className="absolute bottom-6 inset-x-4 z-10 flex justify-around">

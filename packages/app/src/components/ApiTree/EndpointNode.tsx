@@ -12,11 +12,14 @@ export default function EndpointNode(
       endpoint: Endpoint;
       onChangeGroup: (group: string) => void;
       groupColor?: string;
+      isBeingDragged: boolean;
     }>
   >,
 ) {
   return (
-    <div className="bg-secondarySurface-light dark:bg-secondarySurface-dark  rounded-xl border border-border-light dark:border-border-dark overflow-hidden">
+    <div
+      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden ${props.data.isBeingDragged ? "bg-blue-100 dark:bg-blue-900 shadow-lg" : ""}`}
+    >
       <Handle
         type="target"
         position={props.targetPosition || Position.Top}

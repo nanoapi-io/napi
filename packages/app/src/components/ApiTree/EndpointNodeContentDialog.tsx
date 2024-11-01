@@ -5,7 +5,7 @@ import {
   Separator,
   TextField,
 } from "@radix-ui/themes";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { Endpoint } from "../../service/api/types";
 import MethodBadge from "../MethodBadge";
 
@@ -14,20 +14,24 @@ export default function EndpointNodeContentDialog(props: {
   endpoint: Endpoint;
   onChangeGroup: (group: string) => void;
 }) {
+  const [open, setOpen] = useState<boolean>(false);
   const [group, setGroup] = useState<string>("");
 
   async function handleApply(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (group === props.endpoint.group) return;
-    props.onChangeGroup(group);
+    if (group !== props.endpoint.group) {
+      props.onChangeGroup(group);
+    }
+    setOpen(false);
   }
 
-  useEffect(() => {
+  function handleOpenChange(open: boolean) {
     setGroup(props.endpoint.group || "");
-  }, [props.endpoint]);
+    setOpen(open);
+  }
 
   return (
-    <Dialog.Root>
+    <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Trigger>
         <Button variant="ghost" size="1" highContrast disabled={props.busy}>
           <svg
@@ -63,119 +67,106 @@ export default function EndpointNodeContentDialog(props: {
           </div>
         </Dialog.Title>
         <Dialog.Description></Dialog.Description>
-        <Separator
-          orientation="horizontal"
-          size="4"
-          className="bg-[#FFFFFF1F]"
-        />
-        <DataList.Root className="mt-5">
-          <DataList.Item align="center">
-            <DataList.Label className="text-gray-light dark:text-gray-dark">
-              Method
-            </DataList.Label>
-            <DataList.Value>
-              <MethodBadge method={props.endpoint.method} />
-            </DataList.Value>
-          </DataList.Item>
-          <DataList.Item>
-            <DataList.Label className="text-gray-light dark:text-gray-dark">
-              Path
-            </DataList.Label>
-            <DataList.Value>
-              <div>{props.endpoint.path}</div>
-            </DataList.Value>
-          </DataList.Item>
-          <DataList.Item align="center">
-            <DataList.Label className="text-gray-light dark:text-gray-dark">
-              Group
-            </DataList.Label>
-            <DataList.Value>
-              <form className="flex gap-2 items-center" onSubmit={handleApply}>
+        <form onSubmit={handleApply}>
+          <Separator
+            orientation="horizontal"
+            size="4"
+            className="bg-[#FFFFFF1F]"
+          />
+          <DataList.Root className="mt-5">
+            <DataList.Item align="center">
+              <DataList.Label className="text-gray-light dark:text-gray-dark">
+                Method
+              </DataList.Label>
+              <DataList.Value>
+                <MethodBadge method={props.endpoint.method} />
+              </DataList.Value>
+            </DataList.Item>
+            <DataList.Item>
+              <DataList.Label className="text-gray-light dark:text-gray-dark">
+                Path
+              </DataList.Label>
+              <DataList.Value>
+                <div>{props.endpoint.path}</div>
+              </DataList.Value>
+            </DataList.Item>
+            <DataList.Item align="center">
+              <DataList.Label className="text-gray-light dark:text-gray-dark">
+                Group
+              </DataList.Label>
+              <DataList.Value>
                 <TextField.Root
                   value={group}
                   onChange={(e) => setGroup(e.target.value)}
                   disabled={props.busy}
                   placeholder="Set a group name"
                 />
-                <Button variant="ghost" disabled={props.busy} type="submit">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-gray-light dark:text-gray-dark"
-                    fill="currentColor"
-                  >
-                    <path d="M15.2353 0.765303C14.7821 0.312767 14.1678 0.0585938 13.5273 0.0585938C12.8869 0.0585938 12.2726 0.312767 11.8193 0.765303L0.976677 11.608C0.666178 11.9167 0.419985 12.284 0.252342 12.6885C0.0846994 13.093 -0.00106532 13.5268 9.98748e-06 13.9646V15.3333C9.98748e-06 15.5101 0.0702479 15.6797 0.195272 15.8047C0.320296 15.9297 0.489866 16 0.666677 16H2.03534C2.47319 16.0012 2.90692 15.9156 3.31145 15.748C3.71597 15.5805 4.08325 15.3344 4.39201 15.024L15.2353 4.18064C15.6877 3.72743 15.9417 3.11328 15.9417 2.47297C15.9417 1.83266 15.6877 1.21851 15.2353 0.765303ZM3.44934 14.0813C3.07335 14.4548 2.56532 14.6651 2.03534 14.6666H1.33334V13.9646C1.33267 13.7019 1.38411 13.4417 1.4847 13.1989C1.58529 12.9562 1.73302 12.7359 1.91934 12.5506L10.148 4.32197L11.6813 5.8553L3.44934 14.0813ZM14.292 3.23797L12.6213 4.9093L11.088 3.3793L12.7593 1.70797C12.86 1.60751 12.9795 1.52786 13.111 1.47358C13.2424 1.41929 13.3833 1.39143 13.5255 1.39158C13.6678 1.39174 13.8086 1.41991 13.9399 1.47448C14.0712 1.52905 14.1905 1.60896 14.291 1.70964C14.3915 1.81032 14.4711 1.9298 14.5254 2.06126C14.5797 2.19272 14.6076 2.33359 14.6074 2.47581C14.6072 2.61804 14.5791 2.75885 14.5245 2.89019C14.4699 3.02153 14.39 3.14084 14.2893 3.2413L14.292 3.23797Z" />
-                  </svg>
-                </Button>
-                {group === (props.endpoint.group || "") && (
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 16 16"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="text-[green]"
-                    fill="currentColor"
-                  >
-                    <path d="M7.99998 1.3335C11.682 1.3335 14.6666 4.31816 14.6666 8.00016C14.6666 11.6822 11.682 14.6668 7.99998 14.6668C4.31798 14.6668 1.33331 11.6822 1.33331 8.00016C1.33331 4.31816 4.31798 1.3335 7.99998 1.3335ZM10.1466 5.98016L7.16665 8.96016L5.85331 7.64683C5.75853 7.55851 5.63317 7.51043 5.50363 7.51271C5.3741 7.515 5.25051 7.56747 5.1589 7.65908C5.06729 7.75069 5.01482 7.87428 5.01253 8.00381C5.01024 8.13335 5.05833 8.25871 5.14665 8.3535L6.81331 10.0202C6.90706 10.1138 7.03415 10.1664 7.16665 10.1664C7.29915 10.1664 7.42623 10.1138 7.51998 10.0202L10.8533 6.68683C10.9024 6.64105 10.9418 6.58585 10.9692 6.52452C10.9965 6.46319 11.0112 6.39698 11.0124 6.32984C11.0136 6.26271 11.0012 6.19602 10.9761 6.13376C10.9509 6.07151 10.9135 6.01495 10.866 5.96747C10.8185 5.91999 10.762 5.88256 10.6997 5.85741C10.6375 5.83227 10.5708 5.81992 10.5036 5.8211C10.4365 5.82229 10.3703 5.83698 10.309 5.86431C10.2476 5.89164 10.1924 5.93104 10.1466 5.98016Z" />
-                  </svg>
-                )}
-              </form>
-            </DataList.Value>
-          </DataList.Item>
-        </DataList.Root>
+              </DataList.Value>
+            </DataList.Item>
+          </DataList.Root>
 
-        <Separator
-          orientation="horizontal"
-          size="4"
-          className="bg-[#FFFFFF1F] mt-5"
-        />
+          <Separator
+            orientation="horizontal"
+            size="4"
+            className="bg-[#FFFFFF1F] mt-5"
+          />
 
-        <DataList.Root className="mt-5">
-          <DataList.Item>
-            <DataList.Label className="text-gray-light dark:text-gray-dark">
-              Source:
-            </DataList.Label>
-            <DataList.Value>
-              <div>{props.endpoint.filePath}</div>
-            </DataList.Value>
-          </DataList.Item>
+          <DataList.Root className="mt-5">
+            <DataList.Item>
+              <DataList.Label className="text-gray-light dark:text-gray-dark">
+                Source:
+              </DataList.Label>
+              <DataList.Value>
+                <div>{props.endpoint.filePath}</div>
+              </DataList.Value>
+            </DataList.Item>
 
-          <DataList.Item>
-            <DataList.Label className="text-gray-light dark:text-gray-dark">
-              Dependants:
-            </DataList.Label>
-            <DataList.Value>
-              <ul className="list-disc">
-                {props.endpoint.parentFilePaths.length > 0 ? (
-                  props.endpoint.parentFilePaths.map((parent, index) => (
-                    <li key={index}>{parent}</li>
-                  ))
-                ) : (
-                  <li>No dependants</li>
-                )}
-              </ul>
-            </DataList.Value>
-          </DataList.Item>
+            <DataList.Item>
+              <DataList.Label className="text-gray-light dark:text-gray-dark">
+                Dependants:
+              </DataList.Label>
+              <DataList.Value>
+                <ul className="list-disc">
+                  {props.endpoint.parentFilePaths.length > 0 ? (
+                    props.endpoint.parentFilePaths.map((parent, index) => (
+                      <li key={index}>{parent}</li>
+                    ))
+                  ) : (
+                    <li>No dependants</li>
+                  )}
+                </ul>
+              </DataList.Value>
+            </DataList.Item>
 
-          <DataList.Item>
-            <DataList.Label className="text-gray-light dark:text-gray-dark">
-              Dependencies:
-            </DataList.Label>
-            <DataList.Value>
-              <ul className="list-disc">
-                {props.endpoint.childrenFilePaths.length > 0 ? (
-                  props.endpoint.childrenFilePaths.map((child, index) => (
-                    <li key={index}>{child}</li>
-                  ))
-                ) : (
-                  <li>No dependencies</li>
-                )}
-              </ul>
-            </DataList.Value>
-          </DataList.Item>
-        </DataList.Root>
+            <DataList.Item>
+              <DataList.Label className="text-gray-light dark:text-gray-dark">
+                Dependencies:
+              </DataList.Label>
+              <DataList.Value>
+                <ul className="list-disc">
+                  {props.endpoint.childrenFilePaths.length > 0 ? (
+                    props.endpoint.childrenFilePaths.map((child, index) => (
+                      <li key={index}>{child}</li>
+                    ))
+                  ) : (
+                    <li>No dependencies</li>
+                  )}
+                </ul>
+              </DataList.Value>
+            </DataList.Item>
+          </DataList.Root>
+
+          <div className="flex justify-end gap-5 mt-5">
+            <Dialog.Close>
+              <Button disabled={props.busy} color="gray">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Button type="submit" disabled={props.busy} color="blue">
+              Apply
+            </Button>
+          </div>
+        </form>
       </Dialog.Content>
     </Dialog.Root>
   );

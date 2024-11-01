@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 Use indexes when editing file instead of search/replace
+Some UX changes
 
 ## [0.0.16] - 2024-10-30
 

@@ -4,12 +4,19 @@ import dagre from "@dagrejs/dagre";
 function getNodeHeight(node: Node, isHorizontal: boolean) {
   if (isHorizontal) {
     if (node.type === "groupNode") {
-      return 100;
+      return 80;
     }
     if (node.type === "endpointNode") {
-      return 200;
+      return 150;
     }
   }
+
+  if (node.type === "groupNode") {
+    return 80;
+  } else if (node.type === "endpointNode") {
+    return 150;
+  }
+
   return 100;
 }
 
