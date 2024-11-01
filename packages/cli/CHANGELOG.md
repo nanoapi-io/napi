@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.17] - 2024-11-01
+
 Use indexes when editing file instead of search/replace
 Some UX changes
 
