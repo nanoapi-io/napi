@@ -11,14 +11,14 @@ export default function DefaultLayout({
 
   return (
     <div className="flex flex-col min-h-screen bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark">
-      <div className="px-5 flex items-center gap-10">
+      <div className="px-5 flex items-center gap-10 py-2">
         <a
           className="flex items-center gap-1 text-gray-light dark:text-gray-dark no-underline	"
           href="https://nanoapi.io"
           target="_blank"
         >
-          <img src="/logo.png" alt="logo" className="w-20 h-20" />
-          <span className="text-3xl font-bold">NanoAPI</span>
+          <img src="/logo.png" alt="logo" className="w-8 h-8" />
+          <span className="text-xl font-bold">NanoAPI</span>
         </a>
         <a
           href="https://nanoapi.io/docs"
