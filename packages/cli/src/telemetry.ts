@@ -19,8 +19,7 @@ export enum TelemetryEvents {
 export interface TelemetryEvent {
   sessionId: string;
   eventId: TelemetryEvents;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  data: any;
+  data: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -31,7 +30,7 @@ const TELEMETRY_ENDPOINT =
 const SESSION_FILE_PATH = join("/tmp", "napi_session_id");
 
 // getSessionId generates a new session ID and cache it in SESSION_FILE_PATH
-const getSessionId = (): string => {
+function getSessionId() {
   if (existsSync(SESSION_FILE_PATH)) {
     const fileContent = readFileSync(SESSION_FILE_PATH, "utf-8");
     const [storedDate, sessionId] = fileContent.split(":");
@@ -46,7 +45,7 @@ const getSessionId = (): string => {
   const today = new Date().toISOString().slice(0, 10);
   writeFileSync(SESSION_FILE_PATH, `${today}:${newSessionId}`);
   return newSessionId;
-};
+}
 
 const SESSION_ID = getSessionId();
 
@@ -54,7 +53,7 @@ telemetry.on("event", (data) => {
   sendTelemetryData(data);
 });
 
-const sendTelemetryData = async (data: TelemetryEvent) => {
+async function sendTelemetryData(data: TelemetryEvent) {
   try {
     await axios.post(TELEMETRY_ENDPOINT, data, {
       headers: {
@@ -66,10 +65,12 @@ const sendTelemetryData = async (data: TelemetryEvent) => {
   } catch (error) {
     console.error(`Failed to send telemetry data: ${error}`);
   }
-};
+}
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const trackEvent = (eventId: TelemetryEvents, eventData: any) => {
+export function trackEvent(
+  eventId: TelemetryEvents,
+  eventData: Record<string, unknown>,
+) {
   const telemetryPayload: TelemetryEvent = {
     sessionId: SESSION_ID,
     eventId,
@@ -78,4 +79,4 @@ export const trackEvent = (eventId: TelemetryEvents, eventData: any) => {
   };
 
   telemetry.emit("event", telemetryPayload);
-};
+}

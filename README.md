@@ -164,9 +164,8 @@ We welcome contributions from the community. Please read our [contributing guide
 
 This project is in the early stages of development. We are actively working on the project and will be releasing new features and improvements regularly, which may include a rewrite into a more efficient and generic language like Rust or Go. Please check our issues and project board for more information, and don't for.
 
-- [x] Limited support for NodeJS/Typescript (no require or dynamic imports, no decorators)
+- [x] Limited support for NodeJS/Typescript
 - [x] Simple UI
-- [x] Support NodeJS require and dynamic imports
 - [ ] Full support for NodeJS/Typescript
 - [ ] Python support with Flask
 - [ ] Django support
