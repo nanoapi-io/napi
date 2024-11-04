@@ -1,15 +1,17 @@
 import { z } from "zod";
 import { syncSchema } from "./helpers/validation";
 import fs from "fs";
-import { Dependencies } from "../helper/types";
 import {
   getNanoApiAnnotationFromCommentValue,
-  getParserLanguageFromFile,
   replaceCommentFromAnnotation,
-} from "../helper/file";
-import { getDependencyTree } from "../helper/dependencies";
+} from "../helper/annotations";
+import {
+  getDependencyTree,
+  getEndpontsFromTree,
+} from "../helper/dependencyTree";
 import Parser from "tree-sitter";
-import { getEndpontsFromTree } from "../helper/tree";
+import { getParserLanguageFromFile } from "../helper/treeSitter";
+import { replaceIndexesFromSourceCode } from "../helper/cleanup";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
   const tree = getDependencyTree(payload.entrypointPath);
@@ -31,53 +33,53 @@ export function sync(payload: z.infer<typeof syncSchema>) {
     return endpoint;
   });
 
-  function iterateOverTreeAndUpdateContent(tree: Dependencies) {
-    for (const [filePath, value] of Object.entries(tree)) {
-      let sourceCode = fs.readFileSync(filePath, "utf-8");
+  updatedEndpoints.forEach((endpoint) => {
+    const language = getParserLanguageFromFile(endpoint.filePath);
+    const parser = new Parser();
+    parser.setLanguage(language);
 
-      updatedEndpoints.forEach((endpoint) => {
-        const language = getParserLanguageFromFile(filePath);
-        const parser = new Parser();
-        parser.setLanguage(language);
+    let sourceCode = fs.readFileSync(endpoint.filePath, "utf-8");
 
-        const tree = parser.parse(sourceCode);
+    const tree = parser.parse(sourceCode);
 
-        function traverse(node: Parser.SyntaxNode) {
-          if (node.type === "comment") {
-            const comment = node.text;
+    const indexesToReplace: {
+      startIndex: number;
+      endIndex: number;
+      text: string;
+    }[] = [];
 
-            const annotation = getNanoApiAnnotationFromCommentValue(comment);
+    function traverse(node: Parser.SyntaxNode) {
+      if (node.type === "comment") {
+        const comment = node.text;
 
-            if (annotation) {
-              if (
-                annotation.path === endpoint.path &&
-                annotation.method === endpoint.method
-              ) {
-                annotation.group = endpoint.group;
-                const updatedComment = replaceCommentFromAnnotation(
-                  comment,
-                  annotation,
-                );
-                // Replace the comment in the source code
-                sourceCode = sourceCode.replace(comment, updatedComment);
-              }
-            }
+        const annotation = getNanoApiAnnotationFromCommentValue(comment);
+
+        if (annotation) {
+          if (
+            annotation.path === endpoint.path &&
+            annotation.method === endpoint.method
+          ) {
+            annotation.group = endpoint.group;
+            const updatedComment = replaceCommentFromAnnotation(
+              comment,
+              annotation,
+            );
+
+            indexesToReplace.push({
+              startIndex: node.startIndex,
+              endIndex: node.endIndex,
+              text: updatedComment,
+            });
           }
-          node.children.forEach((child) => traverse(child));
         }
-
-        traverse(tree.rootNode);
-      });
-
-      // update the file
-      fs.writeFileSync(filePath, sourceCode, "utf-8");
-
-      // Recursively process the tree
-      if (typeof value !== "string") {
-        iterateOverTreeAndUpdateContent(value);
       }
+      node.children.forEach((child) => traverse(child));
     }
-  }
 
-  iterateOverTreeAndUpdateContent(tree);
+    traverse(tree.rootNode);
+
+    sourceCode = replaceIndexesFromSourceCode(sourceCode, indexesToReplace);
+
+    fs.writeFileSync(endpoint.filePath, sourceCode, "utf-8");
+  });
 }

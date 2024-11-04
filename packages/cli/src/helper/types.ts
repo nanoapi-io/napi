@@ -20,6 +20,8 @@ export interface NanoAPIAnnotation {
   group?: string;
 }
 
-export interface Dependencies {
-  [key: string]: Dependencies;
+export interface DependencyTree {
+  path: string;
+  sourceCode: string;
+  children: DependencyTree[];
 }
