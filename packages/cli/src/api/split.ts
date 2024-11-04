@@ -1,17 +1,17 @@
 import fs from "fs";
 import path from "path";
-import { getDependencyTree } from "../helper/dependencies";
+import {
+  getDependencyTree,
+  getEndpontsFromTree,
+  getGroupsFromEndpoints,
+} from "../helper/dependencyTree";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
-import { SplitCodebaseResponsePayload } from "../helper/payloads";
-import { getEndpontsFromTree, splitPath } from "../helper/tree";
+import { createSplit } from "../helper/split";
 import { splitSchema } from "./helpers/validation";
 import { z } from "zod";
 import { GroupMap } from "../helper/types";
-import { getGroupsFromEndpoints } from "../helper/groups";
 
-export function split(
-  payload: z.infer<typeof splitSchema>,
-): SplitCodebaseResponsePayload {
+export function split(payload: z.infer<typeof splitSchema>) {
   let groupIndex = 0;
   const groupMap: GroupMap = {};
 
@@ -32,7 +32,7 @@ export function split(
 
   // Process each endpoint for splitting
   for (const group of groups) {
-    splitPath(
+    createSplit(
       group,
       payload.outputDir,
       payload.entrypointPath,

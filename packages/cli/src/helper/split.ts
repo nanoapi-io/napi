@@ -1,41 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { cleanupFile } from "./dependencies";
-import { getEndpointsFromFile } from "./file";
-import { Dependencies, Endpoint, Group, GroupMap } from "./types";
-
-// Helper function to process the tree and gather endpoints
-export function getEndpontsFromTree(
-  tree: Dependencies,
-  parentFiles: string[] = [],
-  endpoints: Endpoint[] = [],
-) {
-  for (const [filePath, value] of Object.entries(tree)) {
-    const endpointsFromFile = getEndpointsFromFile(parentFiles, filePath, tree);
-    for (const endpointFromFile of endpointsFromFile) {
-      const endpoint = {
-        method: endpointFromFile.method,
-        path: endpointFromFile.path,
-        group: endpointFromFile.group,
-        filePath: endpointFromFile.filePath,
-        parentFilePaths: endpointFromFile.parentFilePaths,
-        childrenFilePaths: endpointFromFile.childrenFilePaths,
-      } as Endpoint;
-      endpoints.push(endpoint);
-    }
-
-    // Recursively process the tree
-    if (typeof value !== "string") {
-      const updatedParentFiles = [...parentFiles, filePath];
-      getEndpontsFromTree(value, updatedParentFiles, endpoints);
-    }
-  }
-
-  return endpoints;
-}
+import { Group, GroupMap } from "./types";
+import { cleanupFile } from "./cleanup";
 
 // Function to handle splitting and storing paths based on the split command logic
-export function splitPath(
+export function createSplit(
   group: Group,
   outputDirectory: string,
   entrypointPath: string,

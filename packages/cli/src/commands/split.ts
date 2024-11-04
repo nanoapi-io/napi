@@ -1,10 +1,13 @@
 import path from "path";
 import fs from "fs";
-import { getDependencyTree } from "../helper/dependencies";
+import {
+  getDependencyTree,
+  getEndpontsFromTree,
+  getGroupsFromEndpoints,
+} from "../helper/dependencyTree";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
-import { getEndpontsFromTree, splitPath } from "../helper/tree";
+import { createSplit } from "../helper/split";
 import { GroupMap } from "../helper/types";
-import { getGroupsFromEndpoints } from "../helper/groups";
 
 export default function splitCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
@@ -26,7 +29,7 @@ export default function splitCommandHandler(
 
   // Process each endpoint for splitting
   for (const group of groups) {
-    splitPath(group, outputDir, entrypointPath, groupMap, groupIndex);
+    createSplit(group, outputDir, entrypointPath, groupMap, groupIndex);
     groupIndex++;
   }
 

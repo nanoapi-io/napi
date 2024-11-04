@@ -1,9 +1,6 @@
 import Parser from "tree-sitter";
 import { Group } from "../../types";
-import {
-  getNanoApiAnnotationFromCommentValue,
-  removeIndexesFromSourceCode,
-} from "../../file";
+import { getNanoApiAnnotationFromCommentValue } from "../../annotations";
 import {
   getImportStatements,
   extractFileImportsFromImportStatements,
@@ -15,6 +12,7 @@ import {
   extractFileImportsFromDynamicImportDeclarations,
   extractIdentifiersFromDynamicImportDeclaration,
 } from "./imports";
+import { removeIndexesFromSourceCode } from "../../cleanup";
 
 function removeAnnotations(
   parser: Parser,

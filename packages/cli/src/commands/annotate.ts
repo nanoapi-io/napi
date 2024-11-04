@@ -1,7 +1,7 @@
 import fs from "fs";
-import { getDependencyTree } from "../helper/dependencies";
+import { getDependencyTree } from "../helper/dependencyTree";
 import OpenAI from "openai";
-import { Dependencies } from "../helper/types";
+import { DependencyTree } from "../helper/types";
 
 export default async function annotateOpenAICommandHandler(
   entrypoint: string, // Path to the entrypoint file
@@ -33,20 +33,22 @@ export default async function annotateOpenAICommandHandler(
     I want you to understand what the application is doing and where each endpoint is.`,
   });
 
-  function iterateOverTree(tree: Dependencies) {
-    for (const [filePath, value] of Object.entries(tree)) {
-      // TODO send chunks of each file for big files to respect the openAI limits
-      const content = fs.readFileSync(filePath, "utf8");
+  function iterateOverTree(tree: DependencyTree) {
+    messages.push({
+      role: "user",
+      content: `File: ${tree.path}
+      Content: ${tree.sourceCode}`,
+    });
+
+    tree.children.forEach((child) => {
       messages.push({
         role: "user",
-        content: `File: ${filePath}
-        Content: ${content}`,
+        content: `File: ${child.path}
+        Content: ${child.sourceCode}`,
       });
 
-      if (typeof value !== "string") {
-        iterateOverTree(value);
-      }
-    }
+      iterateOverTree(child);
+    });
   }
   iterateOverTree(tree);
 
