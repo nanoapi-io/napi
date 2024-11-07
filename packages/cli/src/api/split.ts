@@ -12,17 +12,17 @@ import { z } from "zod";
 import { GroupMap } from "../helper/types";
 
 export function split(payload: z.infer<typeof splitSchema>) {
-  let groupIndex = 0;
+  console.time("split command");
   const groupMap: GroupMap = {};
 
   // Get the dependency tree
   const tree = getDependencyTree(payload.entrypointPath);
 
-  payload.outputDir = payload.outputDir || path.dirname(payload.entrypointPath);
+  const outputDir = payload.outputDir || path.dirname(payload.entrypointPath);
 
   // Clean up and prepare the output directory
-  cleanupOutputDir(payload.outputDir);
-  createOutputDir(payload.outputDir);
+  cleanupOutputDir(outputDir);
+  createOutputDir(outputDir);
 
   // Iterate over the tree and get endpoints
   const endpoints = getEndpontsFromTree(tree);
@@ -30,21 +30,20 @@ export function split(payload: z.infer<typeof splitSchema>) {
   // Get groups from the endpoints
   const groups = getGroupsFromEndpoints(endpoints);
 
-  // Process each endpoint for splitting
-  for (const group of groups) {
-    createSplit(
-      group,
-      payload.outputDir,
-      payload.entrypointPath,
-      groupMap,
-      groupIndex,
-    );
-    groupIndex++;
-  }
+  // Process each group for splitting
+  groups.forEach((group, index) => {
+    // Clone the tree to avoid mutation of the original tree
+    const treeClone = structuredClone(tree);
+    createSplit(treeClone, group, outputDir, payload.entrypointPath, index);
+  });
 
   // Store the processed annotations in the output directory
-  const annotationFilePath = path.join(payload.outputDir, "annotations.json");
+  groups.forEach((group, index) => {
+    groupMap[index] = group;
+  });
+  const annotationFilePath = path.join(outputDir, "annotations.json");
   fs.writeFileSync(annotationFilePath, JSON.stringify(groupMap, null, 2));
 
+  console.timeEnd("split command");
   return { groups, success: true };
 }

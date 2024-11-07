@@ -2,8 +2,8 @@ import { z } from "zod";
 import { syncSchema } from "./helpers/validation";
 import fs from "fs";
 import {
-  getNanoApiAnnotationFromCommentValue,
-  replaceCommentFromAnnotation,
+  parseNanoApiAnnotation,
+  updateCommentFromAnnotation,
 } from "../helper/annotations";
 import {
   getDependencyTree,
@@ -12,6 +12,7 @@ import {
 import Parser from "tree-sitter";
 import { getParserLanguageFromFile } from "../helper/treeSitter";
 import { replaceIndexesFromSourceCode } from "../helper/cleanup";
+import { getAnnotationNodes } from "../helper/languages/javascript/annotations";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
   const tree = getDependencyTree(payload.entrypointPath);
@@ -48,35 +49,26 @@ export function sync(payload: z.infer<typeof syncSchema>) {
       text: string;
     }[] = [];
 
-    function traverse(node: Parser.SyntaxNode) {
-      if (node.type === "comment") {
-        const comment = node.text;
+    const annotationNodes = getAnnotationNodes(parser, tree.rootNode);
+    annotationNodes.forEach((node) => {
+      const annotation = parseNanoApiAnnotation(node.text);
+      if (
+        annotation.path === endpoint.path &&
+        annotation.method === endpoint.method
+      ) {
+        annotation.group = endpoint.group;
+        const updatedComment = updateCommentFromAnnotation(
+          node.text,
+          annotation,
+        );
 
-        const annotation = getNanoApiAnnotationFromCommentValue(comment);
-
-        if (annotation) {
-          if (
-            annotation.path === endpoint.path &&
-            annotation.method === endpoint.method
-          ) {
-            annotation.group = endpoint.group;
-            const updatedComment = replaceCommentFromAnnotation(
-              comment,
-              annotation,
-            );
-
-            indexesToReplace.push({
-              startIndex: node.startIndex,
-              endIndex: node.endIndex,
-              text: updatedComment,
-            });
-          }
-        }
+        indexesToReplace.push({
+          startIndex: node.startIndex,
+          endIndex: node.endIndex,
+          text: updatedComment,
+        });
       }
-      node.children.forEach((child) => traverse(child));
-    }
-
-    traverse(tree.rootNode);
+    });
 
     sourceCode = replaceIndexesFromSourceCode(sourceCode, indexesToReplace);
 

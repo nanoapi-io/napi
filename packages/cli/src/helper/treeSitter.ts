@@ -9,8 +9,6 @@ export function getParserLanguageFromFile(filePath: string) {
       return Javascript;
     case "ts":
       return Typescript.typescript;
-    case "tsx": // TODO this is untested
-      return Typescript.tsx;
     default:
       throw new Error(`Unsupported file type: ${ext}`);
   }

@@ -6,7 +6,8 @@ import { resolveFilePath } from "./file";
 import { DependencyTree, Group } from "./types";
 import { Endpoint } from "./types";
 import { getParserLanguageFromFile } from "./treeSitter";
-import { getNanoApiAnnotationFromCommentValue } from "./annotations";
+import { parseNanoApiAnnotation } from "./annotations";
+import { getAnnotationNodes } from "./languages/javascript/annotations";
 
 export function getDependencyTree(filePath: string): DependencyTree {
   const sourceCode = fs.readFileSync(filePath, "utf8");
@@ -69,28 +70,23 @@ export function getEndpontsFromTree(
       return uniqueFilePaths;
     }
 
-    function traverse(node: Parser.SyntaxNode) {
-      if (node.type === "comment") {
-        const comment = node.text;
+    const annotationNodes = getAnnotationNodes(parser, parsedTree.rootNode);
+    annotationNodes.forEach((node) => {
+      const annotation = parseNanoApiAnnotation(node.text);
 
-        const annotation = getNanoApiAnnotationFromCommentValue(comment);
-
-        if (annotation) {
-          const endpoint: Endpoint = {
-            path: annotation.path,
-            method: annotation.method,
-            group: annotation.group,
-            filePath: dependencyTree.path,
-            parentFilePaths,
-            childrenFilePaths: getFilePathsFromTree(dependencyTree),
-          };
-          endpoints.push(endpoint);
-        }
+      // Only add endpoints, not annotations that are just grouping endpoints
+      if (annotation.method) {
+        const endpoint: Endpoint = {
+          path: annotation.path,
+          method: annotation.method,
+          group: annotation.group,
+          filePath: dependencyTree.path,
+          parentFilePaths,
+          childrenFilePaths: getFilePathsFromTree(dependencyTree),
+        };
+        endpoints.push(endpoint);
       }
-      node.children.forEach((child) => traverse(child));
-    }
-
-    traverse(parsedTree.rootNode);
+    });
 
     return endpoints;
   }
@@ -135,4 +131,24 @@ export function getGroupsFromEndpoints(endpoints: Endpoint[]) {
   }
 
   return groups;
+}
+
+export function getFilesFromDependencyTree(
+  tree: DependencyTree,
+): { path: string; sourceCode: string }[] {
+  const files: { path: string; sourceCode: string }[] = [];
+  const uniquePaths = new Set<string>();
+
+  function gatherFiles(tree: DependencyTree) {
+    if (!uniquePaths.has(tree.path)) {
+      uniquePaths.add(tree.path);
+      files.push({ path: tree.path, sourceCode: tree.sourceCode });
+    }
+
+    tree.children.forEach(gatherFiles);
+  }
+
+  gatherFiles(tree);
+
+  return files;
 }
