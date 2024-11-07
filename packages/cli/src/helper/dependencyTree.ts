@@ -1,6 +1,5 @@
 import fs from "fs";
 import Parser from "tree-sitter";
-import { extractJavascriptFileImports } from "./languages/javascript/imports";
 
 import { resolveFilePath } from "./file";
 import { DependencyTree, Group } from "./types";
@@ -8,6 +7,7 @@ import { Endpoint } from "./types";
 import { getParserLanguageFromFile } from "./treeSitter";
 import { parseNanoApiAnnotation } from "./annotations";
 import { getAnnotationNodes } from "./languages/javascript/annotations";
+import { getJavascriptImports } from "./languages/javascript/imports";
 
 export function getDependencyTree(filePath: string): DependencyTree {
   const sourceCode = fs.readFileSync(filePath, "utf8");
@@ -24,10 +24,14 @@ export function getDependencyTree(filePath: string): DependencyTree {
   parser.setLanguage(language);
 
   if (["javascript", "typescript"].includes(language.name)) {
-    const imports = extractJavascriptFileImports(parser, sourceCode);
+    let imports = getJavascriptImports(
+      parser,
+      parser.parse(sourceCode).rootNode,
+    );
+    imports = imports.filter((importPath) => importPath.source.startsWith("."));
 
     imports.forEach((importPath) => {
-      const resolvedPath = resolveFilePath(importPath, filePath);
+      const resolvedPath = resolveFilePath(importPath.source, filePath);
       if (resolvedPath && fs.existsSync(resolvedPath)) {
         dependencyTree.children.push(getDependencyTree(resolvedPath));
       }

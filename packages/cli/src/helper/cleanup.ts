@@ -4,7 +4,7 @@ import {
   cleanupJavascriptInvalidImports,
   cleanupUnusedJavascriptImports,
 } from "./languages/javascript/cleanup";
-import { extractJavascriptFileImports } from "./languages/javascript/imports";
+import { getJavascriptImports } from "./languages/javascript/imports";
 
 import { resolveFilePath } from "./file";
 import { Group } from "./types";
@@ -127,15 +127,15 @@ export function cleanupUnusedFiles(
       parser.setLanguage(language);
 
       if (["javascript", "typescript"].includes(language.name)) {
-        let dependencies = extractJavascriptFileImports(
+        let dependencies = getJavascriptImports(
           parser,
-          file.sourceCode,
+          parser.parse(file.sourceCode).rootNode,
         );
         // Only keep files dependencies
-        dependencies = dependencies.filter((dep) => dep.startsWith("."));
+        dependencies = dependencies.filter((dep) => dep.source.startsWith("."));
 
         dependencies.forEach((dep) => {
-          const resolvedPath = resolveFilePath(dep, file.path);
+          const resolvedPath = resolveFilePath(dep.source, file.path);
           if (resolvedPath) {
             filesToKeep.add(resolvedPath);
           }
