@@ -83,13 +83,21 @@ export function getJavascriptImportIdentifierUsage(
   parser: Parser,
   node: Parser.SyntaxNode,
   identifier: Parser.SyntaxNode,
+  isTypescript = false,
 ) {
   const usageNodes: Parser.SyntaxNode[] = [];
   const identifierQuery = new Parser.Query(
     parser.getLanguage(),
-    `
+    isTypescript
+      ? `
       (
         ([(identifier) (type_identifier)]) @identifier
+        (#match? @identifier "${identifier.text}")
+      )
+    `
+      : `
+      (
+        (identifier) @identifier
         (#match? @identifier "${identifier.text}")
       )
     `,

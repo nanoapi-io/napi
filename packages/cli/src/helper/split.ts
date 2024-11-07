@@ -95,5 +95,5 @@ export async function createSplit(
   console.timeEnd("Write to disk each file");
 
   console.timeEnd(`split ${groupMapIndex}`);
-  console.log("\n");
+  console.info("\n");
 }

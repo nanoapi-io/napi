@@ -6,19 +6,27 @@ import {
   getJavascriptImportIdentifierUsage,
 } from "./imports";
 import { removeIndexesFromSourceCode } from "../../cleanup";
-import { getAnnotationNodes } from "./annotations";
+import { getJavascriptAnnotationNodes } from "./annotations";
 import { resolveFilePath } from "../../file";
+import { getTypescriptAnnotationNodes } from "../typescript/annotations";
+import {
+  getTypescriptImportIdentifierUsage,
+  getTypescriptImports,
+} from "../typescript/imports";
 
 export function cleanupJavascriptAnnotations(
   parser: Parser,
   sourceCode: string,
   groupToKeep: Group,
+  isTypescript = false,
 ): string {
   const tree = parser.parse(sourceCode);
 
   const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
-  const annotationNodes = getAnnotationNodes(parser, tree.rootNode);
+  const annotationNodes = isTypescript
+    ? getTypescriptAnnotationNodes(parser, tree.rootNode)
+    : getJavascriptAnnotationNodes(parser, tree.rootNode);
 
   annotationNodes.forEach((node) => {
     const annotation = parseNanoApiAnnotation(node.text);
@@ -65,12 +73,15 @@ export function cleanupJavascriptInvalidImports(
       defaultExport?: Parser.SyntaxNode;
     }
   >,
+  isTypescript = false,
 ) {
   const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
   const tree = parser.parse(sourceCode);
 
-  const depImports = getJavascriptImports(parser, tree.rootNode);
+  const depImports = isTypescript
+    ? getTypescriptImports(parser, tree.rootNode)
+    : getJavascriptImports(parser, tree.rootNode);
   // check if identifier exists in the imported file (as an export)
   depImports.forEach((depImport) => {
     // check if the import is a file, do not process external dependencies
@@ -86,11 +97,17 @@ export function cleanupJavascriptInvalidImports(
       }
 
       if (depImport.importIdentifier && !exportsForFile.defaultExport) {
-        let usages = getJavascriptImportIdentifierUsage(
-          parser,
-          tree.rootNode,
-          depImport.importIdentifier,
-        );
+        let usages = isTypescript
+          ? getTypescriptImportIdentifierUsage(
+              parser,
+              tree.rootNode,
+              depImport.importIdentifier,
+            )
+          : getJavascriptImportIdentifierUsage(
+              parser,
+              tree.rootNode,
+              depImport.importIdentifier,
+            );
         usages = usages.filter((usage) => {
           return usage.id !== depImport.importIdentifier?.id;
         });
@@ -114,11 +131,17 @@ export function cleanupJavascriptInvalidImports(
               namedExport.identifierNode.text === importSpecifier.text,
           )
         ) {
-          let usages = getJavascriptImportIdentifierUsage(
-            parser,
-            tree.rootNode,
-            importSpecifier,
-          );
+          let usages = isTypescript
+            ? getTypescriptImportIdentifierUsage(
+                parser,
+                tree.rootNode,
+                importSpecifier,
+              )
+            : getJavascriptImportIdentifierUsage(
+                parser,
+                tree.rootNode,
+                importSpecifier,
+              );
           usages = usages.filter((usage) => {
             return usage.id !== depImport.importIdentifier?.id;
           });
@@ -149,21 +172,30 @@ export function cleanupJavascriptInvalidImports(
 export function cleanupUnusedJavascriptImports(
   parser: Parser,
   sourceCode: string,
+  isTypescript = false,
 ) {
   const tree = parser.parse(sourceCode);
 
-  const imports = getJavascriptImports(parser, tree.rootNode);
+  const imports = isTypescript
+    ? getTypescriptImports(parser, tree.rootNode)
+    : getJavascriptImports(parser, tree.rootNode);
 
   const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
   imports.forEach((depImport) => {
     const importSpecifierToRemove: Parser.SyntaxNode[] = [];
     depImport.importSpecifierIdentifiers.forEach((importSpecifier) => {
-      let usages = getJavascriptImportIdentifierUsage(
-        parser,
-        tree.rootNode,
-        importSpecifier,
-      );
+      let usages = isTypescript
+        ? getTypescriptImportIdentifierUsage(
+            parser,
+            tree.rootNode,
+            importSpecifier,
+          )
+        : getJavascriptImportIdentifierUsage(
+            parser,
+            tree.rootNode,
+            importSpecifier,
+          );
       usages = usages.filter((usage) => {
         return usage.id !== importSpecifier.id;
       });
@@ -175,11 +207,17 @@ export function cleanupUnusedJavascriptImports(
 
     let removeDefaultImport = false;
     if (depImport.importIdentifier) {
-      let usages = getJavascriptImportIdentifierUsage(
-        parser,
-        tree.rootNode,
-        depImport.importIdentifier,
-      );
+      let usages = isTypescript
+        ? getTypescriptImportIdentifierUsage(
+            parser,
+            tree.rootNode,
+            depImport.importIdentifier,
+          )
+        : getJavascriptImportIdentifierUsage(
+            parser,
+            tree.rootNode,
+            depImport.importIdentifier,
+          );
       usages = usages.filter((usage) => {
         return usage.id !== depImport.importIdentifier?.id;
       });
@@ -192,7 +230,7 @@ export function cleanupUnusedJavascriptImports(
     if (
       importSpecifierToRemove.length ===
         depImport.importSpecifierIdentifiers.length &&
-      removeDefaultImport
+      (removeDefaultImport || !depImport.importIdentifier)
     ) {
       indexesToRemove.push({
         startIndex: depImport.node.startIndex,

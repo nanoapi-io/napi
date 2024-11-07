@@ -12,7 +12,8 @@ import {
 import Parser from "tree-sitter";
 import { getParserLanguageFromFile } from "../helper/treeSitter";
 import { replaceIndexesFromSourceCode } from "../helper/cleanup";
-import { getAnnotationNodes } from "../helper/languages/javascript/annotations";
+import { getJavascriptAnnotationNodes } from "../helper/languages/javascript/annotations";
+import { getTypescriptAnnotationNodes } from "../helper/languages/typescript/annotations";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
   const tree = getDependencyTree(payload.entrypointPath);
@@ -49,7 +50,15 @@ export function sync(payload: z.infer<typeof syncSchema>) {
       text: string;
     }[] = [];
 
-    const annotationNodes = getAnnotationNodes(parser, tree.rootNode);
+    let annotationNodes: Parser.SyntaxNode[];
+    if (language.name === "javascript") {
+      annotationNodes = getJavascriptAnnotationNodes(parser, tree.rootNode);
+    } else if (language.name === "typescript") {
+      annotationNodes = getTypescriptAnnotationNodes(parser, tree.rootNode);
+    } else {
+      throw new Error("Language not supported");
+    }
+
     annotationNodes.forEach((node) => {
       const annotation = parseNanoApiAnnotation(node.text);
       if (

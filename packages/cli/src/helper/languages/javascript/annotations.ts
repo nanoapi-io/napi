@@ -1,6 +1,9 @@
 import Parser from "tree-sitter";
 
-export function getAnnotationNodes(parser: Parser, node: Parser.SyntaxNode) {
+export function getJavascriptAnnotationNodes(
+  parser: Parser,
+  node: Parser.SyntaxNode,
+) {
   const commentQuery = new Parser.Query(
     parser.getLanguage(),
     `

@@ -6,8 +6,9 @@ import { DependencyTree, Group } from "./types";
 import { Endpoint } from "./types";
 import { getParserLanguageFromFile } from "./treeSitter";
 import { parseNanoApiAnnotation } from "./annotations";
-import { getAnnotationNodes } from "./languages/javascript/annotations";
+import { getJavascriptAnnotationNodes } from "./languages/javascript/annotations";
 import { getJavascriptImports } from "./languages/javascript/imports";
+import { getTypescriptImports } from "./languages/typescript/imports";
 
 export function getDependencyTree(filePath: string): DependencyTree {
   const sourceCode = fs.readFileSync(filePath, "utf8");
@@ -23,22 +24,28 @@ export function getDependencyTree(filePath: string): DependencyTree {
   const parser = new Parser();
   parser.setLanguage(language);
 
-  if (["javascript", "typescript"].includes(language.name)) {
-    let imports = getJavascriptImports(
-      parser,
-      parser.parse(sourceCode).rootNode,
-    );
+  let imports: {
+    node: Parser.SyntaxNode;
+    source: string;
+    importSpecifierIdentifiers: Parser.SyntaxNode[];
+    importIdentifier?: Parser.SyntaxNode;
+  }[];
+  if (language.name === "javascript") {
+    imports = getJavascriptImports(parser, parser.parse(sourceCode).rootNode);
     imports = imports.filter((importPath) => importPath.source.startsWith("."));
-
-    imports.forEach((importPath) => {
-      const resolvedPath = resolveFilePath(importPath.source, filePath);
-      if (resolvedPath && fs.existsSync(resolvedPath)) {
-        dependencyTree.children.push(getDependencyTree(resolvedPath));
-      }
-    });
+  } else if (language.name === "typescript") {
+    imports = getTypescriptImports(parser, parser.parse(sourceCode).rootNode);
+    imports = imports.filter((importPath) => importPath.source.startsWith("."));
   } else {
     throw new Error(`Unsupported language: ${language.name}`);
   }
+
+  imports.forEach((importPath) => {
+    const resolvedPath = resolveFilePath(importPath.source, filePath);
+    if (resolvedPath && fs.existsSync(resolvedPath)) {
+      dependencyTree.children.push(getDependencyTree(resolvedPath));
+    }
+  });
 
   return dependencyTree;
 }
@@ -74,7 +81,10 @@ export function getEndpontsFromTree(
       return uniqueFilePaths;
     }
 
-    const annotationNodes = getAnnotationNodes(parser, parsedTree.rootNode);
+    const annotationNodes = getJavascriptAnnotationNodes(
+      parser,
+      parsedTree.rootNode,
+    );
     annotationNodes.forEach((node) => {
       const annotation = parseNanoApiAnnotation(node.text);
 

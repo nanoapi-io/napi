@@ -1,6 +1,10 @@
 import Parser from "tree-sitter";
 
-export function getJavascriptExports(parser: Parser, sourceCode: string) {
+export function getJavascriptExports(
+  parser: Parser,
+  sourceCode: string,
+  isTypescript = false,
+) {
   const tree = parser.parse(sourceCode);
 
   const exportQuery = new Parser.Query(
@@ -22,8 +26,8 @@ export function getJavascriptExports(parser: Parser, sourceCode: string) {
   exportCaptures.forEach((capture) => {
     const identifierQuery = new Parser.Query(
       parser.getLanguage(),
-      // TODO type_identifier only valid for typescript, not javascript
-      `
+      isTypescript
+        ? `
         declaration: ([
           (_
             name: ([(identifier) (type_identifier)]) @identifier
@@ -31,6 +35,18 @@ export function getJavascriptExports(parser: Parser, sourceCode: string) {
           (_
             (_
               name: ([(identifier) (type_identifier)]) @identifier
+            )
+          )
+        ])
+      `
+        : `
+        declaration: ([
+          (_
+            name: (identifier) @identifier
+          )
+          (_
+            (_
+              name: (identifier) @identifier
             )
           )
         ])
