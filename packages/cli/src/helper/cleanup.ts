@@ -57,11 +57,13 @@ export function getExportMap(files: { path: string; sourceCode: string }[]) {
     const parser = new Parser();
     parser.setLanguage(language);
 
+    const tree = parser.parse(file.sourceCode);
+
     if (language.name === "javascript") {
-      const exports = getJavascriptExports(parser, file.sourceCode);
+      const exports = getJavascriptExports(parser, tree.rootNode);
       exportIdentifiersMap.set(file.path, exports);
     } else if (language.name === "typescript") {
-      const exports = getTypescriptExports(parser, file.sourceCode);
+      const exports = getTypescriptExports(parser, tree.rootNode);
       exportIdentifiersMap.set(file.path, exports);
     } else {
       throw new Error(`Unsupported language: ${language.language}`);
@@ -147,6 +149,8 @@ export function cleanupUnusedFiles(
       const parser = new Parser();
       parser.setLanguage(language);
 
+      const tree = parser.parse(file.sourceCode);
+
       let dependencies: {
         node: Parser.SyntaxNode;
         source: string;
@@ -154,17 +158,11 @@ export function cleanupUnusedFiles(
         importIdentifier?: Parser.SyntaxNode;
       }[];
       if (language.name === "javascript") {
-        dependencies = getJavascriptImports(
-          parser,
-          parser.parse(file.sourceCode).rootNode,
-        );
+        dependencies = getJavascriptImports(parser, tree.rootNode);
         // Only keep files dependencies
         dependencies = dependencies.filter((dep) => dep.source.startsWith("."));
       } else if (language.name === "typescript") {
-        dependencies = getTypescriptImports(
-          parser,
-          parser.parse(file.sourceCode).rootNode,
-        );
+        dependencies = getTypescriptImports(parser, tree.rootNode);
         // Only keep files dependencies
         dependencies = dependencies.filter((dep) => dep.source.startsWith("."));
       } else {

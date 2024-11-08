@@ -24,6 +24,8 @@ export function getDependencyTree(filePath: string): DependencyTree {
   const parser = new Parser();
   parser.setLanguage(language);
 
+  const tree = parser.parse(sourceCode);
+
   let imports: {
     node: Parser.SyntaxNode;
     source: string;
@@ -31,10 +33,10 @@ export function getDependencyTree(filePath: string): DependencyTree {
     importIdentifier?: Parser.SyntaxNode;
   }[];
   if (language.name === "javascript") {
-    imports = getJavascriptImports(parser, parser.parse(sourceCode).rootNode);
+    imports = getJavascriptImports(parser, tree.rootNode);
     imports = imports.filter((importPath) => importPath.source.startsWith("."));
   } else if (language.name === "typescript") {
-    imports = getTypescriptImports(parser, parser.parse(sourceCode).rootNode);
+    imports = getTypescriptImports(parser, tree.rootNode);
     imports = imports.filter((importPath) => importPath.source.startsWith("."));
   } else {
     throw new Error(`Unsupported language: ${language.name}`);

@@ -140,7 +140,9 @@ yargs(hideBin(process.argv))
         const url = `http://localhost:${port}`;
         console.info(`Server started at ${url}`);
         console.info("Press Ctrl+C to stop the server");
-        openInBrowser(url);
+        if (process.env.NODE_ENV !== "development") {
+          openInBrowser(url);
+        }
       });
     },
   )

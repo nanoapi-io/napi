@@ -60,10 +60,10 @@ async function sendTelemetryData(data: TelemetryEvent) {
         "Content-Type": "application/json",
         "User-Agent": "napi",
       },
-      timeout: 5000,
+      timeout: 100000,
     });
   } catch (error) {
-    console.error(`Failed to send telemetry data: ${error}`);
+    console.debug(`Failed to send telemetry data: ${error}`);
   }
 }
 

@@ -2,11 +2,9 @@ import Parser from "tree-sitter";
 
 export function getJavascriptExports(
   parser: Parser,
-  sourceCode: string,
+  node: Parser.SyntaxNode,
   isTypescript = false,
 ) {
-  const tree = parser.parse(sourceCode);
-
   const exportQuery = new Parser.Query(
     parser.getLanguage(),
     `
@@ -17,7 +15,7 @@ export function getJavascriptExports(
     `,
   );
 
-  const exportCaptures = exportQuery.captures(tree.rootNode);
+  const exportCaptures = exportQuery.captures(node);
 
   const namedExports: {
     exportNode: Parser.SyntaxNode;
@@ -74,7 +72,7 @@ export function getJavascriptExports(
       )
     `,
   );
-  const defaultExportCaptures = defaultExportQuery.captures(tree.rootNode);
+  const defaultExportCaptures = defaultExportQuery.captures(node);
   if (defaultExportCaptures.length > 1) {
     throw new Error("Found multiple default export. Only one is allowed");
   }
