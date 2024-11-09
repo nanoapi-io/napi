@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+Remove support for require and dynamic import
+Code splitting now works take into account the whole dependencies. This fixes https://github.com/nanoapi-io/napi/issues/26
+
 ## [0.0.17] - 2024-11-01
 
 Use indexes when editing file instead of search/replace
