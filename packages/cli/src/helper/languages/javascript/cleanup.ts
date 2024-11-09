@@ -251,8 +251,7 @@ export function cleanupUnusedJavascriptImports(
     if (
       importSpecifierToRemove.length ===
         depImport.importSpecifierIdentifiers.length &&
-      (removeDefaultImport || !depImport.importIdentifier) &&
-      (removeNameSpaceImport || !depImport.namespaceImport)
+      (removeDefaultImport || removeNameSpaceImport)
     ) {
       indexesToRemove.push({
         startIndex: depImport.node.startIndex,
@@ -265,20 +264,6 @@ export function cleanupUnusedJavascriptImports(
           endIndex: importSpecifier.endIndex,
         });
       });
-
-      if (removeDefaultImport && depImport.importIdentifier) {
-        indexesToRemove.push({
-          startIndex: depImport.importIdentifier.startIndex,
-          endIndex: depImport.importIdentifier.endIndex,
-        });
-      }
-
-      if (removeNameSpaceImport && depImport.namespaceImport) {
-        indexesToRemove.push({
-          startIndex: depImport.namespaceImport.startIndex,
-          endIndex: depImport.namespaceImport.endIndex,
-        });
-      }
     }
   });
 

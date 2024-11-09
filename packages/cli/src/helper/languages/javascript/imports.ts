@@ -100,158 +100,160 @@ function getImportStatements(parser: Parser, node: Parser.SyntaxNode) {
   return imports;
 }
 
-function getRequireAndDynamicImports(parser: Parser, node: Parser.SyntaxNode) {
-  const imports: {
-    node: Parser.SyntaxNode;
-    source: string;
-    importSpecifierIdentifiers: Parser.SyntaxNode[];
-    importIdentifier?: Parser.SyntaxNode;
-    namespaceImport?: undefined;
-  }[] = [];
+// function getRequireAndDynamicImports(parser: Parser, node: Parser.SyntaxNode) {
+//   const imports: {
+//     node: Parser.SyntaxNode;
+//     source: string;
+//     importSpecifierIdentifiers: Parser.SyntaxNode[];
+//     importIdentifier?: Parser.SyntaxNode;
+//     namespaceImport?: undefined;
+//   }[] = [];
 
-  const requireStatementQuery = new Parser.Query(
-    parser.getLanguage(),
-    `
-    ([
-      (lexical_declaration
-        (variable_declarator
-          (call_expression
-            (
-              ([(identifier) (import)]) @call_expression
-              (#match? @call_expression "^(require|import)$")
-            )
-          )
-        )
-      )
-      (variable_declaration
-        (variable_declarator
-          (call_expression
-            (
-              ([(identifier) (import)]) @call_expression
-              (#match? @call_expression "^(require|import)$")
-            )
-          )
-        )
-      )
-    ]) @import
-    `,
-  );
-  let requireStatementCaptures = requireStatementQuery.captures(node);
-  requireStatementCaptures = requireStatementCaptures.filter(
-    (capture) => capture.name === "import",
-  );
-  requireStatementCaptures.forEach((capture) => {
-    const requireSourceQuery = new Parser.Query(
-      parser.getLanguage(),
-      `
-        ([
-          (lexical_declaration
-            (variable_declarator
-              value: (call_expression
-                arguments: (arguments
-                  (string
-                    (string_fragment) @source
-                  )
-                )
-              )
-            )
-          )
-          (variable_declaration
-            (variable_declarator
-              value: (call_expression
-                arguments: (arguments
-                  (string
-                    (string_fragment) @source
-                  )
-                )
-              )
-            )
-          )
-        ])
-      `,
-    );
-    const requireSourceCaptures = requireSourceQuery.captures(capture.node);
-    if (requireSourceCaptures.length === 0) {
-      throw new Error("Could not find require source");
-    }
-    if (requireSourceCaptures.length > 1) {
-      throw new Error("Found multiple require sources");
-    }
-    const source = requireSourceCaptures[0].node.text;
+//   const requireStatementQuery = new Parser.Query(
+//     parser.getLanguage(),
+//     `
+//     ([
+//       (lexical_declaration
+//         (variable_declarator
+//           (call_expression
+//             (
+//               ([(identifier) (import)]) @call_expression
+//               (#match? @call_expression "^(require|import)$")
+//             )
+//           )
+//         )
+//       )
+//       (variable_declaration
+//         (variable_declarator
+//           (call_expression
+//             (
+//               ([(identifier) (import)]) @call_expression
+//               (#match? @call_expression "^(require|import)$")
+//             )
+//           )
+//         )
+//       )
+//     ]) @import
+//     `,
+//   );
+//   let requireStatementCaptures = requireStatementQuery.captures(node);
+//   requireStatementCaptures = requireStatementCaptures.filter(
+//     (capture) => capture.name === "import",
+//   );
+//   requireStatementCaptures.forEach((capture) => {
+//     const requireSourceQuery = new Parser.Query(
+//       parser.getLanguage(),
+//       `
+//         ([
+//           (lexical_declaration
+//             (variable_declarator
+//               value: (call_expression
+//                 arguments: (arguments
+//                   (string
+//                     (string_fragment) @source
+//                   )
+//                 )
+//               )
+//             )
+//           )
+//           (variable_declaration
+//             (variable_declarator
+//               value: (call_expression
+//                 arguments: (arguments
+//                   (string
+//                     (string_fragment) @source
+//                   )
+//                 )
+//               )
+//             )
+//           )
+//         ])
+//       `,
+//     );
+//     const requireSourceCaptures = requireSourceQuery.captures(capture.node);
+//     if (requireSourceCaptures.length === 0) {
+//       throw new Error("Could not find require source");
+//     }
+//     if (requireSourceCaptures.length > 1) {
+//       throw new Error("Found multiple require sources");
+//     }
+//     const source = requireSourceCaptures[0].node.text;
 
-    const importSpecifierIdentifierQuery = new Parser.Query(
-      parser.getLanguage(),
-      `
-        ([
-          (lexical_declaration
-            (variable_declarator
-              name: (object_pattern
-                (shorthand_property_identifier_pattern) @identifier
-              )
-            )
-          )
-          (variable_declaration
-            (variable_declarator
-              name: (object_pattern
-                (shorthand_property_identifier_pattern) @identifier
-              )
-            )
-          )
-        ])
-      `,
-    );
+//     const importSpecifierIdentifierQuery = new Parser.Query(
+//       parser.getLanguage(),
+//       `
+//         ([
+//           (lexical_declaration
+//             (variable_declarator
+//               name: (object_pattern
+//                 (shorthand_property_identifier_pattern) @identifier
+//               )
+//             )
+//           )
+//           (variable_declaration
+//             (variable_declarator
+//               name: (object_pattern
+//                 (shorthand_property_identifier_pattern) @identifier
+//               )
+//             )
+//           )
+//         ])
+//       `,
+//     );
 
-    const importSpecifierCaptures = importSpecifierIdentifierQuery.captures(
-      capture.node,
-    );
-    const importSpecifierIdentifiers = importSpecifierCaptures.map(
-      (capture) => {
-        return capture.node;
-      },
-    );
+//     const importSpecifierCaptures = importSpecifierIdentifierQuery.captures(
+//       capture.node,
+//     );
+//     const importSpecifierIdentifiers = importSpecifierCaptures.map(
+//       (capture) => {
+//         return capture.node;
+//       },
+//     );
 
-    const importClauseIdentifierQuery = new Parser.Query(
-      parser.getLanguage(),
-      `
-        ([
-          (lexical_declaration
-            (variable_declarator
-              name: (identifier) @identifier
-            )
-          )
-          (variable_declaration
-            (variable_declarator
-              name: (identifier) @identifier
-            )
-          )
-        ])
-      `,
-    );
-    const importClauseIdentifierCaptures = importClauseIdentifierQuery.captures(
-      capture.node,
-    );
-    if (importClauseIdentifierCaptures.length > 1) {
-      throw new Error("Found multiple import clause identifier");
-    }
-    const importIdentifier = importClauseIdentifierCaptures.length
-      ? importClauseIdentifierCaptures[0].node
-      : undefined;
+//     const importClauseIdentifierQuery = new Parser.Query(
+//       parser.getLanguage(),
+//       `
+//         ([
+//           (lexical_declaration
+//             (variable_declarator
+//               name: (identifier) @identifier
+//             )
+//           )
+//           (variable_declaration
+//             (variable_declarator
+//               name: (identifier) @identifier
+//             )
+//           )
+//         ])
+//       `,
+//     );
+//     const importClauseIdentifierCaptures = importClauseIdentifierQuery.captures(
+//       capture.node,
+//     );
+//     if (importClauseIdentifierCaptures.length > 1) {
+//       throw new Error("Found multiple import clause identifier");
+//     }
+//     const importIdentifier = importClauseIdentifierCaptures.length
+//       ? importClauseIdentifierCaptures[0].node
+//       : undefined;
 
-    imports.push({
-      node: capture.node,
-      source,
-      importSpecifierIdentifiers,
-      importIdentifier,
-      namespaceImport: undefined,
-    });
-  });
+//     imports.push({
+//       node: capture.node,
+//       source,
+//       importSpecifierIdentifiers,
+//       importIdentifier,
+//       namespaceImport: undefined,
+//     });
+//   });
 
-  return imports;
-}
+//   return imports;
+// }
 
 export function getJavascriptImports(parser: Parser, node: Parser.SyntaxNode) {
   const imports = getImportStatements(parser, node);
-  imports.push(...getRequireAndDynamicImports(parser, node));
+  // TODO splitting is not reliable enought with require and dynamic imports.
+  // For now we do not use this.
+  // imports.push(...getRequireAndDynamicImports(parser, node));
 
   return imports;
 }
