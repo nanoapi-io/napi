@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.18] - 2024-11-09
+
 Remove support for require and dynamic import
 Code splitting now works take into account the whole dependencies. This fixes https://github.com/nanoapi-io/napi/issues/26
 
