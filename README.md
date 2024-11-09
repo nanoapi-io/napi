@@ -166,7 +166,7 @@ This project is in the early stages of development. We are actively working on t
 
 - [x] Limited support for NodeJS/Typescript
 - [x] Simple UI
-- [ ] Full support for NodeJS/Typescript
+- [x] Full support for NodeJS/Typescript
 - [ ] Python support with Flask
 - [ ] Django support
 - [ ] Full python support

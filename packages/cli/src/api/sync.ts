@@ -2,8 +2,8 @@ import { z } from "zod";
 import { syncSchema } from "./helpers/validation";
 import fs from "fs";
 import {
-  getNanoApiAnnotationFromCommentValue,
-  replaceCommentFromAnnotation,
+  parseNanoApiAnnotation,
+  updateCommentFromAnnotation,
 } from "../helper/annotations";
 import {
   getDependencyTree,
@@ -12,6 +12,8 @@ import {
 import Parser from "tree-sitter";
 import { getParserLanguageFromFile } from "../helper/treeSitter";
 import { replaceIndexesFromSourceCode } from "../helper/cleanup";
+import { getJavascriptAnnotationNodes } from "../helper/languages/javascript/annotations";
+import { getTypescriptAnnotationNodes } from "../helper/languages/typescript/annotations";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
   const tree = getDependencyTree(payload.entrypointPath);
@@ -48,35 +50,34 @@ export function sync(payload: z.infer<typeof syncSchema>) {
       text: string;
     }[] = [];
 
-    function traverse(node: Parser.SyntaxNode) {
-      if (node.type === "comment") {
-        const comment = node.text;
-
-        const annotation = getNanoApiAnnotationFromCommentValue(comment);
-
-        if (annotation) {
-          if (
-            annotation.path === endpoint.path &&
-            annotation.method === endpoint.method
-          ) {
-            annotation.group = endpoint.group;
-            const updatedComment = replaceCommentFromAnnotation(
-              comment,
-              annotation,
-            );
-
-            indexesToReplace.push({
-              startIndex: node.startIndex,
-              endIndex: node.endIndex,
-              text: updatedComment,
-            });
-          }
-        }
-      }
-      node.children.forEach((child) => traverse(child));
+    let annotationNodes: Parser.SyntaxNode[];
+    if (language.name === "javascript") {
+      annotationNodes = getJavascriptAnnotationNodes(parser, tree.rootNode);
+    } else if (language.name === "typescript") {
+      annotationNodes = getTypescriptAnnotationNodes(parser, tree.rootNode);
+    } else {
+      throw new Error("Language not supported");
     }
 
-    traverse(tree.rootNode);
+    annotationNodes.forEach((node) => {
+      const annotation = parseNanoApiAnnotation(node.text);
+      if (
+        annotation.path === endpoint.path &&
+        annotation.method === endpoint.method
+      ) {
+        annotation.group = endpoint.group;
+        const updatedComment = updateCommentFromAnnotation(
+          node.text,
+          annotation,
+        );
+
+        indexesToReplace.push({
+          startIndex: node.startIndex,
+          endIndex: node.endIndex,
+          text: updatedComment,
+        });
+      }
+    });
 
     sourceCode = replaceIndexesFromSourceCode(sourceCode, indexesToReplace);
 

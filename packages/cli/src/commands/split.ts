@@ -13,7 +13,6 @@ export default function splitCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
   outputDir: string, // Path to the output directory
 ) {
-  let groupIndex = 0;
   const groupMap: GroupMap = {};
 
   const tree = getDependencyTree(entrypointPath);
@@ -27,13 +26,17 @@ export default function splitCommandHandler(
   // Get groups from the endpoints
   const groups = getGroupsFromEndpoints(endpoints);
 
-  // Process each endpoint for splitting
-  for (const group of groups) {
-    createSplit(group, outputDir, entrypointPath, groupMap, groupIndex);
-    groupIndex++;
-  }
+  // Process each group for splitting
+  groups.forEach((group, index) => {
+    // Clone the tree to avoid mutation of the original tree
+    const treeClone = structuredClone(tree);
+    createSplit(treeClone, group, outputDir, entrypointPath, index);
+  });
 
   // Store the processed annotations in the output directory
+  groups.forEach((group, index) => {
+    groupMap[index] = group;
+  });
   const annotationFilePath = path.join(outputDir, "annotations.json");
   fs.writeFileSync(annotationFilePath, JSON.stringify(groupMap, null, 2));
 }

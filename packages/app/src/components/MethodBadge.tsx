@@ -5,7 +5,7 @@ export default function MethodBadge(props: { method: string }) {
   const [color, setColor] = useState<BadgeProps["color"]>("gray");
 
   useEffect(() => {
-    switch (props.method.toLocaleLowerCase()) {
+    switch (props.method.toLowerCase()) {
       case "get":
         setColor("green");
         break;

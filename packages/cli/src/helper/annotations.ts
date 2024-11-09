@@ -1,8 +1,8 @@
-import { NanoAPIAnnotation } from "./types";
+import { Group, NanoAPIAnnotation } from "./types";
 
-export function getNanoApiAnnotationFromCommentValue(comment: string) {
+export function parseNanoApiAnnotation(value: string) {
   const nanoapiRegex = /@nanoapi|((method|path|group):([^ ]+))/g;
-  const matches = comment.match(nanoapiRegex);
+  const matches = value.match(nanoapiRegex);
   // remove first match, which is the @nanoapi identifier
   matches?.shift();
 
@@ -16,10 +16,41 @@ export function getNanoApiAnnotationFromCommentValue(comment: string) {
     }, {} as NanoAPIAnnotation);
   }
 
-  return null;
+  throw new Error("Could not parse annotation");
 }
 
-export function replaceCommentFromAnnotation(
+export function isAnnotationInGroup(
+  group: Group,
+  annotation: NanoAPIAnnotation,
+) {
+  // check if annotation has a method (actual endpoint)
+  if (annotation.method) {
+    const endpoint = group.endpoints.find(
+      (endpoint) =>
+        endpoint.method === annotation.method &&
+        endpoint.path === annotation.path,
+    );
+
+    if (endpoint) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // if annotation has no method, we treat it as a module that contains other endpoints
+  const endpoints = group.endpoints.filter((endpoint) =>
+    endpoint.path.startsWith(annotation.path),
+  );
+
+  if (endpoints.length > 0) {
+    return true;
+  }
+
+  return false;
+}
+
+export function updateCommentFromAnnotation(
   comment: string,
   annotation: NanoAPIAnnotation,
 ) {

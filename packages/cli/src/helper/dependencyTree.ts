@@ -1,12 +1,14 @@
 import fs from "fs";
 import Parser from "tree-sitter";
-import { extractJavascriptFileImports } from "./languages/javascript/imports";
 
 import { resolveFilePath } from "./file";
 import { DependencyTree, Group } from "./types";
 import { Endpoint } from "./types";
 import { getParserLanguageFromFile } from "./treeSitter";
-import { getNanoApiAnnotationFromCommentValue } from "./annotations";
+import { parseNanoApiAnnotation } from "./annotations";
+import { getJavascriptAnnotationNodes } from "./languages/javascript/annotations";
+import { getJavascriptImports } from "./languages/javascript/imports";
+import { getTypescriptImports } from "./languages/typescript/imports";
 
 export function getDependencyTree(filePath: string): DependencyTree {
   const sourceCode = fs.readFileSync(filePath, "utf8");
@@ -22,18 +24,31 @@ export function getDependencyTree(filePath: string): DependencyTree {
   const parser = new Parser();
   parser.setLanguage(language);
 
-  if (["javascript", "typescript"].includes(language.name)) {
-    const imports = extractJavascriptFileImports(parser, sourceCode);
+  const tree = parser.parse(sourceCode);
 
-    imports.forEach((importPath) => {
-      const resolvedPath = resolveFilePath(importPath, filePath);
-      if (resolvedPath && fs.existsSync(resolvedPath)) {
-        dependencyTree.children.push(getDependencyTree(resolvedPath));
-      }
-    });
+  let imports: {
+    node: Parser.SyntaxNode;
+    source: string;
+    importSpecifierIdentifiers: Parser.SyntaxNode[];
+    importIdentifier?: Parser.SyntaxNode;
+    namespaceImport?: Parser.SyntaxNode;
+  }[];
+  if (language.name === "javascript") {
+    imports = getJavascriptImports(parser, tree.rootNode);
+    imports = imports.filter((importPath) => importPath.source.startsWith("."));
+  } else if (language.name === "typescript") {
+    imports = getTypescriptImports(parser, tree.rootNode);
+    imports = imports.filter((importPath) => importPath.source.startsWith("."));
   } else {
     throw new Error(`Unsupported language: ${language.name}`);
   }
+
+  imports.forEach((importPath) => {
+    const resolvedPath = resolveFilePath(importPath.source, filePath);
+    if (resolvedPath && fs.existsSync(resolvedPath)) {
+      dependencyTree.children.push(getDependencyTree(resolvedPath));
+    }
+  });
 
   return dependencyTree;
 }
@@ -69,28 +84,26 @@ export function getEndpontsFromTree(
       return uniqueFilePaths;
     }
 
-    function traverse(node: Parser.SyntaxNode) {
-      if (node.type === "comment") {
-        const comment = node.text;
+    const annotationNodes = getJavascriptAnnotationNodes(
+      parser,
+      parsedTree.rootNode,
+    );
+    annotationNodes.forEach((node) => {
+      const annotation = parseNanoApiAnnotation(node.text);
 
-        const annotation = getNanoApiAnnotationFromCommentValue(comment);
-
-        if (annotation) {
-          const endpoint: Endpoint = {
-            path: annotation.path,
-            method: annotation.method,
-            group: annotation.group,
-            filePath: dependencyTree.path,
-            parentFilePaths,
-            childrenFilePaths: getFilePathsFromTree(dependencyTree),
-          };
-          endpoints.push(endpoint);
-        }
+      // Only add endpoints, not annotations that are just grouping endpoints
+      if (annotation.method) {
+        const endpoint: Endpoint = {
+          path: annotation.path,
+          method: annotation.method,
+          group: annotation.group,
+          filePath: dependencyTree.path,
+          parentFilePaths,
+          childrenFilePaths: getFilePathsFromTree(dependencyTree),
+        };
+        endpoints.push(endpoint);
       }
-      node.children.forEach((child) => traverse(child));
-    }
-
-    traverse(parsedTree.rootNode);
+    });
 
     return endpoints;
   }
@@ -135,4 +148,24 @@ export function getGroupsFromEndpoints(endpoints: Endpoint[]) {
   }
 
   return groups;
+}
+
+export function getFilesFromDependencyTree(
+  tree: DependencyTree,
+): { path: string; sourceCode: string }[] {
+  const files: { path: string; sourceCode: string }[] = [];
+  const uniquePaths = new Set<string>();
+
+  function gatherFiles(tree: DependencyTree) {
+    if (!uniquePaths.has(tree.path)) {
+      uniquePaths.add(tree.path);
+      files.push({ path: tree.path, sourceCode: tree.sourceCode });
+    }
+
+    tree.children.forEach(gatherFiles);
+  }
+
+  gatherFiles(tree);
+
+  return files;
 }
