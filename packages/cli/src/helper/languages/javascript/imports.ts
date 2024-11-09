@@ -1,11 +1,12 @@
 import Parser from "tree-sitter";
 
-function getFromImportStatements(parser: Parser, node: Parser.SyntaxNode) {
+function getImportStatements(parser: Parser, node: Parser.SyntaxNode) {
   const imports: {
     node: Parser.SyntaxNode;
     source: string;
     importSpecifierIdentifiers: Parser.SyntaxNode[];
     importIdentifier?: Parser.SyntaxNode;
+    namespaceImport?: Parser.SyntaxNode;
   }[] = [];
 
   const importStatementQuery = new Parser.Query(
@@ -53,16 +54,9 @@ function getFromImportStatements(parser: Parser, node: Parser.SyntaxNode) {
     const importClauseIdentifierQuery = new Parser.Query(
       parser.getLanguage(),
       `
-        ([
-          (import_clause
-            (identifier) @identifier
-          )
-          (import_clause
-            (namespace_import
-              (identifier) @identifier
-            )
-          )
-        ])
+        (import_clause
+          (identifier) @identifier
+        )
       `,
     );
     const importClauseIdentifierCaptures = importClauseIdentifierQuery.captures(
@@ -75,26 +69,44 @@ function getFromImportStatements(parser: Parser, node: Parser.SyntaxNode) {
       ? importClauseIdentifierCaptures[0].node
       : undefined;
 
+    const nameSpaceimportClauseIdentifierQuery = new Parser.Query(
+      parser.getLanguage(),
+      `
+        (import_clause
+          (namespace_import
+            (identifier) @identifier
+          )
+        )
+        `,
+    );
+    const nameSpaceimportClauseIdentifierCaptures =
+      nameSpaceimportClauseIdentifierQuery.captures(capture.node);
+    if (nameSpaceimportClauseIdentifierCaptures.length > 1) {
+      throw new Error("Found multiple namespace import clause identifier");
+    }
+    const namespaceImport = nameSpaceimportClauseIdentifierCaptures.length
+      ? nameSpaceimportClauseIdentifierCaptures[0].node
+      : undefined;
+
     imports.push({
       node: capture.node,
       source,
       importSpecifierIdentifiers,
       importIdentifier,
+      namespaceImport,
     });
   });
 
   return imports;
 }
 
-function getFromRequireAndDynamicImports(
-  parser: Parser,
-  node: Parser.SyntaxNode,
-) {
+function getRequireAndDynamicImports(parser: Parser, node: Parser.SyntaxNode) {
   const imports: {
     node: Parser.SyntaxNode;
     source: string;
     importSpecifierIdentifiers: Parser.SyntaxNode[];
     importIdentifier?: Parser.SyntaxNode;
+    namespaceImport?: undefined;
   }[] = [];
 
   const requireStatementQuery = new Parser.Query(
@@ -230,6 +242,7 @@ function getFromRequireAndDynamicImports(
       source,
       importSpecifierIdentifiers,
       importIdentifier,
+      namespaceImport: undefined,
     });
   });
 
@@ -237,8 +250,8 @@ function getFromRequireAndDynamicImports(
 }
 
 export function getJavascriptImports(parser: Parser, node: Parser.SyntaxNode) {
-  const imports = getFromImportStatements(parser, node);
-  imports.push(...getFromRequireAndDynamicImports(parser, node));
+  const imports = getImportStatements(parser, node);
+  imports.push(...getRequireAndDynamicImports(parser, node));
 
   return imports;
 }
@@ -255,7 +268,10 @@ export function getJavascriptImportIdentifierUsage(
     isTypescript
       ? `
       (
-        ([(identifier) (type_identifier)]) @identifier
+        ([
+          (identifier)
+          (type_identifier)
+        ]) @identifier
         (#eq? @identifier "${identifier.text}")
       )
     `
@@ -278,6 +294,14 @@ export function getJavascriptImportIdentifierUsage(
       if (targetNode.parent && targetNode.parent.type === "array") {
         break;
       }
+
+      if (
+        targetNode.parent &&
+        targetNode.parent.type === "expression_statement"
+      ) {
+        break;
+      }
+
       // TODO: add more cases as we encounter them
 
       if (!targetNode.parent) {

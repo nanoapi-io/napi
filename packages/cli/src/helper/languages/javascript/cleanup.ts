@@ -227,10 +227,32 @@ export function cleanupUnusedJavascriptImports(
       }
     }
 
+    let removeNameSpaceImport = false;
+    if (depImport.namespaceImport) {
+      let usages = isTypescript
+        ? getTypescriptImportIdentifierUsage(
+            parser,
+            tree.rootNode,
+            depImport.namespaceImport,
+          )
+        : getJavascriptImportIdentifierUsage(
+            parser,
+            tree.rootNode,
+            depImport.namespaceImport,
+          );
+      usages = usages.filter((usage) => {
+        return usage.id !== depImport.importIdentifier?.id;
+      });
+      if (usages.length === 0) {
+        removeNameSpaceImport = true;
+      }
+    }
+
     if (
       importSpecifierToRemove.length ===
         depImport.importSpecifierIdentifiers.length &&
-      (removeDefaultImport || !depImport.importIdentifier)
+      (removeDefaultImport || !depImport.importIdentifier) &&
+      (removeNameSpaceImport || !depImport.namespaceImport)
     ) {
       indexesToRemove.push({
         startIndex: depImport.node.startIndex,
@@ -243,6 +265,20 @@ export function cleanupUnusedJavascriptImports(
           endIndex: importSpecifier.endIndex,
         });
       });
+
+      if (removeDefaultImport && depImport.importIdentifier) {
+        indexesToRemove.push({
+          startIndex: depImport.importIdentifier.startIndex,
+          endIndex: depImport.importIdentifier.endIndex,
+        });
+      }
+
+      if (removeNameSpaceImport && depImport.namespaceImport) {
+        indexesToRemove.push({
+          startIndex: depImport.namespaceImport.startIndex,
+          endIndex: depImport.namespaceImport.endIndex,
+        });
+      }
     }
   });
 

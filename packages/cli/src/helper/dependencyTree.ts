@@ -31,6 +31,7 @@ export function getDependencyTree(filePath: string): DependencyTree {
     source: string;
     importSpecifierIdentifiers: Parser.SyntaxNode[];
     importIdentifier?: Parser.SyntaxNode;
+    namespaceImport?: Parser.SyntaxNode;
   }[];
   if (language.name === "javascript") {
     imports = getJavascriptImports(parser, tree.rootNode);

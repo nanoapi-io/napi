@@ -44,18 +44,16 @@ import * as test from './test';
     expect(imports.length).toBe(2);
 
     expect(imports[0].source).toBe("@nestjs/common");
-
     expect(imports[0].importIdentifier).not.toBe(undefined);
     expect(imports[0].importIdentifier?.text).toBe("common");
-
+    expect(imports[0].namespaceImport).toBe(undefined);
     expect(imports[0].importSpecifierIdentifiers.length).toBe(0);
 
     expect(imports[1].source).toBe("./test");
-
-    expect(imports[1].importIdentifier).not.toBe(undefined);
-    expect(imports[1].importIdentifier?.text).toBe("test");
-
-    expect(imports[0].importSpecifierIdentifiers.length).toBe(0);
+    expect(imports[1].importIdentifier).toBe(undefined);
+    expect(imports[1].namespaceImport).not.toBe(undefined);
+    expect(imports[1].namespaceImport?.text).toBe("test");
+    expect(imports[1].importSpecifierIdentifiers.length).toBe(0);
   });
 
   it("Should work with require import", () => {

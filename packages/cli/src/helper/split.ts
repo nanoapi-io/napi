@@ -82,7 +82,6 @@ export async function createSplit(
     outputDirectory,
     groupMapIndex.toString(),
   );
-
   files.forEach((file) => {
     const relativeFileNamePath = path.relative(targetDir, file.path);
     const destinationPath = path.join(
