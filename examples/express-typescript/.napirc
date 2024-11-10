@@ -1,0 +1,4 @@
+{
+  "entrypoint": "src/index.ts",
+  "out": "napi_dist"
+}
