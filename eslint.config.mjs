@@ -13,7 +13,7 @@ export default tseslint.config(
   {
     ignores: [
       "**/node_modules/**/*",
-      "dist",
+      "examples/**",
       "packages/app/dist",
       "packages/cli/dist",
     ],
