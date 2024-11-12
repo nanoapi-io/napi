@@ -42,13 +42,13 @@ $ napi init
 $ napi ui
 ```
 
-### Example API Repos
+## Examples
 
 We are building a collection of example API repositories in each language so you can explore the project. This list will grow over time.
 
-- NodeJS: [nodejs-example-apis](https://github.com/nanoapi-io/nodejs-example-apis)
+[examples](/examples/README.md)
 
-# Usage
+## Usage
 
 ### Installation
 
@@ -174,7 +174,7 @@ This project is in the early stages of development. We are actively working on t
 - [ ] Java support
 - [ ] C# support
 
-#### On Donating
+## On Donating
 
 NanoAPI is a fair-source project. Because of this, we feel it would be unethical to keep any donations to ourselves. Instead, here is how we will handle donations:
 
