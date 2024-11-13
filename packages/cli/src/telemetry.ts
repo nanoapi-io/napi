@@ -3,6 +3,7 @@ import { EventEmitter } from "events";
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { v4 as uuidv4 } from "uuid";
+import os from "os";
 
 export enum TelemetryEvents {
   APP_START = "app_start",
@@ -27,7 +28,7 @@ const telemetry = new EventEmitter();
 const TELEMETRY_ENDPOINT =
   process.env.TELEMETRY_ENDPOINT ||
   "https://napi-watchdog-api-gateway-33ge7a49.nw.gateway.dev/telemetryHandler";
-const SESSION_FILE_PATH = join("/tmp", "napi_session_id");
+const SESSION_FILE_PATH = join(os.tmpdir(), "napi_session_id");
 
 // getSessionId generates a new session ID and cache it in SESSION_FILE_PATH
 function getSessionId() {

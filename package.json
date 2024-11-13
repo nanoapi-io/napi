@@ -6,7 +6,7 @@
   ],
   "scripts": {
     "dev:app": "npm run dev --workspace packages/app",
-    "dev:cli": "NODE_ENV=development npm run dev --workspace packages/cli",
+    "dev:cli": "npm run dev --workspace packages/cli",
     "build:cleanup": "rm -rf packages/cli/dist && rm -rf packages/app/dist",
     "build:packages": "npm run build --workspaces",
     "build:copy-dist": "cp -r packages/app/dist packages/cli/dist/app_dist",
