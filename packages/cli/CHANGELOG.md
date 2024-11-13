@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.19] - 2024-11-13
+
 Fix https://github.com/nanoapi-io/napi/issues/38
 
 ## [0.0.18] - 2024-11-09
