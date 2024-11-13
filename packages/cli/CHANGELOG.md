@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Fix https://github.com/nanoapi-io/napi/issues/38
+
 ## [0.0.18] - 2024-11-09
 
 Remove support for require and dynamic import
