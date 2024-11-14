@@ -32,7 +32,7 @@ To understand better what we mean by the above, please take a look at our [docum
 Ensure you have NodeJS >= 18 and NPM installed on your machine.
 
 ```bash
-$ npm install -g @nanoapi-io/napi
+$ npm install -g @nanoapi.io/napi
 ```
 
 To open the UI for your codebase, run the following commands:
