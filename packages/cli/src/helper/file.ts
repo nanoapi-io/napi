@@ -44,6 +44,7 @@ export function resolveFilePath(importPath: string, currentFile: string) {
       return null;
     }
   }
+
   // Skip external dependencies (e.g., node_modules)
   return null;
 }

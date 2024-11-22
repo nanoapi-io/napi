@@ -1,6 +1,4 @@
-import fs from "fs";
-import path from "path";
-import { DependencyTree, Group } from "./types";
+import { Group } from "./types";
 import {
   cleanupAnnotations,
   getExportMap,
@@ -10,89 +8,132 @@ import {
   cleanupErrors,
   cleanupUnusedExports,
 } from "./cleanup";
-import { getFilesFromDependencyTree } from "./dependencyTree";
+import DependencyTreeManager from "./dependencyTree";
+import Parser from "tree-sitter";
 
-// Function to handle splitting and storing paths based on the split command logic
-export async function createSplit(
-  tree: DependencyTree,
-  group: Group,
-  outputDirectory: string,
-  entrypointPath: string,
-  groupMapIndex: number,
-) {
-  console.time(`split ${groupMapIndex}`);
-  let files = getFilesFromDependencyTree(tree);
+class SplitRunner {
+  private dependencyTreeManager: DependencyTreeManager;
+  private group: Group;
+  private files: { path: string; sourceCode: string }[];
 
-  console.time("remove annotation from other groups");
-  // Step 1, remove annotation from other groups
-  files = files.map((file) => {
-    const updatedSourceCode = cleanupAnnotations(
-      file.path,
-      file.sourceCode,
-      group,
+  constructor(dependencyTreeManager: DependencyTreeManager, group: Group) {
+    this.dependencyTreeManager = dependencyTreeManager;
+    this.group = group;
+    this.files = dependencyTreeManager.getFiles();
+  }
+
+  #getExportMap() {
+    return getExportMap(this.files);
+  }
+
+  #removeAnnotationFromOtherGroups() {
+    this.files = this.files.map((file) => {
+      const updatedSourceCode = cleanupAnnotations(
+        file.path,
+        file.sourceCode,
+        this.group,
+      );
+      return { ...file, sourceCode: updatedSourceCode };
+    });
+  }
+
+  #removeInvalidImportsAndUsages(
+    exportMap: Map<
+      string,
+      {
+        namedExports: {
+          exportNode: Parser.SyntaxNode;
+          identifierNode: Parser.SyntaxNode;
+        }[];
+        defaultExport?: Parser.SyntaxNode;
+      }
+    >,
+  ) {
+    this.files = this.files.map((file) => {
+      const updatedSourceCode = cleanupInvalidImports(
+        file.path,
+        file.sourceCode,
+        exportMap,
+      );
+      return { ...file, sourceCode: updatedSourceCode };
+    });
+  }
+
+  #removeUnusedImports() {
+    this.files = this.files.map((file) => {
+      const updatedSourceCode = cleanupUnusedImports(
+        file.path,
+        file.sourceCode,
+      );
+      return { ...file, sourceCode: updatedSourceCode };
+    });
+  }
+
+  #removeUnusedFiles() {
+    this.files = cleanupUnusedFiles(
+      this.dependencyTreeManager.dependencyTree.path,
+      this.files,
     );
-    return { ...file, sourceCode: updatedSourceCode };
-  });
-  console.timeEnd("remove annotation from other groups");
+  }
 
-  console.time("Check for invalid imports and delete their usage");
-  // Step 2, Check for invalid imports and delete their usage
-  let exportIdentifiersMap = getExportMap(files);
-  files = files.map((file) => {
-    const updatedSourceCode = cleanupInvalidImports(
-      file.path,
-      file.sourceCode,
-      exportIdentifiersMap,
-    );
-    return { ...file, sourceCode: updatedSourceCode };
-  });
-  console.timeEnd("Check for invalid imports and delete their usage");
+  #removeUnusedExports(
+    exportMap: Map<
+      string,
+      {
+        namedExports: {
+          exportNode: Parser.SyntaxNode;
+          identifierNode: Parser.SyntaxNode;
+        }[];
+        defaultExport?: Parser.SyntaxNode;
+      }
+    >,
+  ) {
+    this.files = cleanupUnusedExports(this.files, exportMap);
+  }
 
-  console.time("Remove unused import");
-  // Step 3, Remove unused import
-  files = files.map((file) => {
-    const updatedSourceCode = cleanupUnusedImports(file.path, file.sourceCode);
-    return { ...file, sourceCode: updatedSourceCode };
-  });
-  console.timeEnd("Remove unused import");
+  #removeErrors() {
+    this.files = this.files.map((file) => {
+      const updatedSourceCode = cleanupErrors(file.path, file.sourceCode);
+      return { ...file, sourceCode: updatedSourceCode };
+    });
+  }
 
-  console.time("Check for unused files and delete them");
-  // Step 4, Check for unused files and delete them
-  files = cleanupUnusedFiles(entrypointPath, files);
-  console.timeEnd("Check for unused files and delete them");
+  run() {
+    console.log("\n");
+    console.time("Splitting");
 
-  console.time("Remove unused export");
-  // Step 5, Check for unused export and delete them
-  exportIdentifiersMap = getExportMap(files);
-  files = cleanupUnusedExports(files, exportIdentifiersMap);
-  console.timeEnd("Remove unused export");
+    console.time("remove annotation from other groups");
+    this.#removeAnnotationFromOtherGroups();
+    console.timeEnd("remove annotation from other groups");
 
-  console.time("Remove all tree sitter ERRORS");
-  // Step 6, Remove all tree sitter ERRORS
-  files = files.map((file) => {
-    const updatedSourceCode = cleanupErrors(file.path, file.sourceCode);
-    return { ...file, sourceCode: updatedSourceCode };
-  });
-  console.timeEnd("Remove all tree sitter ERRORS");
+    console.time("Get export map");
+    const exportMap = this.#getExportMap();
+    console.timeEnd("Get export map");
 
-  console.time("Write to disk each file");
-  // Step 7, Write to disk each file
-  const targetDir = path.dirname(entrypointPath);
-  const annotationDirectory = path.join(
-    outputDirectory,
-    groupMapIndex.toString(),
-  );
-  files.forEach((file) => {
-    const relativeFileNamePath = path.relative(targetDir, file.path);
-    const destinationPath = path.join(
-      annotationDirectory,
-      relativeFileNamePath,
-    );
-    fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
-    fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
-  });
-  console.timeEnd("Write to disk each file");
+    console.time("Remove invalid imports and usages");
+    this.#removeInvalidImportsAndUsages(exportMap);
+    console.timeEnd("Remove invalid imports and usages");
 
-  console.timeEnd(`split ${groupMapIndex}`);
-  console.info("\n");
+    console.time("Remove unused imports");
+    this.#removeUnusedImports();
+    console.timeEnd("Remove unused imports");
+
+    console.time("Remove unused files");
+    this.#removeUnusedFiles();
+    console.timeEnd("Remove unused files");
+
+    console.time("Remove unused exports");
+    this.#removeUnusedExports(exportMap);
+    console.timeEnd("Remove unused exports");
+
+    console.time("Remove errors");
+    this.#removeErrors();
+    console.timeEnd("Remove errors");
+
+    console.timeEnd("Splitting");
+
+    return this.files;
+  }
 }
+
+export default SplitRunner;

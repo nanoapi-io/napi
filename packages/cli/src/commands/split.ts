@@ -1,12 +1,8 @@
 import path from "path";
 import fs from "fs";
-import {
-  getDependencyTree,
-  getEndpontsFromTree,
-  getGroupsFromEndpoints,
-} from "../helper/dependencyTree";
+import DependencyTreeManager from "../helper/dependencyTree";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
-import { createSplit } from "../helper/split";
+import SplitRunner from "../helper/split";
 import { GroupMap } from "../helper/types";
 
 export default function splitCommandHandler(
@@ -15,22 +11,31 @@ export default function splitCommandHandler(
 ) {
   const groupMap: GroupMap = {};
 
-  const tree = getDependencyTree(entrypointPath);
+  const dependencyTreeManager = new DependencyTreeManager(entrypointPath);
 
   cleanupOutputDir(outputDir);
   createOutputDir(outputDir);
 
-  // Iterate over the tree and get endpoints
-  const endpoints = getEndpontsFromTree(tree);
-
-  // Get groups from the endpoints
-  const groups = getGroupsFromEndpoints(endpoints);
+  // Get groups from the dependency tree
+  const groups = dependencyTreeManager.getGroups();
 
   // Process each group for splitting
   groups.forEach((group, index) => {
-    // Clone the tree to avoid mutation of the original tree
-    const treeClone = structuredClone(tree);
-    createSplit(treeClone, group, outputDir, entrypointPath, index);
+    const splitRunner = new SplitRunner(dependencyTreeManager, group);
+    const files = splitRunner.run();
+
+    const targetDir = path.dirname(entrypointPath);
+    const annotationDirectory = path.join(outputDir, index.toString());
+
+    files.forEach((file) => {
+      const relativeFileNamePath = path.relative(targetDir, file.path);
+      const destinationPath = path.join(
+        annotationDirectory,
+        relativeFileNamePath,
+      );
+      fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+      fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
+    });
   });
 
   // Store the processed annotations in the output directory

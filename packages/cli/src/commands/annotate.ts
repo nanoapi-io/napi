@@ -1,5 +1,5 @@
 import fs from "fs";
-import { getDependencyTree } from "../helper/dependencyTree";
+import DependencyTreeManager from "../helper/dependencyTree";
 import OpenAI from "openai";
 import { DependencyTree } from "../helper/types";
 
@@ -8,7 +8,7 @@ export default async function annotateOpenAICommandHandler(
   openAIApiKey: string, // OpenAI API key
 ) {
   console.info("Annotating program...");
-  const tree = getDependencyTree(entrypoint);
+  const dependencyTreeManager = new DependencyTreeManager(entrypoint);
 
   const openAIConfig = {
     apiKey: openAIApiKey,
@@ -24,7 +24,7 @@ export default async function annotateOpenAICommandHandler(
   messages.push({
     role: "user",
     content: `The entrypoint of my application is: ${entrypoint}.
-    Here is the dependency tree of the entrypoint of: ${JSON.stringify(tree)}`,
+    Here is the dependency tree of the entrypoint of: ${JSON.stringify(dependencyTreeManager.dependencyTree)}`,
   });
 
   messages.push({
@@ -50,7 +50,7 @@ export default async function annotateOpenAICommandHandler(
       iterateOverTree(child);
     });
   }
-  iterateOverTree(tree);
+  iterateOverTree(dependencyTreeManager.dependencyTree);
 
   messages.push({
     role: "user",

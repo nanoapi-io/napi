@@ -5,10 +5,7 @@ import {
   parseNanoApiAnnotation,
   updateCommentFromAnnotation,
 } from "../helper/annotations";
-import {
-  getDependencyTree,
-  getEndpontsFromTree,
-} from "../helper/dependencyTree";
+import DependencyTreeManager from "../helper/dependencyTree";
 import Parser from "tree-sitter";
 import { getParserLanguageFromFile } from "../helper/treeSitter";
 import { replaceIndexesFromSourceCode } from "../helper/cleanup";
@@ -16,9 +13,11 @@ import { getJavascriptAnnotationNodes } from "../helper/languages/javascript/ann
 import { getTypescriptAnnotationNodes } from "../helper/languages/typescript/annotations";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
-  const tree = getDependencyTree(payload.entrypointPath);
+  const dependencyTreeManager = new DependencyTreeManager(
+    payload.entrypointPath,
+  );
 
-  const endpoints = getEndpontsFromTree(tree);
+  const endpoints = dependencyTreeManager.getEndponts();
 
   const updatedEndpoints = endpoints.map((endpoint) => {
     const updatedEndpoint = payload.endpoints.find(
