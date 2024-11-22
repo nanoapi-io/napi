@@ -6,31 +6,31 @@ import { User, UserPartial } from './users.data';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // @nanoapi path:/api/v1/users/ method:POST
+  // @nanoapi method:POST path:/api/v1/users/ group:users
   @Post()
   async createUser(@Body() userData: UserPartial): Promise<User> {
     return this.usersService.createUser(userData);
   }
 
-  // @nanoapi path:/api/v1/users/ method:GET
+  // @nanoapi method:GET path:/api/v1/users/ group:users
   @Get()
   async findAllUsers(): Promise<User[]> {
     return this.usersService.getUsers();
   }
 
-  // @nanoapi path:/api/v1/users/random method:GET
+  // @nanoapi method:GET path:/api/v1/users/random group:users
   @Get('/random')
   async findRandomUser(): Promise<User | { id: number, name: string }> {
     return this.usersService.findRandomUser();
   }
 
-  // @nanoapi path:/api/v1/users/:id/ method:GET
+  // @nanoapi method:GET path:/api/v1/users/:id/ group:users
   @Get(':id')
   async findUserById(@Param('id') id: number): Promise<User | null> {
     return this.usersService.getUser(id);
   }
 
-  // @nanoapi path:/api/v1/users/:id/ method:PUT
+  // @nanoapi method:PUT path:/api/v1/users/:id/ group:users
   @Put(':id')
   async updateUser(
     @Param('id') id: number,
@@ -39,7 +39,7 @@ export class UsersController {
     return this.usersService.updateUser(id, userData);
   }
 
-  // @nanoapi path:/api/v1/users/:id/ method:DELETE
+  // @nanoapi method:DELETE path:/api/v1/users/:id/ group:users
   @Delete(':id')
   async deleteUser(@Param('id') id: number): Promise<null> {
     return this.usersService.deleteUser(id);
