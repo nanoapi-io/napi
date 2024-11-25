@@ -4,9 +4,9 @@ Portions of this software are licensed as follows:
 
 - Content of branches other than the main branch (i.e. "master") are not licensed.
 - Source code files that contain ".ee." in their filename are NOT licensed under the Sustainable Use License.
-  To use source code files that contain ".ee." in their filename you must hold a valid n8n Enterprise License
+  To use source code files that contain ".ee." in their filename you must hold a valid NanoAPI Enterprise License
   specifically allowing you access to such source code files and as defined in "LICENSE_EE.md".
-- All third party components incorporated into the n8n Software are licensed under the original license
+- All third party components incorporated into the NanoAPI Software are licensed under the original license
   provided by the owner of the applicable component.
 - Content outside of the above mentioned files or restrictions is available under the "Sustainable Use
   License" as defined below.
