@@ -3,7 +3,7 @@ import fs from "fs";
 import { resolveFilePath } from "../helper/file";
 import { DependencyTree, Group, Endpoint } from "./types";
 import AnnotationManager from "../annotationManager";
-import { getLanguagePluginFromFilePath } from "../languages";
+import { getLanguagePluginFromFilePath } from "../languagesPlugins";
 
 class DependencyTreeManager {
   dependencyTree: DependencyTree;

@@ -1,5 +1,5 @@
 import { Group } from "./dependencyManager/types";
-import { LanguagePlugin } from "./languages/types";
+import { LanguagePlugin } from "./languagesPlugins/types";
 
 class AnnotationManager {
   private nanoapiRegex: RegExp;

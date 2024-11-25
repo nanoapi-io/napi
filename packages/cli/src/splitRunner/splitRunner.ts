@@ -5,7 +5,7 @@ import { ExportMap, File } from "./types";
 import Parser from "tree-sitter";
 import assert from "assert";
 import { resolveFilePath } from "../helper/file";
-import { getLanguagePluginFromFilePath } from "../languages";
+import { getLanguagePluginFromFilePath } from "../languagesPlugins";
 
 class SplitRunner {
   private dependencyTreeManager: DependencyTreeManager;
