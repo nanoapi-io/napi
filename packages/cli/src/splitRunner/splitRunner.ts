@@ -1,26 +1,28 @@
 import { Group } from "../dependencyManager/types";
 import { removeIndexesFromSourceCode } from "../helper/file";
 import DependencyTreeManager from "../dependencyManager/dependencyManager";
-import { ExportMap, File } from "./types";
+import { File } from "./types";
 import Parser from "tree-sitter";
 import assert from "assert";
-import { resolveFilePath } from "../helper/file";
-import { getLanguagePluginFromFilePath } from "../languagesPlugins";
+import { getLanguagePlugin } from "../languagesPlugins";
+import { Export } from "../languagesPlugins/types";
 
 class SplitRunner {
   private dependencyTreeManager: DependencyTreeManager;
+  private entrypointPath: string;
   private group: Group;
   private files: File[];
 
   constructor(dependencyTreeManager: DependencyTreeManager, group: Group) {
     this.dependencyTreeManager = dependencyTreeManager;
+    this.entrypointPath = dependencyTreeManager.dependencyTree.path;
     this.group = group;
     this.files = dependencyTreeManager.getFiles();
   }
 
   #removeAnnotationFromOtherGroups() {
     this.files = this.files.map((file) => {
-      const languagePlugin = getLanguagePluginFromFilePath(file.path);
+      const languagePlugin = getLanguagePlugin(this.entrypointPath, file.path);
 
       const updatedSourceCode = languagePlugin.removeAnnotationFromOtherGroups(
         file.sourceCode,
@@ -31,10 +33,10 @@ class SplitRunner {
   }
 
   #getExportMap() {
-    const exportMap: ExportMap = new Map();
+    const exportMap = new Map<string, Export>();
 
     this.files.forEach((file) => {
-      const languagePlugin = getLanguagePluginFromFilePath(file.path);
+      const languagePlugin = getLanguagePlugin(this.entrypointPath, file.path);
 
       const tree = languagePlugin.parser.parse(file.sourceCode);
 
@@ -46,9 +48,9 @@ class SplitRunner {
     return exportMap;
   }
 
-  #removeInvalidImportsAndUsages(exportMap: ExportMap) {
+  #removeInvalidImportsAndUsages(exportMap: Map<string, Export>) {
     this.files = this.files.map((file) => {
-      const languagePlugin = getLanguagePluginFromFilePath(file.path);
+      const languagePlugin = getLanguagePlugin(this.entrypointPath, file.path);
 
       const updatedSourceCode = languagePlugin.cleanupInvalidImports(
         file.path,
@@ -62,9 +64,10 @@ class SplitRunner {
 
   #removeUnusedImports() {
     this.files = this.files.map((file) => {
-      const languagePlugin = getLanguagePluginFromFilePath(file.path);
+      const languagePlugin = getLanguagePlugin(this.entrypointPath, file.path);
 
       const updatedSourceCode = languagePlugin.cleanupUnusedImports(
+        file.path,
         file.sourceCode,
       );
 
@@ -83,18 +86,22 @@ class SplitRunner {
       filesToKeep.add(this.dependencyTreeManager.dependencyTree.path);
 
       this.files.forEach((file) => {
-        const languagePlugin = getLanguagePluginFromFilePath(file.path);
+        const languagePlugin = getLanguagePlugin(
+          this.entrypointPath,
+          file.path,
+        );
 
         const tree = languagePlugin.parser.parse(file.sourceCode);
 
-        let dependencies = languagePlugin.getImports(tree.rootNode);
-        dependencies = dependencies.filter((dep) => dep.source.startsWith("."));
+        const imports = languagePlugin.getImports(file.path, tree.rootNode);
 
-        dependencies.forEach((dep) => {
-          const resolvedPath = resolveFilePath(dep.source, file.path);
-          if (resolvedPath) {
-            filesToKeep.add(resolvedPath);
+        imports.forEach((depImport) => {
+          if (depImport.isExternal || !depImport.source) {
+            // Ignore external dependencies
+            return;
           }
+
+          filesToKeep.add(depImport.source);
         });
       });
 
@@ -110,9 +117,27 @@ class SplitRunner {
     }
   }
 
-  #removeUnusedExports(exportMap: ExportMap) {
+  #removeUnusedExports(exportMap: Map<string, Export>) {
+    let exportDeleted = true;
+    while (exportDeleted) {
+      exportDeleted = false;
+      this.files = this.files.map((file) => {
+        const languagePlugin = getLanguagePlugin(
+          this.entrypointPath,
+          file.path,
+        );
+
+        const tree = languagePlugin.parser.parse(file.sourceCode);
+
+        const exp = languagePlugin.getExports(tree.rootNode);
+
+        assert(exp);
+
+        return file;
+      });
+    }
     // TODO
-    // Step 1, create variable to track which export is user
+    // Step 1, create variable to track which export is used
     // Step 2, iterate over all file imports. If the import is used, mark the export as used
     // Step 3, iterate over each file, and remove the unused exports
 
@@ -122,7 +147,7 @@ class SplitRunner {
 
   #removeErrors() {
     this.files = this.files.map((file) => {
-      const languagePlugin = getLanguagePluginFromFilePath(file.path);
+      const languagePlugin = getLanguagePlugin(this.entrypointPath, file.path);
 
       const tree = languagePlugin.parser.parse(file.sourceCode);
 

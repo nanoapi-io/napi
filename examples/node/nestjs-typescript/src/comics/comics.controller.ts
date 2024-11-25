@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { ComicsService } from './comics.service';
 import { Comic, ComicPartial } from './comics.data';
-import { calculateHighFibonacci } from 'src/helpers/fibonacci';
+import { calculateHighFibonacci } from '../helpers/fibonacci';
 
 @Controller('comics')
 export class ComicsController {

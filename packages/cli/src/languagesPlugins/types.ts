@@ -3,7 +3,8 @@ import Parser from "tree-sitter";
 
 export interface Import {
   node: Parser.SyntaxNode;
-  source: string;
+  source?: string;
+  isExternal: boolean;
   importSpecifierIdentifiers: Parser.SyntaxNode[];
   importIdentifier?: Parser.SyntaxNode;
   namespaceImport?: Parser.SyntaxNode;
@@ -19,6 +20,7 @@ export interface Export {
 
 export interface LanguagePlugin {
   parser: Parser;
+  entryPointPath: string;
 
   commentPrefix: string;
   annotationRegex: RegExp;
@@ -30,7 +32,7 @@ export interface LanguagePlugin {
     groupToKeep: Group,
   ): string;
 
-  getImports(node: Parser.SyntaxNode): Import[];
+  getImports(filePath: string, node: Parser.SyntaxNode): Import[];
 
   getExports(node: Parser.SyntaxNode): Export;
 
@@ -40,5 +42,5 @@ export interface LanguagePlugin {
     exportMap: Map<string, Export>,
   ): string;
 
-  cleanupUnusedImports(sourceCode: string): string;
+  cleanupUnusedImports(filePath: string, sourceCode: string): string;
 }

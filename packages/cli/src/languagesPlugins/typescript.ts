@@ -3,8 +3,8 @@ import Typescript from "tree-sitter-typescript";
 import JavascriptPlugin from "./javascript";
 
 class TypescriptPlugin extends JavascriptPlugin {
-  constructor() {
-    super();
+  constructor(entryPointPath: string) {
+    super(entryPointPath);
     this.parser.setLanguage(Typescript.typescript);
   }
 

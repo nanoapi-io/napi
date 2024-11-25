@@ -11,7 +11,7 @@ class ElfListView(MethodView):
         return elves
 
 
-# @nanoapi path:/api/elves method:GET
+# @nanoapi method:GET path:/api/elves group:elf_read
 elves_bp.add_url_rule("/", view_func=ElfListView.as_view("elf_list"), methods=["GET"])
 
 
@@ -22,7 +22,7 @@ class ElfCreateView(MethodView):
         return new_elf
 
 
-# @nanoapi path:/api/elves method:POST
+# @nanoapi method:POST path:/api/elves group:elf_write
 elves_bp.add_url_rule(
     "/", view_func=ElfCreateView.as_view("elf_create"), methods=["POST"]
 )
@@ -34,7 +34,7 @@ class ElfDetailView(MethodView):
         return elf
 
 
-# @nanoapi path:/api/elves/<elf_id> method:GET
+# @nanoapi method:GET path:/api/elves/<elf_id> group:elf_read
 elves_bp.add_url_rule(
     "/<int:elf_id>", view_func=ElfDetailView.as_view("elf_detail"), methods=["GET"]
 )
@@ -47,7 +47,7 @@ class ElfUpdateView(MethodView):
         return updated_elf
 
 
-# @nanoapi path:/api/elves/<elf_id> method:PUT
+# @nanoapi method:PUT path:/api/elves/<elf_id> group:elf_write
 elves_bp.add_url_rule(
     "/<int:elf_id>", view_func=ElfUpdateView.as_view("elf_update"), methods=["PUT"]
 )
@@ -59,7 +59,7 @@ class ElfDeleteView(MethodView):
         return None
 
 
-# @nanoapi path:/api/elves/<elf_id> method:DELETE
+# @nanoapi method:DELETE path:/api/elves/<elf_id> group:elf_write
 elves_bp.add_url_rule(
     "/<int:elf_id>", view_func=ElfDeleteView.as_view("elf_delete"), methods=["DELETE"]
 )

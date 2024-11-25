@@ -3,22 +3,22 @@ import { LanguagePlugin, Import, Export } from "./types";
 import { Group } from "../dependencyManager/types";
 import AnnotationManager from "../annotationManager";
 import { removeIndexesFromSourceCode } from "../helper/file";
-import Javascript from "tree-sitter-javascript";
+import Python from "tree-sitter-python";
 import path from "path";
 import fs from "fs";
 
-class JavascriptPlugin implements LanguagePlugin {
+class PythonPlugin implements LanguagePlugin {
   parser: Parser;
   entryPointPath: string;
 
   constructor(entryPointPath: string) {
     this.entryPointPath = entryPointPath;
     this.parser = new Parser();
-    this.parser.setLanguage(Javascript);
+    this.parser.setLanguage(Python);
   }
 
-  commentPrefix = "//";
-  annotationRegex = /\/\/( *)@nanoapi/;
+  commentPrefix = "#";
+  annotationRegex = /#( *)@nanoapi/;
 
   getCommentNodes(node: Parser.SyntaxNode) {
     const commentQuery = new Parser.Query(
@@ -49,11 +49,7 @@ class JavascriptPlugin implements LanguagePlugin {
         }
 
         // remove the other annotations
-        let nextNode = node.nextNamedSibling;
-        // We need to remove all decorators too
-        while (nextNode && nextNode.type === "decorator") {
-          nextNode = nextNode.nextNamedSibling;
-        }
+        const nextNode = node.nextNamedSibling;
         if (!nextNode) {
           throw new Error("Could not find next node");
         }
@@ -76,42 +72,41 @@ class JavascriptPlugin implements LanguagePlugin {
     return updatedSourceCode;
   }
 
-  $resolveImportSource(
-    filePath: string,
-    importSource: string,
-  ): string | undefined {
-    const currentFileExt = path.extname(filePath);
-
-    const importExt = path.extname(importSource);
-
-    // If import path has an extension, resolve directly
-    if (importExt) {
-      const resolvedPath = path.resolve(path.dirname(filePath), importSource);
+  $resolveImportSource(resolvedImportSource: string) {
+    for (const ext of [".py", ".pyc"]) {
+      const resolvedPath = path.resolve(`${resolvedImportSource}${ext}`);
       if (fs.existsSync(resolvedPath)) {
         return resolvedPath;
       }
     }
 
-    // If import path does not have an extension, try current file's extension first
-    const resolvedPathWithCurrentExt = path.resolve(
-      path.dirname(filePath),
-      `${importSource}${currentFileExt}`,
-    );
-    if (fs.existsSync(resolvedPathWithCurrentExt)) {
-      return resolvedPathWithCurrentExt;
-    }
-
-    // try to resolve with any extension
-    const resolvedPath = path.resolve(path.dirname(filePath), importSource);
+    const resolvedPath = path.resolve(resolvedImportSource);
     try {
       const resolvedPathWithAnyExt = require.resolve(resolvedPath);
       if (fs.existsSync(resolvedPathWithAnyExt)) {
         return resolvedPathWithAnyExt;
       }
     } catch {
-      // cannot resolve the path, probably external dependencies, return undefined
       return undefined;
     }
+  }
+
+  $resolveModuleImportSource(importSource: string) {
+    const importPath = path.resolve(
+      path.dirname(this.entryPointPath),
+      path.join(...importSource.split(".")),
+    );
+
+    return this.$resolveImportSource(importPath);
+  }
+
+  $resolveRelativeImportSource(filePath: string, importSouce: string) {
+    const importPath = path.resolve(
+      path.dirname(filePath),
+      path.join(...importSouce.split(".")),
+    );
+
+    return this.$resolveImportSource(importPath);
   }
 
   getImports(filePath: string, node: Parser.SyntaxNode) {
@@ -120,7 +115,7 @@ class JavascriptPlugin implements LanguagePlugin {
     const importStatementQuery = new Parser.Query(
       this.parser.getLanguage(),
       `
-        (import_statement) @import
+        (import_from_statement) @import
       `,
     );
     const importStatementCaptures = importStatementQuery.captures(node);
@@ -128,10 +123,11 @@ class JavascriptPlugin implements LanguagePlugin {
       const importSourceQuery = new Parser.Query(
         this.parser.getLanguage(),
         `
-            source: (string
-              (string_fragment) @source
-            )
-          `,
+          module_name: ([
+            (dotted_name) @module_source
+            (relative_import) @relative_source
+          ])
+        `,
       );
       const importSourceCaptures = importSourceQuery.captures(capture.node);
       if (importSourceCaptures.length === 0) {
@@ -141,13 +137,15 @@ class JavascriptPlugin implements LanguagePlugin {
         throw new Error("Found multiple import sources");
       }
 
-      const source = this.$resolveImportSource(
-        filePath,
-        importSourceCaptures[0].node.text,
-      );
+      const { name, node } = importSourceCaptures[0];
+      let source: string | undefined = undefined;
+      if (name === "module_source") {
+        source = this.$resolveModuleImportSource(node.text);
+      } else if (name === "relative_source") {
+        source = this.$resolveRelativeImportSource(filePath, node.text);
+      }
 
       let isExternal = false;
-
       if (!source) {
         isExternal = true;
       }
@@ -155,10 +153,8 @@ class JavascriptPlugin implements LanguagePlugin {
       const importSpecifierIdentifierQuery = new Parser.Query(
         this.parser.getLanguage(),
         `
-            (import_specifier
-              (identifier) @identifier
-            )
-          `,
+          name: (dotted_name) @identifier
+        `,
       );
       const importSpecifierCaptures = importSpecifierIdentifierQuery.captures(
         capture.node,
@@ -169,49 +165,11 @@ class JavascriptPlugin implements LanguagePlugin {
         },
       );
 
-      const importClauseIdentifierQuery = new Parser.Query(
-        this.parser.getLanguage(),
-        `
-            (import_clause
-              (identifier) @identifier
-            )
-          `,
-      );
-      const importClauseIdentifierCaptures =
-        importClauseIdentifierQuery.captures(capture.node);
-      if (importClauseIdentifierCaptures.length > 1) {
-        throw new Error("Found multiple import clause identifier");
-      }
-      const importIdentifier = importClauseIdentifierCaptures.length
-        ? importClauseIdentifierCaptures[0].node
-        : undefined;
-
-      const nameSpaceimportClauseIdentifierQuery = new Parser.Query(
-        this.parser.getLanguage(),
-        `
-            (import_clause
-              (namespace_import
-                (identifier) @identifier
-              )
-            )
-            `,
-      );
-      const nameSpaceimportClauseIdentifierCaptures =
-        nameSpaceimportClauseIdentifierQuery.captures(capture.node);
-      if (nameSpaceimportClauseIdentifierCaptures.length > 1) {
-        throw new Error("Found multiple namespace import clause identifier");
-      }
-      const namespaceImport = nameSpaceimportClauseIdentifierCaptures.length
-        ? nameSpaceimportClauseIdentifierCaptures[0].node
-        : undefined;
-
       imports.push({
         node: capture.node,
         source,
         isExternal,
         importSpecifierIdentifiers,
-        importIdentifier,
-        namespaceImport,
       });
     });
 
@@ -246,14 +204,20 @@ class JavascriptPlugin implements LanguagePlugin {
       let targetNode = capture.node;
       while (true) {
         // we can remove from the array
-        if (targetNode.parent && targetNode.parent.type === "array") {
+        if (targetNode.parent && targetNode.parent.type === "list") {
           break;
         }
 
         if (
           targetNode.parent &&
-          targetNode.parent.type === "expression_statement"
+          [
+            "import_from_statement",
+            "expression_statement",
+            "function_definition",
+            "class_definition",
+          ].includes(targetNode.parent.type)
         ) {
+          targetNode = targetNode.parent;
           break;
         }
 
@@ -271,75 +235,140 @@ class JavascriptPlugin implements LanguagePlugin {
     return usageNodes;
   }
 
-  _getExportIdentifierQuery() {
-    return new Parser.Query(
-      this.parser.getLanguage(),
-      `
-        declaration: ([
-          (_
-            name: (identifier) @identifier
-          )
-          (_
-            (_
-              name: (identifier) @identifier
-            )
-          )
-        ])
-      `,
-    );
-  }
-
   getExports(node: Parser.SyntaxNode) {
-    const exportQuery = new Parser.Query(
-      this.parser.getLanguage(),
-      `
-        (
-          (export_statement) @export
-          (#not-match? @export "export default")
-        )
-      `,
-    );
-
-    const exportCaptures = exportQuery.captures(node);
     const namedExports: {
       exportNode: Parser.SyntaxNode;
       identifierNode: Parser.SyntaxNode;
     }[] = [];
 
-    exportCaptures.forEach((capture) => {
-      const identifierQuery = this._getExportIdentifierQuery();
+    const queries = [
+      // expression statement export
+      {
+        export: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (module
+              (expression_statement
+                (assignment
+                  left: (identifier)
+                )
+              ) @export
+            )
+          `,
+        ),
+        identifier: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (expression_statement
+              (assignment
+                left: (identifier) @identifier
+              )
+            )
+          `,
+        ),
+      },
+      // function export
+      {
+        export: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (module
+              (function_definition) @export
+            )
+          `,
+        ),
+        identifier: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (function_definition
+              name: (identifier) @identifier
+            )
+          `,
+        ),
+      },
+      // class export
+      {
+        export: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (module
+              (class_definition) @export
+            )
+          `,
+        ),
+        identifier: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (class_definition
+              name: (identifier) @identifier
+            )
+          `,
+        ),
+      },
+      // decorated function export
+      {
+        export: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (module
+              (decorated_definition
+                definition: (function_definition)
+              ) @export
+            )
+          `,
+        ),
+        identifier: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (decorated_definition
+              definition: (function_definition
+                name: (identifier) @identifier
+              )
+            )
+          `,
+        ),
+      },
+      // decorated class export
+      {
+        export: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (module
+              (decorated_definition
+                definition: (class_definition)
+              ) @export
+            )
+          `,
+        ),
+        identifier: new Parser.Query(
+          this.parser.getLanguage(),
+          `
+            (decorated_definition
+              definition: (class_definition
+                name: (identifier) @identifier
+              )
+            )
+          `,
+        ),
+      },
+    ];
 
-      const identifierCaptures = identifierQuery.captures(capture.node);
-      if (identifierCaptures.length === 0) {
-        throw new Error("No identifier found in export statement");
-      }
-      identifierCaptures.forEach((capture) => {
+    queries.forEach((query) => {
+      const exportCaptures = query.export.captures(node);
+      exportCaptures.forEach((capture) => {
+        const identifierCaptures = query.identifier.captures(capture.node);
+        if (identifierCaptures.length !== 1) {
+          throw new Error("Could not find identifier");
+        }
+
+        const identifierNode = identifierCaptures[0].node;
+
         namedExports.push({
           exportNode: capture.node,
-          identifierNode: capture.node,
+          identifierNode,
         });
       });
     });
-
-    const defaultExportQuery = new Parser.Query(
-      this.parser.getLanguage(),
-      `
-          (
-            (export_statement) @export
-            (#match? @export "export default")
-          )
-        `,
-    );
-    const defaultExportCaptures = defaultExportQuery.captures(node);
-    if (defaultExportCaptures.length > 1) {
-      throw new Error("Found multiple default export. Only one is allowed");
-    }
-    if (defaultExportCaptures.length === 1) {
-      return {
-        namedExports,
-        defaultExport: defaultExportCaptures[0].node,
-      };
-    }
 
     return {
       namedExports,
@@ -368,26 +397,6 @@ class JavascriptPlugin implements LanguagePlugin {
         throw new Error("Could not find exports");
       }
 
-      if (depImport.importIdentifier && !exportsForFile.defaultExport) {
-        let usages = this._getImportIdentifiersUsages(
-          tree.rootNode,
-          depImport.importIdentifier,
-        );
-        usages = usages.filter((usage) => {
-          return usage.id !== depImport.importIdentifier?.id;
-        });
-        indexesToRemove.push({
-          startIndex: depImport.node.startIndex,
-          endIndex: depImport.node.endIndex,
-        });
-        usages.forEach((usage) => {
-          indexesToRemove.push({
-            startIndex: usage.startIndex,
-            endIndex: usage.endIndex,
-          });
-        });
-      }
-
       depImport.importSpecifierIdentifiers.forEach((importSpecifier) => {
         if (
           !exportsForFile.namedExports.find(
@@ -399,8 +408,9 @@ class JavascriptPlugin implements LanguagePlugin {
             tree.rootNode,
             importSpecifier,
           );
+
           usages = usages.filter((usage) => {
-            return usage.id !== depImport.importIdentifier?.id;
+            return usage.id !== depImport.node.id;
           });
 
           indexesToRemove.push({
@@ -425,10 +435,10 @@ class JavascriptPlugin implements LanguagePlugin {
     return updatedSourceCode;
   }
 
-  cleanupUnusedImports(filePath: string, sourceCode: string) {
+  cleanupUnusedImports(filepath: string, sourceCode: string) {
     const tree = this.parser.parse(sourceCode);
 
-    const imports = this.getImports(filePath, tree.rootNode);
+    const imports = this.getImports(filepath, tree.rootNode);
 
     const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
@@ -439,8 +449,9 @@ class JavascriptPlugin implements LanguagePlugin {
           tree.rootNode,
           importSpecifier,
         );
+
         usages = usages.filter((usage) => {
-          return usage.id !== importSpecifier.id;
+          return usage.id !== depImport.node.id;
         });
 
         if (usages.length === 0) {
@@ -448,45 +459,7 @@ class JavascriptPlugin implements LanguagePlugin {
         }
       });
 
-      let removeDefaultImport = false;
-      if (depImport.importIdentifier) {
-        let usages = this._getImportIdentifiersUsages(
-          tree.rootNode,
-          depImport.importIdentifier,
-        );
-        usages = usages.filter((usage) => {
-          return usage.id !== depImport.importIdentifier?.id;
-        });
-
-        if (usages.length === 0) {
-          removeDefaultImport = true;
-        }
-      }
-
-      let removeNameSpaceImport = false;
-      if (depImport.namespaceImport) {
-        let usages = this._getImportIdentifiersUsages(
-          tree.rootNode,
-          depImport.namespaceImport,
-        );
-        usages = usages.filter((usage) => {
-          return usage.id !== depImport.importIdentifier?.id;
-        });
-        if (usages.length === 0) {
-          removeNameSpaceImport = true;
-        }
-      }
-
       if (
-        importSpecifierToRemove.length ===
-          depImport.importSpecifierIdentifiers.length &&
-        (removeDefaultImport || removeNameSpaceImport)
-      ) {
-        indexesToRemove.push({
-          startIndex: depImport.node.startIndex,
-          endIndex: depImport.node.endIndex,
-        });
-      } else if (
         importSpecifierToRemove.length ===
         depImport.importSpecifierIdentifiers.length
       ) {
@@ -513,4 +486,4 @@ class JavascriptPlugin implements LanguagePlugin {
   }
 }
 
-export default JavascriptPlugin;
+export default PythonPlugin;

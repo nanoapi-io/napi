@@ -1,41 +1,51 @@
 import fs from "fs";
 
-import { resolveFilePath } from "../helper/file";
 import { DependencyTree, Group, Endpoint } from "./types";
 import AnnotationManager from "../annotationManager";
-import { getLanguagePluginFromFilePath } from "../languagesPlugins";
+import { getLanguagePlugin } from "../languagesPlugins";
 
 class DependencyTreeManager {
+  entryPointPath: string;
   dependencyTree: DependencyTree;
 
-  constructor(filePath: string) {
-    const dependencyTree = this.#getDependencyTree(filePath);
+  constructor(entryPointPath: string) {
+    this.entryPointPath = entryPointPath;
+    const dependencyTree = this.#getDependencyTree(
+      this.entryPointPath,
+      this.entryPointPath,
+    );
     this.dependencyTree = dependencyTree;
   }
 
-  #getDependencyTree(filePath: string): DependencyTree {
-    const sourceCode = fs.readFileSync(filePath, "utf8");
+  #getDependencyTree(
+    entryPointPath: string,
+    currentFilePath: string,
+  ): DependencyTree {
+    const sourceCode = fs.readFileSync(currentFilePath, "utf8");
 
     const dependencyTree: DependencyTree = {
-      path: filePath,
+      path: currentFilePath,
       sourceCode,
       children: [],
     };
 
-    const languagePlugin = getLanguagePluginFromFilePath(filePath);
+    const languagePlugin = getLanguagePlugin(entryPointPath, currentFilePath);
 
     const tree = languagePlugin.parser.parse(sourceCode);
 
-    let imports = languagePlugin.getImports(tree.rootNode);
+    const imports = languagePlugin.getImports(currentFilePath, tree.rootNode);
 
-    imports = imports.filter((importPath) => importPath.source.startsWith("."));
-
-    imports.forEach((importPath) => {
-      const resolvedPath = resolveFilePath(importPath.source, filePath);
-      if (resolvedPath && fs.existsSync(resolvedPath)) {
-        const childTree = this.#getDependencyTree(resolvedPath);
-        dependencyTree.children.push(childTree);
+    imports.forEach((depImport) => {
+      if (depImport.isExternal || !depImport.source) {
+        // Ignore external dependencies
+        return;
       }
+
+      const childTree = this.#getDependencyTree(
+        entryPointPath,
+        depImport.source,
+      );
+      dependencyTree.children.push(childTree);
     });
 
     return dependencyTree;
@@ -58,7 +68,10 @@ class DependencyTreeManager {
     parentFilePaths: string[],
     dependencyTree: DependencyTree,
   ) {
-    const languagePlugin = getLanguagePluginFromFilePath(dependencyTree.path);
+    const languagePlugin = getLanguagePlugin(
+      this.entryPointPath,
+      dependencyTree.path,
+    );
 
     const tree = languagePlugin.parser.parse(dependencyTree.sourceCode);
 

@@ -1,6 +1,6 @@
 from flask.views import MethodView
 from flask import request, Blueprint
-from api.wizards.services import WizardService
+from .services import WizardService
 
 wizards_bp = Blueprint("wizards", __name__)
 
@@ -11,7 +11,7 @@ class WizardListView(MethodView):
         return wizards
 
 
-# @nanoapi path:/api/wizards method:GET
+# @nanoapi method:GET path:/api/wizards group:wizard_read
 wizards_bp.add_url_rule(
     "/", view_func=WizardListView.as_view("wizard_list"), methods=["GET"]
 )
@@ -24,7 +24,7 @@ class WizardCreateView(MethodView):
         return new_wizard
 
 
-# @nanoapi path:/api/wizards method:POST
+# @nanoapi method:POST path:/api/wizards group:wizard_write
 wizards_bp.add_url_rule(
     "/", view_func=WizardCreateView.as_view("wizard_create"), methods=["POST"]
 )
@@ -36,7 +36,7 @@ class WizardDetailView(MethodView):
         return wizard
 
 
-# @nanoapi path:/api/wizards/<wizard_id> method:GET
+# @nanoapi method:GET path:/api/wizards/<wizard_id> group:wizard_read
 wizards_bp.add_url_rule(
     "/<int:wizard_id>",
     view_func=WizardDetailView.as_view("wizard_detail"),
@@ -51,7 +51,7 @@ class WizardUpdateView(MethodView):
         return updated_wizard
 
 
-# @nanoapi path:/api/wizards/<wizard_id> method:PUT
+# @nanoapi method:PUT path:/api/wizards/<wizard_id> group:wizard_write
 wizards_bp.add_url_rule(
     "/<int:wizard_id>",
     view_func=WizardUpdateView.as_view("wizard_update"),
@@ -65,7 +65,7 @@ class WizardDeleteView(MethodView):
         return None
 
 
-# @nanoapi path:/api/wizards/<wizard_id> method:DELETE
+# @nanoapi method:DELETE path:/api/wizards/<wizard_id> group:wizard_write
 wizards_bp.add_url_rule(
     "/<int:wizard_id>",
     view_func=WizardDeleteView.as_view("wizard_delete"),

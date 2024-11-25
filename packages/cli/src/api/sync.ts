@@ -3,7 +3,7 @@ import { syncSchema } from "./helpers/validation";
 import fs from "fs";
 import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import AnnotationManager from "../annotationManager";
-import { getLanguagePluginFromFilePath } from "../languagesPlugins";
+import { getLanguagePlugin } from "../languagesPlugins";
 import { replaceIndexesFromSourceCode } from "../helper/file";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
@@ -29,7 +29,10 @@ export function sync(payload: z.infer<typeof syncSchema>) {
   });
 
   updatedEndpoints.forEach((endpoint) => {
-    const languagePlugin = getLanguagePluginFromFilePath(endpoint.filePath);
+    const languagePlugin = getLanguagePlugin(
+      payload.entrypointPath,
+      endpoint.filePath,
+    );
 
     const sourceCode = fs.readFileSync(endpoint.filePath, "utf-8");
 

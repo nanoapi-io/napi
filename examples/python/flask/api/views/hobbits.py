@@ -11,7 +11,7 @@ class HobbitListView(MethodView):
         return hobbits
 
 
-# @nanoapi path:/api/hobbits method:GET
+# @nanoapi method:GET path:/api/hobbits group:hobbit_read
 hobbits_bp.add_url_rule(
     "/", view_func=HobbitListView.as_view("hobbit_list"), methods=["GET"]
 )
@@ -24,7 +24,7 @@ class HobbitCreateView(MethodView):
         return new_hobbit
 
 
-# @nanoapi path:/api/hobbits method:POST
+# @nanoapi method:POST path:/api/hobbits group:hobbit_write
 hobbits_bp.add_url_rule(
     "/", view_func=HobbitCreateView.as_view("hobbit_create"), methods=["POST"]
 )
@@ -36,7 +36,7 @@ class HobbitDetailView(MethodView):
         return hobbit
 
 
-# @nanoapi path:/api/hobbits/<hobbit_id> method:GET
+# @nanoapi method:GET path:/api/hobbits/<hobbit_id> group:hobbit_read
 hobbits_bp.add_url_rule(
     "/<int:hobbit_id>",
     view_func=HobbitDetailView.as_view("hobbit_detail"),
@@ -51,7 +51,7 @@ class HobbitUpdateView(MethodView):
         return updated_hobbit
 
 
-# @nanoapi path:/api/hobbits/<hobbit_id> method:PUT
+# @nanoapi method:PUT path:/api/hobbits/<hobbit_id> group:hobbit_write
 hobbits_bp.add_url_rule(
     "/<int:hobbit_id>",
     view_func=HobbitUpdateView.as_view("hobbit_update"),
@@ -65,7 +65,7 @@ class HobbitDeleteView(MethodView):
         return None
 
 
-# @nanoapi path:/api/hobbits/<hobbit_id> method:DELETE
+# @nanoapi method:DELETE path:/api/hobbits/<hobbit_id> group:hobbit_write
 hobbits_bp.add_url_rule(
     "/<int:hobbit_id>",
     view_func=HobbitDeleteView.as_view("hobbit_delete"),
