@@ -1,7 +1,7 @@
 import fs from "fs";
-import DependencyTreeManager from "../helper/dependencyTree";
+import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import OpenAI from "openai";
-import { DependencyTree } from "../helper/types";
+import { DependencyTree } from "../dependencyManager/types";
 
 export default async function annotateOpenAICommandHandler(
   entrypoint: string, // Path to the entrypoint file

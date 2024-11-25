@@ -1,5 +1,5 @@
 import { z } from "zod";
-import DependencyTreeManager from "../helper/dependencyTree";
+import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import { scanSchema } from "./helpers/validation";
 
 export function scan(payload: z.infer<typeof scanSchema>) {
@@ -7,5 +7,6 @@ export function scan(payload: z.infer<typeof scanSchema>) {
     payload.entrypointPath,
   );
   const endpoints = dependencyTreeManager.getEndponts();
+
   return { endpoints };
 }

@@ -1,15 +1,15 @@
 import fs from "fs";
 import path from "path";
-import DependencyTreeManager from "../helper/dependencyTree";
+import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
-import SplitRunner from "../helper/split";
+import SplitRunner from "../splitRunner/splitRunner";
 import { splitSchema } from "./helpers/validation";
 import { z } from "zod";
-import { GroupMap } from "../helper/types";
+import { Group } from "../dependencyManager/types";
 
 export function split(payload: z.infer<typeof splitSchema>) {
   console.time("split command");
-  const groupMap: GroupMap = {};
+  const groupMap: Record<number, Group> = {};
 
   // Get the dependency tree
   const dependencyTreeManager = new DependencyTreeManager(
@@ -27,8 +27,6 @@ export function split(payload: z.infer<typeof splitSchema>) {
 
   // Process each group for splitting
   groups.forEach((group, index) => {
-    console.log(JSON.stringify(dependencyTreeManager.dependencyTree, null, 2));
-
     const splitRunner = new SplitRunner(dependencyTreeManager, group);
     const files = splitRunner.run();
 

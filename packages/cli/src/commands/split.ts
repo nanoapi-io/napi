@@ -1,15 +1,15 @@
 import path from "path";
 import fs from "fs";
-import DependencyTreeManager from "../helper/dependencyTree";
+import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
-import SplitRunner from "../helper/split";
-import { GroupMap } from "../helper/types";
+import SplitRunner from "../splitRunner/splitRunner";
+import { Group } from "../dependencyManager/types";
 
 export default function splitCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
   outputDir: string, // Path to the output directory
 ) {
-  const groupMap: GroupMap = {};
+  const groupMap: Record<number, Group> = {};
 
   const dependencyTreeManager = new DependencyTreeManager(entrypointPath);
 
