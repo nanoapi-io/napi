@@ -5,7 +5,7 @@ import { File } from "./types";
 import Parser from "tree-sitter";
 import assert from "assert";
 import { getLanguagePlugin } from "../languagesPlugins";
-import { Export } from "../languagesPlugins/types";
+import { DepExport } from "../languagesPlugins/types";
 
 class SplitRunner {
   private dependencyTreeManager: DependencyTreeManager;
@@ -33,7 +33,7 @@ class SplitRunner {
   }
 
   #getExportMap() {
-    const exportMap = new Map<string, Export>();
+    const exportMap = new Map<string, DepExport[]>();
 
     this.files.forEach((file) => {
       const languagePlugin = getLanguagePlugin(this.entrypointPath, file.path);
@@ -48,7 +48,7 @@ class SplitRunner {
     return exportMap;
   }
 
-  #removeInvalidImportsAndUsages(exportMap: Map<string, Export>) {
+  #removeInvalidImportsAndUsages(exportMap: Map<string, DepExport[]>) {
     this.files = this.files.map((file) => {
       const languagePlugin = getLanguagePlugin(this.entrypointPath, file.path);
 
@@ -117,7 +117,7 @@ class SplitRunner {
     }
   }
 
-  #removeUnusedExports(exportMap: Map<string, Export>) {
+  #removeUnusedExports(exportMap: Map<string, DepExport[]>) {
     let exportDeleted = true;
     while (exportDeleted) {
       exportDeleted = false;
