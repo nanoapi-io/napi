@@ -121,6 +121,9 @@ class SplitRunner {
     let exportDeleted = true;
     while (exportDeleted) {
       exportDeleted = false;
+
+      // const usedExportMap = new Map<string, Export>();
+
       this.files = this.files.map((file) => {
         const languagePlugin = getLanguagePlugin(
           this.entrypointPath,
@@ -129,9 +132,22 @@ class SplitRunner {
 
         const tree = languagePlugin.parser.parse(file.sourceCode);
 
-        const exp = languagePlugin.getExports(tree.rootNode);
+        const imports = languagePlugin.getImports(file.path, tree.rootNode);
 
-        assert(exp);
+        imports.forEach((depImport) => {
+          if (depImport.isExternal || !depImport.source) {
+            // Ignore external dependencies
+            return;
+          }
+
+          // for each import, reconstruct the export map
+          const depExport = exportMap.get(depImport.source);
+          if (!depExport) {
+            throw new Error("Export not found");
+          }
+
+          // check named imports
+        });
 
         return file;
       });

@@ -19,6 +19,8 @@ export function removeIndexesFromSourceCode(
   // sort to start removing from the of the file end
   indexesToRemove.sort((a, b) => b.startIndex - a.startIndex);
 
+  // TODO improve this method by implementing merging of indexes to prevent accidental deletion of code
+
   indexesToRemove.forEach(({ startIndex, endIndex }) => {
     newSourceCode =
       newSourceCode.slice(0, startIndex) + newSourceCode.slice(endIndex);

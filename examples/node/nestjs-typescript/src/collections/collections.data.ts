@@ -54,3 +54,7 @@ export function getRandomCollection(): Collection {
     const randomIndex = Math.floor(Math.random() * collections.length)
     return collections[randomIndex]
 }
+
+const def = [1]
+
+export default def

@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { create, getAll, getByUserId, update, deleteCollection, getRandomCollection, CollectionPartial } from './collections.data';
+import def, { create, getAll, getByUserId, update, deleteCollection, getRandomCollection, CollectionPartial } from './collections.data';
+// import def from './collections.data';
 import { Collection } from './collections.data';
 
+console.log(def)
 @Injectable()
 export class CollectionsService {
   createCollection(data: CollectionPartial): Collection {

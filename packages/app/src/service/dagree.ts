@@ -14,7 +14,7 @@ function getNodeHeight(node: Node, isHorizontal: boolean) {
   if (node.type === "groupNode") {
     return 80;
   } else if (node.type === "endpointNode") {
-    return 150;
+    return 200;
   }
 
   return 100;
