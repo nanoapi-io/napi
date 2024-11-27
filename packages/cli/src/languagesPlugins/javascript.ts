@@ -347,9 +347,9 @@ class JavascriptPlugin implements LanguagePlugin {
           [
             (export_clause
               (export_specifier
-                name: (identifier)
+                name: (identifier) @identifier
                 alias: (identifier)? @alias
-              )  @identifier
+              ) @node
             )
             declaration: ([
               (function_declaration
@@ -380,9 +380,9 @@ class JavascriptPlugin implements LanguagePlugin {
           [
             (export_clause
               (export_specifier
-                name: (identifier)
+                name: (identifier) @identifier
                 alias: (identifier)? @alias
-              )  @identifier
+              ) @node
             )
             declaration: ([
               (function_declaration
@@ -410,19 +410,29 @@ class JavascriptPlugin implements LanguagePlugin {
     const captures = query.captures(node);
     const depExportIdentifiers: DepExportIdentifier[] = [];
 
-    captures.forEach((capture) => {
-      if (capture.name === "identifier") {
-        const aliasCapture = captures.find(
-          (c) => c.name === "alias" && c.node.parent?.id === capture.node.id,
-        );
+    const nodeCaptures = captures.filter((capture) => capture.name === "node");
+    const identifierCaptures = captures.filter(
+      (capture) => capture.name === "identifier",
+    );
+    const aliasCaptures = captures.filter(
+      (capture) => capture.name === "alias",
+    );
 
-        depExportIdentifiers.push({
-          node: capture.node,
-          identifierNode: capture.node,
-          aliasNode: aliasCapture ? aliasCapture.node : undefined,
-          used: undefined,
-        });
-      }
+    identifierCaptures.forEach((identifierCapture) => {
+      const aliasCapture = aliasCaptures.find(
+        (c) => c.node.parent?.id === identifierCapture.node.parent?.id,
+      );
+
+      const nodeCapture = nodeCaptures.find(
+        (c) => c.node.id === identifierCapture.node.parent?.id,
+      );
+
+      depExportIdentifiers.push({
+        node: nodeCapture?.node || identifierCapture.node,
+        identifierNode: identifierCapture.node,
+        aliasNode: aliasCapture ? aliasCapture.node : undefined,
+        used: undefined,
+      });
     });
 
     return depExportIdentifiers;
@@ -600,7 +610,8 @@ class JavascriptPlugin implements LanguagePlugin {
           if (dep.type === "named") {
             return dep.identifiers.some((depExportIdentifier) => {
               const exportTargetNode =
-                depExportIdentifier.aliasNode || depExportIdentifier.node;
+                depExportIdentifier.aliasNode ||
+                depExportIdentifier.identifierNode;
               return (
                 exportTargetNode.text ===
                 depImportIdentifier.identifierNode.text

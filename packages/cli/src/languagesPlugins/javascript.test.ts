@@ -365,8 +365,8 @@ describe("Should get exports properly", () => {
       `,
       node: `export { a, b as c };`,
       identifiers: [
-        { node: "a", alias: undefined },
-        { node: "b as c", alias: "c" },
+        { node: "a", identifierNode: "a", alias: undefined },
+        { node: "b as c", identifierNode: "b", alias: "c" },
       ],
     },
     {
@@ -376,9 +376,9 @@ describe("Should get exports properly", () => {
       `,
       node: `export { x, y as z, m };`,
       identifiers: [
-        { node: "x", alias: undefined },
-        { node: "y as z", alias: "z" },
-        { node: "m", alias: undefined },
+        { node: "x", identifierNode: "x", alias: undefined },
+        { node: "y as z", identifierNode: "y", alias: "z" },
+        { node: "m", identifierNode: "m", alias: undefined },
       ],
     },
     {
@@ -388,9 +388,9 @@ describe("Should get exports properly", () => {
       `,
       node: `export { type X, type Y as Z, type M };`,
       identifiers: [
-        { node: "type X", alias: undefined },
-        { node: "type Y as Z", alias: "Z" },
-        { node: "type M", alias: undefined },
+        { node: "type X", identifierNode: "X", alias: undefined },
+        { node: "type Y as Z", identifierNode: "Y", alias: "Z" },
+        { node: "type M", identifierNode: "M", alias: undefined },
       ],
     },
   ])(
@@ -407,6 +407,9 @@ describe("Should get exports properly", () => {
 
         for (let i = 0; i < identifiers.length; i++) {
           expect(exports[0].identifiers[i].node.text).toBe(identifiers[i].node);
+          expect(exports[0].identifiers[i].identifierNode.text).toBe(
+            identifiers[i].identifierNode,
+          );
           expect(exports[0].identifiers[i].aliasNode?.text).toBe(
             identifiers[i].alias,
           );
@@ -420,41 +423,53 @@ describe("Should get exports properly", () => {
       plugins: [javascriptPlugin, typescriptPlugin],
       sourceCode: "export var foo = 42;",
       expectedNode: "export var foo = 42;",
-      identifier: "foo",
+      identifierNode: "foo",
+      identifierIdentifierNode: "foo",
     },
     {
       plugins: [javascriptPlugin, typescriptPlugin],
       sourceCode: "export let foo = 42;",
       expectedNode: "export let foo = 42;",
-      identifier: "foo",
+      identifierNode: "foo",
+      identifierIdentifierNode: "foo",
     },
     {
       plugins: [javascriptPlugin, typescriptPlugin],
       sourceCode: "export const foo = 42;",
       expectedNode: "export const foo = 42;",
-      identifier: "foo",
+      identifierNode: "foo",
+      identifierIdentifierNode: "foo",
     },
     {
       plugins: [javascriptPlugin, typescriptPlugin],
       sourceCode: "export function foo() {}",
       expectedNode: "export function foo() {}",
-      identifier: "foo",
+      identifierNode: "foo",
+      identifierIdentifierNode: "foo",
     },
     {
       plugins: [javascriptPlugin, typescriptPlugin],
       sourceCode: "export class foo {}",
       expectedNode: "export class foo {}",
-      identifier: "foo",
+      identifierNode: "foo",
+      identifierIdentifierNode: "foo",
     },
     {
       plugins: [typescriptPlugin],
       sourceCode: "export type A = { a: string, b: number };",
       expectedNode: "export type A = { a: string, b: number };",
-      identifier: "A",
+      identifierNode: "A",
+      identifierIdentifierNode: "A",
     },
   ])(
     "Should parse inline export",
-    ({ plugins, sourceCode, expectedNode, identifier }) => {
+    ({
+      plugins,
+      sourceCode,
+      expectedNode,
+      identifierNode,
+      identifierIdentifierNode,
+    }) => {
       plugins.forEach((plugin) => {
         const tree = plugin.parser.parse(sourceCode);
         const exports = plugin.getExports(tree.rootNode);
@@ -463,7 +478,10 @@ describe("Should get exports properly", () => {
         expect(exports[0].type).toBe("named");
         expect(exports[0].node.text).toBe(expectedNode);
         expect(exports[0].identifiers.length).toBe(1);
-        expect(exports[0].identifiers[0].node.text).toBe(identifier);
+        expect(exports[0].identifiers[0].node.text).toBe(identifierNode);
+        expect(exports[0].identifiers[0].identifierNode.text).toBe(
+          identifierIdentifierNode,
+        );
         expect(exports[0].identifiers[0].aliasNode).toBeUndefined();
       });
     },
@@ -486,8 +504,8 @@ describe("Should get exports properly", () => {
           type: "named",
           nodeText: "export { a, b as c };",
           identifiers: [
-            { node: "a", alias: undefined },
-            { node: "b as c", alias: "c" },
+            { node: "a", identifier: "a", alias: undefined },
+            { node: "b as c", identifier: "b", alias: "c" },
           ],
         },
       ],
@@ -508,8 +526,8 @@ describe("Should get exports properly", () => {
           type: "named",
           nodeText: "export { x, y as z };",
           identifiers: [
-            { node: "x", alias: undefined },
-            { node: "y as z", alias: "z" },
+            { node: "x", identifier: "x", alias: undefined },
+            { node: "y as z", identifier: "y", alias: "z" },
           ],
         },
       ],
@@ -530,8 +548,8 @@ describe("Should get exports properly", () => {
           type: "named",
           nodeText: "export { type X, type Y as Z };",
           identifiers: [
-            { node: "type X", alias: undefined },
-            { node: "type Y as Z", alias: "Z" },
+            { node: "type X", identifier: "X", alias: undefined },
+            { node: "type Y as Z", identifier: "Y", alias: "Z" },
           ],
         },
       ],
@@ -559,6 +577,9 @@ describe("Should get exports properly", () => {
           for (let i = 0; i < expectedExport.identifiers.length; i++) {
             expect(exports[index].identifiers[i].node.text).toBe(
               expectedExport.identifiers[i].node,
+            );
+            expect(exports[index].identifiers[i].identifierNode.text).toBe(
+              expectedExport.identifiers[i].identifier,
             );
             expect(exports[index].identifiers[i].aliasNode?.text).toBe(
               expectedExport.identifiers[i].alias,
