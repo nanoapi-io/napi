@@ -1,11 +1,18 @@
 import Parser from "tree-sitter";
-import { LanguagePlugin, Import, Export } from "./types";
+import {
+  LanguagePlugin,
+  DepImportIdentifier,
+  DepImport,
+  DepExport,
+  // DepExportIdentifier,
+} from "./types";
 import { Group } from "../dependencyManager/types";
 import AnnotationManager from "../annotationManager";
 import { removeIndexesFromSourceCode } from "../helper/file";
 import Python from "tree-sitter-python";
 import path from "path";
 import fs from "fs";
+import { assert } from "console";
 
 class PythonPlugin implements LanguagePlugin {
   parser: Parser;
@@ -72,7 +79,7 @@ class PythonPlugin implements LanguagePlugin {
     return updatedSourceCode;
   }
 
-  $resolveImportSource(resolvedImportSource: string) {
+  #resolveImportSource(resolvedImportSource: string) {
     for (const ext of [".py", ".pyc"]) {
       const resolvedPath = path.resolve(`${resolvedImportSource}${ext}`);
       if (fs.existsSync(resolvedPath)) {
@@ -91,348 +98,447 @@ class PythonPlugin implements LanguagePlugin {
     }
   }
 
-  $resolveModuleImportSource(importSource: string) {
+  #resolveModuleImportSource(importSource: string) {
     const importPath = path.resolve(
       path.dirname(this.entryPointPath),
       path.join(...importSource.split(".")),
     );
 
-    return this.$resolveImportSource(importPath);
+    return this.#resolveImportSource(importPath) || "";
   }
 
-  $resolveRelativeImportSource(filePath: string, importSouce: string) {
+  #resolveRelativeImportSource(filePath: string, importSouce: string) {
     const importPath = path.resolve(
       path.dirname(filePath),
       path.join(...importSouce.split(".")),
     );
 
-    return this.$resolveImportSource(importPath);
+    return this.#resolveImportSource(importPath) || "";
   }
 
-  getImports(filePath: string, node: Parser.SyntaxNode) {
-    const imports: Import[] = [];
-
-    const importStatementQuery = new Parser.Query(
+  #findImportSource(filePath: string, importNode: Parser.SyntaxNode) {
+    const importSourceQuery = new Parser.Query(
       this.parser.getLanguage(),
       `
-        (import_from_statement) @import
+        module_name: ([
+          (dotted_name) @module_source
+          (relative_import) @relative_source
+        ])
       `,
     );
-    const importStatementCaptures = importStatementQuery.captures(node);
-    importStatementCaptures.forEach((capture) => {
-      const importSourceQuery = new Parser.Query(
-        this.parser.getLanguage(),
-        `
-          module_name: ([
-            (dotted_name) @module_source
-            (relative_import) @relative_source
-          ])
-        `,
-      );
-      const importSourceCaptures = importSourceQuery.captures(capture.node);
-      if (importSourceCaptures.length === 0) {
-        throw new Error("Could not find import source");
-      }
-      if (importSourceCaptures.length > 1) {
-        throw new Error("Found multiple import sources");
-      }
+    const importSourceCaptures = importSourceQuery.captures(importNode);
+    if (importSourceCaptures.length === 0) {
+      throw new Error("Could not find import source");
+    }
+    if (importSourceCaptures.length > 1) {
+      throw new Error("Found multiple import sources");
+    }
 
-      const { name, node } = importSourceCaptures[0];
-      let source: string | undefined = undefined;
-      if (name === "module_source") {
-        source = this.$resolveModuleImportSource(node.text);
-      } else if (name === "relative_source") {
-        source = this.$resolveRelativeImportSource(filePath, node.text);
-      }
+    const { name, node } = importSourceCaptures[0];
+    const source =
+      name === "module_source"
+        ? this.#resolveModuleImportSource(node.text)
+        : this.#resolveRelativeImportSource(filePath, node.text);
 
-      let isExternal = false;
-      if (!source) {
-        isExternal = true;
-      }
-
-      const importSpecifierIdentifierQuery = new Parser.Query(
-        this.parser.getLanguage(),
-        `
-          name: (dotted_name) @identifier
-        `,
-      );
-      const importSpecifierCaptures = importSpecifierIdentifierQuery.captures(
-        capture.node,
-      );
-      const importSpecifierIdentifiers = importSpecifierCaptures.map(
-        (capture) => {
-          return capture.node;
-        },
-      );
-
-      imports.push({
-        node: capture.node,
-        source,
-        isExternal,
-        importSpecifierIdentifiers,
-      });
-    });
-
-    return imports;
+    return source;
   }
 
-  _getIdentifierUsagesQuery(identifier: Parser.SyntaxNode) {
-    return new Parser.Query(
+  #findImportDottedName(importNode: Parser.SyntaxNode) {
+    const dottedNameQuery = new Parser.Query(
       this.parser.getLanguage(),
       `
-        (
-          (identifier) @identifier
-          (#eq? @identifier "${identifier.text}")
-        )
+      (import_from_statement
+        name: ([
+            (dotted_name) @import
+            (aliased_import) @aliasImport
+        ])
+      )
       `,
     );
-  }
+    const captures = dottedNameQuery.captures(importNode);
 
-  _getImportIdentifiersUsages(
-    node: Parser.SyntaxNode,
-    identifier: Parser.SyntaxNode,
-  ) {
-    const usageNodes: Parser.SyntaxNode[] = [];
-    const identifierQuery = this._getIdentifierUsagesQuery(identifier);
+    const depImportIdentifier: DepImportIdentifier[] = [];
 
-    const identifierCaptures = identifierQuery.captures(node);
-    identifierCaptures.forEach((capture) => {
-      if (capture.node.id === identifier.id) {
-        return;
-      }
+    captures.forEach((capture) => {
+      const node = capture.node;
 
-      let targetNode = capture.node;
-      while (true) {
-        // we can remove from the array
-        if (targetNode.parent && targetNode.parent.type === "list") {
-          break;
-        }
-
-        if (
-          targetNode.parent &&
-          [
-            "import_from_statement",
-            "expression_statement",
-            "function_definition",
-            "class_definition",
-          ].includes(targetNode.parent.type)
-        ) {
-          targetNode = targetNode.parent;
-          break;
-        }
-
-        // TODO: add more cases as we encounter them
-
-        if (!targetNode.parent) {
-          break;
-        }
-        targetNode = targetNode.parent;
-      }
-
-      return usageNodes.push(targetNode);
-    });
-
-    return usageNodes;
-  }
-
-  getExports(node: Parser.SyntaxNode) {
-    const namedExports: {
-      exportNode: Parser.SyntaxNode;
-      identifierNode: Parser.SyntaxNode;
-    }[] = [];
-
-    const queries = [
-      // expression statement export
-      {
-        export: new Parser.Query(
+      if (capture.name === "import") {
+        const query = new Parser.Query(
           this.parser.getLanguage(),
           `
-            (module
-              (expression_statement
-                (assignment
-                  left: (identifier)
-                )
-              ) @export
-            )
+          (dotted_name
+            (identifier) @identifier
+          )
           `,
-        ),
-        identifier: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (expression_statement
-              (assignment
-                left: (identifier) @identifier
-              )
-            )
-          `,
-        ),
-      },
-      // function export
-      {
-        export: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (module
-              (function_definition) @export
-            )
-          `,
-        ),
-        identifier: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (function_definition
-              name: (identifier) @identifier
-            )
-          `,
-        ),
-      },
-      // class export
-      {
-        export: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (module
-              (class_definition) @export
-            )
-          `,
-        ),
-        identifier: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (class_definition
-              name: (identifier) @identifier
-            )
-          `,
-        ),
-      },
-      // decorated function export
-      {
-        export: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (module
-              (decorated_definition
-                definition: (function_definition)
-              ) @export
-            )
-          `,
-        ),
-        identifier: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (decorated_definition
-              definition: (function_definition
-                name: (identifier) @identifier
-              )
-            )
-          `,
-        ),
-      },
-      // decorated class export
-      {
-        export: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (module
-              (decorated_definition
-                definition: (class_definition)
-              ) @export
-            )
-          `,
-        ),
-        identifier: new Parser.Query(
-          this.parser.getLanguage(),
-          `
-            (decorated_definition
-              definition: (class_definition
-                name: (identifier) @identifier
-              )
-            )
-          `,
-        ),
-      },
-    ];
+        );
 
-    queries.forEach((query) => {
-      const exportCaptures = query.export.captures(node);
-      exportCaptures.forEach((capture) => {
-        const identifierCaptures = query.identifier.captures(capture.node);
+        const identifierCaptures = query.captures(node);
         if (identifierCaptures.length !== 1) {
           throw new Error("Could not find identifier");
         }
-
         const identifierNode = identifierCaptures[0].node;
 
-        namedExports.push({
-          exportNode: capture.node,
+        depImportIdentifier.push({
+          type: "named",
+          node,
           identifierNode,
         });
-      });
+      }
+
+      if (capture.name === "aliasImport") {
+        const query = new Parser.Query(
+          this.parser.getLanguage(),
+          `
+          (aliased_import
+            name: (dotted_name
+              (identifier) @identifier
+            )
+            alias: (identifier) @alias
+          )
+          `,
+        );
+
+        const captures = query.captures(node);
+        const identifierCaptures = captures.filter(
+          (capture) => capture.name === "identifier",
+        );
+        if (identifierCaptures.length !== 1) {
+          throw new Error("Could not find identifier");
+        }
+        const identifierNode = identifierCaptures[0].node;
+
+        const aliasCaptures = captures.filter(
+          (capture) => capture.name === "alias",
+        );
+        if (aliasCaptures.length > 1) {
+          throw new Error("Could not find alias");
+        }
+        const aliasNode =
+          aliasCaptures.length === 1 ? aliasCaptures[0].node : undefined;
+
+        depImportIdentifier.push({
+          type: "named",
+          node,
+          identifierNode,
+          aliasNode,
+        });
+      }
     });
 
-    return {
-      namedExports,
-    };
+    return depImportIdentifier;
+  }
+
+  getImports(filePath: string, node: Parser.SyntaxNode) {
+    const depImports: DepImport[] = [];
+
+    // Step 1: Get all import statements
+    const query = new Parser.Query(
+      this.parser.getLanguage(),
+      `(import_from_statement) @import`,
+    );
+    const importStatementNodes = query
+      .captures(node)
+      .map((capture) => capture.node);
+
+    const language = this.parser.getLanguage().name;
+
+    importStatementNodes.forEach((importNode) => {
+      // Step 2: Find import source
+      const source = this.#findImportSource(filePath, importNode);
+      const isExternal = source ? false : true;
+
+      // Step 3: set the DepImport object
+      const identifiers = this.#findImportDottedName(importNode);
+      const depImport: DepImport = {
+        source: source,
+        isExternal,
+        node: importNode,
+        identifiers,
+        language,
+      };
+
+      depImports.push(depImport);
+    });
+
+    return depImports;
+  }
+
+  #getExpressionAssignementExports(node: Parser.SyntaxNode) {
+    const depExports: DepExport[] = [];
+
+    const language = this.parser.getLanguage().name;
+
+    const expressionStatementQuery = new Parser.Query(
+      this.parser.getLanguage(),
+      `
+      (module
+        (expression_statement
+        	(assignment
+            left: (identifier) @identifier
+          )
+        ) @node
+      )
+      `,
+    );
+
+    const captures = expressionStatementQuery.captures(node);
+
+    if (captures.length === 0) {
+      return depExports;
+    }
+
+    const nodeCaptures = captures.filter((capture) => capture.name === "node");
+    const identifierCaptures = captures.filter(
+      (capture) => capture.name === "identifier",
+    );
+
+    nodeCaptures.forEach((nodeCapture) => {
+      const subNode = nodeCapture.node;
+
+      const idenfifierNode = identifierCaptures.find(
+        (capture) =>
+          capture.name === "identifier" &&
+          capture.node.parent?.parent?.id === subNode.id,
+      );
+      if (!idenfifierNode) {
+        throw new Error("Could not find identifier");
+      }
+
+      const depExport: DepExport = {
+        type: "export",
+        node: subNode,
+        identifiers: [
+          {
+            node: subNode,
+            identifierNode: idenfifierNode.node,
+          },
+        ],
+        language,
+      };
+
+      depExports.push(depExport);
+    });
+
+    return depExports;
+  }
+
+  #getClassDefExports(node: Parser.SyntaxNode) {
+    const depExports: DepExport[] = [];
+
+    const language = this.parser.getLanguage().name;
+
+    const classDefQuery = new Parser.Query(
+      this.parser.getLanguage(),
+      `
+      (module
+        (class_definition
+          name: (identifier) @identifier
+        ) @node
+      )
+      `,
+    );
+
+    const captures = classDefQuery.captures(node);
+
+    if (captures.length === 0) {
+      return depExports;
+    }
+
+    const nodeCaptures = captures.filter((capture) => capture.name === "node");
+    const identifierCaptures = captures.filter(
+      (capture) => capture.name === "identifier",
+    );
+
+    nodeCaptures.forEach((nodeCapture) => {
+      const subNode = nodeCapture.node;
+
+      const idenfifierNode = identifierCaptures.find(
+        (capture) =>
+          capture.name === "identifier" &&
+          capture.node.parent?.id === subNode.id,
+      );
+      if (!idenfifierNode) {
+        throw new Error("Could not find identifier");
+      }
+
+      const depExport: DepExport = {
+        type: "export",
+        node: subNode,
+        identifiers: [
+          {
+            node: subNode,
+            identifierNode: idenfifierNode.node,
+          },
+        ],
+        language,
+      };
+
+      depExports.push(depExport);
+    });
+
+    return depExports;
+  }
+
+  #getFuncDefExports(node: Parser.SyntaxNode) {
+    const depExports: DepExport[] = [];
+
+    const language = this.parser.getLanguage().name;
+
+    const functionDefQuery = new Parser.Query(
+      this.parser.getLanguage(),
+      `
+      (module
+        (function_definition
+          (identifier) @identifier
+        ) @node
+      )
+      `,
+    );
+
+    const captures = functionDefQuery.captures(node);
+
+    if (captures.length === 0) {
+      return depExports;
+    }
+
+    const nodeCaptures = captures.filter((capture) => capture.name === "node");
+    const identifierCaptures = captures.filter(
+      (capture) => capture.name === "identifier",
+    );
+
+    nodeCaptures.forEach((nodeCapture) => {
+      const subNode = nodeCapture.node;
+
+      const idenfifierNode = identifierCaptures.find(
+        (capture) =>
+          capture.name === "identifier" &&
+          capture.node.parent?.id === subNode.id,
+      );
+      if (!idenfifierNode) {
+        throw new Error("Could not find identifier");
+      }
+
+      const depExport: DepExport = {
+        type: "export",
+        node: subNode,
+        identifiers: [
+          {
+            node: subNode,
+            identifierNode: idenfifierNode.node,
+          },
+        ],
+        language,
+      };
+
+      depExports.push(depExport);
+    });
+
+    return depExports;
+  }
+
+  getExports(node: Parser.SyntaxNode): DepExport[] {
+    const depExports: DepExport[] = [];
+
+    const expressionAssignementExports =
+      this.#getExpressionAssignementExports(node);
+
+    depExports.push(...expressionAssignementExports);
+
+    const classDefExports = this.#getClassDefExports(node);
+
+    depExports.push(...classDefExports);
+
+    const funcDefExports = this.#getFuncDefExports(node);
+
+    depExports.push(...funcDefExports);
+
+    // const language = this.parser.getLanguage().name;
+
+    // const expressionStatementQuery = new Parser.Query(
+    //   this.parser.getLanguage(),
+    //   `
+    //   (module
+    //     (expression_statement
+    //     	(assignment
+    //         left: (identifier) @identifier
+    //       )
+    //     ) @node
+    //   )
+    //   `,
+    // );
+
+    // const classDefQuery = new Parser.Query(
+    //   this.parser.getLanguage(),
+    //   `
+    //   (module
+    //     (class_definition
+    //       (identifier) @identifier
+    //     ) @node
+    //   )
+    //   `,
+    // );
+
+    // const functionDefQuery = new Parser.Query(
+    //   this.parser.getLanguage(),
+    //   `
+    //   (module
+    //     (function_definition
+    //       (identifier) @identifier
+    //     ) @node
+    //   )
+    //   `,
+    // );
+
+    // [expressionStatementQuery, classDefQuery, functionDefQuery].forEach(
+    //   (query) => {
+    //     const captures = query.captures(node);
+    //     if (captures.length === 0) {
+    //       return;
+    //     }
+    //     const nodeCaptures = captures.filter(
+    //       (capture) => capture.name === "node",
+    //     );
+    //     if (nodeCaptures.length !== 1) {
+    //       throw new Error("Could not find node");
+    //     }
+    //     const subNode = nodeCaptures[0].node;
+
+    //     const identifierCaptures = captures.filter(
+    //       (capture) => capture.name === "identifier",
+    //     );
+    //     if (identifierCaptures.length !== 1) {
+    //       throw new Error("Could not find identifier");
+    //     }
+    //     const identifierNode = identifierCaptures[0].node;
+
+    //     const depExport: DepExport = {
+    //       type: "export",
+    //       node,
+    //       identifiers: [
+    //         {
+    //           node: subNode,
+    //           identifierNode,
+    //         },
+    //       ],
+    //       language,
+    //     };
+
+    //     depExports.push(depExport);
+    //   },
+    // );
+
+    return depExports;
   }
 
   cleanupInvalidImports(
     filePath: string,
     sourceCode: string,
-    exportMap: Map<string, Export>,
+    depExportMap: Map<string, DepExport[]>,
   ) {
-    const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+    assert(filePath);
+    assert(depExportMap);
 
-    const tree = this.parser.parse(sourceCode);
-
-    const imports = this.getImports(filePath, tree.rootNode);
-
-    imports.forEach((depImport) => {
-      if (depImport.isExternal || !depImport.source) {
-        // ignore external dependencies
-        return;
-      }
-
-      const exportsForFile = exportMap.get(depImport.source);
-      if (!exportsForFile) {
-        throw new Error("Could not find exports");
-      }
-
-      depImport.importSpecifierIdentifiers.forEach((importSpecifier) => {
-        if (
-          !exportsForFile.namedExports.find(
-            (namedExport) =>
-              namedExport.identifierNode.text === importSpecifier.text,
-          )
-        ) {
-          let usages = this._getImportIdentifiersUsages(
-            tree.rootNode,
-            importSpecifier,
-          );
-
-          usages = usages.filter((usage) => {
-            return usage.id !== depImport.node.id;
-          });
-
-          indexesToRemove.push({
-            startIndex: depImport.node.startIndex,
-            endIndex: depImport.node.endIndex,
-          });
-          usages.forEach((usage) => {
-            indexesToRemove.push({
-              startIndex: usage.startIndex,
-              endIndex: usage.endIndex,
-            });
-          });
-        }
-      });
-    });
-
-    const updatedSourceCode = removeIndexesFromSourceCode(
-      sourceCode,
-      indexesToRemove,
-    );
-
-    return updatedSourceCode;
+    return sourceCode;
   }
 
   cleanupUnusedImports(filepath: string, sourceCode: string) {
@@ -443,38 +549,45 @@ class PythonPlugin implements LanguagePlugin {
     const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
     imports.forEach((depImport) => {
-      const importSpecifierToRemove: Parser.SyntaxNode[] = [];
-      depImport.importSpecifierIdentifiers.forEach((importSpecifier) => {
-        let usages = this._getImportIdentifiersUsages(
-          tree.rootNode,
-          importSpecifier,
-        );
-
-        usages = usages.filter((usage) => {
-          return usage.id !== depImport.node.id;
-        });
-
-        if (usages.length === 0) {
-          importSpecifierToRemove.push(importSpecifier);
-        }
-      });
-
-      if (
-        importSpecifierToRemove.length ===
-        depImport.importSpecifierIdentifiers.length
-      ) {
-        indexesToRemove.push({
-          startIndex: depImport.node.startIndex,
-          endIndex: depImport.node.endIndex,
-        });
-      } else {
-        importSpecifierToRemove.forEach((importSpecifier) => {
-          indexesToRemove.push({
-            startIndex: importSpecifier.startIndex,
-            endIndex: importSpecifier.endIndex,
-          });
-        });
+      if (depImport.identifiers.length === 0) {
+        // Side-effect-only imports are considered used and should not be removed
+        return;
       }
+
+      // const unusedIdentifiers: Parser.SyntaxNode[] = [];
+
+      depImport.identifiers.forEach((identifier) => {
+        // TODO
+        assert(identifier);
+
+        //   // Check if the identifier is used in the source code
+        //   const usageNodes = this.#getImportIdentifiersUsages(
+        //     tree.rootNode,
+        //     identifier.aliasNode || identifier.identifierNode,
+        //   );
+
+        //   if (usageNodes.length === 0) {
+        //     // If no usage nodes are found, mark the identifier as unused
+        //     unusedIdentifiers.push(identifier.node);
+        //   }
+        // });
+
+        // if (unusedIdentifiers.length === depImport.identifiers.length) {
+        //   // If all identifiers are unused, mark the entire import statement for removal
+        //   indexesToRemove.push({
+        //     startIndex: depImport.node.startIndex,
+        //     endIndex: depImport.node.endIndex,
+        //   });
+        // } else {
+        //   // Remove only the unused identifiers from the import statement
+        //   unusedIdentifiers.forEach((unusedIdentifierNode) => {
+        //     indexesToRemove.push({
+        //       startIndex: unusedIdentifierNode.startIndex,
+        //       endIndex: unusedIdentifierNode.endIndex,
+        //     });
+        //   });
+        // }
+      });
     });
 
     const updatedSourceCode = removeIndexesFromSourceCode(

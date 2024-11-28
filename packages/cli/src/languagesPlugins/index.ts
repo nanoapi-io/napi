@@ -1,5 +1,5 @@
 import JavascriptPlugin from "./javascript";
-// import PythonPlugin from "./python";
+import PythonPlugin from "./python";
 import { LanguagePlugin } from "./types";
 
 export function getLanguagePlugin(
@@ -13,8 +13,8 @@ export function getLanguagePlugin(
       return new JavascriptPlugin(entryPointPath, false);
     case "ts":
       return new JavascriptPlugin(entryPointPath, true);
-    // case "py":
-    //   return new PythonPlugin(entryPointPath);
+    case "py":
+      return new PythonPlugin(entryPointPath);
     default:
       throw new Error(`Unsupported file type: ${ext}`);
   }
