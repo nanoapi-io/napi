@@ -60,11 +60,7 @@ class JavascriptPlugin implements LanguagePlugin {
         }
 
         // remove the other annotations
-        let nextNode = node.nextNamedSibling;
-        // We need to remove all decorators too
-        while (nextNode && nextNode.type === "decorator") {
-          nextNode = nextNode.nextNamedSibling;
-        }
+        const nextNode = node.nextNamedSibling;
         if (!nextNode) {
           throw new Error("Could not find next node");
         }
@@ -597,6 +593,12 @@ class JavascriptPlugin implements LanguagePlugin {
 
       // Validate each import identifier
       depImport.identifiers.forEach((depImportIdentifier) => {
+        if (depImportIdentifier.type === "namespace") {
+          // TODO for namespace import, need to go deeper in the code to see if their usage is valid.
+          // For now, we just assume they are always valid
+          return;
+        }
+
         const isValid = depExport.some((dep) => {
           // Check if the identifier matches a default export
           if (
