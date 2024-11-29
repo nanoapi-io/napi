@@ -59,8 +59,12 @@ class JavascriptPlugin implements LanguagePlugin {
           return;
         }
 
-        // remove the other annotations
-        const nextNode = node.nextNamedSibling;
+        let nextNode = node.nextNamedSibling;
+        // We need to remove all decorators too
+        while (nextNode && nextNode.type === "decorator") {
+          nextNode = nextNode.nextNamedSibling;
+        }
+
         if (!nextNode) {
           throw new Error("Could not find next node");
         }
@@ -475,14 +479,8 @@ class JavascriptPlugin implements LanguagePlugin {
     return depExports;
   }
 
-  // TODO thought, we could leverage LLM to better find the usages of the import identifiers
-  // This is really a case by case issue here. This implementation only works for some cases
-  #getImportIdentifiersUsages(
-    node: Parser.SyntaxNode,
-    identifier: Parser.SyntaxNode,
-  ) {
-    let usageNodes: Parser.SyntaxNode[] = [];
-    const identifierQuery = new Parser.Query(
+  #getIdentifiersNode(node: Parser.SyntaxNode, identifier: Parser.SyntaxNode) {
+    const query = new Parser.Query(
       this.parser.getLanguage(),
       this.isTypescript
         ? `
@@ -499,13 +497,26 @@ class JavascriptPlugin implements LanguagePlugin {
       `,
     );
 
-    const identifierCaptures = identifierQuery.captures(node);
-    identifierCaptures.forEach((capture) => {
-      if (capture.node.id === identifier.id) {
-        return;
-      }
+    const captures = query.captures(node);
+    const nodes = captures.map((capture) => capture.node);
 
-      let targetNode = capture.node;
+    const identifiers = nodes.filter((node) => node.id !== identifier.id);
+
+    return identifiers;
+  }
+
+  // TODO We could leverage LLM to better find the usages of the import identifiers
+  // This is really a case by case issue here. This implementation only works for some cases
+  #getImportIdentifiersUsages(
+    node: Parser.SyntaxNode,
+    identifier: Parser.SyntaxNode,
+  ) {
+    const otherIdentifiers = this.#getIdentifiersNode(node, identifier);
+
+    const usageNodes: Parser.SyntaxNode[] = [];
+
+    otherIdentifiers.forEach((otherIdentifier) => {
+      let targetNode = otherIdentifier;
       while (true) {
         // we can remove from the array
         if (targetNode.parent && targetNode.parent.type === "array") {
@@ -530,10 +541,6 @@ class JavascriptPlugin implements LanguagePlugin {
       return usageNodes.push(targetNode);
     });
 
-    usageNodes = usageNodes.filter(
-      (usageNode) => usageNode.id !== identifier.id,
-    );
-
     return usageNodes;
   }
 
@@ -544,7 +551,6 @@ class JavascriptPlugin implements LanguagePlugin {
   ) {
     const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
-    // Parse the source code to get the AST
     const tree = this.parser.parse(sourceCode);
 
     // Get all imports from the file
@@ -565,12 +571,6 @@ class JavascriptPlugin implements LanguagePlugin {
       const depExport = depExportMap.get(depImport.source);
 
       if (!depExport) {
-        // If no exports exist for the import source, mark the entire import for removal
-        indexesToRemove.push({
-          startIndex: depImport.node.startIndex,
-          endIndex: depImport.node.endIndex,
-        });
-
         // Remove usages of all identifiers from this import
         depImport.identifiers.forEach((importIdentifier) => {
           const usageNodes = this.#getImportIdentifiersUsages(
@@ -642,22 +642,6 @@ class JavascriptPlugin implements LanguagePlugin {
           });
         }
       });
-
-      if (invalidIdentifiers.length === depImport.identifiers.length) {
-        // If all identifiers are invalid, mark the entire import for removal
-        indexesToRemove.push({
-          startIndex: depImport.node.startIndex,
-          endIndex: depImport.node.endIndex,
-        });
-      } else {
-        // Remove only the invalid identifiers from the import statement
-        invalidIdentifiers.forEach((identifierNode) => {
-          indexesToRemove.push({
-            startIndex: identifierNode.startIndex,
-            endIndex: identifierNode.endIndex,
-          });
-        });
-      }
     });
 
     // Remove invalid imports and usages from the source code

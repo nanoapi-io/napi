@@ -16,12 +16,26 @@ export function removeIndexesFromSourceCode(
 ) {
   let newSourceCode = sourceCode;
 
-  // sort to start removing from the of the file end
-  indexesToRemove.sort((a, b) => b.startIndex - a.startIndex);
+  // Sort the indexes based on startIndex (ascending)
+  indexesToRemove.sort((a, b) => a.startIndex - b.startIndex);
 
-  // TODO improve this method by implementing merging of indexes to prevent accidental deletion of code
+  // Merge overlapping or contiguous ranges
+  const mergedIndexes: { startIndex: number; endIndex: number }[] = [];
+  for (const range of indexesToRemove) {
+    const last = mergedIndexes[mergedIndexes.length - 1];
+    if (last && range.startIndex <= last.endIndex) {
+      // Merge the current range with the last range
+      last.endIndex = Math.max(last.endIndex, range.endIndex);
+    } else {
+      // Add as a new range
+      mergedIndexes.push({ ...range });
+    }
+  }
 
-  indexesToRemove.forEach(({ startIndex, endIndex }) => {
+  // Sort to start removing from the end of the file
+  mergedIndexes.sort((a, b) => b.startIndex - a.startIndex);
+
+  mergedIndexes.forEach(({ startIndex, endIndex }) => {
     newSourceCode =
       newSourceCode.slice(0, startIndex) + newSourceCode.slice(endIndex);
   });

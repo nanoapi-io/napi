@@ -121,9 +121,7 @@ describe("Should get imports properly", () => {
 });
 
 describe("Should get exports properly", () => {
-  const entryPointPath = "api/index.py";
-
-  const plugin = new PythonPlugin(entryPointPath);
+  const plugin = new PythonPlugin("api/index.py");
 
   it.each([
     {
@@ -420,4 +418,114 @@ def bar(b):
   pass`);
     expect(exports[1].identifiers[0].identifierNode.text).toBe(`bar`);
   });
+});
+
+describe("Should cleanup unused imports", () => {
+  const entryPoint = "api/index.py";
+  const plugin = new PythonPlugin(entryPoint);
+
+  it.each([
+    {
+      sourceCode: `from module import foo`,
+      expectedSourceCode: ``,
+    },
+    {
+      sourceCode: `from module import foo as bar`,
+      expectedSourceCode: ``,
+    },
+    {
+      sourceCode: `from module import foo`,
+      expectedSourceCode: ``,
+    },
+    {
+      sourceCode: `from module import foo, bar as b`,
+      expectedSourceCode: ``,
+    },
+  ])(
+    "Should completely remove unused imports",
+    ({ sourceCode, expectedSourceCode }) => {
+      const updatedSourceCode = plugin.cleanupUnusedImports(
+        entryPoint,
+        sourceCode,
+      );
+
+      expect(updatedSourceCode).toBe(expectedSourceCode);
+    },
+  );
+
+  it("Should retain side effect import", () => {
+    const sourceCode = `import module`;
+
+    const updatedSourceCode = plugin.cleanupUnusedImports(
+      entryPoint,
+      sourceCode,
+    );
+
+    expect(updatedSourceCode).toBe(sourceCode);
+  });
+
+  it.each([
+    {
+      sourceCode: `
+from module import foo, bar
+bar()
+`,
+      expectedSourceCode: `
+from module import , bar
+bar()
+`,
+    },
+    {
+      sourceCode: `
+from module import foo, bar
+foo()
+    `,
+      expectedSourceCode: `
+from module import foo, 
+foo()
+    `,
+    },
+  ])(
+    "Should remove partially unused imports",
+    ({ sourceCode, expectedSourceCode }) => {
+      const updatedSourceCode = plugin.cleanupUnusedImports(
+        entryPoint,
+        sourceCode,
+      );
+
+      expect(updatedSourceCode).toBe(expectedSourceCode);
+    },
+  );
+  it.each([
+    {
+      sourceCode: `
+from module import foo as f, bar as b
+b()
+`,
+      expectedSourceCode: `
+from module import , bar as b
+b()
+`,
+    },
+    {
+      sourceCode: `
+from module import foo as f, bar as b
+f()
+`,
+      expectedSourceCode: `
+from module import foo as f, 
+f()
+`,
+    },
+  ])(
+    "Should remove partially unused imports with aliases",
+    ({ sourceCode, expectedSourceCode }) => {
+      const updatedSourceCode = plugin.cleanupUnusedImports(
+        entryPoint,
+        sourceCode,
+      );
+
+      expect(updatedSourceCode).toBe(expectedSourceCode);
+    },
+  );
 });

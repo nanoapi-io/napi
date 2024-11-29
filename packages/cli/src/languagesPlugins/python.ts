@@ -12,7 +12,6 @@ import { removeIndexesFromSourceCode } from "../helper/file";
 import Python from "tree-sitter-python";
 import path from "path";
 import fs from "fs";
-import { assert } from "console";
 
 class PythonPlugin implements LanguagePlugin {
   parser: Parser;
@@ -55,8 +54,11 @@ class PythonPlugin implements LanguagePlugin {
           return;
         }
 
-        // remove the other annotations
-        const nextNode = node.nextNamedSibling;
+        let nextNode = node.nextNamedSibling;
+        // We need to remove all decorators too
+        while (nextNode && nextNode.type === "decorator") {
+          nextNode = nextNode.nextNamedSibling;
+        }
         if (!nextNode) {
           throw new Error("Could not find next node");
         }
@@ -452,82 +454,63 @@ class PythonPlugin implements LanguagePlugin {
 
     depExports.push(...funcDefExports);
 
-    // const language = this.parser.getLanguage().name;
-
-    // const expressionStatementQuery = new Parser.Query(
-    //   this.parser.getLanguage(),
-    //   `
-    //   (module
-    //     (expression_statement
-    //     	(assignment
-    //         left: (identifier) @identifier
-    //       )
-    //     ) @node
-    //   )
-    //   `,
-    // );
-
-    // const classDefQuery = new Parser.Query(
-    //   this.parser.getLanguage(),
-    //   `
-    //   (module
-    //     (class_definition
-    //       (identifier) @identifier
-    //     ) @node
-    //   )
-    //   `,
-    // );
-
-    // const functionDefQuery = new Parser.Query(
-    //   this.parser.getLanguage(),
-    //   `
-    //   (module
-    //     (function_definition
-    //       (identifier) @identifier
-    //     ) @node
-    //   )
-    //   `,
-    // );
-
-    // [expressionStatementQuery, classDefQuery, functionDefQuery].forEach(
-    //   (query) => {
-    //     const captures = query.captures(node);
-    //     if (captures.length === 0) {
-    //       return;
-    //     }
-    //     const nodeCaptures = captures.filter(
-    //       (capture) => capture.name === "node",
-    //     );
-    //     if (nodeCaptures.length !== 1) {
-    //       throw new Error("Could not find node");
-    //     }
-    //     const subNode = nodeCaptures[0].node;
-
-    //     const identifierCaptures = captures.filter(
-    //       (capture) => capture.name === "identifier",
-    //     );
-    //     if (identifierCaptures.length !== 1) {
-    //       throw new Error("Could not find identifier");
-    //     }
-    //     const identifierNode = identifierCaptures[0].node;
-
-    //     const depExport: DepExport = {
-    //       type: "export",
-    //       node,
-    //       identifiers: [
-    //         {
-    //           node: subNode,
-    //           identifierNode,
-    //         },
-    //       ],
-    //       language,
-    //     };
-
-    //     depExports.push(depExport);
-    //   },
-    // );
-
     return depExports;
+  }
+
+  #getIdentifiersNode(node: Parser.SyntaxNode, identifier: Parser.SyntaxNode) {
+    const query = new Parser.Query(
+      this.parser.getLanguage(),
+      `
+      (
+        (identifier) @identifier
+        (#eq? @identifier "${identifier.text}") 
+      )
+      `,
+    );
+
+    const captures = query.captures(node);
+    const nodes = captures.map((capture) => capture.node);
+
+    const identifiers = nodes.filter((node) => node.id !== identifier.id);
+
+    return identifiers;
+  }
+
+  #getImportIdentifiersUsages(
+    node: Parser.SyntaxNode,
+    identifier: Parser.SyntaxNode,
+  ) {
+    const otherIdentifiers = this.#getIdentifiersNode(node, identifier);
+
+    const usageNodes: Parser.SyntaxNode[] = [];
+
+    otherIdentifiers.forEach((otherIdentifier) => {
+      let targetNode = otherIdentifier;
+      while (true) {
+        // we can remove from the array
+        if (targetNode.parent && targetNode.parent.type === "array") {
+          break;
+        }
+
+        if (
+          targetNode.parent &&
+          targetNode.parent.type === "expression_statement"
+        ) {
+          break;
+        }
+
+        // TODO: add more cases as we encounter them
+
+        if (!targetNode.parent) {
+          break;
+        }
+        targetNode = targetNode.parent;
+      }
+
+      return usageNodes.push(targetNode);
+    });
+
+    return usageNodes;
   }
 
   cleanupInvalidImports(
@@ -535,10 +518,89 @@ class PythonPlugin implements LanguagePlugin {
     sourceCode: string,
     depExportMap: Map<string, DepExport[]>,
   ) {
-    assert(filePath);
-    assert(depExportMap);
+    const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
-    return sourceCode;
+    const tree = this.parser.parse(sourceCode);
+
+    // Get all imports from the file
+    const imports = this.getImports(filePath, tree.rootNode);
+
+    imports.forEach((depImport) => {
+      if (depImport.isExternal) {
+        // Ignore external dependencies
+        return;
+      }
+
+      if (depImport.identifiers.length === 0) {
+        // Ignore side-effect-only imports (e.g., `import module`)
+        return;
+      }
+
+      // Find exports for the current import source
+      const depExport = depExportMap.get(depImport.source);
+
+      if (!depExport) {
+        // Remove usages of all identifiers from this import
+        depImport.identifiers.forEach((importIdentifier) => {
+          const usageNodes = this.#getImportIdentifiersUsages(
+            tree.rootNode,
+            importIdentifier.aliasNode || importIdentifier.identifierNode,
+          );
+
+          usageNodes.forEach((usageNode) => {
+            indexesToRemove.push({
+              startIndex: usageNode.startIndex,
+              endIndex: usageNode.endIndex,
+            });
+          });
+        });
+        return;
+      }
+
+      // Track identifiers to remove
+      const invalidIdentifiers: Parser.SyntaxNode[] = [];
+
+      // Validate each import identifier
+      depImport.identifiers.forEach((depImportIdentifier) => {
+        const isValid = depExport.some((dep) => {
+          // Check if the identifier matches a named export
+          return dep.identifiers.some((depExportIdentifier) => {
+            const exportTargetNode =
+              depExportIdentifier.aliasNode ||
+              depExportIdentifier.identifierNode;
+            return (
+              exportTargetNode.text === depImportIdentifier.identifierNode.text
+            );
+          });
+        });
+
+        if (!isValid) {
+          // Mark the identifier for removal
+          invalidIdentifiers.push(depImportIdentifier.node);
+
+          // Remove usages of the invalid identifier
+          const usageNodes = this.#getImportIdentifiersUsages(
+            tree.rootNode,
+            depImportIdentifier.aliasNode || depImportIdentifier.identifierNode,
+          );
+
+          usageNodes.forEach((usageNode) => {
+            indexesToRemove.push({
+              startIndex: usageNode.startIndex,
+              endIndex: usageNode.endIndex,
+            });
+          });
+        }
+      });
+    });
+
+    // Remove invalid imports and usages from the source code
+    const updatedSourceCode = removeIndexesFromSourceCode(
+      sourceCode,
+      indexesToRemove,
+    );
+
+    return updatedSourceCode;
   }
 
   cleanupUnusedImports(filepath: string, sourceCode: string) {
@@ -554,40 +616,36 @@ class PythonPlugin implements LanguagePlugin {
         return;
       }
 
-      // const unusedIdentifiers: Parser.SyntaxNode[] = [];
+      const unusedIdentifiers: Parser.SyntaxNode[] = [];
 
       depImport.identifiers.forEach((identifier) => {
-        // TODO
-        assert(identifier);
+        // Check if the identifier is used in the source code
+        const identifiers = this.#getIdentifiersNode(
+          tree.rootNode,
+          identifier.aliasNode || identifier.identifierNode,
+        );
 
-        //   // Check if the identifier is used in the source code
-        //   const usageNodes = this.#getImportIdentifiersUsages(
-        //     tree.rootNode,
-        //     identifier.aliasNode || identifier.identifierNode,
-        //   );
-
-        //   if (usageNodes.length === 0) {
-        //     // If no usage nodes are found, mark the identifier as unused
-        //     unusedIdentifiers.push(identifier.node);
-        //   }
-        // });
-
-        // if (unusedIdentifiers.length === depImport.identifiers.length) {
-        //   // If all identifiers are unused, mark the entire import statement for removal
-        //   indexesToRemove.push({
-        //     startIndex: depImport.node.startIndex,
-        //     endIndex: depImport.node.endIndex,
-        //   });
-        // } else {
-        //   // Remove only the unused identifiers from the import statement
-        //   unusedIdentifiers.forEach((unusedIdentifierNode) => {
-        //     indexesToRemove.push({
-        //       startIndex: unusedIdentifierNode.startIndex,
-        //       endIndex: unusedIdentifierNode.endIndex,
-        //     });
-        //   });
-        // }
+        if (identifiers.length === 0) {
+          // The identifier is not used, we mark it for removal
+          unusedIdentifiers.push(identifier.node);
+        }
       });
+
+      if (unusedIdentifiers.length === depImport.identifiers.length) {
+        // All the identifiers are unused, we mark the import for removal
+        indexesToRemove.push({
+          startIndex: depImport.node.startIndex,
+          endIndex: depImport.node.endIndex,
+        });
+      } else {
+        // Remove only the unused identifiers from the import
+        unusedIdentifiers.forEach((unusedIdentifier) => {
+          indexesToRemove.push({
+            startIndex: unusedIdentifier.startIndex,
+            endIndex: unusedIdentifier.endIndex,
+          });
+        });
+      }
     });
 
     const updatedSourceCode = removeIndexesFromSourceCode(

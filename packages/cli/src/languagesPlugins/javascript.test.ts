@@ -750,10 +750,10 @@ foofoo();
 foobar();
 `,
       expectedSourceCode: `
-import foo, { a, c as c_n,  } from "./export1";
+import foo, { a, c as c_n, z } from "./export1";
 import barbar from "./export2";
-
-
+import foofoo from "./export3";
+import foobar from "./export4";
 
 foo();
 a();
@@ -781,10 +781,10 @@ let foofoo: FooFoo;
 let foobar: FooBar;
 `,
       expectedSourceCode: `
-import Foo, { A, C as C_N,  } from "./export1";
+import Foo, { A, C as C_N, Z } from "./export1";
 import BarBar from "./export2";
-
-
+import FooFoo from "./export3";
+import FooBar from "./export4";
 
 let foo: Foo;
 let a: A;
