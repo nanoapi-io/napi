@@ -1,14 +1,12 @@
 import { z } from "zod";
-import {
-  getDependencyTree,
-  getEndpontsFromTree,
-} from "../helper/dependencyTree";
+import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import { scanSchema } from "./helpers/validation";
 
 export function scan(payload: z.infer<typeof scanSchema>) {
-  const tree = getDependencyTree(payload.entrypointPath);
-
-  const endpoints = getEndpontsFromTree(tree);
+  const dependencyTreeManager = new DependencyTreeManager(
+    payload.entrypointPath,
+  );
+  const endpoints = dependencyTreeManager.getEndponts();
 
   return { endpoints };
 }

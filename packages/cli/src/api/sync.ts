@@ -1,24 +1,17 @@
 import { z } from "zod";
 import { syncSchema } from "./helpers/validation";
 import fs from "fs";
-import {
-  parseNanoApiAnnotation,
-  updateCommentFromAnnotation,
-} from "../helper/annotations";
-import {
-  getDependencyTree,
-  getEndpontsFromTree,
-} from "../helper/dependencyTree";
-import Parser from "tree-sitter";
-import { getParserLanguageFromFile } from "../helper/treeSitter";
-import { replaceIndexesFromSourceCode } from "../helper/cleanup";
-import { getJavascriptAnnotationNodes } from "../helper/languages/javascript/annotations";
-import { getTypescriptAnnotationNodes } from "../helper/languages/typescript/annotations";
+import DependencyTreeManager from "../dependencyManager/dependencyManager";
+import AnnotationManager from "../annotationManager";
+import { getLanguagePlugin } from "../languagesPlugins";
+import { replaceIndexesFromSourceCode } from "../helper/file";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
-  const tree = getDependencyTree(payload.entrypointPath);
+  const dependencyTreeManager = new DependencyTreeManager(
+    payload.entrypointPath,
+  );
 
-  const endpoints = getEndpontsFromTree(tree);
+  const endpoints = dependencyTreeManager.getEndponts();
 
   const updatedEndpoints = endpoints.map((endpoint) => {
     const updatedEndpoint = payload.endpoints.find(
@@ -36,13 +29,14 @@ export function sync(payload: z.infer<typeof syncSchema>) {
   });
 
   updatedEndpoints.forEach((endpoint) => {
-    const language = getParserLanguageFromFile(endpoint.filePath);
-    const parser = new Parser();
-    parser.setLanguage(language);
+    const languagePlugin = getLanguagePlugin(
+      payload.entrypointPath,
+      endpoint.filePath,
+    );
 
-    let sourceCode = fs.readFileSync(endpoint.filePath, "utf-8");
+    const sourceCode = fs.readFileSync(endpoint.filePath, "utf-8");
 
-    const tree = parser.parse(sourceCode);
+    const tree = languagePlugin.parser.parse(sourceCode);
 
     const indexesToReplace: {
       startIndex: number;
@@ -50,37 +44,35 @@ export function sync(payload: z.infer<typeof syncSchema>) {
       text: string;
     }[] = [];
 
-    let annotationNodes: Parser.SyntaxNode[];
-    if (language.name === "javascript") {
-      annotationNodes = getJavascriptAnnotationNodes(parser, tree.rootNode);
-    } else if (language.name === "typescript") {
-      annotationNodes = getTypescriptAnnotationNodes(parser, tree.rootNode);
-    } else {
-      throw new Error("Language not supported");
-    }
+    const commentNodes = languagePlugin.getCommentNodes(tree.rootNode);
 
-    annotationNodes.forEach((node) => {
-      const annotation = parseNanoApiAnnotation(node.text);
-      if (
-        annotation.path === endpoint.path &&
-        annotation.method === endpoint.method
-      ) {
-        annotation.group = endpoint.group;
-        const updatedComment = updateCommentFromAnnotation(
+    commentNodes.forEach((node) => {
+      try {
+        const annotationManager = new AnnotationManager(
           node.text,
-          annotation,
+          languagePlugin,
         );
+        if (annotationManager.matchesEndpoint(endpoint.path, endpoint.method)) {
+          annotationManager.group = endpoint.group;
+          const updatedComment = annotationManager.stringify();
 
-        indexesToReplace.push({
-          startIndex: node.startIndex,
-          endIndex: node.endIndex,
-          text: updatedComment,
-        });
+          indexesToReplace.push({
+            startIndex: node.startIndex,
+            endIndex: node.endIndex,
+            text: updatedComment,
+          });
+        }
+      } catch {
+        // Skip if annotation is not valid, we assume it is a regular comment
+        return;
       }
     });
 
-    sourceCode = replaceIndexesFromSourceCode(sourceCode, indexesToReplace);
+    const updatedSourceCode = replaceIndexesFromSourceCode(
+      sourceCode,
+      indexesToReplace,
+    );
 
-    fs.writeFileSync(endpoint.filePath, sourceCode, "utf-8");
+    fs.writeFileSync(endpoint.filePath, updatedSourceCode, "utf-8");
   });
 }

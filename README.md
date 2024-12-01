@@ -164,15 +164,15 @@ We welcome contributions from the community. Please read our [contributing guide
 
 This project is in the early stages of development. We are actively working on the project and will be releasing new features and improvements regularly, which may include a rewrite into a more efficient and generic language like Rust or Go. Please check our issues and project board for more information, and don't for.
 
-- [x] Limited support for NodeJS/Typescript
-- [x] Simple UI
-- [x] Full support for NodeJS/Typescript
-- [ ] Python support with Flask
-- [ ] Django support
-- [ ] Full python support
+- [x] Javascript support
+- [x] UI for configuration
+- [x] Typescript support
+- [x] Python support
 - [ ] PHP support
 - [ ] Java support
 - [ ] C# support
+- [ ] C support
+- [ ] C++ support
 
 ## On Donating
 

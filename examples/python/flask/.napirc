@@ -1,0 +1,4 @@
+{
+  "entrypoint": "app.py",
+  "out": "napi_dist"
+}
