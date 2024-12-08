@@ -61,7 +61,7 @@ export interface LanguagePlugin {
 
   removeAnnotationFromOtherGroups(
     sourceCode: string,
-    groupToKeep: Group
+    groupToKeep: Group,
   ): string;
 
   getImports(filePath: string, node: Parser.SyntaxNode): DepImport[];
@@ -71,7 +71,7 @@ export interface LanguagePlugin {
   cleanupInvalidImports(
     filePath: string,
     sourceCode: string,
-    exportMap: Map<string, DepExport[]>
+    exportMap: Map<string, DepExport[]>,
   ): string;
 
   cleanupUnusedImports(filePath: string, sourceCode: string): string;

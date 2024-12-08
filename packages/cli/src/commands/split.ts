@@ -7,7 +7,7 @@ import SplitRunner from "../splitRunner/splitRunner";
 
 export default function splitCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
-  outputDir: string // Path to the output directory
+  outputDir: string, // Path to the output directory
 ) {
   const groupMap: Record<number, Group> = {};
 
@@ -33,7 +33,7 @@ export default function splitCommandHandler(
           const relativeFileNamePath = path.relative(targetDir, file.path);
           const destinationPath = path.join(
             annotationDirectory,
-            relativeFileNamePath
+            relativeFileNamePath,
           );
           fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
           fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
