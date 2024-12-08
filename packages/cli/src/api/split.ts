@@ -1,11 +1,11 @@
 import fs from "fs";
 import path from "path";
+import { z } from "zod";
 import DependencyTreeManager from "../dependencyManager/dependencyManager";
+import { Group } from "../dependencyManager/types";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
 import SplitRunner from "../splitRunner/splitRunner";
 import { splitSchema } from "./helpers/validation";
-import { z } from "zod";
-import { Group } from "../dependencyManager/types";
 
 export function split(payload: z.infer<typeof splitSchema>) {
   console.time("split command");
@@ -13,7 +13,7 @@ export function split(payload: z.infer<typeof splitSchema>) {
 
   // Get the dependency tree
   const dependencyTreeManager = new DependencyTreeManager(
-    payload.entrypointPath,
+    payload.entrypointPath
   );
 
   const outputDir = payload.outputDir || path.dirname(payload.entrypointPath);
@@ -33,15 +33,22 @@ export function split(payload: z.infer<typeof splitSchema>) {
     const targetDir = path.dirname(payload.entrypointPath);
     const annotationDirectory = path.join(outputDir, index.toString());
 
-    files.forEach((file) => {
-      const relativeFileNamePath = path.relative(targetDir, file.path);
-      const destinationPath = path.join(
-        annotationDirectory,
-        relativeFileNamePath,
-      );
-      fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
-      fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
-    });
+    files
+      .then((files) => {
+        files.forEach((file) => {
+          const relativeFileNamePath = path.relative(targetDir, file.path);
+          const destinationPath = path.join(
+            annotationDirectory,
+            relativeFileNamePath
+          );
+          fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+          fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        throw error;
+      });
   });
 
   // Store the processed annotations in the output directory
