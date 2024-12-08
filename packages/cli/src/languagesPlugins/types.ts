@@ -1,5 +1,5 @@
-import { Group } from "../dependencyManager/types";
 import Parser from "tree-sitter";
+import { Group } from "../dependencyManager/types";
 
 export interface DepImportIdentifier {
   // Specific to each programing languages. Used by the language plugins.
