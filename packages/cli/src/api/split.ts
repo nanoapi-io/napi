@@ -13,7 +13,7 @@ export async function split(payload: z.infer<typeof splitSchema>) {
 
   // Get the dependency tree
   const dependencyTreeManager = new DependencyTreeManager(
-    payload.entrypointPath,
+    payload.entrypointPath
   );
 
   const outputDir = payload.outputDir || path.dirname(payload.entrypointPath);
@@ -38,13 +38,13 @@ export async function split(payload: z.infer<typeof splitSchema>) {
         const relativeFileNamePath = path.relative(targetDir, file.path);
         const destinationPath = path.join(
           annotationDirectory,
-          relativeFileNamePath,
+          relativeFileNamePath
         );
         fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
         fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
       });
       return files;
-    }),
+    })
   );
 
   // Store the processed annotations in the output directory

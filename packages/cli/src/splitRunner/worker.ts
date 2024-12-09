@@ -25,7 +25,7 @@ function removeAnnotationFromOtherGroups() {
 
     const updatedSourceCode = languagePlugin.removeAnnotationFromOtherGroups(
       file.sourceCode,
-      group,
+      group
     );
     return { ...file, sourceCode: updatedSourceCode };
   });
@@ -51,7 +51,7 @@ function removeInvalidImportsAndUsages(exportMap: Map<string, DepExport[]>) {
     const updatedSourceCode = languagePlugin.cleanupInvalidImports(
       file.path,
       file.sourceCode,
-      exportMap,
+      exportMap
     );
 
     return { ...file, sourceCode: updatedSourceCode };
@@ -64,7 +64,7 @@ function removeUnusedImports() {
 
     const updatedSourceCode = languagePlugin.cleanupUnusedImports(
       file.path,
-      file.sourceCode,
+      file.sourceCode
     );
 
     return { ...file, sourceCode: updatedSourceCode };
@@ -135,7 +135,7 @@ function removeErrors() {
 
     const query = new Parser.Query(
       languagePlugin.parser.getLanguage(),
-      "(ERROR) @error",
+      "(ERROR) @error"
     );
     const errorCaptures = query.captures(tree.rootNode);
     errorCaptures.forEach((capture) => {
@@ -147,14 +147,14 @@ function removeErrors() {
 
     const updatedSourceCode = removeIndexesFromSourceCode(
       file.sourceCode,
-      indexesToRemove,
+      indexesToRemove
     );
 
     return { ...file, sourceCode: updatedSourceCode };
   });
 }
 
-(async () => {
+(() => {
   console.time("remove annotation from other groups");
   removeAnnotationFromOtherGroups();
   console.timeEnd("remove annotation from other groups");

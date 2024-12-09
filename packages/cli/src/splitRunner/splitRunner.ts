@@ -13,7 +13,7 @@ class SplitRunner {
     this.group = group;
   }
 
-  async run(): Promise<File[]> {
+  run(): Promise<File[]> {
     console.info(`Splitting group: ${this.group.name}`);
     console.time(`${this.group.name ? `${this.group.name}-` : ""}total-time`);
 
@@ -28,7 +28,7 @@ class SplitRunner {
     return new Promise<File[]>((resolve, reject) => {
       worker.on("message", (updatedFiles: File[]) => {
         console.timeEnd(
-          `${this.group.name ? `${this.group.name}-` : ""}total-time`,
+          `${this.group.name ? `${this.group.name}-` : ""}total-time`
         );
         resolve(updatedFiles);
       });
