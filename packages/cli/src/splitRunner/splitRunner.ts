@@ -28,7 +28,7 @@ class SplitRunner {
     return new Promise<File[]>((resolve, reject) => {
       worker.on("message", (updatedFiles: File[]) => {
         console.timeEnd(
-          `${this.group.name ? `${this.group.name}-` : ""}total-time`
+          `${this.group.name ? `${this.group.name}-` : ""}total-time`,
         );
         resolve(updatedFiles);
       });
