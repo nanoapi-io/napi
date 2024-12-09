@@ -15,7 +15,7 @@ class SplitRunner {
 
   async run(): Promise<File[]> {
     console.info(`Splitting group: ${this.group.name}`);
-    console.time("Total Splitting Time");
+    console.time(`${this.group.name ? `${this.group.name}-` : ""}total-time`);
 
     const worker = new Worker(path.resolve(__dirname, "worker"), {
       workerData: {
@@ -27,7 +27,9 @@ class SplitRunner {
 
     return new Promise<File[]>((resolve, reject) => {
       worker.on("message", (updatedFiles: File[]) => {
-        console.timeEnd("Total Splitting Time");
+        console.timeEnd(
+          `${this.group.name ? `${this.group.name}-` : ""}total-time`,
+        );
         resolve(updatedFiles);
       });
 
