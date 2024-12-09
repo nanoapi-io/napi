@@ -5,9 +5,9 @@ import { Group } from "../dependencyManager/types";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
 import SplitRunner from "../splitRunner/splitRunner";
 
-export default function splitCommandHandler(
+export default async function splitCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
-  outputDir: string, // Path to the output directory
+  outputDir: string // Path to the output directory
 ) {
   const groupMap: Record<number, Group> = {};
 
@@ -20,30 +20,25 @@ export default function splitCommandHandler(
   const groups = dependencyTreeManager.getGroups();
 
   // Process each group for splitting
-  groups.forEach((group, index) => {
-    const splitRunner = new SplitRunner(dependencyTreeManager, group);
-    const files = splitRunner.run();
+  await Promise.all(
+    groups.map(async (group, index) => {
+      const splitRunner = new SplitRunner(dependencyTreeManager, group);
+      const files = await splitRunner.run();
 
-    const targetDir = path.dirname(entrypointPath);
-    const annotationDirectory = path.join(outputDir, index.toString());
+      const targetDir = path.dirname(entrypointPath);
+      const annotationDirectory = path.join(outputDir, index.toString());
 
-    files
-      .then((files) => {
-        files.forEach((file) => {
-          const relativeFileNamePath = path.relative(targetDir, file.path);
-          const destinationPath = path.join(
-            annotationDirectory,
-            relativeFileNamePath,
-          );
-          fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
-          fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-        throw error;
+      files.forEach((file) => {
+        const relativeFileNamePath = path.relative(targetDir, file.path);
+        const destinationPath = path.join(
+          annotationDirectory,
+          relativeFileNamePath
+        );
+        fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+        fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
       });
-  });
+    })
+  );
 
   // Store the processed annotations in the output directory
   groups.forEach((group, index) => {

@@ -17,7 +17,7 @@ class SplitRunner {
     console.info(`Splitting group: ${this.group.name}`);
     console.time("Total Splitting Time");
 
-    const worker = new Worker(path.resolve(__dirname, "worker.js"), {
+    const worker = new Worker(path.resolve(__dirname, "worker"), {
       workerData: {
         entrypointPath: this.dependencyTreeManager.dependencyTree.path,
         group: this.group,

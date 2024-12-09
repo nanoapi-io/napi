@@ -7,13 +7,13 @@ import { cleanupOutputDir, createOutputDir } from "../helper/file";
 import SplitRunner from "../splitRunner/splitRunner";
 import { splitSchema } from "./helpers/validation";
 
-export function split(payload: z.infer<typeof splitSchema>) {
+export async function split(payload: z.infer<typeof splitSchema>) {
   console.time("split command");
   const groupMap: Record<number, Group> = {};
 
   // Get the dependency tree
   const dependencyTreeManager = new DependencyTreeManager(
-    payload.entrypointPath,
+    payload.entrypointPath
   );
 
   const outputDir = payload.outputDir || path.dirname(payload.entrypointPath);
@@ -26,30 +26,26 @@ export function split(payload: z.infer<typeof splitSchema>) {
   const groups = dependencyTreeManager.getGroups();
 
   // Process each group for splitting
-  groups.forEach((group, index) => {
-    const splitRunner = new SplitRunner(dependencyTreeManager, group);
-    const files = splitRunner.run();
+  await Promise.all(
+    groups.map(async (group, index) => {
+      const splitRunner = new SplitRunner(dependencyTreeManager, group);
+      const files = await splitRunner.run();
 
-    const targetDir = path.dirname(payload.entrypointPath);
-    const annotationDirectory = path.join(outputDir, index.toString());
+      const targetDir = path.dirname(payload.entrypointPath);
+      const annotationDirectory = path.join(outputDir, index.toString());
 
-    files
-      .then((files) => {
-        files.forEach((file) => {
-          const relativeFileNamePath = path.relative(targetDir, file.path);
-          const destinationPath = path.join(
-            annotationDirectory,
-            relativeFileNamePath,
-          );
-          fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
-          fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
-        });
-      })
-      .catch((error) => {
-        console.error(error);
-        throw error;
+      files.forEach((file) => {
+        const relativeFileNamePath = path.relative(targetDir, file.path);
+        const destinationPath = path.join(
+          annotationDirectory,
+          relativeFileNamePath
+        );
+        fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+        fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
       });
-  });
+      return files;
+    })
+  );
 
   // Store the processed annotations in the output directory
   groups.forEach((group, index) => {
