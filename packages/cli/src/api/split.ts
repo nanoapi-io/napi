@@ -1,15 +1,12 @@
-import fs from "fs";
 import path from "path";
 import { z } from "zod";
 import DependencyTreeManager from "../dependencyManager/dependencyManager";
-import { Group } from "../dependencyManager/types";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
-import SplitRunner from "../splitRunner/splitRunner";
+import { runWithWorker, writeSplitsToDisk } from "../splitRunner/splitRunner";
 import { splitSchema } from "./helpers/validation";
 
 export async function split(payload: z.infer<typeof splitSchema>) {
   console.time("split command");
-  const groupMap: Record<number, Group> = {};
 
   // Get the dependency tree
   const dependencyTreeManager = new DependencyTreeManager(
@@ -26,33 +23,19 @@ export async function split(payload: z.infer<typeof splitSchema>) {
   const groups = dependencyTreeManager.getGroups();
 
   // Process each group for splitting
-  await Promise.all(
-    groups.map(async (group, index) => {
-      const splitRunner = new SplitRunner(dependencyTreeManager, group);
-      const files = await splitRunner.run();
-
-      const targetDir = path.dirname(payload.entrypointPath);
-      const annotationDirectory = path.join(outputDir, index.toString());
-
-      files.forEach((file) => {
-        const relativeFileNamePath = path.relative(targetDir, file.path);
-        const destinationPath = path.join(
-          annotationDirectory,
-          relativeFileNamePath,
-        );
-        fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
-        fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
-      });
-      return files;
-    }),
+  const splits = groups.map((group, index) =>
+    runWithWorker(
+      index,
+      group,
+      dependencyTreeManager.entryPointPath,
+      dependencyTreeManager.getFiles(),
+    ),
   );
 
-  // Store the processed annotations in the output directory
-  groups.forEach((group, index) => {
-    groupMap[index] = group;
-  });
-  const annotationFilePath = path.join(outputDir, "annotations.json");
-  fs.writeFileSync(annotationFilePath, JSON.stringify(groupMap, null, 2));
+  // Wait for all splits to be processed
+  const processedSplits = await Promise.all(splits.map(async (split) => split));
+
+  writeSplitsToDisk(outputDir, payload.entrypointPath, processedSplits);
 
   console.timeEnd("split command");
   return { groups, success: true };
