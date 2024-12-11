@@ -1,180 +1,143 @@
-# napi
+<p align="center">
+  <img src="https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/media/logo-192.png" alt="NanoAPI Logo" width="200" />
+</p>
 
-Powerful CLI + UI for inspecting and refactoring an API codebase in any language and web framework.
+# `napi` - Next-Level Visual Tooling For API Codebases
 
-> This project is under ongoing development. Check the [status section](#status) for more information on supported languages and frameworks.
+`napi` is a versatile tool designed to automatically refactor large microlith codebases into smaller, more manageable microservices. With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
+
+![NanoAPI UI Screenshot](/media/screenshots/app.png)
 
 ## Features
 
-- **Inspect**: Analyze your codebase and understand the API endpoints, middleware, and other API-specific code
-- **Refactor**: Refactor your codebase into smaller, more manageable pieces through the UI or annotations
-- **Build**: Transform your codebase into smaller, more manageable pieces at build time
+- **🔍 Inspect**: Analyze your codebase to identify API endpoints, middleware, and other API-specific components.
+- **📝 Refactor**: Split your monolith into microservices using the UI or annotations in the code.
+- **🏗️ Build**: Generate modular microservices ready for deployment.
+- **⚙️ Integrate**: Use CLI commands compatible with all CI/CD workflows for automation.
 
-## Motivation
+## Why `napi`?
 
-- Quickly refactor large/monolith codebases into smaller, more manageable pieces at build time
-- Increase robustness by reducing the downtime through isolating
-- Don't waste time with consultants or contractors to refactor your codebase
-- Better understand what your codebase is doing today
-- Create a new development paradigm (develop monolith, deploy microservice) for projects moving fast
+- Simplifies the process of breaking down monoliths into microservices.
+- Reduces dependency on consultants or contractors for complex refactoring tasks.
+- Enhances codebase understanding and robustness.
+- Accelerates development with a "develop monolith, deploy microservice" approach.
 
-To understand better what we mean by the above, please take a look at our [documentation](https://nanoapi.io/docs/nanoapi).
+## Supported Languages and Frameworks
 
-## Design goals
+`napi` aims to support all major programming languages and web frameworks. Here is the current status:
 
-- Zero configuration
-- Support for all languages and web frameworks
-- Auto-detect endpoint definitions, middleware, and other API-specific code without manual annotations
-- Clean, simple, and easy to use UI
+| Language/Framework | Status         | Related Issues                                      |
+| ------------------ | -------------- | --------------------------------------------------- |
+| JavaScript         | ✅ Supported   | Early Core Feature                                  |
+| TypeScript         | ✅ Supported   | Early Core Feature                                  |
+| Python             | ✅ Supported   | [#28](https://github.com/nanoapi-io/napi/issues/28) |
+| PHP                | 🚧 In Progress | [#30](https://github.com/nanoapi-io/napi/issues/30) |
+| C#                 | 🚧 In Progress | [#31](https://github.com/nanoapi-io/napi/issues/31) |
+| Java               | 🚧 In Progress | [#32](https://github.com/nanoapi-io/napi/issues/32) |
+| C                  | 🚧 In Progress | Not Tracked Yet                                     |
+| C++                | 🚧 In Progress | Not Tracked Yet                                     |
+
+For the latest updates, visit our [project board](https://github.com/nanoapi-io/napi/projects).
+
+## Documentation
+
+Comprehensive documentation is available on our [documentation website](https://nanoapi.io/docs/nanoapi).
 
 ## Quick Start
 
-Ensure you have NodeJS >= 18 and NPM installed on your machine.
-
-```bash
-$ npm install -g @nanoapi.io/napi
-```
-
-To open the UI for your codebase, run the following commands:
-
-```bash
-$ napi init
-$ napi ui
-```
-
-## Examples
-
-We are building a collection of example API repositories in each language so you can explore the project. This list will grow over time.
-
-[examples](/examples/README.md)
-
-## Usage
+Ensure you have Node.js (>=18) and npm installed.
 
 ### Installation
 
-We are working on a binary release, but for now, you can install it via this github repository:
+```bash
+npm install -g @nanoapi.io/napi
+```
+
+### Getting Started
 
 ```bash
-$ git clone https://github.com/nanoapi-io/napi.git
-$ cd napi
-$ npm install
+napi init
+napi ui
 ```
 
-### Usage
+This will initialize a new NanoAPI project and open the UI for inspecting and refactoring your codebase.
 
-To open the UI and inspect your codebase, run the following commands:
+## CLI Usage
+
+`napi` provides the following commands:
 
 ```bash
-$ napi init
-$ napi ui
+init                  Initialize the NanoAPI project
+ui [entrypoint]       Open the UI to inspect and refactor the codebase
+split <entrypoint>    Transform the codebase into microservices
+napi <platform> annotate <entrypoint> [--token=<key>] Automatically generate annotations for the codebase via OpenAI
 ```
 
-### Commands:
+For more detailed information about the CLI and what each command does, refer to our [CLI guide](https://nanoapi.io/docs/cli/).
 
-```
-  init                  Initialize the NanoAPI project
-  ui [entrypoint]       Inspect the codebase and understand the API endpoints, middleware, and other API-specific code
-  split <entrypoint>    Transform the codebase into smaller, more manageable pieces at build time
-```
+## Refactoring with Annotations
 
-## Using the UI
-
-The easiest way to refactor your API endpoints is to do it through our UI. You can group endpoints and create builds from here.
-
-## Building with Annotations
-
-You can also refactor your codebase by adding annotations to your code. Here is an example of how you can do it:
+You can use annotations to specify how to split your code. Here’s an example:
 
 ```typescript
 // src/api.js
 
-import * as express from "express";
-
-import * as service from "./service.js";
-
-const app = express();
-const port = 3000;
-
-app.use(express.json());
-
-// @nanoapi endpoint:/api/v2/maths/time method:GET group:Time
-app.get("/api/v2/maths/time", (req, res) => {
-  const result = service.time();
-  return res.json({
-    result,
-  });
+// @nanoapi endpoint:/api/v1/users method:GET group:Users
+app.get("/api/v1/users", (req, res) => {
+  res.send("User data");
 });
 
-// @nanoapi endpoint:/api/v2/maths/addition method:POST group:Maths
-app.post("/api/v2/maths/addition", (req, res) => {
-  const { body } = req;
-  const result = service.addition(body.a, body.b);
-  return res.json({
-    result,
-  });
-});
-
-// @nanoapi endpoint:/api/v2/maths/subtraction method:POST group:Maths
-app.post("/api/v2/maths/subtraction", (req, res) => {
-  const { body } = req;
-  const result = service.subtraction(body.a, body.b);
-  return res.json({
-    result,
-  });
-});
-
-app.listen(port, () => {
-  console.log(`App listening on port: ${port}`);
+// @nanoapi endpoint:/api/v1/orders method:POST group:Orders
+app.post("/api/v1/orders", (req, res) => {
+  res.send("Order created");
 });
 ```
 
-## Output
+Running `napi split` will generate modular services based on these annotations. You'll have a `Users` service and an `Orders` service, each containing the respective endpoint.
 
-From the exmaple above, you will get the following output from running a build:
+## Using the UI
 
-```typescript
-// dist/Time/src/api.js
+The UI provides an interactive interface to:
 
-import * as express from "express";
+- Group and organize endpoints.
+- Preview the generated microservices.
+- Export refactored code for deployment.
 
-import * as service from "./service.js";
+![NanoAPI UI Preview](/media/screenshots/app-ui.png)
 
-const app = express();
-const port = 3000;
+## CI/CD Integration
 
-app.use(express.json());
+`napi` works seamlessly with CI/CD platforms like GitHub Actions, GitLab CI/CD, and Jenkins. For setup instructions, refer to our [CLI guide](https://nanoapi.io/docs/cli/).
 
-app.get("/api/v2/maths/time", (req, res) => {
-  const result = service.time();
-  return res.json({
-    result,
-  });
-});
+## Contributing
 
-app.listen(port, () => {
-  console.log(`App listening on port: ${port}`);
-});
-```
+We welcome contributions from the community. Please read our [contributing guide](https://github.com/nanoapi-io/napi/blob/main/.github/CONTRIBUTING.md) for details on how to get involved.
 
-## Contributing and Development
+## License
 
-We welcome contributions from the community. Please read our [contributing guide](/.github/CONTRIBUTING.md) for more information.
+`napi` is licensed under the [Sustainable Use License](https://github.com/nanoapi-io/napi/blob/main/LICENSE.md).
 
-## Status
+## Support
 
-This project is in the early stages of development. We are actively working on the project and will be releasing new features and improvements regularly, which may include a rewrite into a more efficient and generic language like Rust or Go. Please check our issues and project board for more information, and don't for.
+<div align="center">
+  <p>For questions or issues, feel free to open an issue on GitHub or join us on our server on Discord.</p>
+  <table>
+    <tr>
+      <td valign="center">
+        <a href="https://github.com/nanoapi-io/napi/issues/new/choose" target="_blank">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" alt="GitHub Logo" width="50" />
+        </a>
+      </td>
+      <td valign="center">
+        <a href="https://discord.gg/4ZaQ347ZmQ" target="_blank">
+          <img src="https://cdn.prod.website-files.com/6257adef93867e50d84d30e2/653714c1c2d8d50382c7df8a_636e0b5061df29d55a92d945_full_logo_blurple_RGB.svg" alt="Discord Logo" width="100" height="100" />
+        </a>
+      </td>
+    </tr>
+  </table>
+</div>
 
-- [x] Javascript support
-- [x] UI for configuration
-- [x] Typescript support
-- [x] Python support
-- [ ] PHP support
-- [ ] Java support
-- [ ] C# support
-- [ ] C support
-- [ ] C++ support
-
-## On Donating
+## Donations
 
 NanoAPI is a fair-source project. Because of this, we feel it would be unethical to keep any donations to ourselves. Instead, here is how we will handle donations:
 
