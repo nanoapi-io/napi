@@ -1,16 +1,12 @@
-import path from "path";
-import fs from "fs";
 import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import { cleanupOutputDir, createOutputDir } from "../helper/file";
-import SplitRunner from "../splitRunner/splitRunner";
-import { Group } from "../dependencyManager/types";
+import { runWithWorker, writeSplitsToDisk } from "../splitRunner/splitRunner";
 
-export default function splitCommandHandler(
+export default async function splitCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
   outputDir: string, // Path to the output directory
 ) {
-  const groupMap: Record<number, Group> = {};
-
+  console.time("split command");
   const dependencyTreeManager = new DependencyTreeManager(entrypointPath);
 
   cleanupOutputDir(outputDir);
@@ -20,28 +16,19 @@ export default function splitCommandHandler(
   const groups = dependencyTreeManager.getGroups();
 
   // Process each group for splitting
-  groups.forEach((group, index) => {
-    const splitRunner = new SplitRunner(dependencyTreeManager, group);
-    const files = splitRunner.run();
+  const splits = groups.map((group, index) =>
+    runWithWorker(
+      index,
+      group,
+      dependencyTreeManager.entryPointPath,
+      dependencyTreeManager.getFiles(),
+    ),
+  );
 
-    const targetDir = path.dirname(entrypointPath);
-    const annotationDirectory = path.join(outputDir, index.toString());
+  // Wait for all splits to be processed
+  const processedSplits = await Promise.all(splits.map(async (split) => split));
 
-    files.forEach((file) => {
-      const relativeFileNamePath = path.relative(targetDir, file.path);
-      const destinationPath = path.join(
-        annotationDirectory,
-        relativeFileNamePath,
-      );
-      fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
-      fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
-    });
-  });
+  writeSplitsToDisk(outputDir, entrypointPath, processedSplits);
 
-  // Store the processed annotations in the output directory
-  groups.forEach((group, index) => {
-    groupMap[index] = group;
-  });
-  const annotationFilePath = path.join(outputDir, "annotations.json");
-  fs.writeFileSync(annotationFilePath, JSON.stringify(groupMap, null, 2));
+  console.timeEnd("split command");
 }

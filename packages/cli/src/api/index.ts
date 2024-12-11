@@ -1,10 +1,10 @@
 import { json, Router } from "express";
+import { z } from "zod";
+import { napiConfigSchema } from "../config";
+import { scanSchema, splitSchema, syncSchema } from "./helpers/validation";
 import { scan } from "./scan";
 import { split } from "./split";
 import { sync } from "./sync";
-import { scanSchema, splitSchema, syncSchema } from "./helpers/validation";
-import { napiConfigSchema } from "../config";
-import { z } from "zod";
 
 export function getApi(napiConfig: z.infer<typeof napiConfigSchema>) {
   const api = Router();
@@ -42,13 +42,13 @@ export function getApi(napiConfig: z.infer<typeof napiConfigSchema>) {
     res.status(200).json({ success: true });
   });
 
-  api.post("/api/split", (req, res) => {
+  api.post("/api/split", async (req, res) => {
     const result = splitSchema.safeParse(req.body);
     if (!result.success) {
       res.status(400).json(result.error.issues);
       return;
     }
-    const splitResult = split(result.data);
+    const splitResult = await split(result.data);
     res.status(200).json(splitResult);
   });
 

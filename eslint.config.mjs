@@ -1,8 +1,8 @@
 // @ts-check
 
 import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
+import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -16,6 +16,7 @@ export default tseslint.config(
       "examples/**",
       "packages/app/dist",
       "packages/cli/dist",
+      "packages/cli/src/**/worker.js",
     ],
   },
 );

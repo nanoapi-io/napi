@@ -1,23 +1,30 @@
+import path from "path";
+import { Worker } from "worker_threads";
 import { Group } from "../dependencyManager/types";
-import { removeIndexesFromSourceCode } from "../helper/file";
-import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import { File } from "./types";
-import Parser from "tree-sitter";
-import assert from "assert";
 import { getLanguagePlugin } from "../languagesPlugins";
 import { DepExport } from "../languagesPlugins/types";
+import { removeIndexesFromSourceCode } from "../helper/file";
+import assert from "assert";
+import Parser from "tree-sitter";
+import fs from "fs";
 
-class SplitRunner {
-  private dependencyTreeManager: DependencyTreeManager;
-  private entrypointPath: string;
+export class SplitRunner {
+  private index: number;
   private group: Group;
+  private entrypointPath: string;
   private files: File[];
 
-  constructor(dependencyTreeManager: DependencyTreeManager, group: Group) {
-    this.dependencyTreeManager = dependencyTreeManager;
-    this.entrypointPath = dependencyTreeManager.dependencyTree.path;
+  constructor(
+    index: number,
+    group: Group,
+    entrypointPath: string,
+    files: File[],
+  ) {
+    this.index = index;
+    this.entrypointPath = entrypointPath;
     this.group = group;
-    this.files = dependencyTreeManager.getFiles();
+    this.files = files;
   }
 
   #removeAnnotationFromOtherGroups() {
@@ -83,7 +90,7 @@ class SplitRunner {
       // We always want to keep the entrypoint file.
       // It will never be imported anywhere, so we add it now.
       const filesToKeep = new Set<string>();
-      filesToKeep.add(this.dependencyTreeManager.dependencyTree.path);
+      filesToKeep.add(this.entrypointPath);
 
       this.files.forEach((file) => {
         const languagePlugin = getLanguagePlugin(
@@ -191,41 +198,100 @@ class SplitRunner {
   }
 
   run() {
-    console.info("\n");
-    console.time("Splitting");
+    console.time(`Splitting-${this.index}`);
 
-    console.time("remove annotation from other groups");
+    console.time(`remove annotation from other groups-${this.index}`);
     this.#removeAnnotationFromOtherGroups();
-    console.timeEnd("remove annotation from other groups");
+    console.timeEnd(`remove annotation from other groups-${this.index}`);
 
-    console.time("Get export map");
+    console.time(`Get export map-${this.index}`);
     const exportMap = this.#getExportMap();
-    console.timeEnd("Get export map");
+    console.timeEnd(`Get export map-${this.index}`);
 
-    console.time("Remove invalid imports and usages");
+    console.time(`Remove invalid imports and usages-${this.index}`);
     this.#removeInvalidImportsAndUsages(exportMap);
-    console.timeEnd("Remove invalid imports and usages");
+    console.timeEnd(`Remove invalid imports and usages-${this.index}`);
 
-    console.time("Remove unused imports");
+    console.time(`Remove unused imports-${this.index}`);
     this.#removeUnusedImports();
-    console.timeEnd("Remove unused imports");
+    console.timeEnd(`Remove unused imports-${this.index}`);
 
-    console.time("Remove unused files");
+    console.time(`Remove unused files-${this.index}`);
     this.#removeUnusedFiles();
-    console.timeEnd("Remove unused files");
+    console.timeEnd(`Remove unused files-${this.index}`);
 
-    console.time("Remove unused exports");
+    console.time(`Remove unused exports-${this.index}`);
     this.#removeUnusedExports(exportMap);
-    console.timeEnd("Remove unused exports");
+    console.timeEnd(`Remove unused exports-${this.index}`);
 
-    console.time("Remove errors");
+    console.time(`Remove errors-${this.index}`);
     this.#removeErrors();
-    console.timeEnd("Remove errors");
+    console.timeEnd(`Remove errors-${this.index}`);
 
-    console.timeEnd("Splitting");
+    console.timeEnd(`Splitting-${this.index}`);
 
-    return this.files;
+    return { index: this.index, group: this.group, files: this.files };
   }
 }
 
-export default SplitRunner;
+export function runWithWorker(
+  index: number,
+  group: Group,
+  entryPointPath: string,
+  files: File[],
+) {
+  const worker = new Worker(path.resolve(__dirname, "worker"), {
+    workerData: {
+      index,
+      group,
+      entryPointPath,
+      files,
+    },
+  });
+
+  return new Promise<{ index: number; group: Group; files: File[] }>(
+    (resolve, reject) => {
+      worker.on(
+        "message",
+        (split: { index: number; group: Group; files: File[] }) => {
+          resolve(split);
+        },
+      );
+
+      worker.on("error", reject);
+      worker.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(`Worker stopped with exit code ${code}`));
+        }
+      });
+    },
+  );
+}
+
+export function writeSplitsToDisk(
+  outputDir: string,
+  entrypointPath: string,
+  splits: { index: number; group: Group; files: File[] }[],
+) {
+  const targetDir = path.dirname(entrypointPath);
+  const groupMap: Record<number, Group> = {};
+
+  splits.forEach((split) => {
+    const annotationDirectory = path.join(outputDir, split.index.toString());
+
+    split.files.forEach((file) => {
+      const relativeFileNamePath = path.relative(targetDir, file.path);
+      const destinationPath = path.join(
+        annotationDirectory,
+        relativeFileNamePath,
+      );
+      fs.mkdirSync(path.dirname(destinationPath), { recursive: true });
+      fs.writeFileSync(destinationPath, file.sourceCode, "utf8");
+    });
+
+    groupMap[split.index] = split.group;
+  });
+
+  const annotationFilePath = path.join(outputDir, "annotations.json");
+  fs.writeFileSync(annotationFilePath, JSON.stringify(groupMap, null, 2));
+}
