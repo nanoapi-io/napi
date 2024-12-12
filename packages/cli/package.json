@@ -5,7 +5,7 @@
     "access": "public"
   },
   "bin": {
-    "napi": "dist/index.js"
+    "napi": "dist/src/index.js"
   },
   "pkg": {
     "assets": [
@@ -51,7 +51,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node dist/src/index.js",
     "test": "vitest",
     "npm:publish": "npm publish",
     "binaries:build": "pkg ./package.json",
