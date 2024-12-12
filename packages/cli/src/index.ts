@@ -10,6 +10,7 @@ import splitCommandHandler from "./commands/split";
 import { getConfigFromWorkDir, getOpenaiApiKeyFromConfig } from "./config";
 import { findAvailablePort, openInBrowser } from "./helper/server";
 import { TelemetryEvents, trackEvent } from "./telemetry";
+import { checkVersionMiddleware } from "./helper/checkNpmVersion";
 
 // remove all warning.
 // We need this because of some depreciation warning we have with 3rd party libraries
@@ -23,6 +24,9 @@ trackEvent(TelemetryEvents.APP_START, {
 });
 
 yargs(hideBin(process.argv))
+  .middleware(() => {
+    checkVersionMiddleware();
+  })
   .options({
     workdir: {
       type: "string",
