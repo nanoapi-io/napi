@@ -1,9 +1,7 @@
-import axios from "axios";
 import { EventEmitter } from "events";
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
-import { v4 as uuidv4 } from "uuid";
 import os from "os";
+import { getOrCreateGlobalConfig } from "./config/globalConfig";
+import packageJson from "../package.json";
 
 export enum TelemetryEvents {
   APP_START = "app_start",
@@ -18,7 +16,9 @@ export enum TelemetryEvents {
 }
 
 export interface TelemetryEvent {
-  sessionId: string;
+  userId: string;
+  os: string;
+  version: string;
   eventId: TelemetryEvents;
   data: Record<string, unknown>;
   timestamp: string;
@@ -28,52 +28,51 @@ const telemetry = new EventEmitter();
 const TELEMETRY_ENDPOINT =
   process.env.TELEMETRY_ENDPOINT ||
   "https://napi-watchdog-api-gateway-33ge7a49.nw.gateway.dev/telemetryHandler";
-const SESSION_FILE_PATH = join(os.tmpdir(), "napi_session_id");
-
-// getSessionId generates a new session ID and cache it in SESSION_FILE_PATH
-function getSessionId() {
-  if (existsSync(SESSION_FILE_PATH)) {
-    const fileContent = readFileSync(SESSION_FILE_PATH, "utf-8");
-    const [storedDate, sessionId] = fileContent.split(":");
-    const today = new Date().toISOString().slice(0, 10);
-
-    if (storedDate === today) {
-      return sessionId;
-    }
-  }
-
-  const newSessionId = uuidv4();
-  const today = new Date().toISOString().slice(0, 10);
-  writeFileSync(SESSION_FILE_PATH, `${today}:${newSessionId}`);
-  return newSessionId;
-}
-
-const SESSION_ID = getSessionId();
 
 telemetry.on("event", (data) => {
   sendTelemetryData(data);
 });
 
 async function sendTelemetryData(data: TelemetryEvent) {
+  const controller = new AbortController();
+  const timeoutSeconds = 15;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds * 1000);
+
   try {
-    await axios.post(TELEMETRY_ENDPOINT, data, {
+    const response = await fetch(TELEMETRY_ENDPOINT, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
         "User-Agent": "napi",
       },
-      timeout: 100000,
+      body: JSON.stringify(data),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      console.debug(`Failed to send telemetry data: ${response.statusText}`);
+    }
   } catch (error) {
-    console.debug(`Failed to send telemetry data: ${error}`);
+    if (error instanceof Error && error.name === "AbortError") {
+      console.debug("Request timed out");
+    } else {
+      console.debug(`Failed to send telemetry data: ${error}`);
+    }
   }
 }
 
-export function trackEvent(
+export async function trackEvent(
   eventId: TelemetryEvents,
   eventData: Record<string, unknown>,
 ) {
+  const config = await getOrCreateGlobalConfig();
+
   const telemetryPayload: TelemetryEvent = {
-    sessionId: SESSION_ID,
+    userId: config.userId,
+    os: os.platform(),
+    version: packageJson.version,
     eventId,
     data: eventData,
     timestamp: new Date().toISOString(),

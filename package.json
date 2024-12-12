@@ -10,7 +10,7 @@
     "build:cleanup": "rm -rf packages/cli/dist && rm -rf packages/app/dist",
     "build:packages": "npm run build --workspaces",
     "build:copy-dist": "cp -r packages/app/dist packages/cli/dist/app_dist",
-    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - packages/cli/dist/index.js > temp && mv temp packages/cli/dist/index.js && chmod +x packages/cli/dist/index.js",
+    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - packages/cli/dist/src/index.js > temp && mv temp packages/cli/dist/index.js && chmod +x packages/cli/dist/index.js",
     "build": "npm run build:cleanup && npm run build:packages && npm run build:copy-dist && npm run build:add-shebang",
     "start": "npm run start --workspace packages/cli",
     "lint": "eslint . --fix",
