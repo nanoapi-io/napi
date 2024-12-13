@@ -1,6 +1,6 @@
 {
   "name": "@nanoapi.io/napi",
-  "version": "0.0.23",
+  "version": "0.0.22",
   "publishConfig": {
     "access": "public"
   },
@@ -22,9 +22,17 @@
       "allowSameVersion": true
     },
     "plugins": {
+      "@release-it/bumper": {
+        "in": "package.json",
+        "out": "package.json"
+      },
       "@release-it/keep-a-changelog": {
-        "filename": "CHANGELOG.md"
+        "filename": "CHANGELOG.md",
+        "addUnreleased": true
       }
+    },
+    "hooks": {
+      "after:bump": "npm run build"
     }
   },
   "scripts": {
@@ -36,6 +44,7 @@
     "release": "npx release-it"
   },
   "devDependencies": {
+    "@release-it/bumper": "^6.0.1",
     "@release-it/keep-a-changelog": "^5.0.0",
     "@types/express": "^5.0.0",
     "@types/node": "^18.19.54",
