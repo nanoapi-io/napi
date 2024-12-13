@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+Improve telemetry
+Run split process in Node workers
+
 ## [0.0.20] - 2024-12-01
 
 Python support
