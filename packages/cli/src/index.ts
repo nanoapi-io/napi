@@ -20,7 +20,7 @@ if (process.env.NODE_ENV !== "development") {
 }
 
 trackEvent(TelemetryEvents.APP_START, {
-  message: "Napi started with Telemetry enabled",
+  message: "Napi started",
 });
 
 yargs(hideBin(process.argv))
@@ -40,8 +40,24 @@ yargs(hideBin(process.argv))
     "initialize a nanoapi project",
     (yargs) => yargs,
     (argv) => {
-      trackEvent(TelemetryEvents.INIT_COMMAND, { message: "Init command" });
-      initCommandHandler(argv.workdir);
+      const startTime = Date.now();
+      trackEvent(TelemetryEvents.INIT_COMMAND, {
+        message: "Init command started",
+      });
+      try {
+        initCommandHandler(argv.workdir);
+        trackEvent(TelemetryEvents.INIT_COMMAND, {
+          message: "Init command finished",
+          duration: Date.now() - startTime,
+        });
+      } catch (error) {
+        trackEvent(TelemetryEvents.INIT_COMMAND, {
+          message: "Init command error",
+          duration: Date.now() - startTime,
+          error: error,
+        });
+        throw error;
+      }
     },
   )
   // Annotate openai command
@@ -58,13 +74,18 @@ yargs(hideBin(process.argv))
         },
       }),
     (argv) => {
+      const startTime = Date.now();
       trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
-        message: "Annotate command",
+        message: "Annotate command started",
       });
       const napiConfig = getConfigFromWorkDir(argv.workdir);
 
       if (!napiConfig) {
         console.error("Missing .napirc file in project. Run `napi init` first");
+        trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+          message: "Annotate command failed, missing .napirc file",
+          duration: Date.now() - startTime,
+        });
         return;
       }
 
@@ -79,10 +100,26 @@ yargs(hideBin(process.argv))
         console.error(
           "Missing OpenAI API key. Please provide it via --apiKey or in a .napirc file using 'openaiApiKey' or 'openaiApiKeyFilePath'",
         );
+        trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+          message: "Annotate command failed, missing OpenAI API key",
+          duration: Date.now() - startTime,
+        });
         return;
       }
 
-      annotateOpenAICommandHandler(napiConfig.entrypoint, apiKey);
+      try {
+        annotateOpenAICommandHandler(napiConfig.entrypoint, apiKey);
+        trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+          message: "Annotate command finished",
+          duration: Date.now() - startTime,
+        });
+      } catch (error) {
+        trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+          message: "Annotate command error",
+          duration: Date.now() - startTime,
+          error: error,
+        });
+      }
     },
   )
   // Split command
@@ -91,17 +128,30 @@ yargs(hideBin(process.argv))
     "Split a program into multiple ones",
     (yargs) => yargs,
     (argv) => {
+      const startTime = Date.now();
       trackEvent(TelemetryEvents.SPLIT_COMMAND, {
-        message: "Split command",
+        message: "Split command started",
       });
       const napiConfig = getConfigFromWorkDir(argv.workdir);
 
       if (!napiConfig) {
         console.error("Missing .napirc file in project. Run `napi init` first");
+        trackEvent(TelemetryEvents.SPLIT_COMMAND, {
+          message: "Split command failed, missing .napirc file",
+          duration: Date.now() - startTime,
+        });
         return;
       }
 
-      splitCommandHandler(napiConfig.entrypoint, napiConfig.out);
+      try {
+        splitCommandHandler(napiConfig.entrypoint, napiConfig.out);
+      } catch (error) {
+        trackEvent(TelemetryEvents.SPLIT_COMMAND, {
+          message: "Split command error",
+          duration: Date.now() - startTime,
+          error: error,
+        });
+      }
     },
   )
   // Open UI command
@@ -110,14 +160,20 @@ yargs(hideBin(process.argv))
     "open the NanoAPI UI",
     (yargs) => yargs,
     async (argv) => {
+      const start = Date.now();
+
       trackEvent(TelemetryEvents.UI_OPEN, {
-        message: "UI command",
+        message: "UI command started",
       });
 
       const napiConfig = getConfigFromWorkDir(argv.workdir);
 
       if (!napiConfig) {
         console.error("Missing .napirc file in project. Run `napi init` first");
+        trackEvent(TelemetryEvents.UI_OPEN, {
+          message: "UI command failed, missing .napirc file",
+          duration: Date.now() - start,
+        });
         return;
       }
 
@@ -147,6 +203,11 @@ yargs(hideBin(process.argv))
         if (process.env.NODE_ENV !== "development") {
           openInBrowser(url);
         }
+      });
+
+      trackEvent(TelemetryEvents.UI_OPEN, {
+        message: "UI command finished",
+        duration: Date.now() - start,
       });
     },
   )
