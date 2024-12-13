@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.0.23] - 2024-12-13
 
 Fix broken version
 
