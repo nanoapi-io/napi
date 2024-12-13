@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.21] - 2024-12-13
+
 Improve telemetry
 Run split process in Node workers
 
