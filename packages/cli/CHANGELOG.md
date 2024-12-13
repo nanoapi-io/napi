@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Fix broken version
+
 ## [0.0.24] - 2024-12-13
 
 Fix broken version

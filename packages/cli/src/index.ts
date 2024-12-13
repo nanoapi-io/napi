@@ -192,7 +192,7 @@ yargs(hideBin(process.argv))
           }),
         );
       } else {
-        app.use(express.static(path.join(__dirname, "../dist/app_dist")));
+        app.use(express.static(path.join(__dirname, "../app_dist")));
       }
 
       const port = await findAvailablePort(3000);
