@@ -37,9 +37,13 @@
   },
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
-    "build": "tsc",
+    "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
+    "build:app": "npm run build --prefix ../app",
+    "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
+    "build:cli": "tsc",
+    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - ./dist/src/index.js > temp && mv temp ./dist/src/index.js && chmod +x ./dist/src/index.js",
+    "build": "npm run build:cleanup && npm run build:app && npm run build:cli && npm run build:copy-app-dist && npm run build:add-shebang",
     "start": "node dist/src/index.js",
-    "test": "vitest",
     "npm:publish": "npm publish",
     "release": "npx release-it"
   },
