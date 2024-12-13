@@ -39,9 +39,6 @@ jobs:
       - name: Build the cli
         run: npm run build
 
-      - name: Generate binaries
-        run: npm run binaries
-
       - name: Login with git
         run: |
           git config --global user.email "info@nanoapi.io"

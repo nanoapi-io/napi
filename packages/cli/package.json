@@ -7,19 +7,6 @@
   "bin": {
     "napi": "dist/src/index.js"
   },
-  "pkg": {
-    "assets": [
-      "../../node_modules/tree-sitter/**/*",
-      "../../node_modules/openai/**/*",
-      "dist/**/*"
-    ],
-    "targets": [
-      "node16-linux-x64",
-      "node16-macos-x64",
-      "node16-win-x64"
-    ],
-    "outputPath": "binaries"
-  },
   "release-it": {
     "$schema": "https://unpkg.com/release-it/schema/release-it.json",
     "git": {
@@ -28,10 +15,7 @@
       "requireCleanWorkingDir": false
     },
     "github": {
-      "release": true,
-      "assets": [
-        "binaries/**/*"
-      ]
+      "release": true
     },
     "npm": {
       "publish": true,
@@ -54,7 +38,6 @@
     "start": "node dist/src/index.js",
     "test": "vitest",
     "npm:publish": "npm publish",
-    "binaries:build": "pkg ./package.json",
     "release": "npx release-it"
   },
   "devDependencies": {
@@ -67,7 +50,6 @@
     "@types/yargs": "^17.0.33",
     "cross-env": "^7.0.3",
     "nodemon": "^3.1.7",
-    "pkg": "^5.8.1",
     "prettier": "3.3.3",
     "release-it": "^17.10.0",
     "ts-node": "^10.9.2",

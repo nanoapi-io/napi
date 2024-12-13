@@ -1,7 +1,6 @@
 node_modules
 dist
 .env
-binaries
 napi_dist
 __pycache__
 .ruff_cache

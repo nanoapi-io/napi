@@ -55,6 +55,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Binaries
-        run: npm run binaries
