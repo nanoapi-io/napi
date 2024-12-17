@@ -3,6 +3,7 @@ import fs from "fs";
 import { DependencyTree, Group, Endpoint } from "./types";
 import AnnotationManager from "../annotationManager";
 import { getLanguagePlugin } from "../languagesPlugins";
+import { File } from "../splitRunner/types";
 
 class DependencyTreeManager {
   entryPointPath: string;
@@ -77,9 +78,9 @@ class DependencyTreeManager {
 
     const endpoints: Endpoint[] = [];
 
-    const commentNodes = languagePlugin.getCommentNodes(tree.rootNode);
+    const annotationNodes = languagePlugin.getAnnotationNodes(tree.rootNode);
 
-    commentNodes.forEach((node) => {
+    annotationNodes.forEach((node) => {
       try {
         const annotationManager = new AnnotationManager(
           node.text,
@@ -157,7 +158,7 @@ class DependencyTreeManager {
   }
 
   getFiles() {
-    const files: { path: string; sourceCode: string }[] = [];
+    const files: File[] = [];
     const uniquePaths = new Set<string>();
 
     function gatherFiles(tree: DependencyTree) {

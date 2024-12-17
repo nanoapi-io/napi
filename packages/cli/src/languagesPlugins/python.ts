@@ -26,16 +26,26 @@ class PythonPlugin implements LanguagePlugin {
   commentPrefix = "#";
   annotationRegex = /#( *)@nanoapi/;
 
-  getCommentNodes(node: Parser.SyntaxNode) {
+  getAnnotationNodes(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
     const commentQuery = new Parser.Query(
       this.parser.getLanguage(),
       "(comment) @comment",
     );
     const commentCaptures = commentQuery.captures(node);
 
-    return commentCaptures.map((capture) => {
-      return capture.node;
+    const annotationNodes: Parser.SyntaxNode[] = [];
+
+    commentCaptures.forEach((capture) => {
+      try {
+        new AnnotationManager(capture.node.text, this);
+        annotationNodes.push(capture.node);
+      } catch {
+        // Ignore invalid annotations, assume they are comments
+        return;
+      }
     });
+
+    return annotationNodes;
   }
 
   removeAnnotationFromOtherGroups(sourceCode: string, groupToKeep: Group) {
@@ -43,9 +53,9 @@ class PythonPlugin implements LanguagePlugin {
 
     const tree = this.parser.parse(sourceCode);
 
-    const commentNodes = this.getCommentNodes(tree.rootNode);
+    const annotationNodes = this.getAnnotationNodes(tree.rootNode);
 
-    commentNodes.forEach((node) => {
+    annotationNodes.forEach((node) => {
       try {
         const annotationManager = new AnnotationManager(node.text, this);
 

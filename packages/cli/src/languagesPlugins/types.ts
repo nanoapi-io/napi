@@ -57,7 +57,7 @@ export interface LanguagePlugin {
   commentPrefix: string;
   annotationRegex: RegExp;
 
-  getCommentNodes(node: Parser.SyntaxNode): Parser.SyntaxNode[];
+  getAnnotationNodes(node: Parser.SyntaxNode): Parser.SyntaxNode[];
 
   removeAnnotationFromOtherGroups(
     sourceCode: string,

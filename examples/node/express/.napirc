@@ -1,4 +1,5 @@
 {
   "entrypoint": "src/index.js",
-  "out": "napi_dist"
+  "out": "napi_dist",
+  "openaiApiKeyFilePath": "../../.OPENAIKEY"
 }

@@ -44,9 +44,9 @@ export function sync(payload: z.infer<typeof syncSchema>) {
       text: string;
     }[] = [];
 
-    const commentNodes = languagePlugin.getCommentNodes(tree.rootNode);
+    const annotationNodes = languagePlugin.getAnnotationNodes(tree.rootNode);
 
-    commentNodes.forEach((node) => {
+    annotationNodes.forEach((node) => {
       try {
         const annotationManager = new AnnotationManager(
           node.text,
