@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+Update dependencies
+Improve annotate openai command
+
 ## [0.0.25] - 2024-12-13
 
 Fix broken version
