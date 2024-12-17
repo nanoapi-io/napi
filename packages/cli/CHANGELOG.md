@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.26] - 2024-12-17
+
 Update dependencies
 Improve annotate openai command
 
