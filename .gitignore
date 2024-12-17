@@ -4,3 +4,4 @@ dist
 napi_dist
 __pycache__
 .ruff_cache
+.OPENAIKEY

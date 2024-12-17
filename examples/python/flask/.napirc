@@ -1,4 +1,5 @@
 {
   "entrypoint": "app.py",
-  "out": "napi_dist"
+  "out": "napi_dist",
+  "openaiApiKeyFilePath": "../../.OPENAIKEY"
 }

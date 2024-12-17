@@ -36,7 +36,7 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
+    "dev": "cross-env NODE_ENV=development ts-node src/index.ts",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
@@ -51,29 +51,26 @@
     "@release-it/bumper": "^6.0.1",
     "@release-it/keep-a-changelog": "^5.0.0",
     "@types/express": "^5.0.0",
-    "@types/node": "^18.19.54",
+    "@types/node": "^22.10.2",
     "@types/prompts": "^2.4.9",
     "@types/uuid": "^10.0.0",
     "@types/yargs": "^17.0.33",
     "cross-env": "^7.0.3",
-    "nodemon": "^3.1.7",
-    "prettier": "3.3.3",
+    "nodemon": "^3.1.9",
     "release-it": "^17.10.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.6.2",
-    "vitest": "^2.1.1"
+    "ts-node": "^10.9.2"
   },
   "dependencies": {
-    "express": "^4.21.1",
+    "express": "^4.21.2",
     "http-proxy-middleware": "^3.0.3",
-    "openai": "^4.67.2",
+    "openai": "^4.76.3",
     "prompts": "^2.4.2",
-    "tree-sitter": "^0.21.1",
-    "tree-sitter-javascript": "^0.23.0",
-    "tree-sitter-python": "^0.23.4",
-    "tree-sitter-typescript": "^0.23.0",
-    "uuid": "^10.0.0",
+    "tree-sitter": "^0.22.1",
+    "tree-sitter-javascript": "^0.23.1",
+    "tree-sitter-python": "^0.23.5",
+    "tree-sitter-typescript": "^0.23.2",
+    "uuid": "^11.0.3",
     "yargs": "^17.7.2",
-    "zod": "^3.23.8"
+    "zod": "^3.24.1"
   }
 }
