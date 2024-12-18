@@ -1,12 +1,10 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/media/logo-192.png" alt="NanoAPI Logo" width="200" />
-</p>
+![NanoAPI Banner](/media/github-banner.png)
 
-# `napi` - Next-Level Visual Tooling For API Codebases
+# napi - Next-Level Visual Tooling For API Codebases
 
-`napi` is a versatile tool designed to automatically refactor large microlith codebases into smaller, more manageable microservices. With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
+`napi` is a versatile tool built by NanoAPI and designed to automatically refactor large microlith codebases into smaller, more manageable microservices. With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
 
-![NanoAPI UI Screenshot](/media/screenshots/app.png)
+![NanoAPI UI Overview](/media/hero-app.png)
 
 ## Features
 
@@ -18,8 +16,8 @@
 ## Why `napi`?
 
 - Simplifies the process of breaking down monoliths into microservices.
+- Improves understanding, maintainability, and robustness at both the architecture and code level.
 - Reduces dependency on consultants or contractors for complex refactoring tasks.
-- Enhances codebase understanding and robustness.
 - Accelerates development with a "develop monolith, deploy microservice" approach.
 
 ## Supported Languages and Frameworks
@@ -108,6 +106,11 @@ The UI provides an interactive interface to:
 ## CI/CD Integration
 
 `napi` works seamlessly with CI/CD platforms like GitHub Actions, GitLab CI/CD, and Jenkins. For setup instructions, refer to our [CLI guide](https://nanoapi.io/docs/cli/).
+
+## Further Reading
+
+- [Automating the Strangler Pattern with Microlithic Development](https://medium.com/@joel_40950/automating-the-strangler-pattern-with-microlithic-development-241e4e0dd79b)
+- [Rise of the "Microlith": Rethinking Microservices for Modern Developers](https://dev.to/nanojoel/open-sourcing-nanoapi-rethinking-microservices-for-modern-developers-14m2)
 
 ## Contributing
 
