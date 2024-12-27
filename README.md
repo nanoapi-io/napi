@@ -37,10 +37,6 @@
 
 For the latest updates, visit our [project board](https://github.com/nanoapi-io/napi/projects).
 
-## Documentation
-
-Comprehensive documentation is available on our [documentation website](https://nanoapi.io/docs/nanoapi).
-
 ## Quick Start
 
 Ensure you have Node.js (>=18) and npm installed.
@@ -66,8 +62,6 @@ This will initialize a new NanoAPI project and open the UI for inspecting and re
 ## CLI Usage
 
 `napi --help` will provides an overview off all commands
-
-For more detailed information about the CLI and what each command does, refer to our [CLI guide](https://nanoapi.io/docs/cli/).
 
 ## Refactoring with Annotations
 
@@ -106,7 +100,7 @@ napi split configure
 
 ## CI/CD Integration
 
-`napi` works seamlessly with CI/CD platforms like GitHub Actions, GitLab CI/CD, and Jenkins. For setup instructions, refer to our [CLI guide](https://nanoapi.io/docs/cli/).
+`napi` works seamlessly with CI/CD platforms like GitHub Actions, GitLab CI/CD, and Jenkins.
 
 ## Further Reading
 
