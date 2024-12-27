@@ -8,7 +8,7 @@ import { syncEndpoints } from "../service/api/sync";
 import { Endpoint } from "../service/api/types";
 import { getConfig } from "../service/api/config";
 
-export default function App() {
+export default function SplitConfigure() {
   const initialized = useRef(false);
 
   const [chartLoading, setChartLoading] = useState<boolean>(false);

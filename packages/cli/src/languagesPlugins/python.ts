@@ -8,7 +8,7 @@ import {
 } from "./types";
 import { Group } from "../dependencyManager/types";
 import AnnotationManager from "../annotationManager";
-import { removeIndexesFromSourceCode } from "../helper/file";
+import { removeIndexesFromSourceCode } from "../helpers/file";
 import Python from "tree-sitter-python";
 import path from "path";
 import fs from "fs";

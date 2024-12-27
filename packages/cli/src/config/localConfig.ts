@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { z } from "zod";
 
-export const napiConfigSchema = z.object({
+export const localConfigSchema = z.object({
   entrypoint: z.string(),
   out: z.string(),
   openaiApiKey: z.string().optional(),
@@ -20,7 +20,7 @@ export function getConfigFromWorkDir(workdir: string) {
 
   const napircContent = fs.readFileSync(napircPath, "utf-8");
 
-  const result = napiConfigSchema.safeParse(JSON.parse(napircContent));
+  const result = localConfigSchema.safeParse(JSON.parse(napircContent));
 
   if (!result.success) {
     console.error("Invalid NapiConfig:", result.error);
@@ -36,7 +36,7 @@ export function getConfigFromWorkDir(workdir: string) {
 }
 
 export function createConfig(
-  napiConfig: z.infer<typeof napiConfigSchema>,
+  napiConfig: z.infer<typeof localConfigSchema>,
   workdir: string,
 ) {
   const napircPath = path.join(workdir, napiConfigFileName);
@@ -45,7 +45,7 @@ export function createConfig(
 
 export function getOpenaiApiKeyFromConfig(
   workdir: string,
-  napiConfig: z.infer<typeof napiConfigSchema>,
+  napiConfig: z.infer<typeof localConfigSchema>,
 ) {
   if (napiConfig.openaiApiKey) return napiConfig.openaiApiKey;
 

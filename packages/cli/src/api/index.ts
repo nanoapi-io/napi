@@ -1,13 +1,13 @@
 import { json, Router } from "express";
 import { z } from "zod";
-import { napiConfigSchema } from "../config";
+import { localConfigSchema } from "../config/localConfig";
 import { scanSchema, splitSchema, syncSchema } from "./helpers/validation";
 import { scan } from "./scan";
 import { split } from "./split";
 import { sync } from "./sync";
 import { TelemetryEvents, trackEvent } from "../telemetry";
 
-export function getApi(napiConfig: z.infer<typeof napiConfigSchema>) {
+export function getApi(napiConfig: z.infer<typeof localConfigSchema>) {
   const api = Router();
 
   api.use(json());

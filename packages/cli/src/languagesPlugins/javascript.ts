@@ -8,7 +8,7 @@ import {
 } from "./types";
 import { Group } from "../dependencyManager/types";
 import AnnotationManager from "../annotationManager";
-import { removeIndexesFromSourceCode } from "../helper/file";
+import { removeIndexesFromSourceCode } from "../helpers/file";
 import Javascript from "tree-sitter-javascript";
 import Typescript from "tree-sitter-typescript";
 import path from "path";

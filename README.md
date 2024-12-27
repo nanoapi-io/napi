@@ -2,7 +2,7 @@
 
 # napi - Next-Level Visual Tooling For API Codebases
 
-`napi` is a versatile tool built by NanoAPI and designed to automatically refactor large microlith codebases into smaller, more manageable microservices. With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
+`napi` is a versatile tool built by NanoAPI and designed to automatically refactor large monolitic codebases into smaller, more manageable microservices. With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
 
 ![NanoAPI UI Overview](/media/hero-app.png)
 
@@ -55,27 +55,25 @@ npm install -g @nanoapi.io/napi
 
 ```bash
 napi init
-napi ui
+napi split configure
+napi split
 ```
 
 This will initialize a new NanoAPI project and open the UI for inspecting and refactoring your codebase.
 
+**Note:** `napi` works off a simple system of annotation. These annotation allow `napi` to be integrated into any existing projects. Annotating a program is needed before using the split functionalities see [Refactoring with Annotations](#refactoring-with-annotations).
+
 ## CLI Usage
 
-`napi` provides the following commands:
-
-```bash
-init                  Initialize the NanoAPI project
-ui [entrypoint]       Open the UI to inspect and refactor the codebase
-split <entrypoint>    Transform the codebase into microservices
-napi <platform> annotate <entrypoint> [--token=<key>] Automatically generate annotations for the codebase via OpenAI
-```
+`napi --help` will provides an overview off all commands
 
 For more detailed information about the CLI and what each command does, refer to our [CLI guide](https://nanoapi.io/docs/cli/).
 
 ## Refactoring with Annotations
 
-You can use annotations to specify how to split your code. Here’s an example:
+You can use annotations to specify how to split your code.
+Simply add them above blocks of code that is handling or registering an endpoint
+Here’s an example:
 
 ```typescript
 // src/api.js
@@ -91,7 +89,9 @@ app.post("/api/v1/orders", (req, res) => {
 });
 ```
 
-Running `napi split` will generate modular services based on these annotations. You'll have a `Users` service and an `Orders` service, each containing the respective endpoint.
+You can view more example in the [examples](/examples/)
+
+Running `napi split` with the following annotations will generate modular services based on these annotations. You'll have a `Users` service and an `Orders` service, each containing the respective endpoint.
 
 ## Using the UI
 
@@ -99,9 +99,10 @@ The UI provides an interactive interface to:
 
 - Group and organize endpoints.
 - Preview the generated microservices.
-- Export refactored code for deployment.
 
-![NanoAPI UI Preview](/media/screenshots/app-ui.png)
+```
+napi split configure
+```
 
 ## CI/CD Integration
 

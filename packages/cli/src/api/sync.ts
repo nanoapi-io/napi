@@ -4,7 +4,7 @@ import fs from "fs";
 import DependencyTreeManager from "../dependencyManager/dependencyManager";
 import AnnotationManager from "../annotationManager";
 import { getLanguagePlugin } from "../languagesPlugins";
-import { replaceIndexesFromSourceCode } from "../helper/file";
+import { replaceIndexesFromSourceCode } from "../helpers/file";
 
 export function sync(payload: z.infer<typeof syncSchema>) {
   const dependencyTreeManager = new DependencyTreeManager(
