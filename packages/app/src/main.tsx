@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "@xyflow/react/dist/style.css";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
-import Index from "./pages/index";
+import SplitConfigure from "./pages/splitConfigure";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import DefaultLayout from "./layout/default";
 import { ToastContainer } from "react-toastify";
@@ -15,10 +15,10 @@ import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
 
 const router = createHashRouter([
   {
-    path: "/",
+    path: "/splitConfigure",
     element: (
       <DefaultLayout>
-        <Index />
+        <SplitConfigure />
       </DefaultLayout>
     ),
   },

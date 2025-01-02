@@ -1,10 +1,17 @@
 import fs from "fs";
-import DependencyTreeManager from "../dependencyManager/dependencyManager";
+import DependencyTreeManager from "../../dependencyManager/dependencyManager";
 import OpenAI from "openai";
-import { getLanguagePlugin } from "../languagesPlugins";
-import { File } from "../splitRunner/types";
-import { removeIndexesFromSourceCode } from "../helper/file";
+import { getLanguagePlugin } from "../../languagesPlugins";
+import { File } from "../../splitRunner/types";
+import { removeIndexesFromSourceCode } from "../../helpers/file";
 import prompts from "prompts";
+import yargs, { PositionalOptionsType } from "yargs";
+import { globalOptions } from "../helpers/options";
+import { TelemetryEvents, trackEvent } from "../../telemetry";
+import {
+  getConfigFromWorkDir,
+  getOpenaiApiKeyFromConfig,
+} from "../../config/localConfig";
 
 function removeAllAnnotations(entryPointPath: string, files: File[]) {
   const updatedFiles = files.map((file) => {
@@ -35,7 +42,7 @@ function removeAllAnnotations(entryPointPath: string, files: File[]) {
   return updatedFiles;
 }
 
-export default async function annotateOpenAICommandHandler(
+async function annotateOpenAICommandHandler(
   entrypoint: string, // Path to the entrypoint file
   openAIApiKey: string, // OpenAI API key
 ) {
@@ -118,3 +125,72 @@ export default async function annotateOpenAICommandHandler(
     "Annotation complete. OpenAI can make mistakes, so please review the annotations.",
   );
 }
+
+const builder = {
+  apiKey: {
+    type: "string" as PositionalOptionsType,
+    default: "",
+    alias: "k",
+    description: "OpenAI API key",
+  },
+};
+
+function handler(
+  argv: yargs.ArgumentsCamelCase<
+    yargs.InferredOptionTypes<typeof globalOptions & typeof builder>
+  >,
+) {
+  const startTime = Date.now();
+  trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+    message: "Annotate command started",
+  });
+  const napiConfig = getConfigFromWorkDir(argv.workdir);
+
+  if (!napiConfig) {
+    console.error("Missing .napirc file in project. Run `napi init` first");
+    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+      message: "Annotate command failed, missing .napirc file",
+      duration: Date.now() - startTime,
+    });
+    return;
+  }
+
+  let apiKey: string | undefined;
+  if (argv.apiKey) {
+    apiKey = argv.apiKey;
+  } else if (napiConfig) {
+    apiKey = getOpenaiApiKeyFromConfig(argv.workdir, napiConfig);
+  }
+
+  if (!apiKey) {
+    console.error(
+      "Missing OpenAI API key. Please provide it via --apiKey or in a .napirc file using 'openaiApiKey' or 'openaiApiKeyFilePath'",
+    );
+    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+      message: "Annotate command failed, missing OpenAI API key",
+      duration: Date.now() - startTime,
+    });
+    return;
+  }
+
+  try {
+    annotateOpenAICommandHandler(napiConfig.entrypoint, apiKey);
+    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+      message: "Annotate command finished",
+      duration: Date.now() - startTime,
+    });
+  } catch (error) {
+    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
+      message: "Annotate command error",
+      duration: Date.now() - startTime,
+      error: error,
+    });
+  }
+}
+
+export default {
+  command: "split annotate openai",
+  describe: "Annotate a program, needed for splitting",
+  builder,
+  handler,
+};

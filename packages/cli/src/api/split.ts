@@ -1,7 +1,7 @@
 import path from "path";
 import { z } from "zod";
 import DependencyTreeManager from "../dependencyManager/dependencyManager";
-import { cleanupOutputDir, createOutputDir } from "../helper/file";
+import { cleanupOutputDir, createOutputDir } from "../helpers/file";
 import { runWithWorker, writeSplitsToDisk } from "../splitRunner/splitRunner";
 import { splitSchema } from "./helpers/validation";
 

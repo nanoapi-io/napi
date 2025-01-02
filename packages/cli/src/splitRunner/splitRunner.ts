@@ -4,7 +4,7 @@ import { Group } from "../dependencyManager/types";
 import { File } from "./types";
 import { getLanguagePlugin } from "../languagesPlugins";
 import { DepExport } from "../languagesPlugins/types";
-import { removeIndexesFromSourceCode } from "../helper/file";
+import { removeIndexesFromSourceCode } from "../helpers/file";
 import assert from "assert";
 import Parser from "tree-sitter";
 import fs from "fs";
