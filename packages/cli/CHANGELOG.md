@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.27] - 2025-01-02
+
 Change command names
 
 ## [0.0.26] - 2024-12-17
