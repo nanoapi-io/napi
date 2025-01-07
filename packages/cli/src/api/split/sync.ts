@@ -1,14 +1,27 @@
 import { z } from "zod";
-import { syncSchema } from "./helpers/validation";
 import fs from "fs";
-import DependencyTreeManager from "../dependencyManager/dependencyManager";
-import AnnotationManager from "../annotationManager";
-import { getLanguagePlugin } from "../languagesPlugins";
-import { replaceIndexesFromSourceCode } from "../helpers/file";
+import DependencyTreeManager from "../../dependencyManager/dependencyManager";
+import AnnotationManager from "../../annotationManager";
+import { getLanguagePlugin } from "../../languagesPlugins";
+import { replaceIndexesFromSourceCode } from "../../helpers/file";
+import { localConfigSchema } from "../../config/localConfig";
 
-export function sync(payload: z.infer<typeof syncSchema>) {
+export const syncSchema = z.object({
+  endpoints: z.array(
+    z.object({
+      path: z.string(),
+      method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).optional(),
+      group: z.string().optional(),
+    }),
+  ),
+});
+
+export function sync(
+  napiConfig: z.infer<typeof localConfigSchema>,
+  payload: z.infer<typeof syncSchema>,
+) {
   const dependencyTreeManager = new DependencyTreeManager(
-    payload.entrypointPath,
+    napiConfig.entrypoint,
   );
 
   const endpoints = dependencyTreeManager.getEndponts();
@@ -30,7 +43,7 @@ export function sync(payload: z.infer<typeof syncSchema>) {
 
   updatedEndpoints.forEach((endpoint) => {
     const languagePlugin = getLanguagePlugin(
-      payload.entrypointPath,
+      napiConfig.entrypoint,
       endpoint.filePath,
     );
 

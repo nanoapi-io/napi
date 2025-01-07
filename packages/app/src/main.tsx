@@ -8,19 +8,30 @@ import "@xyflow/react/dist/style.css";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import SplitConfigure from "./pages/splitConfigure";
-import { createHashRouter, RouterProvider } from "react-router-dom";
-import DefaultLayout from "./layout/default";
+import { createHashRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
+import Visualizer from "./pages/visualizer/index";
+import BaseVisualizer from "./pages/visualizer";
 
 const router = createHashRouter([
   {
     path: "/splitConfigure",
-    element: (
-      <DefaultLayout>
-        <SplitConfigure />
-      </DefaultLayout>
-    ),
+    element: <SplitConfigure />,
+  },
+  {
+    path: "/visualizer",
+    element: <BaseVisualizer />,
+    children: [
+      {
+        path: "/visualizer",
+        element: <Visualizer />,
+      },
+      {
+        path: "/visualizer/:file",
+        element: <div>test file</div>,
+      },
+    ],
   },
 ]);
 

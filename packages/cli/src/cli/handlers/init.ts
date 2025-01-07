@@ -54,7 +54,7 @@ async function handler(
   >,
 ) {
   const startTime = Date.now();
-  trackEvent(TelemetryEvents.INIT_COMMAND, {
+  trackEvent(TelemetryEvents.CLI_INIT_COMMAND, {
     message: "Init command started",
   });
   try {
@@ -81,12 +81,12 @@ async function handler(
     createConfig(napiConfig, argv.workdir);
 
     console.info("Successfully created .napirc");
-    trackEvent(TelemetryEvents.INIT_COMMAND, {
+    trackEvent(TelemetryEvents.CLI_INIT_COMMAND, {
       message: "Init command finished",
       duration: Date.now() - startTime,
     });
   } catch (error) {
-    trackEvent(TelemetryEvents.INIT_COMMAND, {
+    trackEvent(TelemetryEvents.CLI_INIT_COMMAND, {
       message: "Init command error",
       duration: Date.now() - startTime,
       error: error,

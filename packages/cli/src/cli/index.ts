@@ -6,6 +6,7 @@ import initCommand from "./handlers/init";
 import splitRunHandler from "./handlers/splitRun";
 import splitAnnotateHandler from "./handlers/splitAnnotate";
 import splitConfigureHandler from "./handlers/splitConfigure";
+import visualizerHandler from "./handlers/visualizer";
 import { TelemetryEvents, trackEvent } from "../telemetry";
 
 export function initCli() {
@@ -34,5 +35,6 @@ export function initCli() {
         // do nothing, we are handling the subcommands
       },
     })
+    .command(visualizerHandler)
     .parse();
 }
