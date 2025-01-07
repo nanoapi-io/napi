@@ -93,7 +93,7 @@ This will initialize the `.napirc` configuration file, which is essential for ma
 
 NanoAPI relies on **annotations** to split your codebase. Annotations mark API endpoints, methods, and groups in your code, guiding how monolithic projects are refactored into microservices.
 
-> **Important:** Before running `napi split`, you need to **annotate your codebase**. If you're not familiar with the process, see [Split with Annotations](#split-with-annotations) for a detailed guide and examples.
+> **Important:** Before running `napi split run`, you need to **annotate your codebase**. If you're not familiar with the process, see [Split with Annotations](#split-with-annotations) for a detailed guide and examples.
 
 ```bash
 napi split configure
@@ -102,7 +102,7 @@ napi split configure
 This will launch the configuration UI. It allows you to configure and preview how your codebase will be split.
 
 ```bash
-napi split
+napi split run
 ```
 
 This command allow you to split your codebase. You can use this in your CI pipeline if needed.
@@ -146,7 +146,7 @@ Split the codebase into smaller, more manageable pieces based on annotations. Th
 > **Important:** This process relies on annotation (see [Split with Annotations](#split-with-annotations)).
 
 ```bash
-napi split
+napi split run
 ```
 
 Note: This command uses the .napirc configuration file.
@@ -252,7 +252,7 @@ Automatically generate annotations for large codebases using the CLI with AI sup
 napi split annotate openai --apiKey="sk-**"
 ```
 
-**Note:** LLMs can make mistakes. We recommend reviewing AI-generated annotations carefully before running `napi split` to avoid unexpected behavior in the resulting microservices.
+**Note:** LLMs can make mistakes. We recommend reviewing AI-generated annotations carefully before running `napi split run` to avoid unexpected behavior in the resulting microservices.
 
 You can use annotations to specify how to split your code.
 Simply add them above blocks of code that is handling or registering an endpoint
@@ -274,7 +274,7 @@ app.post("/api/v1/orders", (req, res) => {
 
 You can view more examples in the [examples](/examples/)
 
-Running `napi split` with the following annotations will generate modular services based on these annotations. You'll have a `Users` service and an `Orders` service, each containing the respective endpoint.
+Running `napi split run` with the following annotations will generate modular services based on these annotations. You'll have a `Users` service and an `Orders` service, each containing the respective endpoint.
 
 ## Using the UI
 

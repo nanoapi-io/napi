@@ -35,8 +35,8 @@ async function handler(
 }
 
 export default {
-  command: "split configure",
-  describe: "Configure how napi split your program with the UI",
+  command: "configure",
+  describe: "Configure napi split your program with the UI",
   builder: {},
   handler,
 };
