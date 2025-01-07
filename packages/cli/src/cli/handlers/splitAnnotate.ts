@@ -189,7 +189,7 @@ function handler(
 }
 
 export default {
-  command: "split annotate openai",
+  command: "annotate openai",
   describe: "Annotate a program, needed for splitting",
   builder,
   handler,

@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import { checkVersionMiddleware } from "./helpers/checkNpmVersion";
 import { globalOptions } from "./helpers/options";
 import initCommand from "./handlers/init";
-import splitHandler from "./handlers/split";
+import splitRunHandler from "./handlers/splitRun";
 import splitAnnotateHandler from "./handlers/splitAnnotate";
 import splitConfigureHandler from "./handlers/splitConfigure";
 import { TelemetryEvents, trackEvent } from "../telemetry";
@@ -20,8 +20,19 @@ export function initCli() {
     })
     .options(globalOptions)
     .command(initCommand)
-    .command(splitHandler)
-    .command(splitAnnotateHandler)
-    .command(splitConfigureHandler)
+    .command({
+      command: "split",
+      describe: "split your program",
+      builder: (yargs) => {
+        return yargs
+          .command(splitAnnotateHandler)
+          .command(splitConfigureHandler)
+          .command(splitRunHandler)
+          .demandCommand(1, "You need to specify a valid command");
+      },
+      handler: () => {
+        // do nothing, we are handling the subcommands
+      },
+    })
     .parse();
 }

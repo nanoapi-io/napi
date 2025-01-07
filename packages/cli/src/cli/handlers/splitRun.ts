@@ -9,7 +9,7 @@ import {
   writeSplitsToDisk,
 } from "../../splitRunner/splitRunner";
 
-async function splitCommandHandler(
+async function splitRunCommandHandler(
   entrypointPath: string, // Path to the entrypoint file
   outputDir: string, // Path to the output directory
 ) {
@@ -61,7 +61,7 @@ async function handler(
   }
 
   try {
-    await splitCommandHandler(napiConfig.entrypoint, napiConfig.out);
+    await splitRunCommandHandler(napiConfig.entrypoint, napiConfig.out);
   } catch (error) {
     trackEvent(TelemetryEvents.SPLIT_COMMAND, {
       message: "Split command error",
@@ -72,7 +72,7 @@ async function handler(
 }
 
 export default {
-  command: "split",
+  command: "run",
   description: "Split a program into multiple ones",
   builder: {},
   handler,
