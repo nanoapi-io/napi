@@ -55,7 +55,8 @@ export async function runServer(
       }),
     );
   } else {
-    app.use(express.static(path.join(__dirname, "../app_dist")));
+    // TODO find a better way to get dist directory. If we move this file, it will break
+    app.use(express.static(path.join(__dirname, "../../../app_dist")));
   }
 
   const port = await findAvailablePort(3000);
