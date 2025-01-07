@@ -11,32 +11,32 @@ async function handler(
 ) {
   const start = Date.now();
 
-  trackEvent(TelemetryEvents.CLI_SPLIT_CONFIGURE_COMMAND, {
-    message: "Split configure command started",
+  trackEvent(TelemetryEvents.CLI_VISUALIZER_COMMAND, {
+    message: "Visualizer command started",
   });
 
   const napiConfig = getConfigFromWorkDir(argv.workdir);
 
   if (!napiConfig) {
     console.error("Missing .napirc file in project. Run `napi init` first");
-    trackEvent(TelemetryEvents.CLI_SPLIT_CONFIGURE_COMMAND, {
-      message: "Split configure command failed, missing .napirc file",
+    trackEvent(TelemetryEvents.CLI_VISUALIZER_COMMAND, {
+      message: "Visualizer command failed, missing .napirc file",
       duration: Date.now() - start,
     });
     return;
   }
 
-  runServer(napiConfig, "splitConfigure");
+  runServer(napiConfig, "visualizer");
 
-  trackEvent(TelemetryEvents.CLI_SPLIT_CONFIGURE_COMMAND, {
-    message: "Split configure command finished",
+  trackEvent(TelemetryEvents.CLI_VISUALIZER_COMMAND, {
+    message: "Visualizer command finished",
     duration: Date.now() - start,
   });
 }
 
 export default {
-  command: "split configure",
-  describe: "Configure how napi split your program with the UI",
+  command: "visualizer",
+  describe: "Configure napi split your program with the UI",
   builder: {},
   handler,
 };

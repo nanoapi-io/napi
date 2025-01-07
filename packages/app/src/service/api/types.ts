@@ -7,7 +7,8 @@ export interface Endpoint {
   childrenFilePaths: string[];
 }
 
-export interface NapiConfig {
-  entrypoint: string;
-  out: string;
+export interface VisualizerFile {
+  path: string;
+  sourceCode: string;
+  importSources: string[];
 }

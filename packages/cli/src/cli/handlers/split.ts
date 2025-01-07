@@ -46,14 +46,14 @@ async function handler(
   >,
 ) {
   const startTime = Date.now();
-  trackEvent(TelemetryEvents.SPLIT_COMMAND, {
+  trackEvent(TelemetryEvents.CLI_SPLIT_COMMAND, {
     message: "Split command started",
   });
   const napiConfig = getConfigFromWorkDir(argv.workdir);
 
   if (!napiConfig) {
     console.error("Missing .napirc file in project. Run `napi init` first");
-    trackEvent(TelemetryEvents.SPLIT_COMMAND, {
+    trackEvent(TelemetryEvents.CLI_SPLIT_COMMAND, {
       message: "Split command failed, missing .napirc file",
       duration: Date.now() - startTime,
     });
@@ -63,7 +63,7 @@ async function handler(
   try {
     await splitCommandHandler(napiConfig.entrypoint, napiConfig.out);
   } catch (error) {
-    trackEvent(TelemetryEvents.SPLIT_COMMAND, {
+    trackEvent(TelemetryEvents.CLI_SPLIT_COMMAND, {
       message: "Split command error",
       duration: Date.now() - startTime,
       error: error,
