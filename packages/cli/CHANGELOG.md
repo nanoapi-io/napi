@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.28] - 2025-01-07
+
 fix the path of app_dist directory to fix bug in production
 
 ## [0.0.27] - 2025-01-02
