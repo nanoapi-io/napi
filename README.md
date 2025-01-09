@@ -292,6 +292,76 @@ napi split configure
 
 We welcome contributions from the community. Please read our [contributing guide](https://github.com/nanoapi-io/napi/blob/main/.github/CONTRIBUTING.md) for details on how to get involved.
 
+### Setting up the Development Environment
+
+1. Fork the repository
+
+2. Clone your forked repository:
+
+```bash
+git clone https://github.com/your-username/napi.git
+cd napi
+```
+
+3. Install dependencies:
+
+```bash
+npm install
+```
+
+### Running the Project
+
+The project consists of two main parts: the frontend in the `packages/app` folder and the CLI in the `packages/cli` folder.
+
+#### Running the Frontend
+
+In your first terminal:
+
+```bash
+npm run dev:app
+```
+
+This will start the Vite development server on http://localhost:3001
+
+#### Running the CLI with Examples
+
+In a second terminal, you can run commands using the examples and start the local server. Here's how to do it on different platforms:
+
+##### Windows
+
+```bash
+# Initialize a project (replace with your actual path)
+npm run dev:cli -- init -- --workdir="C:\Users\your-username\Projects\napi\examples\node\express"
+
+# Open the UI configuration
+npm run dev:cli -- split configure -- --workdir="C:\Users\your-username\Projects\napi\examples\node\express"
+```
+
+##### Linux/macOS
+
+```bash
+# Initialize a project (replace with your actual path)
+npm run dev:cli -- init -- --workdir="/home/your-username/projects/napi/examples/node/express"
+
+# Open the UI configuration
+npm run dev:cli -- split configure -- --workdir="/home/your-username/projects/napi/examples/node/express"
+```
+
+### Example Project Structure
+
+The `examples/node/express` directory contains a sample Express.js application that you can use for testing. After running the `init` command, it will create a `.napirc` file in the example project with the following configuration:
+
+```json
+{
+  "entrypoint": "src/index.js",
+  "out": "napi_dist"
+}
+```
+
+This configuration tells napi where to find the main entry point of the application and where to output the generated microservices.
+
+> **Note**: Always use absolute paths when specifying the `workdir` parameter. Replace the example paths above with the actual full path to your project directory.
+
 ## License
 
 `napi` is licensed under the [Sustainable Use License](https://github.com/nanoapi-io/napi/blob/main/LICENSE.md).

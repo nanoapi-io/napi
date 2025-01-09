@@ -17,7 +17,7 @@ export const syncSchema = z.object({
       path: z.string(),
       method: z.enum(["GET", "POST", "PUT", "DELETE", "PATCH"]).optional(),
       group: z.string().optional(),
-    }),
+    })
   ),
 });
 
@@ -29,9 +29,16 @@ export const splitSchema = z.object({
 });
 
 function isValidFilePath(filePath: string) {
+  // Try with original path
   if (!fs.existsSync(filePath)) {
-    return false;
+    // Try with relative path
+    const relativePath = path.relative(process.cwd(), filePath);
+    if (!fs.existsSync(relativePath)) {
+      return false;
+    }
+    filePath = relativePath;
   }
+
   try {
     if (!fs.statSync(filePath).isFile()) {
       return false;
@@ -39,5 +46,6 @@ function isValidFilePath(filePath: string) {
   } catch {
     return false;
   }
-  return path.isAbsolute(filePath) && !/[<>:"|?*]/.test(filePath);
+
+  return path.isAbsolute(filePath) || process.platform === "win32";
 }
