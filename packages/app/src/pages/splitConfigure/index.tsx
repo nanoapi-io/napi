@@ -5,7 +5,6 @@ import { scanCodebase } from "../../service/api/splitApi";
 import { splitCodebase } from "../../service/api/splitApi";
 import { syncEndpoints } from "../../service/api/splitApi";
 import { Endpoint } from "../../service/api/types";
-import { ReactFlowSkeleton } from "../../components/ReactFlow/Skeleton";
 import ReactFlowLayout from "../../layout/ReactFlow";
 
 export default function SplitConfigure() {
@@ -95,10 +94,9 @@ export default function SplitConfigure() {
   }, []);
 
   return (
-    <ReactFlowLayout>
-      {firstLoading ? (
-        <ReactFlowSkeleton />
-      ) : (
+    <ReactFlowLayout
+      busy={firstLoading}
+      chartSlot={
         <SplitConfigureTree
           busy={busy}
           endpoints={endpoints}
@@ -107,7 +105,7 @@ export default function SplitConfigure() {
           onSync={handleSync}
           onSplit={handleSplit}
         />
-      )}
-    </ReactFlowLayout>
+      }
+    />
   );
 }

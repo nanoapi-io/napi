@@ -1,24 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { getProjectOverview } from "../service/api/visualizerApi";
 import { toast } from "react-toastify";
-import VisualizerTree from "../components/ReactFlow/VisualizerTree/VisualizerTree";
 import ReactFlowLayout from "../layout/ReactFlow";
+// import FileExplorer from "../components/Arborist/FileExplorer";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
+import { VisualizerFile } from "../service/api/types";
+import { Outlet } from "react-router";
 
 export default function BaseVisualizer() {
   const initialized = useRef(false);
 
-  const [firstLoading, setFirstLoading] = useState<boolean>(false);
+  const [busy, setBusy] = useState<boolean>(false);
 
   const [files, setFiles] = useState<
-    { path: string; isFocused: boolean; isSelected: boolean }[]
+    (VisualizerFile & { isFocused?: boolean })[]
   >([]);
-
-  const [height, setHeight] = useState(0);
 
   useEffect(() => {
     async function handleOnLoad() {
-      setFirstLoading(true);
+      setBusy(true);
       try {
         const projectPromise = getProjectOverview();
         toast.promise(projectPromise, {
@@ -29,13 +29,9 @@ export default function BaseVisualizer() {
 
         const visualizerFiles = (await projectPromise).files;
 
-        setFiles(
-          visualizerFiles.map((file) => {
-            return { path: file.path, isFocused: false, isSelected: false };
-          }),
-        );
+        setFiles(visualizerFiles);
       } finally {
-        setFirstLoading(false);
+        setBusy(false);
       }
     }
 
@@ -45,12 +41,31 @@ export default function BaseVisualizer() {
     }
   }, []);
 
+  const [focusedPath, setFocusedPath] = useState<string | undefined>(undefined);
+
   return (
     <ReactFlowLayout
-      busy={firstLoading}
-      sideBarSlot={<FileExplorer height={height} files={files} />}
-      chartSlot={<VisualizerTree busy={firstLoading} visualizerFiles={[]} />}
-      onHeightUpdate={setHeight}
+      busy={busy}
+      // sideBarSlot={<FileExplorer height={height} width={350} files={files} />}
+      sideBarSlot={
+        <FileExplorer
+          files={files}
+          focusedId={focusedPath}
+          onNodeFocus={setFocusedPath}
+          onNodeUnfocus={() => setFocusedPath(undefined)}
+        />
+      }
+      chartSlot={
+        <Outlet
+          context={{
+            busy,
+            files,
+            focusedPath,
+            onNodeFocus: setFocusedPath,
+            onNodeUnfocus: () => setFocusedPath(undefined),
+          }}
+        />
+      }
     />
   );
 }

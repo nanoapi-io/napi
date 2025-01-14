@@ -7,7 +7,6 @@ export default function ReactFlowLayout(props: {
   busy?: boolean;
   sideBarSlot?: React.ReactNode;
   chartSlot: React.ReactNode;
-  onHeightUpdate?: (height: number) => void;
 }) {
   const themeContext = useContext(ThemeContext);
 
@@ -17,13 +16,10 @@ export default function ReactFlowLayout(props: {
 
   useEffect(() => {
     if (containerRef.current) {
-      const computedHeight = window.getComputedStyle(
+      const { height: computedHeight } = window.getComputedStyle(
         containerRef.current,
-      ).height;
+      );
       setHeight(computedHeight);
-      if (props.onHeightUpdate) {
-        props.onHeightUpdate(parseInt(computedHeight, 10));
-      }
     }
   }, []);
 
@@ -60,8 +56,8 @@ export default function ReactFlowLayout(props: {
         </a>
       </div>
       <div ref={containerRef} className="grow flex gap-3 mx-5 mb-5">
-        <div className="flex flex-col justify-between bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl p-3">
-          <div />
+        <div className="flex flex-col gap-2 bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl p-3">
+          <div className="grow" />
           <div className="flex flex-col space-y-2 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 pt-2 pb-1 rounded-xl">
             <Button
               variant="ghost"
@@ -105,19 +101,17 @@ export default function ReactFlowLayout(props: {
             </Button>
           </div>
         </div>
-        <div
-          className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl overflow-hidden"
-          // We need to set the height and witdth as style attributes for reactflow to work
-          // https://reactflow.dev/learn "The <ReactFlow /> component must be wrapped in an element with a width and height."
-          style={{ height, width: "100vw" }}
-        >
+        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl overflow-hidden">
           {props.busy ? (
             <ReactFlowSkeleton />
           ) : (
             <>
               {props.sideBarSlot && (
                 <div
-                  className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark shadow-lg absolute top-0 left-0 z-10 h-full pl-2 py-2  transition-transform duration-300 ${isCollapsed ? "-translate-x-full" : "translate-x-0"}`}
+                  className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark shadow-lg absolute top-0 left-0 z-10 h-full px-2 py-2  transition-transform duration-300 ${isCollapsed ? "-translate-x-full" : "translate-x-0"}`}
+                  // We need to set the height as style attributes for reactflow to work
+                  // https://reactflow.dev/learn "The <ReactFlow /> component must be wrapped in an element with a width and height."
+                  style={{ height }}
                 >
                   <Button
                     className="absolute text-text-light dark:text-text-dark top-5 right-0 p-0 translate-x-full z-20"

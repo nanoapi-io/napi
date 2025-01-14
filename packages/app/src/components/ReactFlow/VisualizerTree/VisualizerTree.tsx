@@ -14,7 +14,6 @@ import { useEffect, useState } from "react";
 import FileNode from "./FileNode";
 import { layoutNodesAndEdges } from "../../../service/dagree";
 import Controls from "../Controls";
-import Arborist from "../../Arborist/Arborist";
 
 export default function VisualizerTree(props: {
   busy: boolean;
@@ -177,7 +176,6 @@ export default function VisualizerTree(props: {
       onNodeMouseLeave={onNodeMouseLeave}
       fitView
     >
-      <Arborist nodes={nodes} />
       <Controls
         busy={props.busy}
         reactFlow={reactFlow}

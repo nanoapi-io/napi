@@ -11,8 +11,9 @@ import SplitConfigure from "./pages/splitConfigure";
 import { createHashRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
-import Visualizer from "./pages/visualizer/index";
 import BaseVisualizer from "./pages/visualizer";
+import Visualizer from "./pages/visualizer/index";
+import VisualizerFile from "./pages/visualizer/file";
 
 const router = createHashRouter([
   {
@@ -29,7 +30,7 @@ const router = createHashRouter([
       },
       {
         path: "/visualizer/:file",
-        element: <div>test file</div>,
+        element: <VisualizerFile />,
       },
     ],
   },

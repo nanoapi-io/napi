@@ -25,11 +25,12 @@ export default function FileNode(
         type="target"
         position={props.targetPosition || Position.Top}
         isConnectable={props.isConnectable}
-        className="border border-gray-light dark:border-gray-dark"
+        className="border-0 bg-transparent"
+        // className="border border-gray-light dark:border-gray-dark"
       />
       <Link
         to={encodeURIComponent(props.data.path)}
-        className="text-center p-5 hover:underline"
+        className="text-center p-5"
       >
         {props.data.path.length > maxPathLength ? (
           <Tooltip content={props.data.path}>
@@ -43,7 +44,8 @@ export default function FileNode(
         type="source"
         position={props.sourcePosition || Position.Bottom}
         isConnectable={props.isConnectable}
-        className="border border-gray-light dark:border-gray-dark"
+        className="border-0 bg-transparent"
+        // className="border border-gray-light dark:border-gray-dark"
       />
     </div>
   );
