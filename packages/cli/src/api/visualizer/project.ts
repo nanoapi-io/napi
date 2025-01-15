@@ -8,7 +8,7 @@ export function getProjectOverview(
 ) {
   const dir = path.dirname(napiConfig.entrypoint);
 
-  const projectOverview = new ProjectOverview(dir);
+  const projectOverview = new ProjectOverview(dir, napiConfig);
 
   return { files: projectOverview.files };
 }

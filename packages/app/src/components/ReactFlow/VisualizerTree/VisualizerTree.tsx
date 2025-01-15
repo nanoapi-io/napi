@@ -37,23 +37,25 @@ export default function VisualizerTree(props: {
   }, [props.visualizerFiles]);
 
   function computeNodesAndEdgesFromFiles(files: VisualizerFile[]) {
-    const newNodes: Node<{
-      path: string;
-      isBeingDragged: boolean;
-      isFocused: boolean;
-    }>[] = [];
+    const newNodes: Node<
+      VisualizerFile & {
+        isBeingDragged: boolean;
+        isFocused: boolean;
+      } & Record<string, unknown>
+    >[] = [];
     const newEdges: Edge[] = [];
 
     files.forEach((file) => {
-      const node: Node<{
-        path: string;
-        isBeingDragged: boolean;
-        isFocused: boolean;
-      }> = {
+      const node: Node<
+        VisualizerFile & {
+          isBeingDragged: boolean;
+          isFocused: boolean;
+        } & Record<string, unknown>
+      > = {
         id: file.path,
         position: { x: 0, y: 0 },
         data: {
-          path: file.path,
+          ...file,
           isBeingDragged: false,
           isFocused: false,
         },
@@ -86,11 +88,12 @@ export default function VisualizerTree(props: {
       newEdges,
       direction,
     ) as {
-      nodes: Node<{
-        path: string;
-        isBeingDragged: boolean;
-        isFocused: boolean;
-      }>[];
+      nodes: Node<
+        VisualizerFile & {
+          isBeingDragged: boolean;
+          isFocused: boolean;
+        } & Record<string, unknown>
+      >[];
       edges: Edge[];
     };
 
@@ -111,11 +114,12 @@ export default function VisualizerTree(props: {
       edges,
       direction,
     ) as {
-      nodes: Node<{
-        path: string;
-        isBeingDragged: boolean;
-        isFocused: boolean;
-      }>[];
+      nodes: Node<
+        VisualizerFile & {
+          isBeingDragged: boolean;
+          isFocused: boolean;
+        } & Record<string, unknown>
+      >[];
       edges: Edge[];
     };
     setNodes(layoutedNodes);

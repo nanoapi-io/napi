@@ -1,5 +1,14 @@
 {
   "entrypoint": "src/main.ts",
   "out": "napi_dist",
-  "openaiApiKeyFilePath": "../../.OPENAIKEY"
+  "openaiApiKeyFilePath": "../../.OPENAIKEY",
+  "maxCharPerFile": {
+    "warning": 1000,
+    "error": 2000
+  },
+  "maxLinePerFile": {
+    "warning": 100,
+    "error": 200
+  },
+  "maxDepPerFile": 5
 }

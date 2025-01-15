@@ -5,8 +5,19 @@ import { z } from "zod";
 export const localConfigSchema = z.object({
   entrypoint: z.string(),
   out: z.string(),
-  openaiApiKey: z.string().optional(),
-  openaiApiKeyFilePath: z.string().optional(),
+  openai: z
+    .object({
+      apiKey: z.string().optional(),
+      apiKeyFilePath: z.string().optional(),
+    })
+    .optional(),
+  visualizer: z
+    .object({
+      targetMaxCharInFile: z.number().optional(),
+      targetMaxLineInFile: z.number().optional(),
+      targetMaxDepPerFile: z.number().optional(),
+    })
+    .optional(),
 });
 
 export const napiConfigFileName = ".napirc";
@@ -47,11 +58,11 @@ export function getOpenaiApiKeyFromConfig(
   workdir: string,
   napiConfig: z.infer<typeof localConfigSchema>,
 ) {
-  if (napiConfig.openaiApiKey) return napiConfig.openaiApiKey;
+  if (napiConfig.openai?.apiKey) return napiConfig.openai.apiKey;
 
-  if (napiConfig.openaiApiKeyFilePath) {
+  if (napiConfig.openai?.apiKeyFilePath) {
     // check if file exists (use workdir)
-    const filePath = path.join(workdir, napiConfig.openaiApiKeyFilePath);
+    const filePath = path.join(workdir, napiConfig.openai.apiKeyFilePath);
 
     // check if file exists
     if (fs.existsSync(filePath)) {
