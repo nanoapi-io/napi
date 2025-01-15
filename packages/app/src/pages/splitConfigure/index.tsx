@@ -95,9 +95,9 @@ export default function SplitConfigure() {
 
   return (
     <ReactFlowLayout
-      busy={firstLoading}
       chartSlot={
         <SplitConfigureTree
+          loading={firstLoading}
           busy={busy}
           endpoints={endpoints}
           isOutOfSynced={isOutOfSynced}

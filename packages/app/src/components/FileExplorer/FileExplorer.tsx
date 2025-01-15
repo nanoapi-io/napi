@@ -1,6 +1,7 @@
-import { Button, TextField, Tooltip } from "@radix-ui/themes";
+import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import { FileExplorerSkeleton } from "./Skeleton";
 
 interface FileProp {
   path: string;
@@ -13,11 +14,13 @@ interface TreeData {
 }
 
 export default function FileExplorer(props: {
+  busy: boolean;
   files: FileProp[];
   focusedId?: string;
   onNodeFocus: (id: string) => void;
   onNodeUnfocus: (id: string) => void;
 }) {
+  const [isOpen, setIsOpen] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
@@ -115,34 +118,76 @@ export default function FileExplorer(props: {
   }, [props.files, search]);
 
   return (
-    <div className="flex flex-col gap-2 px-2">
-      <TextField.Root
-        placeholder="Search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      >
-        <TextField.Slot>
+    <div className="h-full flex flex-col">
+      <div className="flex justify-end">
+        <Button
+          className="text-text-light dark:text-text-dark p-0 mx-2 my-1"
+          size="1"
+          onClick={() => setIsOpen(!isOpen)}
+          variant="ghost"
+          radius="full"
+        >
           <svg
-            width="20px"
-            height="20px"
+            width="40"
+            height="40"
             viewBox="0 0 24 24"
             fill="none"
-            xmlns="http://www.w3.org/2000/svg"
             stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" />
+            {isOpen ? (
+              <path d="M15 6L9 12L15 18" />
+            ) : (
+              <path d="M9 6L15 12L9 18" />
+            )}
           </svg>
-        </TextField.Slot>
-      </TextField.Root>
-      <ListElement
-        nodes={treeData}
-        focusedId={props.focusedId}
-        onNodeFocus={props.onNodeFocus}
-        onNodeUnfocus={props.onNodeUnfocus}
-      />
+        </Button>
+      </div>
+
+      <div
+        style={{ width: isOpen ? "300px" : "0px" }}
+        className="grow flex flex-col gap-4 overflow-hidden transition-all duration-300 my-2"
+      >
+        {props.busy ? (
+          <FileExplorerSkeleton />
+        ) : (
+          <>
+            <TextField.Root
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className={`transition-all duration-300 overflow-hidden ${!isOpen && "w-0"}`}
+            >
+              <TextField.Slot className="w-full">
+                <svg
+                  width="20px"
+                  height="20px"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" />
+                </svg>
+              </TextField.Slot>
+            </TextField.Root>
+            <ScrollArea scrollbars="vertical">
+              <ListElement
+                nodes={treeData}
+                focusedId={props.focusedId}
+                onNodeFocus={props.onNodeFocus}
+                onNodeUnfocus={props.onNodeUnfocus}
+              />
+            </ScrollArea>
+          </>
+        )}
+      </div>
     </div>
   );
 }

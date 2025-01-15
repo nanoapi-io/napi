@@ -1,64 +1,31 @@
 import { Button } from "@radix-ui/themes";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext } from "react";
 import { ThemeContext } from "../contexts/ThemeContext";
-import { ReactFlowSkeleton } from "../components/ReactFlow/Skeleton";
 
 export default function ReactFlowLayout(props: {
-  busy?: boolean;
   sideBarSlot?: React.ReactNode;
   chartSlot: React.ReactNode;
 }) {
   const themeContext = useContext(ThemeContext);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  // Set to 0px initially, and then update it to the actual height with the useEffect
-  const [height, setHeight] = useState("0px");
-
-  useEffect(() => {
-    if (containerRef.current) {
-      const { height: computedHeight } = window.getComputedStyle(
-        containerRef.current,
-      );
-      setHeight(computedHeight);
-    }
-  }, []);
-
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark">
-      <div className="px-5 flex items-center gap-10 py-2">
-        <a
-          className="flex items-center gap-1 text-gray-light dark:text-gray-dark no-underline	"
-          href="https://nanoapi.io"
-          target="_blank"
-        >
-          <img src="/logo.png" alt="logo" className="w-8 h-8" />
-          <span className="text-xl font-bold">NanoAPI</span>
-        </a>
-        <a
-          href="https://nanoapi.io/docs"
-          target="_blank"
-          className="text-gray-light dark:text-gray-dark no-underline hover:underline"
-        >
-          Documentation
-        </a>
-        <a
-          href="https://nanoapi.io/docs/faqs"
-          target="_blank"
-          className="text-gray-light dark:text-gray-dark no-underline hover:underline"
-        >
-          Help
-        </a>
-      </div>
-      <div ref={containerRef} className="grow flex gap-3 mx-5 mb-5">
-        <div className="flex flex-col gap-2 bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl p-3">
-          <div className="grow" />
-          <div className="flex flex-col space-y-2 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 pt-2 pb-1 rounded-xl">
+    <div className="h-screen grow flex gap-3 bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark px-4 py-3">
+      {props.sideBarSlot && (
+        <div className="flex flex-col gap-2 bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl px-2 py-2">
+          {props.sideBarSlot}
+        </div>
+      )}
+      <div className="flex w-full flex-col gap-2">
+        <div className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl flex justify-between items-center px-2 py-2 ">
+          <a
+            className="flex items-center gap-1 text-gray-light dark:text-gray-dark no-underline	"
+            href="https://nanoapi.io"
+            target="_blank"
+          >
+            <img src="/logo.png" alt="logo" className="w-8 h-8" />
+            <span className="text-xl font-bold">NanoAPI</span>
+          </a>
+          <div className="flex gap-4 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 py-2 rounded-xl">
             <Button
               variant="ghost"
               size="1"
@@ -102,47 +69,7 @@ export default function ReactFlowLayout(props: {
           </div>
         </div>
         <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl overflow-hidden">
-          {props.busy ? (
-            <ReactFlowSkeleton />
-          ) : (
-            <>
-              {props.sideBarSlot && (
-                <div
-                  className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark shadow-lg absolute top-0 left-0 z-10 h-full px-2 py-2  transition-transform duration-300 ${isCollapsed ? "-translate-x-full" : "translate-x-0"}`}
-                  // We need to set the height as style attributes for reactflow to work
-                  // https://reactflow.dev/learn "The <ReactFlow /> component must be wrapped in an element with a width and height."
-                  style={{ height }}
-                >
-                  <Button
-                    className="absolute text-text-light dark:text-text-dark top-5 right-0 p-0 translate-x-full z-20"
-                    onClick={toggleSidebar}
-                    variant="ghost"
-                    radius="full"
-                  >
-                    <svg
-                      width="40"
-                      height="40"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      {isCollapsed ? (
-                        <path d="M9 6L15 12L9 18" />
-                      ) : (
-                        <path d="M15 6L9 12L15 18" />
-                      )}
-                    </svg>
-                  </Button>
-                  {props.sideBarSlot}
-                </div>
-              )}
-              {props.chartSlot}
-            </>
-          )}
+          {props.chartSlot}
         </div>
       </div>
     </div>

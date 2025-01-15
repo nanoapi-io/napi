@@ -15,6 +15,7 @@ import FileNode from "../../components/ReactFlow/VisualizerTree/FileNode";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import Controls from "../../components/ReactFlow/Controls";
 import { useOutletContext } from "react-router";
+import { ReactFlowSkeleton } from "../../components/ReactFlow/Skeleton";
 
 export default function Visualizer() {
   const context = useOutletContext<{
@@ -39,11 +40,15 @@ export default function Visualizer() {
   const [direction, setDirection] = useState<"TB" | "LR">("TB");
 
   useEffect(() => {
-    const element = document.querySelector(".react-flow__panel") as HTMLElement;
-    if (element) {
-      element.style.display = "none";
+    if (!context.busy) {
+      const element = document.querySelector(
+        ".react-flow__panel",
+      ) as HTMLElement;
+      if (element) {
+        element.style.display = "none";
+      }
     }
-  }, []);
+  }, [context.busy]);
 
   useEffect(() => {
     computeNodesAndEdgesFromFiles(context.files);
@@ -170,6 +175,10 @@ export default function Visualizer() {
 
   function onNodeMouseLeave() {
     context.onNodeUnfocus();
+  }
+
+  if (context.busy) {
+    return <ReactFlowSkeleton />;
   }
 
   return (

@@ -17,8 +17,10 @@ import GroupNode from "./GroupNode";
 import EndpointNode from "./EndpointNode";
 import SmoothEdge from "../SmoothEdge";
 import Controls from "../Controls";
+import { ReactFlowSkeleton } from "../Skeleton";
 
 export default function SplitConfigureTree(props: {
+  loading: boolean;
   busy: boolean;
   endpoints: Endpoint[];
   isOutOfSynced: boolean;
@@ -190,11 +192,15 @@ export default function SplitConfigureTree(props: {
   }
 
   useEffect(() => {
-    const element = document.querySelector(".react-flow__panel") as HTMLElement;
-    if (element) {
-      element.style.display = "none";
+    if (!props.loading) {
+      const element = document.querySelector(
+        ".react-flow__panel",
+      ) as HTMLElement;
+      if (element) {
+        element.style.display = "none";
+      }
     }
-  }, []);
+  }, [props.loading]);
 
   function onNodeDragStart(_event: React.MouseEvent, node: Node) {
     setNodes((nds) =>
@@ -214,6 +220,10 @@ export default function SplitConfigureTree(props: {
           : n,
       ),
     );
+  }
+
+  if (props.loading) {
+    return <ReactFlowSkeleton />;
   }
 
   return (

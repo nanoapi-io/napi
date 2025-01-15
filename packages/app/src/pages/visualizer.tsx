@@ -45,10 +45,9 @@ export default function BaseVisualizer() {
 
   return (
     <ReactFlowLayout
-      busy={busy}
-      // sideBarSlot={<FileExplorer height={height} width={350} files={files} />}
       sideBarSlot={
         <FileExplorer
+          busy={busy}
           files={files}
           focusedId={focusedPath}
           onNodeFocus={setFocusedPath}
