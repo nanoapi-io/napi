@@ -2,10 +2,8 @@ import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
+import { VisualizerFile } from "../../service/api/types";
 
-interface FileProp {
-  path: string;
-}
 interface TreeData {
   id: string;
   level: number;
@@ -15,7 +13,7 @@ interface TreeData {
 
 export default function FileExplorer(props: {
   busy: boolean;
-  files: FileProp[];
+  files: VisualizerFile[];
   focusedId?: string;
   onNodeFocus: (id: string) => void;
   onNodeUnfocus: (id: string) => void;
@@ -24,7 +22,7 @@ export default function FileExplorer(props: {
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
-  function buildTreeData(files: FileProp[]): TreeData[] {
+  function buildTreeData(files: VisualizerFile[]): TreeData[] {
     let rootNodes: TreeData[] = [];
 
     files.forEach((file) => {

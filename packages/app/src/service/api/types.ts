@@ -11,6 +11,8 @@ export interface VisualizerFile {
   path: string;
   sourceCode: string;
   importSources: string[];
+  isUnused: boolean;
+  circularDependencySources: string[];
   analysis: {
     tooManyChar: {
       value: number;
@@ -27,7 +29,5 @@ export interface VisualizerFile {
       target: number;
       result: "ok" | "warning" | "error";
     };
-    isUnused: boolean;
-    circularDependencySources: string[];
   };
 }

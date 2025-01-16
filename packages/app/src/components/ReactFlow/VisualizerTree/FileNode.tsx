@@ -1,4 +1,4 @@
-import { Button, Popover, Tooltip } from "@radix-ui/themes";
+import { Button, Tooltip } from "@radix-ui/themes";
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { Link } from "react-router";
 import { VisualizerFile } from "../../../service/api/types";
@@ -26,7 +26,7 @@ export default function FileNode(
   function getWarnings() {
     const warnings: string[] = [];
 
-    if (props.data.analysis.isUnused) {
+    if (props.data.isUnused) {
       warnings.push("This file is unused");
     }
 
@@ -72,7 +72,7 @@ export default function FileNode(
       );
     }
 
-    props.data.analysis.circularDependencySources.forEach((source) => {
+    props.data.circularDependencySources.forEach((source) => {
       errors.push(`This file has a circular dependency with ${source}.`);
     });
 
@@ -81,20 +81,33 @@ export default function FileNode(
 
   return (
     <div
-      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-border-light dark:border-border-dark ${props.data.isBeingDragged && "bg-blue-100 dark:bg-blue-900 shadow-lg"} ${props.data.isFocused && "border-primary-light dark:border-primary-dark"}`}
+      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-border-light dark:border-border-dark ${props.data.isBeingDragged && "bg-blue-100 dark:bg-blue-900 shadow-lg"} ${props.data.isFocused && "border-2 border-primary-light dark:border-primary-dark"}`}
     >
       <Handle
         type="target"
         position={props.targetPosition || Position.Top}
         isConnectable={props.isConnectable}
         className="border-0 bg-transparent"
-        // className="border border-gray-light dark:border-gray-dark"
       />
-      {getWarnings().length > 0 && (
-        <Popover.Root>
-          <Popover.Trigger>
-            <div className="flex justify-end m-1">
-              <Button variant="ghost" color="yellow" radius="full" size="1">
+      <div className="absolute top-0 right-0 flex gap-1 mx-1 my-1">
+        {getWarnings().length > 0 && (
+          <Tooltip
+            content={
+              <ul className="text-md">
+                {getWarnings().map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            }
+          >
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                color="yellow"
+                radius="full"
+                size="1"
+                className="bg-transparent"
+              >
                 <svg
                   width="16px"
                   height="16px"
@@ -108,21 +121,26 @@ export default function FileNode(
                 </svg>
               </Button>
             </div>
-          </Popover.Trigger>
-          <Popover.Content>
-            <ul>
-              {getWarnings().map((warning) => (
-                <li key={warning}>{warning}</li>
-              ))}
-            </ul>
-          </Popover.Content>
-        </Popover.Root>
-      )}
-      {getErrors().length > 0 && (
-        <Popover.Root>
-          <Popover.Trigger>
-            <div className="flex justify-end m-2">
-              <Button variant="ghost" color="tomato" radius="full" size="1">
+          </Tooltip>
+        )}
+        {getErrors().length > 0 && (
+          <Tooltip
+            content={
+              <ul className="text-md">
+                {getErrors().map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            }
+          >
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                color="tomato"
+                radius="full"
+                size="1"
+                className="bg-transparent"
+              >
                 <svg
                   width="16px"
                   height="16px"
@@ -136,16 +154,10 @@ export default function FileNode(
                 </svg>
               </Button>
             </div>
-          </Popover.Trigger>
-          <Popover.Content>
-            <ul>
-              {getErrors().map((error) => (
-                <li key={error}>{error}</li>
-              ))}
-            </ul>
-          </Popover.Content>
-        </Popover.Root>
-      )}
+          </Tooltip>
+        )}
+      </div>
+
       <Link
         to={encodeURIComponent(props.data.path)}
         className="text-center p-5"
@@ -158,12 +170,12 @@ export default function FileNode(
           props.data.path
         )}
       </Link>
+
       <Handle
         type="source"
         position={props.sourcePosition || Position.Bottom}
         isConnectable={props.isConnectable}
         className="border-0 bg-transparent"
-        // className="border border-gray-light dark:border-gray-dark"
       />
     </div>
   );
