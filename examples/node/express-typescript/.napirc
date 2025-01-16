@@ -1,5 +1,10 @@
 {
   "entrypoint": "src/index.ts",
   "out": "napi_dist",
-  "openaiApiKeyFilePath": "../../.OPENAIKEY"
+  "openaiApiKeyFilePath": "../../.OPENAIKEY",
+  "audit": {
+    "targetMaxCharInFile": 5000,
+    "targetMaxLineInFile": 500,
+    "targetMaxDepPerFile": 4
+  }
 }

@@ -2,19 +2,22 @@
 
 # napi - Next-Level Visual Tooling For API Codebases
 
-`napi` is a versatile tool built by NanoAPI and designed to automatically refactor large monolithic codebases into smaller, more manageable microservices. With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
+`napi` is a versatile tool built by NanoAPI and designed to automatically refactor large monolithic codebases into smaller, more manageable microservices.
+With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
+It also provides a new auditing feature to identify parts of your codebase that could benefit from improvements.
 
 ![NanoAPI UI Overview](/media/hero-app.png)
 
 ## Features
 
-- **🔍 Inspect**: Analyze your codebase to identify API endpoints, middleware, and other API-specific components.
+- **🚨 Audit**: Pinpoint areas of your code that need refactoring or cleanup.
 - **📝 Refactor**: Split your monolith into microservices using the UI and annotations in the code.
 - **🏗️ Build**: Generate modular microservices ready for deployment.
 - **⚙️ Integrate**: Use CLI commands compatible with all CI/CD workflows for automation.
 
 ## Why `napi`?
 
+- Identifies problematic code and potential improvements early.
 - Simplifies the process of breaking down monoliths into microservices.
 - Improves understanding, maintainability, and robustness at both the architecture and code level.
 - Reduces dependency on consultants or contractors for complex refactoring tasks.
@@ -71,41 +74,15 @@ Before reaching out, check our [FAQ section](#faqs) for answers to common questi
 
 For the latest updates, visit our [project board](/projects).
 
-## Installation and Quick Start
+## Installation
 
 Ensure you have Node.js (>=18) and npm installed.
 
 https://nodejs.org/en
 
-### Installation
-
 ```bash
 npm install -g @nanoapi.io/napi
 ```
-
-### Getting Started
-
-```bash
-napi init
-```
-
-This will initialize the `.napirc` configuration file, which is essential for managing your project’s paths and settings. All future CLI commands, including code splitting and UI configuration, rely on this file.
-
-NanoAPI relies on **annotations** to split your codebase. Annotations mark API endpoints, methods, and groups in your code, guiding how monolithic projects are refactored into microservices.
-
-> **Important:** Before running `napi split run`, you need to **annotate your codebase**. If you're not familiar with the process, see [Split with Annotations](#split-with-annotations) for a detailed guide and examples.
-
-```bash
-napi split configure
-```
-
-This will launch the configuration UI. It allows you to configure and preview how your codebase will be split.
-
-```bash
-napi split run
-```
-
-This command allow you to split your codebase. You can use this in your CI pipeline if needed.
 
 ## CLI Usage
 
@@ -117,39 +94,39 @@ For a full list of commands, run:
 napi --help
 ```
 
-## Core CLI Commands
+## Overview of all commands
 
-### Initialize Project
+### `napi init`
 
-Initialize the project and generate the .napirc configuration file. This step is required before running any other command.
-
-```bash
-napi init
-```
+Initialize the project. This step is required before running any other command.
 
 This will create a .napirc configuration file in the project root, storing paths and settings necessary for further commands.
 
-### Launch UI for Split Configuration
+### `napi audit view`
+
+Scan and audit your codebase for potential improvements, vulnerabilities, and maintainability issues. This command opens the NanoAPI UI in your default browser, providing a clear overview of what areas of your code would benefit most from refactoring or cleanup.
+
+> **Important**: Run napi audit view periodically, especially before major refactoring efforts, to ensure your code is in good shape. It will soon also be possible to integrate that command into CI/CD workflows to catch code-quality issues early.
+
+### `napi split annotate openai`
+
+Annotate your API automatically using OpenAI. This is a great way to get started quickly for large or complex codebases.
+
+> **Important:** LLMs can make mistakes. We recommend reviewing AI-generated annotations carefully before running `napi split run` to avoid unexpected behavior in the resulting microservices.
+
+> **Important** We recommand you to read [Split with Annotations](#split-with-annotations) before generating annotations.
+
+### `napi split configure`
 
 Open the NanoAPI UI in your default browser to configure and organize API endpoints visually. This interactive interface allows you to manage groups, refactor, and preview microservices before the split.
 
-```bash
-napi split configure
-```
+> **Important:** This process relies on annotation (see [Split with Annotations](#split-with-annotations)).
 
-The UI relies on the .napirc configuration file.
-
-### Split Codebase
+### `napi split run`
 
 Split the codebase into smaller, more manageable pieces based on annotations. This is ideal for simplifying large monolithic projects.
 
 > **Important:** This process relies on annotation (see [Split with Annotations](#split-with-annotations)).
-
-```bash
-napi split run
-```
-
-Note: This command uses the .napirc configuration file.
 
 ## Split with Annotations
 
@@ -188,9 +165,11 @@ The process is as follows:
 - Annotations from different groups are removed. As well as all their dependents.
 - Unused code gets removed.
 
-#### Example
+### Example
 
-##### Input
+You can view more examples in the [examples](/examples/)
+
+#### Input
 
 ```js
 // src/api.js
@@ -211,7 +190,7 @@ app.post("/api/v1/orders", (req, res) => {
 });
 ```
 
-#### ➡️ Resulting output
+#### Resulting output ➡️
 
 ```js
 // napi_dist/0/src.js
@@ -236,52 +215,22 @@ app.post("/api/v1/orders", (req, res) => {
 });
 ```
 
+Running `napi split run` with the following annotations will generate modular services based on these annotations. You'll have a `Users` service and an `Orders` service, each containing the respective endpoint.
+
 ### How to Annotate my codebase
 
-There are three ways to annotate your code:
+There are two ways to annotate your code:
 
 #### 1. Manual Annotation
 
 Add annotations directly above relevant code blocks.
 
-#### 2. CLI + AI
+#### 2. AI Annotation
 
-Automatically generate annotations for large codebases using the CLI with AI support.
+Automatically generate annotations for large codebases using AI.
 
 ```bash
-napi split annotate openai --apiKey="sk-**"
-```
-
-**Note:** LLMs can make mistakes. We recommend reviewing AI-generated annotations carefully before running `napi split run` to avoid unexpected behavior in the resulting microservices.
-
-You can use annotations to specify how to split your code.
-Simply add them above blocks of code that is handling or registering an endpoint
-Here’s an example:
-
-```typescript
-// src/api.js
-
-// @nanoapi endpoint:/api/v1/users method:GET group:Users
-app.get("/api/v1/users", (req, res) => {
-  res.send("User data");
-});
-
-// @nanoapi endpoint:/api/v1/orders method:POST group:Orders
-app.post("/api/v1/orders", (req, res) => {
-  res.send("Order created");
-});
-```
-
-You can view more examples in the [examples](/examples/)
-
-Running `napi split run` with the following annotations will generate modular services based on these annotations. You'll have a `Users` service and an `Orders` service, each containing the respective endpoint.
-
-## Using the UI
-
-The UI allows you to organize and preview your microservices visually before finalizing the split through the CLI.
-
-```
-napi split configure
+napi split annotate openai
 ```
 
 ## CI/CD Integration

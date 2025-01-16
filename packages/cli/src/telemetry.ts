@@ -5,14 +5,19 @@ import packageJson from "../package.json";
 
 export enum TelemetryEvents {
   APP_START = "app_start",
-  INIT_COMMAND = "init_command",
-  ANNOTATE_COMMAND = "annotate_command",
-  SPLIT_COMMAND = "split_command",
-  UI_OPEN = "ui_open",
+  CLI_INIT_COMMAND = "cli_init_command",
+  CLI_SPLIT_ANNOTATE_COMMAND = "cli_split_annotate_command",
+  CLI_SPLIT_COMMAND = "cli_split_command",
+  CLI_SPLIT_CONFIGURE_COMMAND = "cli_split_configure_command",
+  CLI_AUDIT_VIEW_COMMAND = "cli_audit_view_command",
+
   API_REQUEST_CONGIG = "api_request_config",
   API_REQUEST_SCAN = "api_request_scan",
   API_REQUEST_SYNC = "api_request_sync",
   API_REQUEST_SPLIT = "api_request_split",
+
+  API_REQUEST_AUDIT_PROJECT = "api_request_audit_project",
+  API_REQUEST_AUDIT_FILE = "api_request_audit_file",
 }
 
 export interface TelemetryEvent {

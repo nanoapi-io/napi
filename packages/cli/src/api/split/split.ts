@@ -1,19 +1,21 @@
-import path from "path";
 import { z } from "zod";
-import DependencyTreeManager from "../dependencyManager/dependencyManager";
-import { cleanupOutputDir, createOutputDir } from "../helpers/file";
-import { runWithWorker, writeSplitsToDisk } from "../splitRunner/splitRunner";
-import { splitSchema } from "./helpers/validation";
+import DependencyTreeManager from "../../dependencyManager/dependencyManager";
+import { cleanupOutputDir, createOutputDir } from "../../helpers/file";
+import {
+  runWithWorker,
+  writeSplitsToDisk,
+} from "../../splitRunner/splitRunner";
+import { localConfigSchema } from "../../config/localConfig";
 
-export async function split(payload: z.infer<typeof splitSchema>) {
+export async function split(napiConfig: z.infer<typeof localConfigSchema>) {
   console.time("split command");
 
   // Get the dependency tree
   const dependencyTreeManager = new DependencyTreeManager(
-    payload.entrypointPath,
+    napiConfig.entrypoint,
   );
 
-  const outputDir = payload.outputDir || path.dirname(payload.entrypointPath);
+  const outputDir = napiConfig.out;
 
   // Clean up and prepare the output directory
   cleanupOutputDir(outputDir);
@@ -35,7 +37,7 @@ export async function split(payload: z.infer<typeof splitSchema>) {
   // Wait for all splits to be processed
   const processedSplits = await Promise.all(splits.map(async (split) => split));
 
-  writeSplitsToDisk(outputDir, payload.entrypointPath, processedSplits);
+  writeSplitsToDisk(outputDir, napiConfig.entrypoint, processedSplits);
 
   console.timeEnd("split command");
   return { groups, success: true };

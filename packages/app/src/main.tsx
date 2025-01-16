@@ -8,19 +8,31 @@ import "@xyflow/react/dist/style.css";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import SplitConfigure from "./pages/splitConfigure";
-import { createHashRouter, RouterProvider } from "react-router-dom";
-import DefaultLayout from "./layout/default";
+import { createHashRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
+import BaseAudit from "./pages/audit";
+import Audit from "./pages/audit/index";
+import AuditFile from "./pages/audit/file";
 
 const router = createHashRouter([
   {
     path: "/splitConfigure",
-    element: (
-      <DefaultLayout>
-        <SplitConfigure />
-      </DefaultLayout>
-    ),
+    element: <SplitConfigure />,
+  },
+  {
+    path: "/audit",
+    element: <BaseAudit />,
+    children: [
+      {
+        path: "/audit",
+        element: <Audit />,
+      },
+      {
+        path: "/audit/:file",
+        element: <AuditFile />,
+      },
+    ],
   },
 ]);
 

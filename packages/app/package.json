@@ -21,7 +21,7 @@
     "@xyflow/react": "^12.3.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.0.2",
+    "react-router": "^7.1.1",
     "react-toastify": "^11.0.0"
   }
 }

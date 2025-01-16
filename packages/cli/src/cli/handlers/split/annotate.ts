@@ -1,17 +1,17 @@
 import fs from "fs";
-import DependencyTreeManager from "../../dependencyManager/dependencyManager";
+import DependencyTreeManager from "../../../dependencyManager/dependencyManager";
 import OpenAI from "openai";
-import { getLanguagePlugin } from "../../languagesPlugins";
-import { File } from "../../splitRunner/types";
-import { removeIndexesFromSourceCode } from "../../helpers/file";
+import { getLanguagePlugin } from "../../../languagesPlugins";
+import { File } from "../../../splitRunner/types";
+import { removeIndexesFromSourceCode } from "../../../helpers/file";
 import prompts from "prompts";
 import yargs, { PositionalOptionsType } from "yargs";
-import { globalOptions } from "../helpers/options";
-import { TelemetryEvents, trackEvent } from "../../telemetry";
+import { globalOptions } from "../../helpers/options";
+import { TelemetryEvents, trackEvent } from "../../../telemetry";
 import {
   getConfigFromWorkDir,
   getOpenaiApiKeyFromConfig,
-} from "../../config/localConfig";
+} from "../../../config/localConfig";
 
 function removeAllAnnotations(entryPointPath: string, files: File[]) {
   const updatedFiles = files.map((file) => {
@@ -141,15 +141,15 @@ function handler(
   >,
 ) {
   const startTime = Date.now();
-  trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
-    message: "Annotate command started",
+  trackEvent(TelemetryEvents.CLI_SPLIT_ANNOTATE_COMMAND, {
+    message: "Split annotate command started",
   });
   const napiConfig = getConfigFromWorkDir(argv.workdir);
 
   if (!napiConfig) {
     console.error("Missing .napirc file in project. Run `napi init` first");
-    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
-      message: "Annotate command failed, missing .napirc file",
+    trackEvent(TelemetryEvents.CLI_SPLIT_ANNOTATE_COMMAND, {
+      message: "Split annotate command failed, missing .napirc file",
       duration: Date.now() - startTime,
     });
     return;
@@ -166,8 +166,8 @@ function handler(
     console.error(
       "Missing OpenAI API key. Please provide it via --apiKey or in a .napirc file using 'openaiApiKey' or 'openaiApiKeyFilePath'",
     );
-    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
-      message: "Annotate command failed, missing OpenAI API key",
+    trackEvent(TelemetryEvents.CLI_SPLIT_ANNOTATE_COMMAND, {
+      message: "Split annotate command failed, missing OpenAI API key",
       duration: Date.now() - startTime,
     });
     return;
@@ -175,13 +175,13 @@ function handler(
 
   try {
     annotateOpenAICommandHandler(napiConfig.entrypoint, apiKey);
-    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
-      message: "Annotate command finished",
+    trackEvent(TelemetryEvents.CLI_SPLIT_ANNOTATE_COMMAND, {
+      message: "Split annotate command finished",
       duration: Date.now() - startTime,
     });
   } catch (error) {
-    trackEvent(TelemetryEvents.ANNOTATE_COMMAND, {
-      message: "Annotate command error",
+    trackEvent(TelemetryEvents.CLI_SPLIT_ANNOTATE_COMMAND, {
+      message: "Split annotate command error",
       duration: Date.now() - startTime,
       error: error,
     });

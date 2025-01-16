@@ -1,18 +1,7 @@
-export interface Endpoint {
-  path: string;
-  method: string;
-  group?: string;
-  filePath: string;
-  parentFilePaths: string[];
-  childrenFilePaths: string[];
-}
-
 export interface AuditFile {
   path: string;
   sourceCode: string;
   importSources: string[];
-  isUnused: boolean;
-  circularDependencySources: string[];
   analysis: {
     tooManyChar: {
       value: number;
@@ -29,5 +18,7 @@ export interface AuditFile {
       target: number;
       result: "ok" | "warning" | "error";
     };
+    isUnused: boolean;
+    circularDependencySources: string[];
   };
 }
