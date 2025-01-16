@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.30] - 2025-01-16
+
 Implement audit command
 
 ## [0.0.29] - 2025-01-07
