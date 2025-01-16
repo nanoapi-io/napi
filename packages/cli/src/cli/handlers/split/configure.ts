@@ -1,8 +1,8 @@
 import yargs from "yargs";
-import { globalOptions } from "../helpers/options";
-import { TelemetryEvents, trackEvent } from "../../telemetry";
-import { getConfigFromWorkDir } from "../../config/localConfig";
-import { runServer } from "../helpers/server";
+import { globalOptions } from "../../helpers/options";
+import { TelemetryEvents, trackEvent } from "../../../telemetry";
+import { getConfigFromWorkDir } from "../../../config/localConfig";
+import { runServer } from "../../helpers/server";
 
 async function handler(
   argv: yargs.ArgumentsCamelCase<

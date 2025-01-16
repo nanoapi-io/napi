@@ -9,18 +9,18 @@ import {
   useReactFlow,
   MarkerType,
 } from "@xyflow/react";
-import { VisualizerFile } from "../../service/api/types";
+import { AuditFile } from "../../service/api/types";
 import { useEffect, useState } from "react";
-import FileNode from "../../components/ReactFlow/VisualizerTree/FileNode";
+import FileNode from "../../components/ReactFlow/AuditTree/FileNode";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import Controls from "../../components/ReactFlow/Controls";
 import { useOutletContext } from "react-router";
 import { ReactFlowSkeleton } from "../../components/ReactFlow/Skeleton";
 
-export default function Visualizer() {
+export default function Audit() {
   const context = useOutletContext<{
     busy: boolean;
-    files: VisualizerFile[];
+    files: AuditFile[];
     focusedPath: string | undefined;
     onNodeFocus: (path: string) => void;
     onNodeUnfocus: () => void;
@@ -34,7 +34,7 @@ export default function Visualizer() {
 
   const [nodes, setNodes, onNodesChange] = useNodesState<
     Node<
-      VisualizerFile & {
+      AuditFile & {
         isBeingDragged: boolean;
         isFocused: boolean;
       } & Record<string, unknown>
@@ -69,9 +69,9 @@ export default function Visualizer() {
     );
   }, [context.focusedPath]);
 
-  function computeNodesAndEdgesFromFiles(files: VisualizerFile[]) {
+  function computeNodesAndEdgesFromFiles(files: AuditFile[]) {
     const newNodes: Node<
-      VisualizerFile & {
+      AuditFile & {
         isBeingDragged: boolean;
         isFocused: boolean;
       } & Record<string, unknown>
@@ -80,7 +80,7 @@ export default function Visualizer() {
 
     files.forEach((file) => {
       const node: Node<
-        VisualizerFile & {
+        AuditFile & {
           isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>
@@ -122,7 +122,7 @@ export default function Visualizer() {
       direction,
     ) as {
       nodes: Node<
-        VisualizerFile & {
+        AuditFile & {
           isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>
@@ -141,7 +141,7 @@ export default function Visualizer() {
       direction,
     ) as {
       nodes: Node<
-        VisualizerFile & {
+        AuditFile & {
           isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>

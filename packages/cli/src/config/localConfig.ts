@@ -11,7 +11,7 @@ export const localConfigSchema = z.object({
       apiKeyFilePath: z.string().optional(),
     })
     .optional(),
-  visualizer: z
+  audit: z
     .object({
       targetMaxCharInFile: z.number().optional(),
       targetMaxLineInFile: z.number().optional(),

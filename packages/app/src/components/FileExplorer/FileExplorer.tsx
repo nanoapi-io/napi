@@ -2,7 +2,7 @@ import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
-import { VisualizerFile } from "../../service/api/types";
+import { AuditFile } from "../../service/api/types";
 
 interface TreeData {
   id: string;
@@ -13,7 +13,7 @@ interface TreeData {
 
 export default function FileExplorer(props: {
   busy: boolean;
-  files: VisualizerFile[];
+  files: AuditFile[];
   focusedId?: string;
   onNodeFocus: (id: string) => void;
   onNodeUnfocus: (id: string) => void;
@@ -22,7 +22,7 @@ export default function FileExplorer(props: {
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
-  function buildTreeData(files: VisualizerFile[]): TreeData[] {
+  function buildTreeData(files: AuditFile[]): TreeData[] {
     let rootNodes: TreeData[] = [];
 
     files.forEach((file) => {
@@ -283,7 +283,7 @@ function NodeElement(props: {
             <Link
               to={
                 params.file === props.node.id
-                  ? "/visualizer"
+                  ? "/audit"
                   : encodeURIComponent(props.node.id)
               }
               className="w-full"

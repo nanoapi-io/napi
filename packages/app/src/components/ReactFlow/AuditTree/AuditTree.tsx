@@ -9,15 +9,15 @@ import {
   useReactFlow,
   MarkerType,
 } from "@xyflow/react";
-import { VisualizerFile } from "../../../service/api/types";
+import { AuditFile } from "../../../service/api/types";
 import { useEffect, useState } from "react";
 import FileNode from "./FileNode";
 import { layoutNodesAndEdges } from "../../../service/dagree";
 import Controls from "../Controls";
 
-export default function VisualizerTree(props: {
+export default function AuditTree(props: {
   busy: boolean;
-  visualizerFiles: VisualizerFile[];
+  AuditFiles: AuditFile[];
 }) {
   const nodeTypes = {
     fileNode: FileNode,
@@ -33,12 +33,12 @@ export default function VisualizerTree(props: {
   const [direction, setDirection] = useState<"TB" | "LR">("TB");
 
   useEffect(() => {
-    computeNodesAndEdgesFromFiles(props.visualizerFiles);
-  }, [props.visualizerFiles]);
+    computeNodesAndEdgesFromFiles(props.AuditFiles);
+  }, [props.AuditFiles]);
 
-  function computeNodesAndEdgesFromFiles(files: VisualizerFile[]) {
+  function computeNodesAndEdgesFromFiles(files: AuditFile[]) {
     const newNodes: Node<
-      VisualizerFile & {
+      AuditFile & {
         isBeingDragged: boolean;
         isFocused: boolean;
       } & Record<string, unknown>
@@ -47,7 +47,7 @@ export default function VisualizerTree(props: {
 
     files.forEach((file) => {
       const node: Node<
-        VisualizerFile & {
+        AuditFile & {
           isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>
@@ -89,7 +89,7 @@ export default function VisualizerTree(props: {
       direction,
     ) as {
       nodes: Node<
-        VisualizerFile & {
+        AuditFile & {
           isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>
@@ -115,7 +115,7 @@ export default function VisualizerTree(props: {
       direction,
     ) as {
       nodes: Node<
-        VisualizerFile & {
+        AuditFile & {
           isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>

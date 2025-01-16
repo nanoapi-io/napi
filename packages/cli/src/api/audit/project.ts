@@ -1,7 +1,7 @@
 import z from "zod";
 import path from "path";
 import { localConfigSchema } from "../../config/localConfig";
-import { ProjectOverview } from "../../visualizer/projectOverview";
+import { ProjectOverview } from "../../audit/projectOverview";
 
 export function getProjectOverview(
   napiConfig: z.infer<typeof localConfigSchema>,

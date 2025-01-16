@@ -1,12 +1,12 @@
 import { Button, Tooltip } from "@radix-ui/themes";
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { Link } from "react-router";
-import { VisualizerFile } from "../../../service/api/types";
+import { AuditFile } from "../../../service/api/types";
 
 export default function FileNode(
   props: NodeProps<
     Node<
-      VisualizerFile & {
+      AuditFile & {
         isBeingDragged: boolean;
         isFocused: boolean;
       } & Record<string, unknown>

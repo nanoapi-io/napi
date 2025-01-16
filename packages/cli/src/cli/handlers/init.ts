@@ -76,10 +76,10 @@ async function handler(
     const napiConfig: z.infer<typeof localConfigSchema> = {
       entrypoint: relativeFilePath,
       out: "napi_dist",
-      visualizer: {
-        targetMaxCharInFile: 500,
-        targetMaxLineInFile: 100,
-        targetMaxDepPerFile: 10,
+      audit: {
+        targetMaxCharInFile: 5000,
+        targetMaxLineInFile: 500,
+        targetMaxDepPerFile: 4,
       },
     };
 

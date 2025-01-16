@@ -1,17 +1,17 @@
 import fs from "fs";
-import DependencyTreeManager from "../../dependencyManager/dependencyManager";
+import DependencyTreeManager from "../../../dependencyManager/dependencyManager";
 import OpenAI from "openai";
-import { getLanguagePlugin } from "../../languagesPlugins";
-import { File } from "../../splitRunner/types";
-import { removeIndexesFromSourceCode } from "../../helpers/file";
+import { getLanguagePlugin } from "../../../languagesPlugins";
+import { File } from "../../../splitRunner/types";
+import { removeIndexesFromSourceCode } from "../../../helpers/file";
 import prompts from "prompts";
 import yargs, { PositionalOptionsType } from "yargs";
-import { globalOptions } from "../helpers/options";
-import { TelemetryEvents, trackEvent } from "../../telemetry";
+import { globalOptions } from "../../helpers/options";
+import { TelemetryEvents, trackEvent } from "../../../telemetry";
 import {
   getConfigFromWorkDir,
   getOpenaiApiKeyFromConfig,
-} from "../../config/localConfig";
+} from "../../../config/localConfig";
 
 function removeAllAnnotations(entryPointPath: string, files: File[]) {
   const updatedFiles = files.map((file) => {

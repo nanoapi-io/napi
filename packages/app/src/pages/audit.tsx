@@ -1,20 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { getProjectOverview } from "../service/api/visualizerApi";
+import { getProjectOverview } from "../service/api/auditApi";
 import { toast } from "react-toastify";
 import ReactFlowLayout from "../layout/ReactFlow";
-// import FileExplorer from "../components/Arborist/FileExplorer";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
-import { VisualizerFile } from "../service/api/types";
+import { AuditFile } from "../service/api/types";
 import { Outlet } from "react-router";
 
-export default function BaseVisualizer() {
+export default function BaseAudit() {
   const initialized = useRef(false);
 
   const [busy, setBusy] = useState<boolean>(false);
 
-  const [files, setFiles] = useState<
-    (VisualizerFile & { isFocused?: boolean })[]
-  >([]);
+  const [files, setFiles] = useState<(AuditFile & { isFocused?: boolean })[]>(
+    [],
+  );
 
   useEffect(() => {
     async function handleOnLoad() {
@@ -27,9 +26,9 @@ export default function BaseVisualizer() {
           pending: "Loading project overview...",
         });
 
-        const visualizerFiles = (await projectPromise).files;
+        const AuditFiles = (await projectPromise).files;
 
-        setFiles(visualizerFiles);
+        setFiles(AuditFiles);
       } finally {
         setBusy(false);
       }

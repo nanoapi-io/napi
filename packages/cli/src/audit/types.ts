@@ -1,4 +1,4 @@
-export interface VisualizerFile {
+export interface AuditFile {
   path: string;
   sourceCode: string;
   importSources: string[];

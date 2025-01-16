@@ -1,4 +1,4 @@
-import { VisualizerFile } from "./types";
+import { AuditFile } from "./types";
 import path from "path";
 import fs from "fs";
 import { getLanguagePlugin } from "../languagesPlugins";
@@ -6,7 +6,7 @@ import { localConfigSchema } from "../config/localConfig";
 import z from "zod";
 
 export class ProjectOverview {
-  files: VisualizerFile[] = [];
+  files: AuditFile[] = [];
 
   constructor(dir: string, config: z.infer<typeof localConfigSchema>) {
     this.#init(dir, config);
@@ -33,26 +33,26 @@ export class ProjectOverview {
         analysis: {
           tooManyChar: {
             value: file.sourceCode.length,
-            target: config.visualizer?.targetMaxCharInFile || 0,
+            target: config.audit?.targetMaxCharInFile || 0,
             result: this.#getTooManyCharResult(
               file.sourceCode,
-              config.visualizer?.targetMaxCharInFile || 0,
+              config.audit?.targetMaxCharInFile || 0,
             ),
           },
           tooManyLines: {
             value: file.sourceCode.split("\n").length,
-            target: config.visualizer?.targetMaxLineInFile || 0,
+            target: config.audit?.targetMaxLineInFile || 0,
             result: this.#getTooManyLinesResult(
               file.sourceCode,
-              config.visualizer?.targetMaxLineInFile || 0,
+              config.audit?.targetMaxLineInFile || 0,
             ),
           },
           tooManyDependencies: {
             value: importSources.length,
-            target: config.visualizer?.targetMaxDepPerFile || 0,
+            target: config.audit?.targetMaxDepPerFile || 0,
             result: this.#getTooManyDependenciesResult(
               importSources,
-              config.visualizer?.targetMaxDepPerFile || 0,
+              config.audit?.targetMaxDepPerFile || 0,
             ),
           },
           // The following properties are checked later

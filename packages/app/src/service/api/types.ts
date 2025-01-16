@@ -7,7 +7,7 @@ export interface Endpoint {
   childrenFilePaths: string[];
 }
 
-export interface VisualizerFile {
+export interface AuditFile {
   path: string;
   sourceCode: string;
   importSources: string[];

@@ -2,7 +2,7 @@ import { json, Router } from "express";
 import { z } from "zod";
 import { localConfigSchema } from "../config/localConfig";
 import { splitApi } from "./split";
-import { visualizerApi } from "./visualizer";
+import { auditApi } from "./audit";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -22,7 +22,7 @@ export function getApi(napiConfig: z.infer<typeof localConfigSchema>) {
 
   api.use("/api/split", splitApi);
 
-  api.use("/api/visualizer", visualizerApi);
+  api.use("/api/audit", auditApi);
 
   return api;
 }

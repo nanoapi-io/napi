@@ -11,9 +11,9 @@ import SplitConfigure from "./pages/splitConfigure";
 import { createHashRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
-import BaseVisualizer from "./pages/visualizer";
-import Visualizer from "./pages/visualizer/index";
-import VisualizerFile from "./pages/visualizer/file";
+import BaseAudit from "./pages/audit";
+import Audit from "./pages/audit/index";
+import AuditFile from "./pages/audit/file";
 
 const router = createHashRouter([
   {
@@ -21,16 +21,16 @@ const router = createHashRouter([
     element: <SplitConfigure />,
   },
   {
-    path: "/visualizer",
-    element: <BaseVisualizer />,
+    path: "/audit",
+    element: <BaseAudit />,
     children: [
       {
-        path: "/visualizer",
-        element: <Visualizer />,
+        path: "/audit",
+        element: <Audit />,
       },
       {
-        path: "/visualizer/:file",
-        element: <VisualizerFile />,
+        path: "/audit/:file",
+        element: <AuditFile />,
       },
     ],
   },

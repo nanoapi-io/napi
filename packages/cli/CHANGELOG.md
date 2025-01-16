@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Implement audit command
+
 ## [0.0.29] - 2025-01-07
 
 Fix split command by renaming it to avoid conflicts

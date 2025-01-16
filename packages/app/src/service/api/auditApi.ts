@@ -1,7 +1,7 @@
-import { VisualizerFile } from "./types";
+import { AuditFile } from "./types";
 
 export async function getProjectOverview() {
-  const response = await fetch("/api/visualizer/project", {
+  const response = await fetch("/api/audit/project", {
     method: "GET",
   });
 
@@ -10,7 +10,7 @@ export async function getProjectOverview() {
   }
 
   const responseBody = (await response.json()) as Promise<{
-    files: VisualizerFile[];
+    files: AuditFile[];
   }>;
 
   return await responseBody;

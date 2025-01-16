@@ -1,13 +1,13 @@
 import yargs from "yargs";
-import { globalOptions } from "../helpers/options";
-import { TelemetryEvents, trackEvent } from "../../telemetry";
-import { getConfigFromWorkDir } from "../../config/localConfig";
-import DependencyTreeManager from "../../dependencyManager/dependencyManager";
-import { cleanupOutputDir, createOutputDir } from "../../helpers/file";
+import { globalOptions } from "../../helpers/options";
+import { TelemetryEvents, trackEvent } from "../../../telemetry";
+import { getConfigFromWorkDir } from "../../../config/localConfig";
+import DependencyTreeManager from "../../../dependencyManager/dependencyManager";
+import { cleanupOutputDir, createOutputDir } from "../../../helpers/file";
 import {
   runWithWorker,
   writeSplitsToDisk,
-} from "../../splitRunner/splitRunner";
+} from "../../../splitRunner/splitRunner";
 
 async function splitRunCommandHandler(
   entrypointPath: string, // Path to the entrypoint file

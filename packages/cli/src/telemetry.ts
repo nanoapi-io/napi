@@ -9,15 +9,15 @@ export enum TelemetryEvents {
   CLI_SPLIT_ANNOTATE_COMMAND = "cli_split_annotate_command",
   CLI_SPLIT_COMMAND = "cli_split_command",
   CLI_SPLIT_CONFIGURE_COMMAND = "cli_split_configure_command",
-  CLI_VISUALIZER_COMMAND = "cli_visualizer_command",
+  CLI_AUDIT_VIEW_COMMAND = "cli_audit_view_command",
 
   API_REQUEST_CONGIG = "api_request_config",
   API_REQUEST_SCAN = "api_request_scan",
   API_REQUEST_SYNC = "api_request_sync",
   API_REQUEST_SPLIT = "api_request_split",
 
-  API_REQUEST_VISUALIZER_PROJECT = "api_request_visualizer_project",
-  API_REQUEST_VISUALIZER_FILE = "api_request_visualizer_file",
+  API_REQUEST_AUDIT_PROJECT = "api_request_audit_project",
+  API_REQUEST_AUDIT_FILE = "api_request_audit_file",
 }
 
 export interface TelemetryEvent {
