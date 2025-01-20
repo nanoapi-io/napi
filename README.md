@@ -1,10 +1,11 @@
 ![NanoAPI Banner](/media/github-banner.png)
 
-# napi - Next-Level Visual Tooling For API Codebases
+# napi - Isolate and deploy APIs separately at build time
 
-`napi` is a versatile tool built by NanoAPI and designed to automatically refactor large monolithic codebases into smaller, more manageable microservices.
+`napi` is a versatile tool built by NanoAPI and designed to automatically refactor large monolithic codebases into smaller, more manageable microservices, while providing insights into the architectural complexity of your software.
 With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
-It also provides a new auditing feature to identify parts of your codebase that could benefit from improvements.
+
+Historically, tools like this have only been built by large consulting firms or contractors and kept behind the paywalls of consulting fees. `napi` aims to make these tools accessible to developers of all skill levels, without the cost. Our vision is to help you reduce your reliance on consultants and contractors, while gaining deeper insights into system architecture-level concerns. The added benefit? No more black-box consultant tools running on your code.
 
 ![NanoAPI UI Overview](/media/hero-app.png)
 
