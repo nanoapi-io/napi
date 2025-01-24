@@ -14,11 +14,16 @@ import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
 import BaseAudit from "./pages/audit";
 import Audit from "./pages/audit/index";
 import AuditFile from "./pages/audit/file";
+import ProjectsPage from "./pages/projects";
 
 const router = createHashRouter([
   {
     path: "/splitConfigure",
     element: <SplitConfigure />,
+  },
+  {
+    path: "/projects",
+    element: <ProjectsPage />,
   },
   {
     path: "/audit",
@@ -45,14 +50,24 @@ if (!rootElement) {
 function Main() {
   const themeContext = useContext(ThemeContext);
 
+  const shouldRenderReactFlow = !window.location.pathname.startsWith("/projects");
+
   return (
     <Theme appearance={themeContext.theme}>
-      <ReactFlowProvider>
-        <div className="font-jakarta">
-          <ToastContainer theme={themeContext.theme} />
-          <RouterProvider router={router} />
-        </div>
-      </ReactFlowProvider>
+      {shouldRenderReactFlow ? (
+          <ReactFlowProvider>
+            <div className="font-jakarta">
+              <ToastContainer theme={themeContext.theme} />
+              <RouterProvider router={router} />
+            </div>
+          </ReactFlowProvider>
+        ) : (
+          <div className="font-jakarta">
+            <ToastContainer theme={themeContext.theme} />
+            <RouterProvider router={router} />
+          </div>
+        )
+      }
     </Theme>
   );
 }
