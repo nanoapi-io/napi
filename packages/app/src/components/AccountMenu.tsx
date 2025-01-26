@@ -2,7 +2,7 @@
 
 export default function AccountMenu() {
   return (
-    <div className="flex bg-[#FFFFFF0D] hover:bg-[#FFFFFF00] rounded-lg border-[1px] border-[#35345B] transition-all">
+    <div className="flex bg-[#FFFFFF0D] hover:bg-[#FFFFFF00] rounded-lg border-[1px] border-card-border-light dark:border-card-border-dark transition-all">
       <button className="flex gap-x-3 items-center pl-2 pr-3 my-auto">
         <img className="w-8 h-8 rounded-full" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
         <svg fill="#838293" width="20px" height="20px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">

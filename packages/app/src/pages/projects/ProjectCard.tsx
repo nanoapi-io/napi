@@ -8,7 +8,7 @@ export type Project = {
 
 export default function ProjectCard(project: Project) {
   return (
-    <div className="relative flex flex-col bg-[#212047] rounded-lg border-[1px] border-[#2B2A51] cursor-pointer hover:shadow-lg hover:mt-[-2px] transition-all">
+    <div className="relative flex flex-col bg-[#212047] rounded-lg border-[1px] border-[#2B2A51] cursor-pointer hover:shadow-lg hover:mt-[-2px] hover:mb-[2px] transition-all">
       <div className="absolute top-4 right-4 border-[1px] bg-[#212047] border-[#35345B] rounded-xl hover:bg-[#0000000D]">
         <button className="px-2 py-1.5 align-middle">
           <svg
@@ -32,7 +32,7 @@ export default function ProjectCard(project: Project) {
         <div className="flex gap-x-3">
           {/* Profile or org photo */}
           <img className="w-6 h-6 rounded-full" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
-          <p className="font-semibold">Viewed: {project.viewedAt.toDateString()}</p>
+          <p className="font-semibold">Team name</p>
         </div>
       </div>
     </div>

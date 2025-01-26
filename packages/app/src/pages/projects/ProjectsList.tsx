@@ -5,7 +5,7 @@ import ProjectCard, { Project } from "./ProjectCard";
 
 
 export default function ProjectsList() {
-  const [projects, setProjects] = useState<Project[]>([{
+  const projectsList: Project[] = [{
     id: "1",
     name: "Project 1",
     updatedAt: new Date(),
@@ -23,7 +23,8 @@ export default function ProjectsList() {
     updatedAt: new Date(),
     viewedAt: new Date(),
     language: "TypeScript",
-  }, ]);
+  }, ]
+  const [projects, setProjects] = useState<Project[]>(projectsList);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
@@ -37,25 +38,30 @@ export default function ProjectsList() {
     setLoading(false);
   }
 
+  // Filter the projects based on the search text
   useEffect(() => {
-    if (searchText) {
-      const filteredProjects = projects.filter((project) =>
-        project.name.toLowerCase().includes(searchText.toLowerCase())
-      );
-      setProjects(filteredProjects);
+    if (!searchText) {
+      setProjects(projectsList);
+      return;
     }
+    const filteredProjects = projectsList.filter((project) => {
+      return project.name.toLowerCase().includes(searchText.toLowerCase());
+    });
+    setProjects(filteredProjects);
   }, [searchText]);
 
   return (
     <div className=" text-white bg-[#15143D] rounded-xl grow">
       {/* Top bar with project search on the left and the account icon on the right */}
       <div className="flex justify-between p-2 border-b-[1px] border-[#212047]">
-        <div className="flex bg-[#2C2C50] rounded-lg px-3 py-2.5 gap-x-2 border-[1px] border-[#2C2C50] focus-within:border-[#5848E8]">
+        <div className="flex text-[#B4B4C9] bg-[#2C2C50] rounded-lg px-3 py-2.5 gap-x-2 border-[1px] border-[#2C2C50] focus-within:border-[#5848E8]">
           <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="none" className="my-auto">
-            <path fill="#B4B4C9" fill-rule="evenodd" d="M4 9a5 5 0 1110 0A5 5 0 014 9zm5-7a7 7 0 104.2 12.6.999.999 0 00.093.107l3 3a1 1 0 001.414-1.414l-3-3a.999.999 0 00-.107-.093A7 7 0 009 2z"/>
+            <path fill="currentColor" fill-rule="evenodd" d="M4 9a5 5 0 1110 0A5 5 0 014 9zm5-7a7 7 0 104.2 12.6.999.999 0 00.093.107l3 3a1 1 0 001.414-1.414l-3-3a.999.999 0 00-.107-.093A7 7 0 009 2z"/>
           </svg>
           <input 
             type="text" 
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search for projects"
             className="bg-[#2C2C50] min-w-72 focus:ring-0 focus:outline-none" />
         </div>
@@ -63,7 +69,7 @@ export default function ProjectsList() {
           {/* TODO: Move to project modal component */}
           <button className="font-bold flex gap-x-2 bg-[#5848E8] hover:bg-[#392ea0] rounded-lg px-3 py-2.5 transition-all">
             <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="my-auto">
-              <path d="M13 3C13 2.44772 12.5523 2 12 2C11.4477 2 11 2.44772 11 3V11H3C2.44772 11 2 11.4477 2 12C2 12.5523 2.44772 13 3 13H11V21C11 21.5523 11.4477 22 12 22C12.5523 22 13 21.5523 13 21V13H21C21.5523 13 22 12.5523 22 12C22 11.4477 21.5523 11 21 11H13V3Z" fill="#FFFFFF"/>
+              <path d="M13 3C13 2.44772 12.5523 2 12 2C11.4477 2 11 2.44772 11 3V11H3C2.44772 11 2 11.4477 2 12C2 12.5523 2.44772 13 3 13H11V21C11 21.5523 11.4477 22 12 22C12.5523 22 13 21.5523 13 21V13H21C21.5523 13 22 12.5523 22 12C22 11.4477 21.5523 11 21 11H13V3Z" fill="currentColor"/>
             </svg>
             New Project
           </button>

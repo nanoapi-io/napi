@@ -16,6 +16,10 @@ export default {
           dark: "#0B0A32",
           light: "#F9FAFB",
         },
+        foreground: {
+          dark: "#212047",
+          light: "#FFFFFF",
+        },
         secondaryBackground: {
           dark: "#15143D",
           light: "#E5E7EB",
@@ -31,6 +35,10 @@ export default {
         border: {
           dark: "#3A397C",
           light: "#BDBDBD",
+        },
+        card: {
+          "border-dark": "#35345B",
+          "border-light": "#E5E7EB",
         },
         text: {
           dark: "#FFFFFF",
