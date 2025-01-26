@@ -18,7 +18,7 @@ export default function EndpointNode(
 ) {
   return (
     <div
-      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-border-light dark:border-border-dark overflow-hidden ${props.data.isBeingDragged ? "bg-blue-100 dark:bg-blue-900 shadow-lg" : ""}`}
+      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-borderLight dark:border-borderDark overflow-hidden ${props.data.isBeingDragged ? "bg-blue-100 dark:bg-blue-900 shadow-lg" : ""}`}
     >
       <Handle
         type="target"

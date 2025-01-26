@@ -81,7 +81,7 @@ export default function FileNode(
 
   return (
     <div
-      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-border-light dark:border-border-dark ${props.data.isBeingDragged && "bg-blue-100 dark:bg-blue-900 shadow-lg"} ${props.data.isFocused && "border-2 border-primary-light dark:border-primary-dark"}`}
+      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-borderLight dark:border-borderDark ${props.data.isBeingDragged && "bg-blue-100 dark:bg-blue-900 shadow-lg"} ${props.data.isFocused && "border-2 border-primary-light dark:border-primary-dark"}`}
     >
       <Handle
         type="target"

@@ -8,8 +8,8 @@ export type Project = {
 
 export default function ProjectCard(project: Project) {
   return (
-    <div className="relative flex flex-col bg-[#212047] rounded-lg border-[1px] border-[#2B2A51] cursor-pointer hover:shadow-lg hover:mt-[-2px] hover:mb-[2px] transition-all">
-      <div className="absolute top-4 right-4 border-[1px] bg-[#212047] border-[#35345B] rounded-xl hover:bg-[#0000000D]">
+    <div className="relative flex flex-col bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple cursor-pointer hover:shadow-lg hover:mt-[-2px] hover:mb-[2px] transition-all">
+      <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-borderLight dark:border-borderDark-grey rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
         <button className="px-2 py-1.5 align-middle">
           <svg
             width="15"
@@ -23,12 +23,12 @@ export default function ProjectCard(project: Project) {
           </svg>
         </button>
       </div>
-      <div className="flex justify-center h-[128px] bg-[#00000033]">
+      <div className="flex justify-center h-[128px] bg-hover-light dark:bg-hover-dark">
         <h1 className="my-auto">{project.language}</h1>
       </div>
       <div className="h-[128px] flex flex-col p-4 gap-y-2.5">
         <h2 className="text-xl font-bold">{project.name}</h2>
-        <p className="text-[#7775AC] pb-1">Edited・{project.updatedAt.toDateString()}</p>
+        <p className="text-text-lightInfo dark:text-text-darkInfo pb-1">Edited・{project.updatedAt.toDateString()}</p>
         <div className="flex gap-x-3">
           {/* Profile or org photo */}
           <img className="w-6 h-6 rounded-full" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />

@@ -34,15 +34,24 @@ export default {
         },
         border: {
           dark: "#3A397C",
+          darkPurple: "#2B2A51",
+          darkGray: "#35345B",
+          darkHighlight: "#5848E8",
+          lightHighlight: "#4F46E5",
           light: "#BDBDBD",
         },
         card: {
-          "border-dark": "#35345B",
-          "border-light": "#E5E7EB",
+          borderDark: "#35345B",
+          borderLight: "#E5E7EB",
         },
         text: {
           dark: "#FFFFFF",
+          darkInfo: "#7775AC",
+          darkHighlight: "#B428BE",
           light: "#333333",
+          lightInfo: "#6B7280",
+          lightHighlight: "#B428BE",
+          gray: "#838293",
         },
         gray: {
           dark: "#B4B4C9",
@@ -50,11 +59,23 @@ export default {
         },
         primary: {
           dark: "#5848E8",
+          hoverDark: "#392ea0",
           light: "#4F46E5",
+          hoverLight: "#3c37b0",
         },
         secondary: {
           dark: "#D62B80",
           light: "#D62B80",
+        },
+        hover: {
+          mid: "#0000000D",
+          dark: "#00000033",
+          light: "#FFFFFF0D",
+          translucentLight: "#FFFFFF00",
+        },
+        search: {
+          bgDark: "#2C2C50",
+          bgLight: "#F0F1F3",
         },
       },
     },
