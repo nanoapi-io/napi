@@ -61,7 +61,7 @@ export async function runServer(
 
   const port = await findAvailablePort(3000);
   app.listen(port, () => {
-    const url = `http://localhost:${port}#/${route}`;
+    const url = `http://localhost:${port}/${route}`;
     console.info("Press Ctrl+C to stop the server");
     if (process.env.NODE_ENV !== "development") {
       openInBrowser(url);

@@ -8,15 +8,16 @@ import "@xyflow/react/dist/style.css";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import SplitConfigure from "./pages/splitConfigure";
-import { createHashRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
 import BaseAudit from "./pages/audit";
 import Audit from "./pages/audit/index";
 import AuditFile from "./pages/audit/file";
 import ProjectsPage from "./pages/projects";
+import Auth from "./pages/auth";
 
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: "/splitConfigure",
     element: <SplitConfigure />,
@@ -24,6 +25,18 @@ const router = createHashRouter([
   {
     path: "/projects",
     element: <ProjectsPage />,
+  },
+  {
+    path: "/auth/github",
+    element: <Auth provider="github" />,
+  },
+  {
+    path: "/auth/gitlab",
+    element: <Auth provider="gitlab" />,
+  },
+  {
+    path: "/auth/bitbucket",
+    element: <Auth provider="bitbucket" />,
   },
   {
     path: "/audit",
