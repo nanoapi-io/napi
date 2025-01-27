@@ -24,7 +24,12 @@ export default function ProjectCard(project: Project) {
         </button>
       </div>
       <div className="flex justify-center h-[128px] bg-hover-light dark:bg-hover-dark">
-        <h1 className="my-auto">{project.language}</h1>
+        <img
+          width={80} 
+          height={80} 
+          src={`/svg/${project.language.toLowerCase()}.svg`} 
+          alt="Project language"
+          className="" />
       </div>
       <div className="h-[128px] flex flex-col p-4 gap-y-2.5">
         <h2 className="text-xl font-bold">{project.name}</h2>
