@@ -16,8 +16,13 @@ import Audit from "./pages/audit/index";
 import AuditFile from "./pages/audit/file";
 import ProjectsPage from "./pages/projects";
 import Auth from "./pages/auth";
+import Index from "./pages";
 
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Index />,
+  },
   {
     path: "/splitConfigure",
     element: <SplitConfigure />,
