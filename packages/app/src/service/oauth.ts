@@ -30,3 +30,19 @@ export const redirectToGitLabOAuth = () => {
 
   window.location.href = gitlabOAuthURL; // Redirect user to GitLab OAuth
 };
+
+export const redirectToBitbucketOAuth = () => {
+  const clientId = process.env.REACT_APP_BITBUCKET_CLIENT_ID;
+  const redirectUri = `${window.location.origin}/auth/bitbucket`; // Frontend redirect URI
+
+  if (!clientId) {
+    console.error("Bitbucket Client ID is not defined");
+    return;
+  }
+
+  const bitbucketOAuthURL = `https://bitbucket.org/site/oauth2/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(
+    redirectUri
+  )}&scope=account email project repository`;
+
+  window.location.href = bitbucketOAuthURL; // Redirect user to Bitbucket OAuth
+};

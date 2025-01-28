@@ -81,7 +81,40 @@ export default function Auth(props: {
   };
 
   const fetchBitbucketToken = async () => {
-    // Implement Bitbucket OAuth flow
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code"); // Bitbucket authorization code
+
+    if (!code) {
+      console.error("Authorization code not found");
+      // navigate('/#/projects'); // Redirect to homepage if code is missing
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BACKEND_API_URL}/api/v1/auth/bitbucket/callback`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to exchange authorization code for token");
+      }
+
+      const { token } = await response.json();
+
+      // Store the token (e.g., in localStorage)
+      localStorage.setItem("jwt", token);
+
+      // Redirect to the dashboard or a protected route
+      navigate("/projects");
+    } catch (error) {
+      console.error("Error during OAuth callback:", error);
+      // navigate('/#/projects'); // Redirect to homepage on error
+    }
   };
 
   useEffect(() => {

@@ -1,7 +1,11 @@
 import { Button, Dialog } from "@radix-ui/themes";
 import { useState } from "react";
 
-import { redirectToGitHubOAuth, redirectToGitLabOAuth } from "../service/oauth";
+import {
+  redirectToBitbucketOAuth,
+  redirectToGitHubOAuth,
+  redirectToGitLabOAuth,
+} from "../service/oauth";
 
 export default function LoginDialog() {
   const [open, setOpen] = useState<boolean>(false);
@@ -104,7 +108,10 @@ export default function LoginDialog() {
             </svg>
             <p>GitLab</p>
           </button>
-          <button className="flex justify-center bg-[#5848E80D] gap-x-1.5 p-3 rounded-md border-[1px] border-search-bgLight dark:border-search-bgDark  hover:bg-hover-light dark:hover:bg-hover-dark transition-all grow">
+          <button
+            onClick={() => redirectToBitbucketOAuth()}
+            className="flex justify-center bg-[#5848E80D] gap-x-1.5 p-3 rounded-md border-[1px] border-search-bgLight dark:border-search-bgDark  hover:bg-hover-light dark:hover:bg-hover-dark transition-all grow"
+          >
             <svg
               width="25"
               height="24"
