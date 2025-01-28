@@ -1,12 +1,14 @@
-export type Project = {
-  id: number;
+export type Workspace = {
+  id: string;
   name: string;
+  description?: string;
+  users: any[];
+  settings: any;
   updatedAt: Date;
   viewedAt: Date;
-  language: string;
 }
 
-export default function ProjectCard(project: Project) {
+export default function WorkspaceCard(workspace: Workspace) {
   return (
     <div className="relative flex flex-col bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple cursor-pointer hover:shadow-lg hover:mt-[-2px] hover:mb-[2px] transition-all">
       <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
@@ -24,16 +26,11 @@ export default function ProjectCard(project: Project) {
         </button>
       </div>
       <div className="flex justify-center h-[128px] bg-hover-light dark:bg-hover-dark">
-        <img
-          width={80} 
-          height={80} 
-          src={`/svg/${project.language.toLowerCase()}.svg`} 
-          alt="Project language"
-          className="" />
+        
       </div>
       <div className="h-[128px] flex flex-col p-4 gap-y-2.5">
-        <h2 className="text-xl font-bold">{project.name}</h2>
-        <p className="text-text-lightInfo dark:text-text-darkInfo pb-1">Edited・{project.updatedAt.toDateString()}</p>
+        <h2 className="text-xl font-bold">{workspace.name}</h2>
+        <p className="text-text-lightInfo dark:text-text-darkInfo pb-1">Edited・{workspace.updatedAt.toDateString()}</p>
         <div className="flex gap-x-3">
           {/* Profile or org photo */}
           <img className="w-6 h-6 rounded-full" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />

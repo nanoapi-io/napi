@@ -1,50 +1,13 @@
 import { useEffect, useState } from "react";
 
 import AccountMenu from "../../components/AccountMenu";
-import NewProjectDialog from "../../components/NewProjectDialog";
-import ProjectCard, { Project } from "./ProjectCard";
+import NewWorkspaceDialog from "../../components/NewWorkspaceDialog";
+import WorkspaceCard, { Workspace } from "./WorkspaceCard";
 import ChangeThemeButton from "../../components/ChangeThemeButton";
 
 
-export default function ProjectsList() {
-  const projectsList: Project[] = [{
-    id: 1,
-    name: "Project 1",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
-    language: "TypeScript",
-  },{
-    id: 2,
-    name: "Project 2",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
-    language: "javascript",
-  },{
-    id: 3,
-    name: "Project 3",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
-    language: "python",
-  },{
-    id: 4,
-    name: "Project 1",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
-    language: "nodejs",
-  },{
-    id: 5,
-    name: "Project 2",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
-    language: "csharp",
-  },{
-    id: 6,
-    name: "Project 3",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
-    language: "TypeScript",
-  }, ]
-  const [projects, setProjects] = useState<Project[]>([]);
+export default function WorkspacesList() {
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [loading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
@@ -60,14 +23,7 @@ export default function ProjectsList() {
 
   // Filter the projects based on the search text
   useEffect(() => {
-    if (!searchText) {
-      setProjects([]);
-      return;
-    }
-    const filteredProjects = projectsList.filter((project) => {
-      return project.name.toLowerCase().includes(searchText.toLowerCase());
-    });
-    setProjects(filteredProjects);
+    
   }, [searchText]);
 
   return (
@@ -87,13 +43,13 @@ export default function ProjectsList() {
         </div>
         <div className="flex gap-x-2">
           <ChangeThemeButton />
-          <NewProjectDialog />
+          <NewWorkspaceDialog />
           <AccountMenu />
         </div>
       </div>
       <div className="grow flex flex-col p-4">
         <div className="flex flex-col gap-y-2">
-          <h1 className="text-2xl font-bold">My Projects</h1>
+          <h1 className="text-2xl font-bold">My Workspaces</h1>
           <p className="text-text-gray">Here is something cool about my cool project</p>
         </div>
         <div className="pt-4 pb-3">
@@ -101,18 +57,18 @@ export default function ProjectsList() {
         </div>
         {loading ? (
           <p>Loading...</p>
-        ) : projects.length > 0 || searchText ? (
+        ) : workspaces.length > 0 || searchText ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} {...project} />
+            {workspaces.map((ws) => (
+              <WorkspaceCard key={ws.id} {...ws} />
             ))}
           </div>
         ) : (
           <div className="w-full h-max flex flex-col justify-center items-center gap-y-3 grow">
             <img src="/svg/empty-projects.svg" alt="" />
-            <h1 className="text-2xl font-semibold">You have no projects yet...</h1>
-            <p className="text-text-gray pb-2">Create or import a project to get started</p>
-            <NewProjectDialog />
+            <h1 className="text-2xl font-semibold">You have no workspaces yet...</h1>
+            <p className="text-text-gray pb-2">Create a workspace to get started</p>
+            <NewWorkspaceDialog />
           </div>
         )}
       </div>

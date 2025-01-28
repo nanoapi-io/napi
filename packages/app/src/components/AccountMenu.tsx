@@ -4,7 +4,7 @@ import LoginDialog from './LoginDialog';
 
 export default function AccountMenu() {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>({});
   const [avatar, setAvatar] = useState("https://randomuser.me/api/portraits/men/75.jpg");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -12,43 +12,22 @@ export default function AccountMenu() {
   const logOut = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     localStorage.removeItem('jwt');
+    localStorage.removeItem('user');
     setLoggedIn(false);
   }
-
-  const loadUser = async () => {
-    console.log(user);
-    const jwt = localStorage.getItem('jwt');
-    if (!jwt) return;
-
-    const res = fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/self`, {
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-        'Content-Type': 'application/json',
-      }
-    })
-    .then(res => res.json())
-    .catch(err => console.error('Failed to fetch user data:', err));
-
-    return res;
-  }
-
 
   useEffect(() => {
     // Check if the user is logged in
     const jwt = localStorage.getItem('jwt');
     setLoggedIn(!!jwt);
 
-    if (jwt) {
-      // Get user data
-      loadUser()
-        .then((data) => {
-          setUser(data);
-          localStorage.setItem('user', JSON.stringify(data));
-          setAvatar(data.avatar);
-          setName(data.name);
-          setUsername(data.username);
-        })
-        .catch(err => console.error('Failed to fetch user data:', err));
+    // Get user data
+    const userData: string | null = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+      setAvatar(user.avatar);
+      setName(user.name);
+      setUsername(user.username);
     }
   }, []);
 
@@ -89,7 +68,7 @@ export default function AccountMenu() {
             </DropdownMenu.Item>
             <DropdownMenu.Separator />
             <DropdownMenu.Item className='hover:bg-primary-dark'>
-              <button onClick={logOut}>Log out</button>
+              <button className='w-full text-left' onClick={logOut}>Log out</button>
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Root>
