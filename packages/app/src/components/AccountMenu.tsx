@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
 import { DropdownMenu } from '@radix-ui/themes';
+import { useEffect, useState } from 'react';
 import LoginDialog from './LoginDialog';
-import { data } from 'react-router';
 
 export default function AccountMenu() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -17,6 +16,7 @@ export default function AccountMenu() {
   }
 
   const loadUser = async () => {
+    console.log(user);
     const jwt = localStorage.getItem('jwt');
     if (!jwt) return;
 

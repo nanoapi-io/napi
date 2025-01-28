@@ -1,11 +1,8 @@
 import {
   Button,
-  DataList,
   Dialog,
-  Separator,
-  TextField,
 } from "@radix-ui/themes";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 
 export function NewProjectDialog() {
   const [open, setOpen] = useState(false);

@@ -44,18 +44,18 @@ export default function ProjectsList() {
     language: "TypeScript",
   }, ]
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
   useEffect(() => {
     // fetchProjects();
   }, []);
 
-  async function fetchProjects() {
-    const projects = [] as Project[]; //await getProjects();
-    setProjects(projects);
-    setLoading(false);
-  }
+  // async function fetchProjects() {
+  //   const projects = [] as Project[]; //await getProjects();
+  //   setProjects(projects);
+  //   setLoading(false);
+  // }
 
   // Filter the projects based on the search text
   useEffect(() => {
