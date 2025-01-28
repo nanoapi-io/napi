@@ -1,10 +1,13 @@
-import { useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+
+import { StoreContext } from '../../contexts/StoreContext';
 
 
 export default function Auth(props: {
   provider: "github" | "gitlab" | "bitbucket";
 }) {
+  const { changeState } = useContext(StoreContext);
   const navigate = useNavigate();
 
   const fetchGithubToken = async () => {
@@ -35,6 +38,41 @@ export default function Auth(props: {
 
       // Store the token (e.g., in localStorage)
       localStorage.setItem('jwt', token);
+
+      const userResponse = await fetch(
+        `${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/self`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const user = await userResponse.json();
+
+      // Store the user data (e.g., in localStorage)
+      localStorage.setItem('user', JSON.stringify(user));
+      const defaultWorkspace = user.workspaces.find((workspace: any) => workspace.name === "Default");
+
+      // Check if we've set an active workspace before
+      const localStoreWorkspace = localStorage.getItem('activeWorkspace');
+      if (localStoreWorkspace) {
+        
+        changeState({
+          activeWorkspace: localStoreWorkspace,
+        });
+        navigate('/projects');
+        return;
+      }
+
+      changeState({
+        activeWorkspace: defaultWorkspace.id,
+      })
 
       // Redirect to the dashboard or a protected route
       navigate('/projects');

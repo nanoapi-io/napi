@@ -11,10 +11,12 @@ import SplitConfigure from "./pages/splitConfigure";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
+import { StoreProvider } from "./contexts/StoreContext";
 import BaseAudit from "./pages/audit";
 import Audit from "./pages/audit/index";
 import AuditFile from "./pages/audit/file";
 import ProjectsPage from "./pages/projects";
+import WorkspacesPage from "./pages/workspaces";
 import Auth from "./pages/auth";
 import Index from "./pages";
 
@@ -30,6 +32,10 @@ const router = createBrowserRouter([
   {
     path: "/projects",
     element: <ProjectsPage />,
+  },
+  {
+    path: "/workspaces",
+    element: <WorkspacesPage />,
   },
   {
     path: "/auth/github",
@@ -93,7 +99,9 @@ function Main() {
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <ThemeProvider>
-      <Main />
+      <StoreProvider>
+        <Main />
+      </StoreProvider>
     </ThemeProvider>
   </React.StrictMode>,
 );

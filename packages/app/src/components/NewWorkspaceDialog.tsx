@@ -4,7 +4,7 @@ import {
 } from "@radix-ui/themes";
 import { useState } from "react";
 
-export default function NewProjectDialog() {
+export default function NewWorkspaceDialog() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,7 +37,7 @@ export default function NewProjectDialog() {
             <TextField label="Description" placeholder="Enter project description" />
             <TextField label="Tags" placeholder="Enter tags" /> */}
             <Button type="submit" className="bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg px-3 py-2.5 transition-all">
-              Create Project
+              Create Workspace
             </Button>
           </div>
         </form>
