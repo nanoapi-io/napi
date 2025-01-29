@@ -24,7 +24,8 @@ export default function AccountMenu() {
     // Get user data
     const userData: string | null = localStorage.getItem('user');
     console.log(userData);
-    if (userData) {
+    if (userData !== null) {
+      console.log("Here")
       setUser(JSON.parse(userData));
       setAvatar(user.avatar);
       setName(user.name);
