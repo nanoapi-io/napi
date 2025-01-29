@@ -26,10 +26,11 @@ export default function AccountMenu() {
     console.log(userData);
     if (userData !== null) {
       console.log("Here")
-      setUser(JSON.parse(userData));
-      setAvatar(user.avatar);
-      setName(user.name);
-      setUsername(user.username);
+      const userJSON = JSON.parse(userData);
+      setUser(userJSON);
+      setAvatar(userJSON.avatar);
+      setName(userJSON.name);
+      setUsername(userJSON.username);
     }
   }, []);
 
