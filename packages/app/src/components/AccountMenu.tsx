@@ -26,6 +26,7 @@ export default function AccountMenu() {
     console.log(userData);
     if (userData !== null) {
       console.log("Here")
+      console.log(user)
       const userJSON = JSON.parse(userData);
       setUser(userJSON);
       setAvatar(userJSON.avatar);
