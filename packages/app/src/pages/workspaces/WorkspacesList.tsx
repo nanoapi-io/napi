@@ -7,7 +7,7 @@ import ChangeThemeButton from "../../components/ChangeThemeButton";
 
 
 export default function WorkspacesList() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [workspaces] = useState<Workspace[]>([]);
   const [loading] = useState(false);
   const [searchText, setSearchText] = useState("");
 

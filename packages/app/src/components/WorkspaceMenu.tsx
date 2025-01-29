@@ -1,6 +1,6 @@
 import { DropdownMenu } from '@radix-ui/themes';
 import { useEffect, useState } from 'react';
-import { NewWorkspaceDialog } from './NewWorkspaceDialog';
+// import { NewWorkspaceDialog } from './NewWorkspaceDialog';
 
 export default function WorkspaceMenu() {
   const [workspaces, setWorkspaces] = useState([]);
