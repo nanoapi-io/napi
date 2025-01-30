@@ -1,29 +1,30 @@
 import { useContext, useEffect, useState } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { StoreContext } from "../contexts/StoreContext";
 import WorkspaceMenu from "./WorkspaceMenu";
 
 export default function AppSidebar() {
-  const stateContext = useContext(StoreContext);
+  const { state } = useContext(StoreContext);
   const location = useLocation();
+  const navigate = useNavigate();
 
   const [workspace, setWorkspace] = useState({ name: "Default" });
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
+    const userData = state.user;
     if (!userData) {
       return;
     }
 
-    const workspaces = JSON.parse(userData).workspaces;
+    const workspaces = userData.workspaces;
     const found = workspaces.find(
-      (ws: any) => ws.id === stateContext.state.activeWorkspace
+      (ws: any) => ws.id === state.activeWorkspace
     );
     if (!found) {
       return;
     }
     setWorkspace(found);
-  }, [stateContext.state.activeWorkspace]);
+  }, [state.activeWorkspace]);
 
   return (
     <div className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark w-80 px-4 py-2 rounded-xl flex flex-col">
@@ -67,7 +68,9 @@ export default function AppSidebar() {
 
       {/* Navigation */}
       <div className="grow flex flex-col mt-8 gap-y-2">
-        <button className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
+        <button 
+          onClick={() => navigate("/projects")}
+          className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
           location.pathname.includes("/projects") ? "bg-foreground-light dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
         }`}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">

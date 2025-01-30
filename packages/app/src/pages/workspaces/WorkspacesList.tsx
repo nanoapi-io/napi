@@ -1,25 +1,36 @@
 import { useEffect, useState } from "react";
+import { Table } from "@radix-ui/themes";
 
 import AccountMenu from "../../components/AccountMenu";
 import NewWorkspaceDialog from "../../components/NewWorkspaceDialog";
-import WorkspaceCard, { Workspace } from "./WorkspaceCard";
 import ChangeThemeButton from "../../components/ChangeThemeButton";
-
+import { Workspace } from "../../types";
+import WorkspaceRow from "./WorkspaceRow";
 
 export default function WorkspacesList() {
-  const [workspaces] = useState<Workspace[]>([]);
-  const [loading] = useState(false);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
 
-  useEffect(() => {
-    // fetchProjects();
-  }, []);
+  const getWorkspaces = async () => {
+    // Fetch workspaces
+    const workspaceRes = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/workspaces`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+      },
+    });
+    const workspacesPages = await workspaceRes.json();
 
-  // async function fetchProjects() {
-  //   const projects = [] as Project[]; //await getProjects();
-  //   setProjects(projects);
-  //   setLoading(false);
-  // }
+    const wsData = workspacesPages.data;
+
+    setWorkspaces(wsData);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    // fetchWorkspaces();
+    getWorkspaces();
+  }, []);
 
   // Filter the projects based on the search text
   useEffect(() => {
@@ -50,7 +61,7 @@ export default function WorkspacesList() {
       <div className="grow flex flex-col p-4">
         <div className="flex flex-col gap-y-2">
           <h1 className="text-2xl font-bold">My Workspaces</h1>
-          <p className="text-text-gray">Here is something cool about my cool project</p>
+          <p className="text-text-gray">View and manage workspaces you have access to</p>
         </div>
         <div className="pt-4 pb-3">
           <div><p>All | Oldest | Latest</p></div>
@@ -58,11 +69,22 @@ export default function WorkspacesList() {
         {loading ? (
           <p>Loading...</p>
         ) : workspaces.length > 0 || searchText ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-            {workspaces.map((ws) => (
-              <WorkspaceCard key={ws.id} {...ws} />
-            ))}
-          </div>
+          <Table.Root size="3" variant="surface">
+            <Table.Header>
+              <Table.Row>
+                <Table.ColumnHeaderCell>Name</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Members</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Projects</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell>Created</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell justify="end">Settings</Table.ColumnHeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {workspaces.map((ws: Workspace) => (
+                <WorkspaceRow key={ws.id} workspace={ws} />
+              ))}
+            </Table.Body>
+          </Table.Root>
         ) : (
           <div className="w-full h-max flex flex-col justify-center items-center gap-y-3 grow">
             <img src="/svg/empty-projects.svg" alt="" />

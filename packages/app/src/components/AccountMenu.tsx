@@ -1,10 +1,11 @@
 import { DropdownMenu } from '@radix-ui/themes';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import LoginDialog from './LoginDialog';
+import { StoreContext } from '../contexts/StoreContext';
 
 export default function AccountMenu() {
+  const stateContext = useContext(StoreContext);
   const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState<any>({});
   const [avatar, setAvatar] = useState("https://randomuser.me/api/portraits/men/75.jpg");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -22,16 +23,11 @@ export default function AccountMenu() {
     setLoggedIn(!!jwt);
 
     // Get user data
-    const userData: string | null = localStorage.getItem('user');
-    console.log(userData);
+    const userData = stateContext.state.user;
     if (userData !== null) {
-      console.log("Here")
-      console.log(user)
-      const userJSON = JSON.parse(userData);
-      setUser(userJSON);
-      setAvatar(userJSON.avatar);
-      setName(userJSON.name);
-      setUsername(userJSON.username);
+      setAvatar(userData.avatar);
+      setName(userData.name);
+      setUsername(userData.username);
     }
   }, []);
 

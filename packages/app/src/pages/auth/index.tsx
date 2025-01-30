@@ -54,6 +54,7 @@ export default function Auth(props: {
       }
 
       const user = await userResponse.json();
+      console.log('User data:', user);
 
       // Store the user data (e.g., in localStorage)
       localStorage.setItem('user', JSON.stringify(user));
@@ -65,6 +66,7 @@ export default function Auth(props: {
         
         changeState({
           activeWorkspace: localStoreWorkspace,
+          user,
         });
         navigate('/projects');
         return;
@@ -72,6 +74,7 @@ export default function Auth(props: {
 
       changeState({
         activeWorkspace: defaultWorkspace.id,
+        user,
       })
 
       // Redirect to the dashboard or a protected route

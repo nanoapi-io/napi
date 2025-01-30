@@ -1,10 +1,4 @@
-export type Project = {
-  id: number;
-  name: string;
-  updatedAt: Date;
-  viewedAt: Date;
-  language: string;
-}
+import { Project } from '../../types'
 
 export default function ProjectCard(project: Project) {
   return (
@@ -33,7 +27,7 @@ export default function ProjectCard(project: Project) {
       </div>
       <div className="h-[128px] flex flex-col p-4 gap-y-2.5">
         <h2 className="text-xl font-bold">{project.name}</h2>
-        <p className="text-text-lightInfo dark:text-text-darkInfo pb-1">Edited・{project.updatedAt.toDateString()}</p>
+        <p className="text-text-lightInfo dark:text-text-darkInfo pb-1">Edited・{project.updatedAt}</p>
         <div className="flex gap-x-3">
           {/* Profile or org photo */}
           <img className="w-6 h-6 rounded-full" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
