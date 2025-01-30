@@ -8,23 +8,37 @@ export default function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [workspace, setWorkspace] = useState({ name: "Default" });
+  const [workspace, setWorkspace] = useState({ name: "Default", users: [] });
 
   useEffect(() => {
     const userData = state.user;
+    console.log("userData", userData);
     if (!userData) {
       return;
     }
 
+    console.log("activeWorkspace", state.activeWorkspace);
+
+    let activeWorkspace;
+    if (!state.activeWorkspace) {
+      if (!localStorage.getItem("activeWorkspace")) {
+        return;
+      }
+      activeWorkspace = parseInt(localStorage.getItem("activeWorkspace") as string);
+    } else {
+      activeWorkspace = state.activeWorkspace;
+    }
+
     const workspaces = userData.workspaces;
     const found = workspaces.find(
-      (ws: any) => ws.id === state.activeWorkspace
+      (ws: any) => ws.id === activeWorkspace
     );
     if (!found) {
       return;
     }
+    console.log("found", found);
     setWorkspace(found);
-  }, [state.activeWorkspace]);
+  }, [state.activeWorkspace, state.user]);
 
   return (
     <div className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark w-80 px-4 py-2 rounded-xl flex flex-col">
@@ -52,7 +66,7 @@ export default function AppSidebar() {
             <img className="w-6 h-6 ml-[-6px] rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
             <img className="w-6 h-6 ml-[-6px] rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
           </div>
-          <p className="text-text-lightInfo dark:text-text-darkInfo text-sm">5 members</p>
+          <p className="text-text-lightInfo dark:text-text-darkInfo text-sm">{workspace.users.length} {workspace.users.length === 1 ? "member" : "members"}</p>
         </div>
 
         {/* Invite teammates */}
