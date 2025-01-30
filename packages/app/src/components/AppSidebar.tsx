@@ -2,13 +2,22 @@ import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { StoreContext } from "../contexts/StoreContext";
 import WorkspaceMenu from "./WorkspaceMenu";
+import { Workspace } from "../types";
 
 export default function AppSidebar() {
   const { state } = useContext(StoreContext);
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [workspace, setWorkspace] = useState({ name: "Default", users: [] });
+  const [workspace, setWorkspace] = useState<Workspace>({ 
+    name: "Default", 
+    users: [] ,
+    id: "0",
+    projects: [],
+    settings: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
 
   useEffect(() => {
     const userData = state.user;
@@ -62,9 +71,9 @@ export default function AppSidebar() {
         <div className="flex gap-x-2 border-b-[1px] border-[#2B2A51] pt-2 pb-3">
           {/* IMG */}
           <div className="flex">
-            <img className="w-6 h-6 rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
-            <img className="w-6 h-6 ml-[-6px] rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
-            <img className="w-6 h-6 ml-[-6px] rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
+            {workspace.users[0] && <img className="w-6 h-6 rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src={workspace.users[0].avatar} alt="Profile" />}
+            {workspace.users[1] && <img className="w-6 h-6 ml-[-6px] rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src={workspace.users[1].avatar} alt="Profile" />}
+            {workspace.users[2] && <img className="w-6 h-6 ml-[-6px] rounded-full border-[1px] border-foreground-light dark:border-foreground-dark" src={workspace.users[2].avatar} alt="Profile" />}
           </div>
           <p className="text-text-lightInfo dark:text-text-darkInfo text-sm">{workspace.users.length} {workspace.users.length === 1 ? "member" : "members"}</p>
         </div>

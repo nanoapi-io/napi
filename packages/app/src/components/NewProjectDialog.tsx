@@ -1,11 +1,44 @@
 import {
   Button,
   Dialog,
+  TextField
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { StoreContext } from "../contexts/StoreContext";
 
 export default function NewProjectDialog() {
+  const { state } = useContext(StoreContext);
   const [open, setOpen] = useState(false);
+  const [showNextStep, setShowNextStep] = useState(false);
+  const [projectName, setProjectName] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+
+  const createNewProject = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/projects`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+        },
+        body: JSON.stringify({
+          name: projectName,
+          description: projectDescription,
+          workspaceId: state.activeWorkspace,
+        }),
+      });
+      if (response.ok) {
+        console.log("Project created successfully");
+        setShowNextStep(true);
+      } else {
+        console.error("Failed to create project");
+      }
+    } catch (error) {
+      console.error("Failed to create project", error);
+    }
+  }
+
+
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -31,13 +64,29 @@ export default function NewProjectDialog() {
         </Dialog.Title>
         <h1 className="text-3xl font-bold text-center p-4">New Project</h1>
         <p className="text-lg text-text-gray text-center pb-3">Create a new project</p>
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={createNewProject}>
           <div className="flex flex-col gap-y-4 p-4">
-            {/* <TextField label="Project Name" placeholder="Enter project name" />
-            <TextField label="Description" placeholder="Enter project description" />
-            <TextField label="Tags" placeholder="Enter tags" /> */}
-            <Button type="submit" className="bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg px-3 py-2.5 transition-all">
-              Create Project
+            <div>
+              <label htmlFor="projectName" className="font-sm font-semibold p-1">Workspace Name</label>
+              <TextField.Root 
+                id="projectName"
+                size="3" 
+                placeholder="Enter project name" 
+                value={projectDescription} 
+                onChange={(e) => setProjectName(e.target.value)} />
+            </div>
+            <div>
+              <label htmlFor="projectDescription" className="font-sm font-semibold p-1">Project Description</label>
+              <TextField.Root 
+                id="projectDescription"
+                size="3" 
+                placeholder="Enter project description" 
+                value={projectDescription} 
+                onChange={(e) => setProjectDescription(e.target.value)}/>
+            </div>
+            <Button type="submit" 
+              className="mt-5 mx-auto text-lg font-bold bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg px-6 py-5 transition-all">
+              Next
             </Button>
           </div>
         </form>

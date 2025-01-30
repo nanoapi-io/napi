@@ -29,7 +29,7 @@ export default function AccountMenu() {
       setName(userData.name);
       setUsername(userData.username);
     }
-  }, []);
+  }, [stateContext.state.user]);
 
   return (
     <>
