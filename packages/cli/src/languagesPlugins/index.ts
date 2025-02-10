@@ -1,6 +1,7 @@
 import JavascriptPlugin from "./javascript";
 import PythonPlugin from "./python";
 import { LanguagePlugin } from "./types";
+import UnknownPlugin from "./unknown";
 
 export function getLanguagePlugin(
   entryPointPath: string,
@@ -16,6 +17,6 @@ export function getLanguagePlugin(
     case "py":
       return new PythonPlugin(entryPointPath);
     default:
-      throw new Error(`Unsupported file type: ${ext}`);
+      return new UnknownPlugin(entryPointPath);
   }
 }

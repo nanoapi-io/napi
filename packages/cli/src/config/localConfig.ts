@@ -5,6 +5,8 @@ import { z } from "zod";
 export const localConfigSchema = z.object({
   entrypoint: z.string(),
   out: z.string(),
+  include: z.array(z.string()).optional(),
+  exclude: z.array(z.string()).optional(),
   openai: z
     .object({
       apiKey: z.string().optional(),

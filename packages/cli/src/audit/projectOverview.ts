@@ -4,6 +4,7 @@ import fs from "fs";
 import { getLanguagePlugin } from "../languagesPlugins";
 import { localConfigSchema } from "../config/localConfig";
 import z from "zod";
+import UnknownPlugin from "../languagesPlugins/unknown";
 
 export class ProjectOverview {
   files: AuditFile[] = [];
@@ -15,8 +16,14 @@ export class ProjectOverview {
   #init(dir: string, config: z.infer<typeof localConfigSchema>) {
     const files = this.#getFiles(dir);
 
-    this.files = files.map((file) => {
+    files.forEach((file) => {
       const plugin = getLanguagePlugin(file.path, file.path);
+
+      if (plugin.constructor === UnknownPlugin) {
+        // TODO log something
+        console.log(1111111111111, file.path);
+        return;
+      }
 
       const tree = plugin.parser.parse(file.sourceCode);
 
@@ -26,7 +33,7 @@ export class ProjectOverview {
         .filter((depImport) => !depImport.isExternal)
         .map((depImport) => depImport.source);
 
-      return {
+      this.files.push({
         path: file.path,
         sourceCode: file.sourceCode,
         importSources,
@@ -59,7 +66,7 @@ export class ProjectOverview {
           isUnused: false,
           circularDependencySources: [],
         },
-      };
+      });
     });
 
     this.#checkForUnusedFiles();

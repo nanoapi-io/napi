@@ -20,6 +20,8 @@ export default function SplitConfigure() {
     setBusy(true);
     setIsOutOfSynced(true);
 
+    console.log(111111111111, endpoint, group);
+
     const targetEndpoint = endpoints.find(
       (e) => e.path === endpoint.path && e.method === endpoint.method,
     );
