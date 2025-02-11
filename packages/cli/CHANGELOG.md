@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.0.31] - 2025-02-11
+
 Improve audit to support more use cases
 
 ## [0.0.30] - 2025-01-16
