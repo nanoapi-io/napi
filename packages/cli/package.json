@@ -36,7 +36,7 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development ts-node src/index.ts",
+    "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",

@@ -1,6 +1,14 @@
 import { Group } from "./dependencyManager/types";
 import { LanguagePlugin } from "./languagesPlugins/types";
 
+export class CannotParseAnnotationError extends Error {
+  constructor() {
+    super();
+    this.message = "Could not parse path from annotation";
+    this.name = "AnnotationError";
+  }
+}
+
 class AnnotationManager {
   private nanoapiRegex: RegExp;
   private commentPrefix: string;
@@ -33,7 +41,7 @@ class AnnotationManager {
     const groupMatches = text.match(groupRegex);
 
     if (!pathMatches) {
-      throw new Error("Could not parse path from annotation");
+      throw new CannotParseAnnotationError();
     }
 
     const path = pathMatches[1];

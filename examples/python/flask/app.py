@@ -15,7 +15,7 @@ def hello_world():
 def liveness():
     return {"status": "ok"}
 
-# @nanoapi path:readiness method:GET
+# @nanoapi method:GET path:readiness
 @app.get("/readiness")
 def readiness():
     return {"status": "ok"}

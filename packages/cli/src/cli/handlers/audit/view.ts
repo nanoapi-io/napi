@@ -26,7 +26,7 @@ async function handler(
     return;
   }
 
-  runServer(napiConfig, "audit");
+  runServer(argv.workdir, napiConfig, "audit");
 
   trackEvent(TelemetryEvents.CLI_AUDIT_VIEW_COMMAND, {
     message: "Audit view command finished",

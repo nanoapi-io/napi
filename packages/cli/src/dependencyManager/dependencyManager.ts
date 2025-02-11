@@ -4,6 +4,7 @@ import { DependencyTree, Group, Endpoint } from "./types";
 import AnnotationManager from "../annotationManager";
 import { getLanguagePlugin } from "../languagesPlugins";
 import { File } from "../splitRunner/types";
+import path from "path";
 
 class DependencyTreeManager {
   entryPointPath: string;
@@ -30,7 +31,10 @@ class DependencyTreeManager {
       children: [],
     };
 
-    const languagePlugin = getLanguagePlugin(entryPointPath, currentFilePath);
+    const languagePlugin = getLanguagePlugin(
+      path.dirname(entryPointPath),
+      currentFilePath,
+    );
 
     const tree = languagePlugin.parser.parse(sourceCode);
 

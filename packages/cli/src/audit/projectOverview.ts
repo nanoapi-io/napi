@@ -1,9 +1,10 @@
 import { AuditFile } from "./types";
 import path from "path";
-import fs from "fs";
+import fs, { globSync } from "fs";
 import { getLanguagePlugin } from "../languagesPlugins";
 import { localConfigSchema } from "../config/localConfig";
 import z from "zod";
+import UnknownPlugin from "../languagesPlugins/unknown";
 
 export class ProjectOverview {
   files: AuditFile[] = [];
@@ -13,10 +14,15 @@ export class ProjectOverview {
   }
 
   #init(dir: string, config: z.infer<typeof localConfigSchema>) {
-    const files = this.#getFiles(dir);
+    const files = this.#getFiles(dir, config);
 
-    this.files = files.map((file) => {
-      const plugin = getLanguagePlugin(file.path, file.path);
+    files.forEach((file) => {
+      const plugin = getLanguagePlugin(dir, file.path);
+
+      if (plugin.constructor === UnknownPlugin) {
+        console.warn(`Unknown file type, ignoring: ${file.path}`);
+        return;
+      }
 
       const tree = plugin.parser.parse(file.sourceCode);
 
@@ -26,7 +32,7 @@ export class ProjectOverview {
         .filter((depImport) => !depImport.isExternal)
         .map((depImport) => depImport.source);
 
-      return {
+      this.files.push({
         path: file.path,
         sourceCode: file.sourceCode,
         importSources,
@@ -59,36 +65,26 @@ export class ProjectOverview {
           isUnused: false,
           circularDependencySources: [],
         },
-      };
+      });
     });
 
     this.#checkForUnusedFiles();
     this.#checkForCircularDependencies();
   }
 
-  #getFiles(dir: string, files: { path: string; sourceCode: string }[] = []) {
-    if (!fs.existsSync(dir)) {
-      throw new Error("Directory does not exist");
-    }
-    if (!fs.lstatSync(dir).isDirectory()) {
-      throw new Error("Path is not a directory");
-    }
+  #getFiles(dir: string, config: z.infer<typeof localConfigSchema>) {
+    const patterns = config.audit?.patterns
+      ? config.audit?.patterns.map((pattern) => path.join(dir, pattern))
+      : [`${dir}/**`];
 
-    const filePaths = fs.readdirSync(dir);
+    let filePaths = globSync(patterns);
+    filePaths = filePaths.filter((filePath) => fs.lstatSync(filePath).isFile());
+
+    const files: { path: string; sourceCode: string }[] = [];
 
     filePaths.forEach((filePath) => {
-      const fullPath = path.join(dir, filePath);
-      const stat = fs.lstatSync(fullPath);
-
-      if (stat.isDirectory()) {
-        this.#getFiles(fullPath, files);
-      }
-
-      if (stat.isFile()) {
-        const sourceCode = fs.readFileSync(fullPath, "utf8");
-
-        files.push({ path: fullPath, sourceCode });
-      }
+      const sourceCode = fs.readFileSync(filePath, "utf8");
+      files.push({ path: filePath, sourceCode });
     });
 
     return files;
