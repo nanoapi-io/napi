@@ -67,8 +67,8 @@ Before reaching out, check our [FAQ section](#faqs) for answers to common questi
 | JavaScript         | ✅ Supported   | Early Core Feature                                  |
 | TypeScript         | ✅ Supported   | Early Core Feature                                  |
 | Python             | ✅ Supported   | [#28](https://github.com/nanoapi-io/napi/issues/28) |
-| PHP                | 🚧 In Progress | [#30](https://github.com/nanoapi-io/napi/issues/30) |
 | C#                 | 🚧 In Progress | [#31](https://github.com/nanoapi-io/napi/issues/31) |
+| PHP                | 🚧 In Progress | [#30](https://github.com/nanoapi-io/napi/issues/30) |
 | Java               | 🚧 In Progress | [#32](https://github.com/nanoapi-io/napi/issues/32) |
 | C                  | 🚧 In Progress | Not Tracked Yet                                     |
 | C++                | 🚧 In Progress | Not Tracked Yet                                     |

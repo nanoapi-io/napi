@@ -1,7 +1,6 @@
 import { Group } from "./dependencyManager/types";
 import { LanguagePlugin } from "./languagesPlugins/types";
 
-// Create cusotm error
 export class CannotParseAnnotationError extends Error {
   constructor() {
     super();

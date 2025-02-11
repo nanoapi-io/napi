@@ -51,7 +51,6 @@
     "@release-it/bumper": "^6.0.1",
     "@release-it/keep-a-changelog": "^5.0.0",
     "@types/express": "^5.0.0",
-    "@types/micromatch": "^4.0.9",
     "@types/node": "^22.10.2",
     "@types/prompts": "^2.4.9",
     "@types/uuid": "^10.0.0",
