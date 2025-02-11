@@ -36,7 +36,7 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development ts-node src/index.ts",
+    "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
@@ -51,6 +51,7 @@
     "@release-it/bumper": "^6.0.1",
     "@release-it/keep-a-changelog": "^5.0.0",
     "@types/express": "^5.0.0",
+    "@types/micromatch": "^4.0.9",
     "@types/node": "^22.10.2",
     "@types/prompts": "^2.4.9",
     "@types/uuid": "^10.0.0",

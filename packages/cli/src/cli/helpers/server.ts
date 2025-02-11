@@ -37,11 +37,12 @@ function openInBrowser(url: string) {
 }
 
 export async function runServer(
+  workdir: string,
   napiConfig: z.infer<typeof localConfigSchema>,
   route: string,
 ) {
   const app = express();
-  const api = getApi(napiConfig);
+  const api = getApi(workdir, napiConfig);
   app.use(api);
 
   if (process.env.NODE_ENV === "development") {

@@ -4,10 +4,10 @@ import { Group } from "../dependencyManager/types";
 
 class UnknownPlugin implements LanguagePlugin {
   parser: Parser;
-  entryPointPath: string;
+  baseDir: string;
 
-  constructor(entryPointPath: string) {
-    this.entryPointPath = entryPointPath;
+  constructor(baseDir: string) {
+    this.baseDir = baseDir;
     this.parser = new Parser();
   }
 

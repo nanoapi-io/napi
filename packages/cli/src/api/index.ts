@@ -1,8 +1,8 @@
 import { json, Router } from "express";
 import { z } from "zod";
 import { localConfigSchema } from "../config/localConfig";
-import { splitApi } from "./split";
-import { auditApi } from "./audit";
+import { getSplitApi } from "./split";
+import { getAuditApi } from "./audit";
 
 declare module "express-serve-static-core" {
   interface Request {
@@ -10,19 +10,17 @@ declare module "express-serve-static-core" {
   }
 }
 
-export function getApi(napiConfig: z.infer<typeof localConfigSchema>) {
+export function getApi(
+  workDir: string,
+  napiConfig: z.infer<typeof localConfigSchema>,
+) {
   const api = Router();
 
   api.use(json());
 
-  api.use((req, _, next) => {
-    req.napiConfig = napiConfig;
-    next();
-  });
+  api.use("/api/split", getSplitApi(workDir, napiConfig));
 
-  api.use("/api/split", splitApi);
-
-  api.use("/api/audit", auditApi);
+  api.use("/api/audit", getAuditApi(workDir, napiConfig));
 
   return api;
 }

@@ -52,7 +52,7 @@ export interface DepExport {
 
 export interface LanguagePlugin {
   parser: Parser;
-  entryPointPath: string;
+  baseDir: string;
 
   commentPrefix: string;
   annotationRegex: RegExp;

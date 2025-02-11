@@ -4,19 +4,19 @@ import { LanguagePlugin } from "./types";
 import UnknownPlugin from "./unknown";
 
 export function getLanguagePlugin(
-  entryPointPath: string,
+  baseDir: string,
   filePath: string,
 ): LanguagePlugin {
   const ext = filePath.split(".").pop();
 
   switch (ext) {
     case "js":
-      return new JavascriptPlugin(entryPointPath, false);
+      return new JavascriptPlugin(baseDir, false);
     case "ts":
-      return new JavascriptPlugin(entryPointPath, true);
+      return new JavascriptPlugin(baseDir, true);
     case "py":
-      return new PythonPlugin(entryPointPath);
+      return new PythonPlugin(baseDir);
     default:
-      return new UnknownPlugin(entryPointPath);
+      return new UnknownPlugin(baseDir);
   }
 }

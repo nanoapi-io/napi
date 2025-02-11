@@ -12,10 +12,11 @@ import {
   getConfigFromWorkDir,
   getOpenaiApiKeyFromConfig,
 } from "../../../config/localConfig";
+import path from "path";
 
 function removeAllAnnotations(entryPointPath: string, files: File[]) {
   const updatedFiles = files.map((file) => {
-    const plugin = getLanguagePlugin(entryPointPath, file.path);
+    const plugin = getLanguagePlugin(path.dirname(entryPointPath), file.path);
 
     const tree = plugin.parser.parse(file.sourceCode);
 

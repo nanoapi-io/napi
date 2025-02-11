@@ -1,10 +1,13 @@
 import { z } from "zod";
 import fs from "fs";
 import DependencyTreeManager from "../../dependencyManager/dependencyManager";
-import AnnotationManager from "../../annotationManager";
+import AnnotationManager, {
+  CannotParseAnnotationError,
+} from "../../annotationManager";
 import { getLanguagePlugin } from "../../languagesPlugins";
 import { replaceIndexesFromSourceCode } from "../../helpers/file";
 import { localConfigSchema } from "../../config/localConfig";
+import path from "path";
 
 export const syncSchema = z.object({
   endpoints: z.array(
@@ -43,7 +46,7 @@ export function sync(
 
   updatedEndpoints.forEach((endpoint) => {
     const languagePlugin = getLanguagePlugin(
-      napiConfig.entrypoint,
+      path.dirname(napiConfig.entrypoint),
       endpoint.filePath,
     );
 
@@ -75,9 +78,12 @@ export function sync(
             text: updatedComment,
           });
         }
-      } catch {
-        // Skip if annotation is not valid, we assume it is a regular comment
-        return;
+      } catch (e) {
+        if (e instanceof CannotParseAnnotationError) {
+          // Skip if annotation is not valid, we assume it is a regular comment
+          return;
+        }
+        throw e;
       }
     });
 

@@ -16,12 +16,12 @@ import fs from "fs";
 
 class JavascriptPlugin implements LanguagePlugin {
   parser: Parser;
-  entryPointPath: string;
+  baseDir: string;
 
   private isTypescript: boolean;
 
-  constructor(entryPointPath: string, isTypescript: boolean) {
-    this.entryPointPath = entryPointPath;
+  constructor(baseDir: string, isTypescript: boolean) {
+    this.baseDir = baseDir;
     this.parser = new Parser();
     this.isTypescript = isTypescript;
     const language = isTypescript ? Typescript.typescript : Javascript;

@@ -26,7 +26,7 @@ async function handler(
     return;
   }
 
-  runServer(napiConfig, "splitConfigure");
+  runServer(argv.workdir, napiConfig, "splitConfigure");
 
   trackEvent(TelemetryEvents.CLI_SPLIT_CONFIGURE_COMMAND, {
     message: "Split configure command finished",

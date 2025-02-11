@@ -1,6 +1,6 @@
 import { AuditFile } from "./types";
 import path from "path";
-import fs from "fs";
+import fs, { globSync } from "fs";
 import { getLanguagePlugin } from "../languagesPlugins";
 import { localConfigSchema } from "../config/localConfig";
 import z from "zod";
@@ -14,14 +14,13 @@ export class ProjectOverview {
   }
 
   #init(dir: string, config: z.infer<typeof localConfigSchema>) {
-    const files = this.#getFiles(dir);
+    const files = this.#getFiles(dir, config);
 
     files.forEach((file) => {
-      const plugin = getLanguagePlugin(file.path, file.path);
+      const plugin = getLanguagePlugin(dir, file.path);
 
       if (plugin.constructor === UnknownPlugin) {
-        // TODO log something
-        console.log(1111111111111, file.path);
+        console.warn(`Unknown file type, ignoring: ${file.path}`);
         return;
       }
 
@@ -73,29 +72,19 @@ export class ProjectOverview {
     this.#checkForCircularDependencies();
   }
 
-  #getFiles(dir: string, files: { path: string; sourceCode: string }[] = []) {
-    if (!fs.existsSync(dir)) {
-      throw new Error("Directory does not exist");
-    }
-    if (!fs.lstatSync(dir).isDirectory()) {
-      throw new Error("Path is not a directory");
-    }
+  #getFiles(dir: string, config: z.infer<typeof localConfigSchema>) {
+    const patterns = config.audit?.patterns
+      ? config.audit?.patterns.map((pattern) => path.join(dir, pattern))
+      : [`${dir}/**`];
 
-    const filePaths = fs.readdirSync(dir);
+    let filePaths = globSync(patterns);
+    filePaths = filePaths.filter((filePath) => fs.lstatSync(filePath).isFile());
+
+    const files: { path: string; sourceCode: string }[] = [];
 
     filePaths.forEach((filePath) => {
-      const fullPath = path.join(dir, filePath);
-      const stat = fs.lstatSync(fullPath);
-
-      if (stat.isDirectory()) {
-        this.#getFiles(fullPath, files);
-      }
-
-      if (stat.isFile()) {
-        const sourceCode = fs.readFileSync(fullPath, "utf8");
-
-        files.push({ path: fullPath, sourceCode });
-      }
+      const sourceCode = fs.readFileSync(filePath, "utf8");
+      files.push({ path: filePath, sourceCode });
     });
 
     return files;

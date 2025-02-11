@@ -15,10 +15,10 @@ import fs from "fs";
 
 class PythonPlugin implements LanguagePlugin {
   parser: Parser;
-  entryPointPath: string;
+  baseDir: string;
 
-  constructor(entryPointPath: string) {
-    this.entryPointPath = entryPointPath;
+  constructor(baseDir: string) {
+    this.baseDir = baseDir;
     this.parser = new Parser();
     this.parser.setLanguage(Python);
   }
@@ -112,7 +112,7 @@ class PythonPlugin implements LanguagePlugin {
 
   #resolveModuleImportSource(importSource: string) {
     const importPath = path.resolve(
-      path.dirname(this.entryPointPath),
+      this.baseDir,
       path.join(...importSource.split(".")),
     );
 

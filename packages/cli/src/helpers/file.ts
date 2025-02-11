@@ -57,3 +57,11 @@ export function replaceIndexesFromSourceCode(
 
   return sourceCode;
 }
+
+// export function shouldIncludeFile(path: string, patterns: string[]) {
+//   const files = globSync(patterns);
+
+//   if (patterns.length === 0) return true;
+
+//   return isMatch(path, patterns);
+// }

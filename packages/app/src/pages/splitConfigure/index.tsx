@@ -20,20 +20,18 @@ export default function SplitConfigure() {
     setBusy(true);
     setIsOutOfSynced(true);
 
-    console.log(111111111111, endpoint, group);
+    const updatedEndpoints = endpoints.map((e) => {
+      if (e.path === endpoint.path && e.method === endpoint.method) {
+        return {
+          ...e,
+          group,
+        };
+      } else {
+        return e;
+      }
+    });
 
-    const targetEndpoint = endpoints.find(
-      (e) => e.path === endpoint.path && e.method === endpoint.method,
-    );
-
-    if (!targetEndpoint) {
-      toast.error("Unescpected Error: Failed to find endpoint when updating");
-      console.error("Unescpected Error: Failed to find endpoint when updating");
-    } else {
-      targetEndpoint.group = group;
-    }
-
-    setEndpoints(endpoints);
+    setEndpoints(updatedEndpoints);
     setBusy(false);
   }
 

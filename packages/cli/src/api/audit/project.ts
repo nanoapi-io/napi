@@ -1,14 +1,12 @@
 import z from "zod";
-import path from "path";
 import { localConfigSchema } from "../../config/localConfig";
 import { ProjectOverview } from "../../audit/projectOverview";
 
 export function getProjectOverview(
+  workDir: string,
   napiConfig: z.infer<typeof localConfigSchema>,
 ) {
-  const dir = path.dirname(napiConfig.entrypoint);
-
-  const projectOverview = new ProjectOverview(dir, napiConfig);
+  const projectOverview = new ProjectOverview(workDir, napiConfig);
 
   return { files: projectOverview.files };
 }

@@ -5,8 +5,6 @@ import { z } from "zod";
 export const localConfigSchema = z.object({
   entrypoint: z.string(),
   out: z.string(),
-  include: z.array(z.string()).optional(),
-  exclude: z.array(z.string()).optional(),
   openai: z
     .object({
       apiKey: z.string().optional(),
@@ -15,6 +13,7 @@ export const localConfigSchema = z.object({
     .optional(),
   audit: z
     .object({
+      patterns: z.array(z.string()).optional(),
       targetMaxCharInFile: z.number().optional(),
       targetMaxLineInFile: z.number().optional(),
       targetMaxDepPerFile: z.number().optional(),
