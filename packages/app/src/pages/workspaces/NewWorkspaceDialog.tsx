@@ -3,42 +3,40 @@ import {
   Dialog,
   TextField
 } from "@radix-ui/themes";
-import { useState, useContext } from "react";
-import { StoreContext } from "../contexts/StoreContext";
+import { useState } from "react";
 
-export default function NewProjectDialog() {
-  const { state } = useContext(StoreContext);
+export default function NewWorkspaceDialog() {
   const [open, setOpen] = useState(false);
-  const [showNextStep, setShowNextStep] = useState(false);
-  const [projectName, setProjectName] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("");
+  const [workspaceDescription, setWorkspaceDescription] = useState("");
 
-  const createNewProject = async () => {
+  const createNewWorkspace = async (e: any) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/projects`, {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/workspaces`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("jwt")}`,
         },
         body: JSON.stringify({
-          name: projectName,
-          description: projectDescription,
-          workspaceId: state.activeWorkspace,
+          name: workspaceName,
+          description: workspaceDescription,
         }),
       });
       if (response.ok) {
-        console.log("Project created successfully");
-        setShowNextStep(true);
+        console.log("Workspace created successfully");
+        setWorkspaceName("");
+        setWorkspaceDescription("");
+        setOpen(false);
+        window.location.reload();
       } else {
-        console.error("Failed to create project");
+        console.error("Failed to create workspace");
       }
     } catch (error) {
-      console.error("Failed to create project", error);
+      console.error("Failed to create workspace", error);
     }
-  }
-
-
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -47,7 +45,7 @@ export default function NewProjectDialog() {
           <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="my-auto">
             <path d="M13 3C13 2.44772 12.5523 2 12 2C11.4477 2 11 2.44772 11 3V11H3C2.44772 11 2 11.4477 2 12C2 12.5523 2.44772 13 3 13H11V21C11 21.5523 11.4477 22 12 22C12.5523 22 13 21.5523 13 21V13H21C21.5523 13 22 12.5523 22 12C22 11.4477 21.5523 11 21 11H13V3Z" fill="currentColor"/>
           </svg>
-          New Project
+          New Workspace
         </button>
       </Dialog.Trigger>
       <Dialog.Content className="bg-secondarySurface-light text-text-light dark:bg-secondarySurface-dark dark:text-text-dark border-0">
@@ -62,31 +60,31 @@ export default function NewProjectDialog() {
             </Dialog.Close>
           </div>
         </Dialog.Title>
-        <h1 className="text-3xl font-bold text-center p-4">New Project</h1>
-        <p className="text-lg text-text-gray text-center pb-3">Create a new project</p>
-        <form onSubmit={createNewProject}>
+        <h1 className="text-3xl font-bold text-center p-4">New Workspace</h1>
+        <p className="text-lg text-text-gray text-center pb-3">Create a new workspace for collaborating</p>
+        <form onSubmit={(e) => createNewWorkspace(e)}>
           <div className="flex flex-col gap-y-4 p-4">
             <div>
-              <label htmlFor="projectName" className="font-sm font-semibold p-1">Workspace Name</label>
+              <label htmlFor="workspaceName" className="font-sm font-semibold p-1">Workspace Name</label>
               <TextField.Root 
-                id="projectName"
+                id="workspaceName"
                 size="3" 
-                placeholder="Enter project name" 
-                value={projectDescription} 
-                onChange={(e) => setProjectName(e.target.value)} />
+                placeholder="Enter workspace name" 
+                value={workspaceName} 
+                onChange={(e) => setWorkspaceName(e.target.value)} />
             </div>
             <div>
-              <label htmlFor="projectDescription" className="font-sm font-semibold p-1">Project Description</label>
+              <label htmlFor="workspaceDescription" className="font-sm font-semibold p-1">Workspace Description</label>
               <TextField.Root 
-                id="projectDescription"
+                id="workspaceDescription"
                 size="3" 
-                placeholder="Enter project description" 
-                value={projectDescription} 
-                onChange={(e) => setProjectDescription(e.target.value)}/>
+                placeholder="Enter workspace description" 
+                value={workspaceDescription} 
+                onChange={(e) => setWorkspaceDescription(e.target.value)}/>
             </div>
             <Button type="submit" 
               className="mt-5 mx-auto text-lg font-bold bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg px-6 py-5 transition-all">
-              Next
+              Create Workspace
             </Button>
           </div>
         </form>

@@ -1,47 +1,48 @@
 import { useEffect, useState } from "react";
 
 import AccountMenu from "../../components/AccountMenu";
-import NewProjectDialog from "../../components/NewProjectDialog";
-import ProjectCard, { Project } from "./ProjectCard";
+import NewProjectDialog from "./NewProjectDialog";
+import ProjectCard from "./ProjectCard";
 import ChangeThemeButton from "../../components/ChangeThemeButton";
+import { Project } from "../../types";
 
 
 export default function ProjectsList() {
   const projectsList: Project[] = [{
     id: 1,
     name: "Project 1",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     language: "TypeScript",
   },{
     id: 2,
     name: "Project 2",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     language: "javascript",
   },{
     id: 3,
     name: "Project 3",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     language: "python",
   },{
     id: 4,
     name: "Project 1",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     language: "nodejs",
   },{
     id: 5,
     name: "Project 2",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     language: "csharp",
   },{
     id: 6,
     name: "Project 3",
-    updatedAt: new Date(),
-    viewedAt: new Date(),
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
     language: "TypeScript",
   }, ]
   const [projects, setProjects] = useState<Project[]>([]);

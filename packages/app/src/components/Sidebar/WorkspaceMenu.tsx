@@ -1,6 +1,6 @@
 import { DropdownMenu } from '@radix-ui/themes';
 import { useEffect, useState, useContext } from 'react';
-import { StoreContext } from '../contexts/StoreContext';
+import { StoreContext } from '../../contexts/StoreContext';
 import { useNavigate } from 'react-router';
 // import { NewWorkspaceDialog } from './NewWorkspaceDialog';
 
@@ -12,12 +12,12 @@ export default function WorkspaceMenu() {
   const isActiveWorkspace = (workspace: any) => {
     const activeWorkspace = stateContext.state.activeWorkspace;
     console.log(activeWorkspace, workspace.id);
-    return activeWorkspace && workspace.id === activeWorkspace;
+    return activeWorkspace && workspace.id === activeWorkspace.id;
   }
 
   const setActiveWorkspace = (workspace: any) => {
-    stateContext.changeState({ activeWorkspace: workspace.id });
-    localStorage.setItem('activeWorkspace', workspace.id);
+    stateContext.changeState({ activeWorkspace: workspace });
+    localStorage.setItem('activeWorkspaceId', workspace.id);
     navigate('/projects');
   }
 

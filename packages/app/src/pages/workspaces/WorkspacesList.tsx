@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Table } from "@radix-ui/themes";
 
 import AccountMenu from "../../components/AccountMenu";
-import NewWorkspaceDialog from "../../components/NewWorkspaceDialog";
+import NewWorkspaceDialog from "./NewWorkspaceDialog";
 import ChangeThemeButton from "../../components/ChangeThemeButton";
 import { Workspace } from "../../types";
 import WorkspaceRow from "./WorkspaceRow";
@@ -28,7 +28,6 @@ export default function WorkspacesList() {
   }
 
   useEffect(() => {
-    // fetchWorkspaces();
     getWorkspaces();
   }, []);
 

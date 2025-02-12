@@ -1,4 +1,4 @@
-import AppSidebar from "../../components/AppSidebar";
+import AppSidebar from "../../components/Sidebar/AppSidebar";
 import WorkspacesList from "./WorkspacesList";
 
 export default function WorkspacesPage() {

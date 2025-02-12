@@ -1,7 +1,8 @@
 import { createContext, useState, useEffect } from "react";
+import { Workspace } from "../types";
 
 export type State = {
-  activeWorkspace: string | null;
+  activeWorkspace: Workspace | null;
   user: any;
 };
 
@@ -26,6 +27,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (response.ok) {
         const user = await response.json();
         changeState({ user });
+        return user;
       } else {
         console.error("Failed to fetch user");
       }
@@ -36,19 +38,51 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (localStorage.getItem("jwt")) {
-      loadUser();
+      loadUser()
+        .then((user: any) => {
+          if (!user) {
+            localStorage.removeItem("jwt");
+            localStorage.removeItem("activeWorkspace");
+            window.location.reload();
+          }
 
-      const activeWorkspace = localStorage.getItem("activeWorkspace");
-      if (activeWorkspace) {
-        changeState({ activeWorkspace });
-      }
+          let activeWorkspaceId: number;
+          if (!state.activeWorkspace) {
+            // If we don't already have the active workspace in the state, we'll try to get it from the local storage. In the case it's not there, we'll set the workspace to the one named "Default".
+            if (!localStorage.getItem("activeWorkspace")) {
+              const defaultWorkspace = user.workspaces.find((workspace: Workspace) => workspace.name === "Default");
+              localStorage.setItem("activeWorkspace", defaultWorkspace.id);
+              changeState({ activeWorkspace: defaultWorkspace });
+              return;
+            }
+
+            activeWorkspaceId = parseInt(localStorage.getItem("activeWorkspace") as string);
+          } else {
+            activeWorkspaceId = state.activeWorkspace.id;
+          }
+
+          if (activeWorkspaceId) {
+            const activeWorkspace = user.workspaces.find((workspace: Workspace) => workspace.id === activeWorkspaceId);
+            changeState({ activeWorkspace });
+          }
+        });
     }
   }, []);
 
   function getInitialState() {
+    if (!localStorage.getItem("jwt")) {
+      return {
+        activeWorkspace: null,
+        user: null,
+      };
+    }
+
+    const user = JSON.parse(localStorage.getItem("user") as string);
+    const activeWorkspaceId = localStorage.getItem("activeWorkspace");
+
     return {
-      activeWorkspace: null,
-      user: null,
+      activeWorkspace: user.workspaces.find((workspace: Workspace) => workspace.id === parseInt(activeWorkspaceId as string)),
+      user,
     };
   }
 

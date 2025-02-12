@@ -1,4 +1,4 @@
-import AppSidebar from "../../components/AppSidebar";
+import AppSidebar from "../../components/Sidebar/AppSidebar";
 import ProjectsList from "./ProjectsList";
 
 export default function ProjectsPage() {

@@ -7,7 +7,7 @@ export type Project = {
 }
 
 export type Workspace = {
-  id: string;
+  id: number;
   name: string;
   description?: string;
   users: any[];

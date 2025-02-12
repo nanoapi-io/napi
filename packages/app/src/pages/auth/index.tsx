@@ -54,26 +54,27 @@ export default function Auth(props: {
       }
 
       const user = await userResponse.json();
-      console.log('User data:', user);
 
       // Store the user data (e.g., in localStorage)
       localStorage.setItem('user', JSON.stringify(user));
       const defaultWorkspace = user.workspaces.find((workspace: any) => workspace.name === "Default");
 
       // Check if we've set an active workspace before
-      const localStoreWorkspace = localStorage.getItem('activeWorkspace');
+      const localStoreWorkspace = localStorage.getItem('activeWorkspaceId');
       if (localStoreWorkspace) {
+        const workspace = user.workspaces.find((workspace: any) => workspace.id === parseInt(localStoreWorkspace));
         
         changeState({
-          activeWorkspace: localStoreWorkspace,
+          activeWorkspace: workspace,
           user,
         });
         navigate('/projects');
         return;
       }
 
+      localStorage.setItem('activeWorkspaceId', defaultWorkspace.id);
       changeState({
-        activeWorkspace: defaultWorkspace.id,
+        activeWorkspace: defaultWorkspace,
         user,
       })
 
@@ -114,6 +115,46 @@ export default function Auth(props: {
       // Store the token (e.g., in localStorage)
       localStorage.setItem("jwt", token);
 
+      const userResponse = await fetch(
+        `${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/self`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const user = await userResponse.json();
+
+      // Store the user data (e.g., in localStorage)
+      localStorage.setItem('user', JSON.stringify(user));
+      const defaultWorkspace = user.workspaces.find((workspace: any) => workspace.name === "Default");
+
+      // Check if we've set an active workspace before
+      const localStoreWorkspace = localStorage.getItem('activeWorkspaceId');
+      if (localStoreWorkspace) {
+        const workspace = user.workspaces.find((workspace: any) => workspace.id === parseInt(localStoreWorkspace));
+        
+        changeState({
+          activeWorkspace: workspace,
+          user,
+        });
+        navigate('/projects');
+        return;
+      }
+
+      localStorage.setItem('activeWorkspaceId', defaultWorkspace.id);
+      changeState({
+        activeWorkspace: defaultWorkspace,
+        user,
+      })
+
+
       // Redirect to the dashboard or a protected route
       navigate("/projects");
     } catch (error) {
@@ -150,6 +191,45 @@ export default function Auth(props: {
 
       // Store the token (e.g., in localStorage)
       localStorage.setItem("jwt", token);
+
+      const userResponse = await fetch(
+        `${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/self`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!userResponse.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const user = await userResponse.json();
+
+      // Store the user data (e.g., in localStorage)
+      localStorage.setItem('user', JSON.stringify(user));
+      const defaultWorkspace = user.workspaces.find((workspace: any) => workspace.name === "Default");
+
+      // Check if we've set an active workspace before
+      const localStoreWorkspace = localStorage.getItem('activeWorkspaceId');
+      if (localStoreWorkspace) {
+        const workspace = user.workspaces.find((workspace: any) => workspace.id === parseInt(localStoreWorkspace));
+        
+        changeState({
+          activeWorkspace: workspace,
+          user,
+        });
+        navigate('/projects');
+        return;
+      }
+
+      localStorage.setItem('activeWorkspaceId', defaultWorkspace.id);
+      changeState({
+        activeWorkspace: defaultWorkspace,
+        user,
+      })
 
       // Redirect to the dashboard or a protected route
       navigate("/projects");
