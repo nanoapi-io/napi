@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import { SegmentedControl } from "@radix-ui/themes";
 import AccountMenu from "../../components/AccountMenu";
 import NewProjectDialog from "./NewProjectDialog";
 import ProjectCard from "./ProjectCard";
@@ -45,7 +45,7 @@ export default function ProjectsList() {
     createdAt: new Date().toISOString(),
     language: "TypeScript",
   }, ]
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>(projectsList);
   const [loading] = useState(false);
   const [searchText, setSearchText] = useState("");
 
@@ -62,7 +62,7 @@ export default function ProjectsList() {
   // Filter the projects based on the search text
   useEffect(() => {
     if (!searchText) {
-      setProjects([]);
+      setProjects(projectsList);
       return;
     }
     const filteredProjects = projectsList.filter((project) => {
@@ -98,7 +98,11 @@ export default function ProjectsList() {
           <p className="text-text-gray">Here is something cool about my cool project</p>
         </div>
         <div className="pt-4 pb-3">
-          <div><p>All | Oldest | Latest</p></div>
+          <SegmentedControl.Root defaultValue="all">
+            <SegmentedControl.Item value="all">All</SegmentedControl.Item>
+            <SegmentedControl.Item value="oldest">Oldest</SegmentedControl.Item>
+            <SegmentedControl.Item value="latest">Latest</SegmentedControl.Item>
+          </SegmentedControl.Root>
         </div>
         {loading ? (
           <p>Loading...</p>

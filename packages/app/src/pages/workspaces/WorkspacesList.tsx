@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Table } from "@radix-ui/themes";
+import { SegmentedControl, Table } from "@radix-ui/themes";
 
 import AccountMenu from "../../components/AccountMenu";
 import NewWorkspaceDialog from "./NewWorkspaceDialog";
@@ -63,7 +63,11 @@ export default function WorkspacesList() {
           <p className="text-text-gray">View and manage workspaces you have access to</p>
         </div>
         <div className="pt-4 pb-3">
-          <div><p>All | Oldest | Latest</p></div>
+          <SegmentedControl.Root defaultValue="all">
+            <SegmentedControl.Item value="all">All</SegmentedControl.Item>
+            <SegmentedControl.Item value="oldest">Oldest</SegmentedControl.Item>
+            <SegmentedControl.Item value="latest">Latest</SegmentedControl.Item>
+          </SegmentedControl.Root>
         </div>
         {loading ? (
           <p>Loading...</p>

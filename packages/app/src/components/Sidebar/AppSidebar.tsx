@@ -39,6 +39,20 @@ export default function AppSidebar() {
       {/* Navigation */}
       <div className="grow flex flex-col mt-8 gap-y-2">
         <button 
+            onClick={() => navigate("/dashboard")}
+            className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
+            location.pathname.includes("/dashboard") ? "bg-foreground-light dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
+          }`}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4 4V11H9V4H4ZM9.00125 11C9.00128 10.9999 9.00127 10.9999 9.00121 11L9.00125 11ZM2 4C2 2.89543 2.89543 2 4 2H9C10.1046 2 11 2.89543 11 4V11C11 12.1046 10.1046 13 9 13H4C2.89543 13 2 12.1046 2 11V4Z" fill="currentColor"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M15 4V7H20V4H15ZM14.9988 6.99995C14.9987 6.99995 14.9987 6.99995 14.9988 6.99995L14.9988 6.99995ZM13 4C13 2.89543 13.8954 2 15 2H20C21.1046 2 22 2.89543 22 4V7C22 8.10457 21.1046 9 20 9H15C13.8954 9 13 8.10457 13 7V4Z" fill="currentColor"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M15 13V20H20V13H15ZM20.0012 20C20.0013 19.9999 20.0013 19.9999 20.0012 20L20.0012 20ZM13 13C13 11.8954 13.8954 11 15 11H20C21.1046 11 22 11.8954 22 13V20C22 21.1046 21.1046 22 20 22H15C13.8954 22 13 21.1046 13 20V13Z" fill="currentColor"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M4 17V20H9V17H4ZM3.99879 20C3.99873 19.9999 3.99872 19.9999 3.99875 20L3.99879 20ZM2 17C2 15.8954 2.89543 15 4 15H9C10.1046 15 11 15.8954 11 17V20C11 21.1046 10.1046 22 9 22H4C2.89543 22 2 21.1046 2 20V17Z" fill="currentColor"/>
+          </svg>
+          <p className="text-md">Dashboard</p>
+        </button>
+
+        <button 
           onClick={() => navigate("/projects")}
           className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
           location.pathname.includes("/projects") ? "bg-foreground-light dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"

@@ -15,6 +15,7 @@ import { StoreProvider } from "./contexts/StoreContext";
 import BaseAudit from "./pages/audit";
 import Audit from "./pages/audit/index";
 import AuditFile from "./pages/audit/file";
+import DashboardPage from "./pages/dashboard";
 import ProjectsPage from "./pages/projects";
 import WorkspacesPage from "./pages/workspaces";
 import Auth from "./pages/auth";
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
   {
     path: "/splitConfigure",
     element: <SplitConfigure />,
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardPage />,
   },
   {
     path: "/projects",
