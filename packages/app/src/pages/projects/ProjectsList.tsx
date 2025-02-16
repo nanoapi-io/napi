@@ -10,37 +10,37 @@ import { Project } from "../../types";
 export default function ProjectsList() {
   const projectsList: Project[] = [{
     id: 1,
-    name: "Project 1",
+    name: "Frontend",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "TypeScript",
   },{
     id: 2,
-    name: "Project 2",
+    name: "Listener",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "javascript",
   },{
     id: 3,
-    name: "Project 3",
+    name: "AI Model",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "python",
   },{
     id: 4,
-    name: "Project 1",
+    name: "Backend",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "nodejs",
   },{
     id: 5,
-    name: "Project 2",
+    name: "Engine",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "csharp",
   },{
     id: 6,
-    name: "Project 3",
+    name: "Optimus",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "TypeScript",
@@ -98,7 +98,7 @@ export default function ProjectsList() {
           <p className="text-text-gray">Here is something cool about my cool project</p>
         </div>
         <div className="pt-4 pb-3">
-          <SegmentedControl.Root defaultValue="all">
+          <SegmentedControl.Root defaultValue="all" variant="classic" className="">
             <SegmentedControl.Item value="all">All</SegmentedControl.Item>
             <SegmentedControl.Item value="oldest">Oldest</SegmentedControl.Item>
             <SegmentedControl.Item value="latest">Latest</SegmentedControl.Item>

@@ -1,8 +1,18 @@
+import { useNavigate } from 'react-router'
 import { Project } from '../../types'
 
 export default function ProjectCard(project: Project) {
+  const navigate = useNavigate()
+
+  const handleNavigate = (e: any) => {
+    e.preventDefault()
+    navigate(`/project/${project.id}/overview`)
+  }
+
   return (
-    <div className="relative flex flex-col bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple cursor-pointer hover:shadow-lg hover:mt-[-2px] hover:mb-[2px] transition-all">
+    <div 
+      onClick={(e) => handleNavigate(e)}
+      className="relative flex flex-col bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple cursor-pointer hover:shadow-lg hover:mt-[-2px] hover:mb-[2px] transition-all">
       <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
         <button className="px-2 py-1.5 align-middle">
           <svg

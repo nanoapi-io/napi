@@ -17,9 +17,15 @@ import Audit from "./pages/audit/index";
 import AuditFile from "./pages/audit/file";
 import DashboardPage from "./pages/dashboard";
 import ProjectsPage from "./pages/projects";
+import Project from "./pages/project";
 import WorkspacesPage from "./pages/workspaces";
 import Auth from "./pages/auth";
 import Index from "./pages";
+
+const reactFlowPaths = [
+  "/splitConfigure",
+  "/audit",
+];
 
 const router = createBrowserRouter([
   {
@@ -37,6 +43,18 @@ const router = createBrowserRouter([
   {
     path: "/projects",
     element: <ProjectsPage />,
+  },
+  {
+    path: "/project/:id/overview",
+    element: <Project />,
+  },
+  {
+    path: "/project/:id/splitConfigure", // Shows react flow
+    element: <Project />,
+  },
+  {
+    path: "/project/:id/audit", // Shows react flow
+    element: <Project />,
   },
   {
     path: "/workspaces",
@@ -79,7 +97,12 @@ if (!rootElement) {
 function Main() {
   const themeContext = useContext(ThemeContext);
 
-  const shouldRenderReactFlow = !window.location.pathname.startsWith("/projects");
+  let shouldRenderReactFlow = false;
+  reactFlowPaths.forEach((path) => {
+    if (window.location.pathname.includes(path)) {
+      shouldRenderReactFlow = true;
+    }
+  });
 
   return (
     <Theme appearance={themeContext.theme}>
