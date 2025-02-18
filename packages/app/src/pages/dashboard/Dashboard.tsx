@@ -88,9 +88,9 @@ export default function Dashboard() {
 
 
   return (
-    <div className="w-full text-text-light dark:text-white bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl flex flex-col">
+    <div className="w-fulltext-text-light dark:text-white bg-background-light dark:bg-secondaryBackground-dark rounded-xl flex flex-col">
       {/* Top bar with project search on the left and the account icon on the right */}
-      <div className="flex justify-between p-2 border-b-[1px] border-foreground-light dark:border-foreground-dark">
+      <div className="flex justify-between p-2 border-b-[1px] border-gray-200 dark:border-foreground-dark">
         <div></div>
         <div className="flex gap-x-2">
           <ChangeThemeButton />
@@ -100,8 +100,8 @@ export default function Dashboard() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 my-auto">
         {/* Arch Quality Index */}
-        <Card className="flex justify-center p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-          <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+        <Card className="flex justify-center p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+          <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
             <button className="px-2 py-1.5 align-middle">
               <svg
                 width="15"
@@ -117,7 +117,7 @@ export default function Dashboard() {
             </button>
           </div>
           <div className="my-auto">
-            <div className="flex w-full justify-center font-sans text-yellow-200">
+            <div className="flex w-full justify-center font-sans text-yellow-400 dark:text-yellow-200">
               <p className="font-bold text-8xl">5</p>
               <p className="font-bold text-6xl self-end pb-0.5">. 3</p>
             </div>
@@ -127,8 +127,8 @@ export default function Dashboard() {
         </Card>
 
         {/* History graph */}
-        <Card className="p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-        <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+        <Card className="p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+        <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
             <button className="px-2 py-1.5 align-middle">
               <svg
                 width="15"
@@ -148,8 +148,8 @@ export default function Dashboard() {
         </Card>
 
         {/* Per-project error graph */}
-        <Card className="p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple col-span-full">
-        <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+        <Card className="p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+        <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
             <button className="px-2 py-1.5 align-middle">
               <svg
                 width="15"

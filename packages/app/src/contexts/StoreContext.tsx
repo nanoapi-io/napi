@@ -43,7 +43,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           if (!user) {
             localStorage.removeItem("jwt");
             localStorage.removeItem("activeWorkspace");
-            window.location.reload();
+            window.location.pathname = "/login";
           }
 
           let activeWorkspaceId: number;

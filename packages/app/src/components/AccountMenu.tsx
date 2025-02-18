@@ -15,6 +15,7 @@ export default function AccountMenu() {
     localStorage.removeItem('jwt');
     localStorage.removeItem('user');
     setLoggedIn(false);
+    window.location.pathname = '/login';
   }
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function AccountMenu() {
       {loggedIn ? (
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>
-            <div className="flex bg-hover-light hover:bg-hover-translucentLight rounded-lg border-[1px] border-card-borderLight dark:border-card-borderDark transition-all">
+            <div className="flex bg-hover-light hover:bg-hover-translucentLight rounded-lg border-[1px] border-secondarySurface-light dark:border-card-borderDark transition-all">
               <button className="flex gap-x-3 items-center pl-2 pr-3 my-auto">
                 <img className="w-8 h-8 rounded-full" src={avatar} alt="Profile" />
                 <svg fill="currentColor" width="20px" height="20px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
@@ -54,20 +55,20 @@ export default function AccountMenu() {
               </div>
             </div>
             <DropdownMenu.Separator />
-            <DropdownMenu.Item className='hover:bg-primary-dark'>
+            <DropdownMenu.Item className='hover:text-white hover:bg-primary-dark'>
               <button>Account & preferences</button>
             </DropdownMenu.Item>
-            <DropdownMenu.Item className='hover:bg-primary-dark'>
+            <DropdownMenu.Item className='hover:text-white hover:bg-primary-dark'>
               <button>Report a bug</button>
             </DropdownMenu.Item>
-            <DropdownMenu.Item className='hover:bg-primary-dark'>
+            <DropdownMenu.Item className='hover:text-white hover:bg-primary-dark'>
               <button>Request features</button>
             </DropdownMenu.Item>
-            <DropdownMenu.Item className='hover:bg-primary-dark'>
+            <DropdownMenu.Item className='hover:text-white hover:bg-primary-dark'>
               <button>Feedback</button>
             </DropdownMenu.Item>
             <DropdownMenu.Separator />
-            <DropdownMenu.Item className='hover:bg-primary-dark'>
+            <DropdownMenu.Item className='hover:text-white hover:bg-primary-dark'>
               <button className='w-full text-left' onClick={logOut}>Log out</button>
             </DropdownMenu.Item>
           </DropdownMenu.Content>

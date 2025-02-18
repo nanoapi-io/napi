@@ -133,8 +133,8 @@ export default function ProjectOverview(props: {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 my-auto">
-      <Card className="p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-        <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+      <Card className="p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-foreground-dark">
+        <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
           <button className="px-2 py-1.5 align-middle">
             <svg
               width="15"
@@ -154,8 +154,8 @@ export default function ProjectOverview(props: {
       </Card>
 
       {/* Per-project error graph */}
-      <Card className="flex flex-col justify-center p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-          <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+      <Card className="flex flex-col justify-center p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+          <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
             <button className="px-2 py-1.5 align-middle">
               <svg
                 width="15"
@@ -181,8 +181,8 @@ export default function ProjectOverview(props: {
 
       {/* History graph */}
 
-        <Card className="flex flex-col justify-between p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-          <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+        <Card className="flex flex-col justify-between p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+          <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
             <button className="px-2 py-1.5 align-middle">
               <svg
                 width="15"
@@ -206,8 +206,8 @@ export default function ProjectOverview(props: {
           <p className="text-center text-text-lightInfo dark:text-text-darkInfo pb-1">You're using less packages than 63% of projects this size</p>
         </Card>
 
-      <Card className="p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-      <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+      <Card className="p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+      <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
           <button className="px-2 py-1.5 align-middle">
             <svg
               width="15"
@@ -226,8 +226,8 @@ export default function ProjectOverview(props: {
         <Line data={errorLineData} options={errorLineOptions} />
       </Card>
 
-      <Card className="p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-      <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+      <Card className="p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+      <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
           <button className="px-2 py-1.5 align-middle">
             <svg
               width="15"
@@ -246,8 +246,8 @@ export default function ProjectOverview(props: {
         <Line data={locLineData} options={locLineOptions} />
       </Card>
 
-      <Card className="flex flex-col justify-between p-4 bg-foreground-light dark:bg-foreground-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
-          <div className="absolute top-4 right-4 border-[1px] bg-foreground-light dark:bg-foreground-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
+      <Card className="flex flex-col justify-between p-4 bg-hover-light dark:bg-hover-dark rounded-lg border-[1px] border-borderLight dark:border-border-darkPurple">
+          <div className="absolute top-4 right-4 border-[1px] bg-hover-light dark:bg-hover-dark border-border-light dark:border-border-darkGray rounded-xl hover:bg-hover-light dark:hover:bg-hover-mid">
             <button className="px-2 py-1.5 align-middle">
               <svg
                 width="15"

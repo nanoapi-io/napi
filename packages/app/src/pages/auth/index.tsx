@@ -249,7 +249,7 @@ export default function Auth(props: {
   }, [props.provider]);
 
   return (
-    <div className="flex flex-col gap-y-4 min-h-screen text-white bg-background-light dark:bg-background-dark p-2 justify-center items-center">
+    <div className="flex flex-col gap-y-4 min-h-screen text-text-gray dark:text-white bg-background-light dark:bg-background-dark p-2 justify-center items-center">
       <h1 className="text-4xl font-bold">Logging in</h1>
       <p className="text-text-gray">You will be redirected in a moment...</p>
     </div>

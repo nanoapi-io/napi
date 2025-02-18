@@ -27,7 +27,7 @@ export default function ProjectCard(project: Project) {
           </svg>
         </button>
       </div>
-      <div className="flex justify-center h-[128px] bg-hover-light dark:bg-hover-dark">
+      <div className="flex justify-center h-[128px] bg-background-light dark:bg-hover-dark">
         <img
           width={80} 
           height={80} 
@@ -37,11 +37,10 @@ export default function ProjectCard(project: Project) {
       </div>
       <div className="h-[128px] flex flex-col p-4 gap-y-2.5">
         <h2 className="text-xl font-bold">{project.name}</h2>
-        <p className="text-text-lightInfo dark:text-text-darkInfo pb-1">Edited・{project.updatedAt}</p>
+        <p className="text-text-lightInfo dark:text-text-darkInfo pb-1">Viewed・{project.updatedAt}</p>
         <div className="flex gap-x-3">
-          {/* Profile or org photo */}
-          <img className="w-6 h-6 rounded-full" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Profile" />
-          <p className="font-semibold">Team name</p>
+          <p className="font-semibold text-red-400">{project.errors || 0} Errors</p>
+          <p className="font-semibold text-yellow-500 dark:text-yellow-200">{project.warnings || 0} Warnings</p>
         </div>
       </div>
     </div>

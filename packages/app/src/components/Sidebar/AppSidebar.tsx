@@ -18,7 +18,7 @@ export default function AppSidebar() {
   }, [state.user]);
 
   return (
-    <div className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark w-80 px-4 py-2 rounded-xl flex flex-col">
+    <div className="bg-background-light dark:bg-secondaryBackground-dark w-80 px-4 py-2 rounded-xl flex flex-col">
       {/* Header */}
       <div className="flex justify-between">
         <div className="flex gap-x-1">
@@ -40,8 +40,8 @@ export default function AppSidebar() {
       <div className="grow flex flex-col mt-8 gap-y-2">
         <button 
             onClick={() => navigate("/dashboard")}
-            className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
-            location.pathname.includes("/dashboard") ? "bg-foreground-light dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
+            className={`flex gap-x-2 p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-hover-dark transition-all ${
+            location.pathname.includes("/dashboard") ? "bg-gray-200 dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
           }`}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M4 4V11H9V4H4ZM9.00125 11C9.00128 10.9999 9.00127 10.9999 9.00121 11L9.00125 11ZM2 4C2 2.89543 2.89543 2 4 2H9C10.1046 2 11 2.89543 11 4V11C11 12.1046 10.1046 13 9 13H4C2.89543 13 2 12.1046 2 11V4Z" fill="currentColor"/>
@@ -54,16 +54,16 @@ export default function AppSidebar() {
 
         <button 
           onClick={() => navigate("/projects")}
-          className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
-          location.pathname.includes("/projects") ? "bg-foreground-light dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
+          className={`flex gap-x-2 p-2 rounded-lg hover:bg-gray-200  dark:hover:bg-hover-dark transition-all ${
+          location.pathname.includes("/projects") ? "bg-gray-200 dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
         }`}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M8.38965 4.11724C8.24203 4.03862 8.07705 3.99829 7.9098 3.99993C7.90654 3.99996 7.90327 3.99997 7.9 3.99997H4C3.73478 3.99997 3.48043 4.10533 3.29289 4.29287C3.10536 4.4804 3 4.73476 3 4.99997V18C3 18.2652 3.10536 18.5195 3.29289 18.7071C3.48043 18.8946 3.73478 19 4 19H18.45C18.4523 19 18.4545 19 18.4568 19C18.6796 19.0015 18.8966 18.9285 19.0732 18.7926C19.2496 18.6569 19.3757 18.4663 19.4315 18.2508C19.4316 18.2505 19.4317 18.2503 19.4317 18.25L20.9718 12.25C21.0099 12.1021 21.0137 11.9474 20.9829 11.7977C20.952 11.6481 20.8872 11.5076 20.7935 11.3869C20.6999 11.2662 20.5798 11.1686 20.4426 11.1015C20.3053 11.0344 20.1545 10.9997 20.0018 11L20 11H9.25356C9.07568 11.0058 8.90251 11.059 8.75197 11.1542C8.59872 11.2511 8.4747 11.3878 8.39316 11.5497C8.39153 11.5529 8.38988 11.5562 8.38822 11.5594L6.88822 14.4594C6.63449 14.9499 6.03113 15.1419 5.54058 14.8882C5.05003 14.6345 4.85805 14.0311 5.11178 13.5406L6.60952 10.6449C6.85417 10.1615 7.2252 9.75324 7.68325 9.46366C8.14299 9.17303 8.67308 9.01284 9.21684 9.00024C9.22456 9.00006 9.23228 8.99997 9.24 8.99997H19V7.99997C19 7.73476 18.8946 7.4804 18.7071 7.29287C18.5196 7.10533 18.2652 6.99997 18 6.99997H12.07V5.99812L12.0698 6.99997C11.5732 6.99989 11.0843 6.8765 10.6471 6.64088C10.2117 6.40625 9.84114 6.06764 9.56829 5.65521L8.76115 4.45945C8.75902 4.45629 8.7569 4.45311 8.7548 4.44993C8.66282 4.31024 8.53728 4.19585 8.38965 4.11724ZM12.07 4.99997C12.0701 4.99997 12.0701 4.99997 12.0702 4.99997H18C18.7957 4.99997 19.5587 5.31604 20.1213 5.87865C20.6839 6.44126 21 7.20432 21 7.99997V9.17031C21.1091 9.20874 21.2162 9.25355 21.3207 9.3046C21.7325 9.50582 22.0926 9.79871 22.3736 10.1608C22.6546 10.5228 22.8489 10.9445 22.9415 11.3933C23.0342 11.8421 23.0228 12.3062 22.9082 12.75L21.3686 18.7486L21.3683 18.75C21.2011 19.3973 20.8226 19.9703 20.2926 20.3779C19.7637 20.7848 19.1143 21.0036 18.447 21H4C3.20435 21 2.44129 20.6839 1.87868 20.1213C1.31607 19.5587 1 18.7956 1 18V4.99997C1 4.20432 1.31607 3.44126 1.87868 2.87865C2.44129 2.31604 3.20435 1.99997 4 1.99997H7.8956C8.39548 1.99597 8.88846 2.11695 9.32975 2.35195C9.77076 2.58681 10.1461 2.92809 10.4217 3.34477L11.2288 4.5405C11.231 4.54365 11.2331 4.5468 11.2352 4.54997C11.3262 4.68824 11.4502 4.80173 11.5959 4.88028C11.7416 4.95879 11.9045 4.99992 12.07 4.99997Z" fill="currentColor"/>
           </svg>
           <p className="text-md">My projects</p>
         </button>
-        <button className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
-          location.pathname.includes("/notifications") ? "bg-foreground-light dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
+        <button className={`flex gap-x-2 p-2 rounded-lg hover:bg-gray-200  dark:hover:bg-hover-dark transition-all ${
+          location.pathname.includes("/notifications") ? "bg-gray-200 dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
         }`}>
           <svg width="20" height="22" viewBox="0 0 20 22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M19.5635 15.1737L19.5664 15.1758C19.9249 15.4221 20.0835 15.8725 19.9572 16.2898C19.8295 16.7115 19.4407 17 19.0001 17H1.00008C0.559411 17 0.170684 16.7115 0.0429858 16.2898C-0.0833578 15.8725 0.075285 15.4221 0.433776 15.1758L0.436625 15.1737C0.444325 15.168 0.462178 15.1544 0.4888 15.1322C0.542016 15.0878 0.6304 15.0091 0.742875 14.8904C0.967304 14.6535 1.29039 14.2544 1.62218 13.6461C2.28301 12.4346 3.00008 10.3527 3.00008 7C3.00008 5.14348 3.73758 3.36301 5.05033 2.05025C6.36308 0.737498 8.14356 0 10.0001 0C11.8566 0 13.6371 0.737498 14.9498 2.05025C16.2626 3.36301 17.0001 5.14348 17.0001 7C17.0001 10.3527 17.7171 12.4346 18.378 13.6461C18.7098 14.2544 19.0329 14.6535 19.2573 14.8904C19.3698 15.0091 19.4581 15.0878 19.5114 15.1322C19.538 15.1544 19.5558 15.168 19.5635 15.1737ZM6.46454 3.46447C7.40223 2.52678 8.674 2 10.0001 2C11.3262 2 12.5979 2.52678 13.5356 3.46447C14.4733 4.40215 15.0001 5.67392 15.0001 7C15.0001 10.6473 15.783 13.0654 16.6222 14.6039C16.6983 14.7434 16.7747 14.8753 16.8508 15H3.1494C3.22549 14.8753 3.30188 14.7434 3.37797 14.6039C4.21715 13.0654 5.00008 10.6473 5.00008 7C5.00008 5.67392 5.52686 4.40215 6.46454 3.46447Z" fill="currentColor"/>
@@ -71,8 +71,8 @@ export default function AppSidebar() {
           </svg>
           <p className="text-md">Notifications</p>
         </button>
-        <button className={`flex gap-x-2 p-2 rounded-lg hover:bg-hover-light dark:hover:bg-hover-dark transition-all ${
-          location.pathname.includes("/notifications") ? "bg-foreground-light dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
+        <button className={`flex gap-x-2 p-2 rounded-lg hover:bg-gray-200  dark:hover:bg-hover-dark transition-all ${
+          location.pathname.includes("/notifications") ? "bg-gray-200  dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
         }`}>
           <svg width="22" height="22" viewBox="0 0 22 22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <path fill-rule="evenodd" clip-rule="evenodd" d="M11 7C8.79086 7 7 8.79086 7 11C7 13.2091 8.79086 15 11 15C13.2091 15 15 13.2091 15 11C15 8.79086 13.2091 7 11 7ZM9 11C9 9.89543 9.89543 9 11 9C12.1046 9 13 9.89543 13 11C13 12.1046 12.1046 13 11 13C9.89543 13 9 12.1046 9 11Z" fill="currentColor"/>

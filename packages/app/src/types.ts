@@ -4,6 +4,8 @@ export type Project = {
   updatedAt: string;
   createdAt: string;
   language: string;
+  errors?: number;
+  warnings?: number;
 }
 
 export type Workspace = {

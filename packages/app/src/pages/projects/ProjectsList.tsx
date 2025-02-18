@@ -14,36 +14,48 @@ export default function ProjectsList() {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "TypeScript",
+    errors: 12,
+    warnings: 2,
   },{
     id: 2,
     name: "Listener",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "javascript",
+    errors: 19,
+    warnings: 3,
   },{
     id: 3,
     name: "AI Model",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "python",
+    errors: 3,
+    warnings: 20,
   },{
     id: 4,
     name: "Backend",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "nodejs",
+    errors: 5,
+    warnings: 5,
   },{
     id: 5,
     name: "Engine",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "csharp",
+    errors: 2,
+    warnings: 1,
   },{
     id: 6,
     name: "Optimus",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "TypeScript",
+    errors: 3,
+    warnings: 4,
   }, ]
   const [projects, setProjects] = useState<Project[]>(projectsList);
   const [loading] = useState(false);
@@ -72,9 +84,9 @@ export default function ProjectsList() {
   }, [searchText]);
 
   return (
-    <div className="w-full text-text-light dark:text-white bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl flex flex-col">
+    <div className="w-full text-text-light dark:text-white bg-background-light dark:bg-secondaryBackground-dark rounded-xl flex flex-col">
       {/* Top bar with project search on the left and the account icon on the right */}
-      <div className="flex justify-between p-2 border-b-[1px] border-foreground-light dark:border-foreground-dark">
+      <div className="flex justify-between p-2 border-b-[1px] border-gray-200 dark:border-foreground-dark">
         <div className="flex text-gray-light dark:text-gray-dark bg-search-bgLight dark:bg-search-bgDark rounded-lg px-3 py-2.5 gap-x-2 border-[1px] border-search-bgLight dark:border-search-bgDark dark:focus-within:border-borderDarkHighlight focus-within:border-borderLightHighlight">
           <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="none" className="my-auto">
             <path fill="currentColor" fill-rule="evenodd" d="M4 9a5 5 0 1110 0A5 5 0 014 9zm5-7a7 7 0 104.2 12.6.999.999 0 00.093.107l3 3a1 1 0 001.414-1.414l-3-3a.999.999 0 00-.107-.093A7 7 0 009 2z"/>
@@ -84,7 +96,7 @@ export default function ProjectsList() {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             placeholder="Search for projects"
-            className="bg-[#2C2C50] min-w-72 focus:ring-0 focus:outline-none" />
+            className="bg-search-bgLight dark:bg-search-bgDark min-w-72 focus:ring-0 focus:outline-none" />
         </div>
         <div className="flex gap-x-2">
           <ChangeThemeButton />
@@ -95,7 +107,7 @@ export default function ProjectsList() {
       <div className="grow flex flex-col p-4">
         <div className="flex flex-col gap-y-2">
           <h1 className="text-2xl font-bold">My Projects</h1>
-          <p className="text-text-gray">Here is something cool about my cool project</p>
+          <p className="text-text-gray">Here is the project description</p>
         </div>
         <div className="pt-4 pb-3">
           <SegmentedControl.Root defaultValue="all" variant="classic" className="">

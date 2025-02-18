@@ -8,19 +8,21 @@ import "@xyflow/react/dist/style.css";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import SplitConfigure from "./pages/splitConfigure";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
 import { StoreProvider } from "./contexts/StoreContext";
 import BaseAudit from "./pages/audit";
 import Audit from "./pages/audit/index";
 import AuditFile from "./pages/audit/file";
+import LoginPage from "./pages/login";
 import DashboardPage from "./pages/dashboard";
 import ProjectsPage from "./pages/projects";
 import Project from "./pages/project";
 import WorkspacesPage from "./pages/workspaces";
 import Auth from "./pages/auth";
 import Index from "./pages";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const reactFlowPaths = [
   "/splitConfigure",
@@ -30,7 +32,11 @@ const reactFlowPaths = [
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Index />,
+    element: <Navigate to="/dashboard" />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
   },
   {
     path: "/splitConfigure",
@@ -38,27 +44,45 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <DashboardPage />,
+    element: <ProtectedRoute />,
+    children: [
+      { index: true, element: <DashboardPage /> },
+    ],
   },
   {
     path: "/projects",
-    element: <ProjectsPage />,
+    element: <ProtectedRoute />,
+    children: [
+      { index: true, element: <ProjectsPage /> },
+    ],
   },
   {
     path: "/project/:id/overview",
-    element: <Project />,
+    element: <ProtectedRoute />,
+    children: [
+      { index: true, element: <Project /> },
+    ],
   },
   {
     path: "/project/:id/splitConfigure", // Shows react flow
-    element: <Project />,
+    element: <ProtectedRoute />,
+    children: [
+      { index: true, element: <Project /> },
+    ],
   },
   {
     path: "/project/:id/audit", // Shows react flow
-    element: <Project />,
+    element: <ProtectedRoute />,
+    children: [
+      { index: true, element: <Project /> },
+    ],
   },
   {
     path: "/workspaces",
-    element: <WorkspacesPage />,
+    element: <ProtectedRoute />,
+    children: [
+      { index: true, element: <WorkspacesPage /> },
+    ],
   },
   {
     path: "/auth/github",
