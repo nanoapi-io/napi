@@ -3,17 +3,17 @@ import {
   Dialog,
   TextField,
   ScrollArea,
-  DropdownMenu,
   Spinner
 } from "@radix-ui/themes";
-import { LuTrash2, LuUser } from "react-icons/lu"
 import { useState, useContext, useEffect } from "react";
-import { StoreContext } from "../contexts/StoreContext";
-import { User } from "../types";
+import InviteRow from "./InviteRow";
+import UserRow from "./UserRow";
+import { StoreContext } from "../../contexts/StoreContext";
+import { Invite, User } from "../../types";
 
 const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
-type UsersAndInvites = User & { uuid: string };
+type UsersAndInvites = User & Invite;
 
 export default function InviteUserDialog(props: {
   type: "sidebar" | "workspace";
@@ -66,6 +66,9 @@ export default function InviteUserDialog(props: {
       }
 
       console.log("Workspace invite sent successfully");
+      setUserSearch("");
+      setLoading(true);
+      loadWorkspaceUsers();
     }
     catch (error) {
       console.error("Failed to send workspace invite", error);
@@ -159,54 +162,13 @@ export default function InviteUserDialog(props: {
             <Spinner loading={loading}>
               {filteredUsers.map((user) => {
 
-                if (user.uuid) return (
-                  <div key={user.uuid} className="flex items-center justify-between gap-x-2 px-2 py-3 border-b-[1px] border-gray-200 dark:border-foreground-dark">
-                    <div className="flex items-center gap-x-2">
-                      <LuUser className="w-8 h-8 text-gray-500 dark:text-text-darkInfo"/>
-                      <p>{user.email}</p>
-                    </div>
-                    <div className="flex gap-x-4">
-                      <div className="my-auto">
-                        <p className="text-gray-400 text-sm px-2">Invite sent</p>
-                      </div>
-                      <Button variant="ghost" size="3" className="px-2 mr-1 my-auto text-red-600 hover:bg-hover-dark hover:cursor-pointer">
-                        <LuTrash2 className="w-5 h-5" />
-                      </Button>
-                    </div>
-                  </div>
-                )
-                
-                return (
-                <div key={user.id} className="flex items-center justify-between gap-x-2 px-2 py-3 border-b-[1px] border-gray-200 dark:border-foreground-dark">
-                  <div className="flex items-center gap-x-2">
-                    <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
-                    <p>{user.name}</p>
-                  </div>
-                  <div className="flex gap-x-4">
-                    <div className="my-auto">
-                      <DropdownMenu.Root>
-                        <DropdownMenu.Trigger>
-                          <button className="flex border-none text-primary-dark dark:text-purple-400 hover:bg-hover-dark text-sm px-2 rounded-md">
-                            Admin
-                            <DropdownMenu.TriggerIcon className="ml-1 mt-1" />
-                          </button>
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Content variant='soft' className='bg-foreground-light dark:bg-foreground-dark mt-1.5' size='2'>
-                          <DropdownMenu.Item>ADMIN</DropdownMenu.Item>
-                          <DropdownMenu.Item>USER</DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                      </DropdownMenu.Root>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="3" 
-                      disabled={user.userWorkspaceRole?.isOwner}
-                      className="px-2 mr-1 my-auto text-red-600 hover:bg-hover-dark hover:cursor-pointer">
-                      <LuTrash2 className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </div>
-              )})}
+                if (user.uuid) {
+                  return <InviteRow key={user.uuid} invite={user as any} />
+                } else {
+                  return <UserRow key={user.id} user={user} />
+                }
+              }
+              )}
             </Spinner>
           </ScrollArea>
       </Dialog.Content>

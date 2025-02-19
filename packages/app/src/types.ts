@@ -27,7 +27,7 @@ export type User = {
   username?: string;
   workspaces: Workspace[];
   oauths: UserOauth[];
-  userWorkspaceRole?: UserWorkspaceRole
+  userWorkspaceRole?: UserWorkspaceRole[]
   createdAt: string;
   updatedAt: string;
 }
@@ -53,3 +53,15 @@ export type UserWorkspaceRole = {
   createdAt: string;
   updatedAt: string;
 }
+
+export type Invite = {
+  id: number;
+  claimed: boolean;
+  email: string;
+  uuid: string;
+  role: "user" // Always defaults to user. Must be set via the UI
+  workspaceId: number;
+  workspace?: Workspace;
+  createdAt: string;
+  updatedAt: string;
+} 

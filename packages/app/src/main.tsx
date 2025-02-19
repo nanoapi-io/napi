@@ -21,7 +21,7 @@ import ProjectsPage from "./pages/projects";
 import Project from "./pages/project";
 import WorkspacesPage from "./pages/workspaces";
 import Auth from "./pages/auth";
-import Index from "./pages";
+import ClaimInvitePage from "./pages/claimInvite";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const reactFlowPaths = [
@@ -82,6 +82,13 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       { index: true, element: <WorkspacesPage /> },
+    ],
+  },
+  {
+    path: "/invitations/claim/:inviteUuid",
+    element: <ProtectedRoute />,
+    children: [
+      { index: true, element: <ClaimInvitePage /> },
     ],
   },
   {

@@ -78,7 +78,14 @@ export default function Auth(props: {
         user,
       })
 
-      // Redirect to the dashboard or a protected route
+      // Redirect to the dashboard or a destination route
+      const destination = localStorage.getItem('destination');
+      if (destination) {
+        localStorage.removeItem('destination');
+        navigate(destination);
+        return;
+      }
+
       navigate("/projects");
     } catch (error) {
       console.error("Error during OAuth callback:", error);
@@ -154,6 +161,13 @@ export default function Auth(props: {
         user,
       })
 
+      // Redirect to the dashboard or a destination route
+      const destination = localStorage.getItem('destination');
+      if (destination) {
+        localStorage.removeItem('destination');
+        navigate(destination);
+        return;
+      }
 
       // Redirect to the dashboard or a protected route
       navigate("/projects");
@@ -230,6 +244,14 @@ export default function Auth(props: {
         activeWorkspace: defaultWorkspace,
         user,
       })
+
+      // Redirect to the dashboard or a destination route
+      const destination = localStorage.getItem('destination');
+      if (destination) {
+        localStorage.removeItem('destination');
+        navigate(destination);
+        return;
+      }
 
       // Redirect to the dashboard or a protected route
       navigate("/projects");

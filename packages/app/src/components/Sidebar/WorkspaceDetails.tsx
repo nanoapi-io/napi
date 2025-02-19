@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import InviteUserDialog from "../InviteUserDialog";
+import InviteUserDialog from "../UserInvite/InviteUserDialog";
 import { StoreContext } from "../../contexts/StoreContext";
 import { Workspace } from "../../types";
 
