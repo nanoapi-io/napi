@@ -88,7 +88,7 @@ export default function Dashboard() {
 
 
   return (
-    <div className="w-fulltext-text-light dark:text-white bg-background-light dark:bg-secondaryBackground-dark rounded-xl flex flex-col">
+    <div className="w-full text-text-light dark:text-white bg-background-light dark:bg-secondaryBackground-dark rounded-xl flex flex-col">
       {/* Top bar with project search on the left and the account icon on the right */}
       <div className="flex justify-between p-2 border-b-[1px] border-gray-200 dark:border-foreground-dark">
         <div></div>

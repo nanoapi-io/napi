@@ -37,7 +37,7 @@ export default function AccountMenu() {
       {loggedIn ? (
         <DropdownMenu.Root>
           <DropdownMenu.Trigger>
-            <div className="flex bg-hover-light hover:bg-hover-translucentLight rounded-lg border-[1px] border-secondarySurface-light dark:border-card-borderDark transition-all">
+            <div className="flex bg-hover-light hover:bg-hover-mid dark:bg-hover-dark rounded-lg border-[1px] border-secondarySurface-light dark:border-card-borderDark transition-all">
               <button className="flex gap-x-3 items-center pl-2 pr-3 my-auto">
                 <img className="w-8 h-8 rounded-full" src={avatar} alt="Profile" />
                 <svg fill="currentColor" width="20px" height="20px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">

@@ -20,25 +20,36 @@ export type Workspace = {
 }
 
 export type User = {
-  id: string;
+  id: number;
   name?: string;
   email: string;
   avatar?: string;
   username?: string;
   workspaces: Workspace[];
   oauths: UserOauth[];
+  userWorkspaceRole?: UserWorkspaceRole
   createdAt: string;
   updatedAt: string;
 }
 
 export type UserOauth = {
-  id: string;
+  id: number;
   provider: string;
   userId: string;
   email: string;
   metadata: any;
   accessToken: string;
   refreshToken: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type UserWorkspaceRole = {
+  id: number;
+  role: "user" | "admin";
+  isOwner: boolean;
+  user?: User;
+  workspace?: Workspace;
   createdAt: string;
   updatedAt: string;
 }
