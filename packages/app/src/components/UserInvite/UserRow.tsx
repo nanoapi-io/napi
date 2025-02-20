@@ -13,30 +13,30 @@ export default function UserRow(props: {
   const { user } = props;
   const userRole = user.userWorkspaceRole;
 
-  const updateUserRole = async (role: string) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/${user.id}/workspace/${state.activeWorkspace?.id}/role`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-        body: JSON.stringify({ role }),
-      });
+  // const updateUserRole = async (role: string) => {
+  //   try {
+  //     setLoading(true);
+  //     const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/${user.id}/workspace/${state.activeWorkspace?.id}/role`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+  //       },
+  //       body: JSON.stringify({ role }),
+  //     });
 
-      if (!response.ok) {
-        throw new Error("Failed to update user role");
-      }
+  //     if (!response.ok) {
+  //       throw new Error("Failed to update user role");
+  //     }
 
-      const updatedUser = await response.json();
-      console.log(updatedUser);
-      setLoading(false);
-    }
-    catch (error) {
-      console.error("Failed to update user role", error);
-    }
-  }
+  //     const updatedUser = await response.json();
+  //     console.log(updatedUser);
+  //     setLoading(false);
+  //   }
+  //   catch (error) {
+  //     console.error("Failed to update user role", error);
+  //   }
+  // }
 
   const removeUserFromWorkspace = async () => {
     try {

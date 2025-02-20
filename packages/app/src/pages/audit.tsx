@@ -8,7 +8,6 @@ import { Outlet } from "react-router";
 
 export default function BaseAudit(props: {
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
 }) {
   const initialized = useRef(false);
 
@@ -53,7 +52,6 @@ export default function BaseAudit(props: {
           files={files}
           focusedId={focusedPath}
           isOpen={props.isOpen}
-          setIsOpen={props.setIsOpen}
           onNodeFocus={setFocusedPath}
           onNodeUnfocus={() => setFocusedPath(undefined)}
         />

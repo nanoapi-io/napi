@@ -3,7 +3,6 @@ import BaseAudit from "../audit";
 
 export default function ProjectAudit(props: {
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
 }) {
   const location = useLocation();
 
@@ -13,7 +12,7 @@ export default function ProjectAudit(props: {
     <>
       {/* If the current route has /audit, then show BaseAudit and Audit, if it has audit/:file then show AuditFile */}
       {location.pathname.includes("/audit") && (
-        <BaseAudit isOpen={props.isOpen} setIsOpen={props.setIsOpen} />
+        <BaseAudit isOpen={props.isOpen} />
       )}
     </>
   );

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
-import { LuSearch } from "react-icons/lu";
 import { FileExplorerSkeleton } from "./Skeleton";
 import { AuditFile } from "../../service/api/types";
 
@@ -17,13 +16,12 @@ export default function FileExplorer(props: {
   files: AuditFile[];
   focusedId?: string;
   isOpen: boolean;
-  setIsOpen: (value: boolean) => void
   onNodeFocus: (id: string) => void;
   onNodeUnfocus: (id: string) => void;
 }) {
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
-  const { isOpen, setIsOpen } = props;
+  const { isOpen } = props;
 
   function buildTreeData(files: AuditFile[]): TreeData[] {
     let rootNodes: TreeData[] = [];

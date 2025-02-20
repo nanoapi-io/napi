@@ -86,7 +86,7 @@ export default function ProjectPage(props: {
       {/* Split Configure */}
       {getActiveDefaultValue() === "api" && <ProjectSplitConfigure />}
       {/* Audit */}
-      {getActiveDefaultValue() === "audit" && <ProjectAudit isOpen={isOpen} setIsOpen={setIsOpen} />}
+      {getActiveDefaultValue() === "audit" && <ProjectAudit isOpen={isOpen} />}
     </div>
   );
 }

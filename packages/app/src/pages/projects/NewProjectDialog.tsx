@@ -9,7 +9,7 @@ import { StoreContext } from "../../contexts/StoreContext";
 export default function NewProjectDialog() {
   const { state } = useContext(StoreContext);
   const [open, setOpen] = useState(false);
-  const [showNextStep, setShowNextStep] = useState(false);
+  const [_, setShowNextStep] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
 
