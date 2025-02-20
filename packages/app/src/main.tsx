@@ -8,21 +8,22 @@ import "@xyflow/react/dist/style.css";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import SplitConfigure from "./pages/splitConfigure";
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
+import { createBrowserRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
 import { StoreProvider } from "./contexts/StoreContext";
 // import BaseAudit from "./pages/audit";
 // import Audit from "./pages/audit/index";
 // import AuditFile from "./pages/audit/file";
-import LoginPage from "./pages/login";
+// import LoginPage from "./pages/login";
+import AccessDemoPage from "./pages/accessDemo";
 import DashboardPage from "./pages/dashboard";
 import ProjectsPage from "./pages/projects";
 import Project from "./pages/project";
 import WorkspacesPage from "./pages/workspaces";
-import Auth from "./pages/auth";
-import ClaimInvitePage from "./pages/claimInvite";
-import ProtectedRoute from "./components/ProtectedRoute";
+// import Auth from "./pages/auth";
+// import ClaimInvitePage from "./pages/claimInvite";
+import DemoProtectedRoute from "./components/DemoProtectedRoute";
 
 const reactFlowPaths = [
   "/splitConfigure",
@@ -32,77 +33,77 @@ const reactFlowPaths = [
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/dashboard" />,
+    element: <AccessDemoPage />,
   },
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
+  // {
+  //   path: "/login",
+  //   element: <LoginPage />,
+  // },
   {
     path: "/splitConfigure",
     element: <SplitConfigure />,
   },
   {
     path: "/dashboard",
-    element: <ProtectedRoute />,
+    element: <DemoProtectedRoute />,
     children: [
       { index: true, element: <DashboardPage /> },
     ],
   },
   {
     path: "/projects",
-    element: <ProtectedRoute />,
+    element: <DemoProtectedRoute />,
     children: [
       { index: true, element: <ProjectsPage /> },
     ],
   },
   {
     path: "/project/:id/overview",
-    element: <ProtectedRoute />,
+    element: <DemoProtectedRoute />,
     children: [
       { index: true, element: <Project /> },
     ],
   },
   {
     path: "/project/:id/splitConfigure", // Shows react flow
-    element: <ProtectedRoute />,
+    element: <DemoProtectedRoute />,
     children: [
       { index: true, element: <Project /> },
     ],
   },
   {
     path: "/project/:id/audit", // Shows react flow
-    element: <ProtectedRoute />,
+    element: <DemoProtectedRoute />,
     children: [
       { index: true, element: <Project /> },
     ],
   },
   {
     path: "/workspaces",
-    element: <ProtectedRoute />,
+    element: <DemoProtectedRoute />,
     children: [
       { index: true, element: <WorkspacesPage /> },
     ],
   },
-  {
-    path: "/invitations/claim/:inviteUuid",
-    element: <ProtectedRoute />,
-    children: [
-      { index: true, element: <ClaimInvitePage /> },
-    ],
-  },
-  {
-    path: "/auth/github",
-    element: <Auth provider="github" />,
-  },
-  {
-    path: "/auth/gitlab",
-    element: <Auth provider="gitlab" />,
-  },
-  {
-    path: "/auth/bitbucket",
-    element: <Auth provider="bitbucket" />,
-  },
+  // {
+  //   path: "/invitations/claim/:inviteUuid",
+  //   element: <ProtectedRoute />,
+  //   children: [
+  //     { index: true, element: <ClaimInvitePage /> },
+  //   ],
+  // },
+  // {
+  //   path: "/auth/github",
+  //   element: <Auth provider="github" />,
+  // },
+  // {
+  //   path: "/auth/gitlab",
+  //   element: <Auth provider="gitlab" />,
+  // },
+  // {
+  //   path: "/auth/bitbucket",
+  //   element: <Auth provider="bitbucket" />,
+  // },
   // {
   //   path: "/audit",
   //   element: <BaseAudit />,

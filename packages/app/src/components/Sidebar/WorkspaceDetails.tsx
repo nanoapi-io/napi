@@ -8,7 +8,12 @@ export default function WorkspaceDetails() {
 
   const [workspace, setWorkspace] = useState<Workspace>({ 
     name: "Default", 
-    users: [] ,
+    users: [{
+      id: 0,
+      name: "John Doe",
+      email: "",
+      avatar: "https://randomuser.me/api/portraits/men/75.jpg"
+    }],
     id: 0,
     projects: [],
     settings: {},

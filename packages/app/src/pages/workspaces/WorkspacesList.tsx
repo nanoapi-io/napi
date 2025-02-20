@@ -8,22 +8,33 @@ import { Workspace } from "../../types";
 import WorkspaceRow from "./WorkspaceRow";
 
 export default function WorkspacesList() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([
+    {
+      id: 1,
+      name: "Default",
+      description: "Default workspace",
+      users: [],
+      projects: [],
+      settings: {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ]);
   const [loading, setLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
 
   const getWorkspaces = async () => {
     // Fetch workspaces
-    const workspaceRes = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/workspaces`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-      },
-    });
-    const workspacesPages = await workspaceRes.json();
+    // const workspaceRes = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/workspaces`, {
+    //   headers: {
+    //     Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+    //   },
+    // });
+    // const workspacesPages = await workspaceRes.json();
 
-    const wsData = workspacesPages.data;
+    // const wsData = workspacesPages.data;
 
-    setWorkspaces(wsData);
+    // setWorkspaces(wsData);
     setLoading(false);
   }
 

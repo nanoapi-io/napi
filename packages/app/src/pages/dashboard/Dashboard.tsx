@@ -30,7 +30,7 @@ const projectErrorOptions = {
   },
 }
 
-const projectErrorLabels = ['Frontend', 'Listener', 'AI Model', 'Backend', 'Engine', 'Optimus']
+const projectErrorLabels = ['App Server', 'Listener', 'AI Model', 'Backend', 'Engine', 'Optimus']
 
 const projectErrorData = {
   labels: projectErrorLabels,

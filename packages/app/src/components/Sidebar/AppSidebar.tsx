@@ -62,7 +62,7 @@ export default function AppSidebar() {
           </svg>
           <p className="text-md">My projects</p>
         </button>
-        <button className={`flex gap-x-2 p-2 rounded-lg hover:bg-gray-200  dark:hover:bg-hover-dark transition-all ${
+        {/* <button className={`flex gap-x-2 p-2 rounded-lg hover:bg-gray-200  dark:hover:bg-hover-dark transition-all ${
           location.pathname.includes("/notifications") ? "bg-gray-200 dark:bg-foreground-dark text-text-lightHighlight dark:text-text-darkHighlight" : "text-text-gray"
         }`}>
           <svg width="20" height="22" viewBox="0 0 20 22" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -80,7 +80,7 @@ export default function AppSidebar() {
           </svg>
 
           <p className="text-md">Settings</p>
-        </button>
+        </button> */}
 
         <WorkspaceMenu />
       </div>

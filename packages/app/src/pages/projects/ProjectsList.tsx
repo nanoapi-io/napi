@@ -10,7 +10,7 @@ import { Project } from "../../types";
 export default function ProjectsList() {
   const projectsList: Project[] = [{
     id: 1,
-    name: "Frontend",
+    name: "App Server",
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
     language: "TypeScript",

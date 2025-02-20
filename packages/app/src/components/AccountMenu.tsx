@@ -5,23 +5,23 @@ import { StoreContext } from '../contexts/StoreContext';
 
 export default function AccountMenu() {
   const stateContext = useContext(StoreContext);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(true);
   const [avatar, setAvatar] = useState("https://randomuser.me/api/portraits/men/75.jpg");
-  const [name, setName] = useState("");
-  const [username, setUsername] = useState("");
+  const [name, setName] = useState("Demo User");
+  const [username, setUsername] = useState("@DemoUser");
 
   const logOut = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('user');
-    setLoggedIn(false);
-    window.location.pathname = '/login';
+    // localStorage.removeItem('jwt');
+    // localStorage.removeItem('user');
+    // setLoggedIn(false);
+    window.location.pathname = '/';
   }
 
   useEffect(() => {
     // Check if the user is logged in
-    const jwt = localStorage.getItem('jwt');
-    setLoggedIn(!!jwt);
+    // const jwt = localStorage.getItem('jwt');
+    // setLoggedIn(!!jwt);
 
     // Get user data
     const userData = stateContext.state.user;

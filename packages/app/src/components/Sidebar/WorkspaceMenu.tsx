@@ -7,7 +7,10 @@ import { useNavigate } from 'react-router';
 export default function WorkspaceMenu() {
   const navigate = useNavigate();
   const stateContext = useContext(StoreContext);
-  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaces, setWorkspaces] = useState([{
+    id: '1',
+    name: 'Default'
+  }]);
 
   const isActiveWorkspace = (workspace: any) => {
     const activeWorkspace = stateContext.state.activeWorkspace;
@@ -49,7 +52,7 @@ export default function WorkspaceMenu() {
                 onClick={() => setActiveWorkspace(workspace)}
                 className='w-full text-left text-lg flex justify-between my-1'>
                 <p>{workspace.name}</p>
-                {isActiveWorkspace(workspace) && (
+                {true && (
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='my-auto'>
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M12 6C12.5523 6 13 6.44772 13 7V21C13 21.5523 12.5523 22 12 22C11.4477 22 11 21.5523 11 21V7C11 6.44772 11.4477 6 12 6Z" fill="currentColor"/>
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M22.7071 9.29289C23.0976 9.68342 23.0976 10.3166 22.7071 10.7071L18.7071 14.7071C18.3166 15.0976 17.6834 15.0976 17.2929 14.7071L15.2929 12.7071C14.9024 12.3166 14.9024 11.6834 15.2929 11.2929C15.6834 10.9024 16.3166 10.9024 16.7071 11.2929L18 12.5858L21.2929 9.29289C21.6834 8.90237 22.3166 8.90237 22.7071 9.29289Z" fill="currentColor"/>

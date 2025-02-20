@@ -20,59 +20,96 @@ export default function InviteUserDialog(props: {
 }) {
   const { state } = useContext(StoreContext);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(false);
   const [userSearch, setUserSearch] = useState("");
-  const [users, setUsers] = useState<UsersAndInvites[]>([]);
+  const [users] = useState<any[]>([
+    {
+      id: 1,
+      name: "John Doe",
+      email: "",
+      avatar: "https://randomuser.me/api/portraits/men/75.jpg",
+      workspaces: [],
+      oauths: [],
+      userWorkspaceRole: [{
+        role: "admin",
+      }],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      name: "Jane Doe",
+      email: "",
+      avatar: "https://randomuser.me/api/portraits/women/75.jpg",
+      workspaces: [],
+      oauths: [],
+      userWorkspaceRole: [{
+        role: "user",
+      }],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: 2,
+      claimed: false,
+      email: "robert.doe@gmail.com",
+      uuid: "1234",
+      role: "user",
+      workspaceId: 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ]);
   const [filteredUsers, setFilteredUsers] = useState<UsersAndInvites[]>([]);
 
   const loadWorkspaceUsers = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/workspace/${state.activeWorkspace?.id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-      });
+    // try {
+    //   const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/users/workspace/${state.activeWorkspace?.id}`, {
+    //     headers: {
+    //       Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+    //     },
+    //   });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch workspace users");
-      }
+    //   if (!response.ok) {
+    //     throw new Error("Failed to fetch workspace users");
+    //   }
 
-      // Takes the shape of { users, invites }
-      const usersData = await response.json();
-      setUsers([...usersData.users, ...usersData.invites]);
-      setLoading(false);
-    } catch (error) {
-      console.error("Failed to fetch workspace users", error);
-    }
+    //   // Takes the shape of { users, invites }
+    //   const usersData = await response.json();
+    //   setUsers([...usersData.users, ...usersData.invites]);
+    //   setLoading(false);
+    // } catch (error) {
+    //   console.error("Failed to fetch workspace users", error);
+    // }
   }
 
-  const sendWorkspaceInvite = async (e: any, email: string) => {
+  const sendWorkspaceInvite = async (e: any) => {
     e.preventDefault();
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/invitations`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-        body: JSON.stringify({ 
-          email,
-          workspaceId: state.activeWorkspace?.id,
-        }),
-      });
+    // try {
+    //   const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/invitations`, {
+    //     method: "POST",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //       Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+    //     },
+    //     body: JSON.stringify({ 
+    //       email,
+    //       workspaceId: state.activeWorkspace?.id,
+    //     }),
+    //   });
 
-      if (!response.ok) {
-        throw new Error("Failed to send workspace invite");
-      }
+    //   if (!response.ok) {
+    //     throw new Error("Failed to send workspace invite");
+    //   }
 
-      console.log("Workspace invite sent successfully");
-      setUserSearch("");
-      setLoading(true);
-      loadWorkspaceUsers();
-    }
-    catch (error) {
-      console.error("Failed to send workspace invite", error);
-    }
+    //   console.log("Workspace invite sent successfully");
+    //   setUserSearch("");
+    //   setLoading(true);
+    //   loadWorkspaceUsers();
+    // }
+    // catch (error) {
+    //   console.error("Failed to send workspace invite", error);
+    // }
   }
 
   useEffect(() => {
@@ -151,7 +188,7 @@ export default function InviteUserDialog(props: {
                   disabled={
                     filteredUsers.length > 0 || !EMAIL_REGEX.test(userSearch)
                   }
-                  onClick={(e) => sendWorkspaceInvite(e, userSearch)}>
+                  onClick={(e) => sendWorkspaceInvite(e)}>
                   Invite
                 </Button>
               </TextField.Slot>
