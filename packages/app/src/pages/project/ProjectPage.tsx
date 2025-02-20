@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router";
-import { SegmentedControl } from "@radix-ui/themes";
+import { SegmentedControl, Switch } from "@radix-ui/themes";
 
 import ChangeThemeButton from "../../components/ChangeThemeButton"
 import AccountMenu from "../../components/AccountMenu"
@@ -8,6 +8,7 @@ import AccountMenu from "../../components/AccountMenu"
 import ProjectOverview from "./ProjectOverview";
 import ProjectSplitConfigure from "./ProjectSplitConfigure";
 import ProjectAudit from "./ProjectAudit";
+import CommitPicker from "./CommitPicker";
 import { Project } from "../../types";
 
 export default function ProjectPage(props: {
@@ -15,6 +16,8 @@ export default function ProjectPage(props: {
 }) {
   const location = useLocation();
   const { id } = useParams();
+  const [commit, setCommit] = useState("latest");
+  const [isOpen, setIsOpen] = useState(false);
   
   const getActiveDefaultValue = () => {
     if (location.pathname.includes("splitConfigure")) {
@@ -64,8 +67,18 @@ export default function ProjectPage(props: {
         </div>
       </div>
       <div className="flex flex-col p-4">
-        <div className="flex flex-col gap-y-2">
+        <div className="flex justify-between gap-y-2">
           <h1 className="text-2xl font-bold">{props.project.name}</h1>
+          {getActiveDefaultValue() === "api" && <div className="my-auto">
+              <CommitPicker commit={commit} setCommit={setCommit} commitList={["latest", "bf830d", "a4d9c3", "b3e4f1", "f3e4f1"]} />
+            </div>}
+         {getActiveDefaultValue() === "audit" && <div className="flex gap-x-4">
+          <div className="flex gap-x-2 my-auto">
+            <div className="text-gray-500 dark:text-gray-200">Show file explorer</div>
+            <Switch size="3" variant="classic" checked={isOpen} onCheckedChange={() => setIsOpen(!isOpen)} />
+          </div>
+          <CommitPicker commit={commit} setCommit={setCommit} commitList={["latest", "bf830d", "a4d9c3", "b3e4f1", "f3e4f1"]} />
+          </div>}
         </div>
       </div>
       {/* Overview */}
@@ -73,7 +86,7 @@ export default function ProjectPage(props: {
       {/* Split Configure */}
       {getActiveDefaultValue() === "api" && <ProjectSplitConfigure />}
       {/* Audit */}
-      {getActiveDefaultValue() === "audit" && <ProjectAudit />}
+      {getActiveDefaultValue() === "audit" && <ProjectAudit isOpen={isOpen} setIsOpen={setIsOpen} />}
     </div>
   );
 }

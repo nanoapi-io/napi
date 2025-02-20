@@ -103,20 +103,20 @@ const router = createBrowserRouter([
     path: "/auth/bitbucket",
     element: <Auth provider="bitbucket" />,
   },
-  {
-    path: "/audit",
-    element: <BaseAudit />,
-    children: [
-      {
-        path: "/audit",
-        element: <Audit />,
-      },
-      {
-        path: "/audit/:file",
-        element: <AuditFile />,
-      },
-    ],
-  },
+  // {
+  //   path: "/audit",
+  //   element: <BaseAudit />,
+  //   children: [
+  //     {
+  //       path: "/audit",
+  //       element: <Audit />,
+  //     },
+  //     {
+  //       path: "/audit/:file",
+  //       element: <AuditFile />,
+  //     },
+  //   ],
+  // },
 ]);
 
 const rootElement = document.getElementById("root");

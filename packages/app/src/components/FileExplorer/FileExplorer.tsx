@@ -1,6 +1,7 @@
-import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
+import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
+import { LuSearch } from "react-icons/lu";
 import { FileExplorerSkeleton } from "./Skeleton";
 import { AuditFile } from "../../service/api/types";
 
@@ -15,12 +16,14 @@ export default function FileExplorer(props: {
   busy: boolean;
   files: AuditFile[];
   focusedId?: string;
+  isOpen: boolean;
+  setIsOpen: (value: boolean) => void
   onNodeFocus: (id: string) => void;
   onNodeUnfocus: (id: string) => void;
 }) {
-  const [isOpen, setIsOpen] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
+  const { isOpen, setIsOpen } = props;
 
   function buildTreeData(files: AuditFile[]): TreeData[] {
     let rootNodes: TreeData[] = [];
@@ -116,75 +119,39 @@ export default function FileExplorer(props: {
   }, [props.files, search]);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex justify-end">
-        <Button
-          className="text-text-light dark:text-text-dark p-0 mx-2 my-1"
-          size="1"
-          onClick={() => setIsOpen(!isOpen)}
-          variant="ghost"
-          radius="full"
+    <div className={`flex flex-col gap-2 bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl px-2 py-2 ${isOpen ? "" : "hidden"}`}>
+      <div className="h-full flex flex-col">
+        <div
+          style={{ width: isOpen ? "300px" : "0px" }}
+          className="grow flex flex-col gap-4 overflow-hidden transition-all duration-300 my-2"
         >
-          <svg
-            width="40"
-            height="40"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {isOpen ? (
-              <path d="M15 6L9 12L15 18" />
-            ) : (
-              <path d="M9 6L15 12L9 18" />
-            )}
-          </svg>
-        </Button>
-      </div>
-
-      <div
-        style={{ width: isOpen ? "300px" : "0px" }}
-        className="grow flex flex-col gap-4 overflow-hidden transition-all duration-300 my-2"
-      >
-        {props.busy ? (
-          <FileExplorerSkeleton />
-        ) : (
-          <>
-            <TextField.Root
-              placeholder="Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={`transition-all duration-300 overflow-hidden ${!isOpen && "w-0"}`}
-            >
-              <TextField.Slot className="w-full">
-                <svg
-                  width="20px"
-                  height="20px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" />
-                </svg>
-              </TextField.Slot>
-            </TextField.Root>
-            <ScrollArea scrollbars="vertical">
-              <ListElement
-                nodes={treeData}
-                focusedId={props.focusedId}
-                onNodeFocus={props.onNodeFocus}
-                onNodeUnfocus={props.onNodeUnfocus}
-              />
-            </ScrollArea>
-          </>
-        )}
+          {props.busy ? (
+            <FileExplorerSkeleton />
+          ) : (
+            <>
+              <TextField.Root
+                placeholder="Search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={`transition-all duration-300 overflow-hidden mx-3 ${!isOpen && "w-0"}`}
+              >
+                <TextField.Slot>
+                  <svg width="20px" height="20px" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" fill="none" className="my-auto">
+                    <path fill="currentColor" fill-rule="evenodd" d="M4 9a5 5 0 1110 0A5 5 0 014 9zm5-7a7 7 0 104.2 12.6.999.999 0 00.093.107l3 3a1 1 0 001.414-1.414l-3-3a.999.999 0 00-.107-.093A7 7 0 009 2z"/>
+                  </svg>
+                </TextField.Slot>
+              </TextField.Root>
+              <ScrollArea scrollbars="vertical">
+                <ListElement
+                  nodes={treeData}
+                  focusedId={props.focusedId}
+                  onNodeFocus={props.onNodeFocus}
+                  onNodeUnfocus={props.onNodeUnfocus}
+                />
+              </ScrollArea>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

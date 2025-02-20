@@ -6,7 +6,10 @@ import FileExplorer from "../components/FileExplorer/FileExplorer";
 import { AuditFile } from "../service/api/types";
 import { Outlet } from "react-router";
 
-export default function BaseAudit() {
+export default function BaseAudit(props: {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}) {
   const initialized = useRef(false);
 
   const [busy, setBusy] = useState<boolean>(false);
@@ -49,6 +52,8 @@ export default function BaseAudit() {
           busy={busy}
           files={files}
           focusedId={focusedPath}
+          isOpen={props.isOpen}
+          setIsOpen={props.setIsOpen}
           onNodeFocus={setFocusedPath}
           onNodeUnfocus={() => setFocusedPath(undefined)}
         />
