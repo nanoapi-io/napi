@@ -8,7 +8,7 @@ import { Workspace } from "../../types";
 import WorkspaceRow from "./WorkspaceRow";
 
 export default function WorkspacesList() {
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([
+  const [workspaces] = useState<Workspace[]>([
     {
       id: 1,
       name: "Default",

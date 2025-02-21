@@ -5,7 +5,7 @@ import { StoreContext } from '../contexts/StoreContext';
 
 export default function AccountMenu() {
   const stateContext = useContext(StoreContext);
-  const [loggedIn, setLoggedIn] = useState(true);
+  const [loggedIn] = useState(true);
   const [avatar, setAvatar] = useState("https://randomuser.me/api/portraits/men/75.jpg");
   const [name, setName] = useState("Demo User");
   const [username, setUsername] = useState("@DemoUser");

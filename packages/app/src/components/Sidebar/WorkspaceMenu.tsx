@@ -12,11 +12,11 @@ export default function WorkspaceMenu() {
     name: 'Default'
   }]);
 
-  const isActiveWorkspace = (workspace: any) => {
-    const activeWorkspace = stateContext.state.activeWorkspace;
-    console.log(activeWorkspace, workspace.id);
-    return activeWorkspace && workspace.id === activeWorkspace.id;
-  }
+  // const isActiveWorkspace = (workspace: any) => {
+  //   const activeWorkspace = stateContext.state.activeWorkspace;
+  //   console.log(activeWorkspace, workspace.id);
+  //   return activeWorkspace && workspace.id === activeWorkspace.id;
+  // }
 
   const setActiveWorkspace = (workspace: any) => {
     stateContext.changeState({ activeWorkspace: workspace });
