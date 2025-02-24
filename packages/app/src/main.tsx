@@ -75,7 +75,10 @@ const router = createBrowserRouter([
     path: "/project/:id/audit", // Shows react flow
     element: <DemoProtectedRoute />,
     children: [
-      { index: true, element: <Project /> },
+      { 
+        index: true, 
+        element: <Project />
+      },
     ],
   },
   {

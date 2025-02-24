@@ -1,20 +1,25 @@
 import { Endpoint } from "./types";
+import getAPIData from "../../apiData";
 
 export async function scanCodebase() {
-  const response = await fetch("/api/split/scan", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  // const response = await fetch("/api/split/scan", {
+  //   method: "POST",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  // });
 
-  if (!response.ok || response.status !== 200) {
-    throw new Error("Failed to scan endpoints");
+  // if (!response.ok || response.status !== 200) {
+  //   throw new Error("Failed to scan endpoints");
+  // }
+
+  // const responseBody = (await response.json()) as Promise<{
+  //   endpoints: Endpoint[];
+  // }>;
+
+  const responseBody = {
+    endpoints: getAPIData()
   }
-
-  const responseBody = (await response.json()) as Promise<{
-    endpoints: Endpoint[];
-  }>;
 
   return await responseBody;
 }

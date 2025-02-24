@@ -14,17 +14,26 @@ import { useEffect, useState } from "react";
 import FileNode from "../../components/ReactFlow/AuditTree/FileNode";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import Controls from "../../components/ReactFlow/Controls";
-import { useOutletContext } from "react-router";
+// import { useOutletContext } from "react-router";
 import { ReactFlowSkeleton } from "../../components/ReactFlow/Skeleton";
 
-export default function Audit() {
-  const context = useOutletContext<{
+export default function Audit(props: {
+  context: {
     busy: boolean;
     files: AuditFile[];
     focusedPath: string | undefined;
     onNodeFocus: (path: string) => void;
     onNodeUnfocus: () => void;
-  }>();
+  };
+}) {
+  // const context = useOutletContext<{
+  //   busy: boolean;
+  //   files: AuditFile[];
+  //   focusedPath: string | undefined;
+  //   onNodeFocus: (path: string) => void;
+  //   onNodeUnfocus: () => void;
+  // }>();
+  const context = props.context;
 
   const nodeTypes = {
     fileNode: FileNode,

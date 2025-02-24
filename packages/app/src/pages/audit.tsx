@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 import ReactFlowLayout from "../layout/ReactFlow";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
 import { AuditFile } from "../service/api/types";
-import { Outlet } from "react-router";
+import Audit from "./audit/index";
+// import { Outlet } from "react-router";
 
 export default function BaseAudit(props: {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export default function BaseAudit(props: {
 
         const AuditFiles = (await projectPromise).files;
 
-        setFiles(AuditFiles);
+        setFiles(AuditFiles as any);
       } finally {
         setBusy(false);
       }
@@ -57,7 +58,7 @@ export default function BaseAudit(props: {
         />
       }
       chartSlot={
-        <Outlet
+        <Audit
           context={{
             busy,
             files,
