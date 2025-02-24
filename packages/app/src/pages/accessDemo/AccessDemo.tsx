@@ -70,6 +70,7 @@ export default function AccessDemo() {
                   <TextField.Root 
                     required
                     id="name" 
+                    type="text"
                     size="3" 
                     placeholder="Name"
                     value={name}
@@ -79,6 +80,7 @@ export default function AccessDemo() {
                   <TextField.Root 
                     required
                     id="email" 
+                    type="email"
                     size="3" 
                     placeholder="Email"
                     value={email}

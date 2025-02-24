@@ -8,7 +8,7 @@ import "@xyflow/react/dist/style.css";
 import "@radix-ui/themes/styles.css";
 import "./index.css";
 import SplitConfigure from "./pages/splitConfigure";
-import { createBrowserRouter, RouterProvider } from "react-router";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
 import { StoreProvider } from "./contexts/StoreContext";
@@ -35,10 +35,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <AccessDemoPage />,
   },
-  // {
-  //   path: "/login",
-  //   element: <LoginPage />,
-  // },
+  {
+    path: "/login",
+    element: <Navigate to="/" />,
+  },
   {
     path: "/splitConfigure",
     element: <SplitConfigure />,
