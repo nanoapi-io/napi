@@ -103,7 +103,7 @@ export class SplitRunner {
         const imports = languagePlugin.getImports(file.path, tree.rootNode);
 
         imports.forEach((depImport) => {
-          if (depImport.isExternal || !depImport.source) {
+          if (depImport.isExternal) {
             // Ignore external dependencies
             return;
           }
@@ -142,7 +142,7 @@ export class SplitRunner {
         const imports = languagePlugin.getImports(file.path, tree.rootNode);
 
         imports.forEach((depImport) => {
-          if (depImport.isExternal || !depImport.source) {
+          if (depImport.isExternal) {
             // Ignore external dependencies
             return;
           }

@@ -147,12 +147,19 @@ class PythonPlugin implements LanguagePlugin {
     }
 
     const { name, node } = importSourceCaptures[0];
-    const source =
+    let source =
       name === "module_source"
         ? this.#resolveModuleImportSource(node.text)
         : this.#resolveRelativeImportSource(filePath, node.text);
 
-    return source;
+    let isExternal = false;
+
+    if (!source) {
+      isExternal = true;
+      source = node.text;
+    }
+
+    return { source, isExternal };
   }
 
   #findImportDottedName(importNode: Parser.SyntaxNode) {
@@ -256,8 +263,10 @@ class PythonPlugin implements LanguagePlugin {
 
     importStatementNodes.forEach((importNode) => {
       // Step 2: Find import source
-      const source = this.#findImportSource(filePath, importNode);
-      const isExternal = source ? false : true;
+      const { isExternal, source } = this.#findImportSource(
+        filePath,
+        importNode,
+      );
 
       // Step 3: set the DepImport object
       const identifiers = this.#findImportDottedName(importNode);
@@ -321,6 +330,7 @@ class PythonPlugin implements LanguagePlugin {
         node: subNode,
         identifiers: [
           {
+            type: "assignement",
             node: subNode,
             identifierNode: idenfifierNode.node,
           },
@@ -378,6 +388,7 @@ class PythonPlugin implements LanguagePlugin {
         node: subNode,
         identifiers: [
           {
+            type: "class",
             node: subNode,
             identifierNode: idenfifierNode.node,
           },
@@ -435,6 +446,7 @@ class PythonPlugin implements LanguagePlugin {
         node: subNode,
         identifiers: [
           {
+            type: "function",
             node: subNode,
             identifierNode: idenfifierNode.node,
           },
@@ -467,7 +479,7 @@ class PythonPlugin implements LanguagePlugin {
     return depExports;
   }
 
-  #getIdentifiersNode(node: Parser.SyntaxNode, identifier: Parser.SyntaxNode) {
+  getIdentifiersNode(node: Parser.SyntaxNode, identifier: Parser.SyntaxNode) {
     const query = new Parser.Query(
       this.parser.getLanguage(),
       `
@@ -490,7 +502,7 @@ class PythonPlugin implements LanguagePlugin {
     node: Parser.SyntaxNode,
     identifier: Parser.SyntaxNode,
   ) {
-    const otherIdentifiers = this.#getIdentifiersNode(node, identifier);
+    const otherIdentifiers = this.getIdentifiersNode(node, identifier);
 
     const usageNodes: Parser.SyntaxNode[] = [];
 
@@ -630,7 +642,7 @@ class PythonPlugin implements LanguagePlugin {
 
       depImport.identifiers.forEach((identifier) => {
         // Check if the identifier is used in the source code
-        const identifiers = this.#getIdentifiersNode(
+        const identifiers = this.getIdentifiersNode(
           tree.rootNode,
           identifier.aliasNode || identifier.identifierNode,
         );

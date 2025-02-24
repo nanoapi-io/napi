@@ -29,6 +29,8 @@ export interface DepImport {
 }
 
 export interface DepExportIdentifier {
+  // Type of export. eg: class, function, assignement.
+  type: string;
   // Node of the identifier
   node: Parser.SyntaxNode;
   // Node of the identifier
@@ -58,6 +60,11 @@ export interface LanguagePlugin {
   annotationRegex: RegExp;
 
   getAnnotationNodes(node: Parser.SyntaxNode): Parser.SyntaxNode[];
+
+  getIdentifiersNode(
+    node: Parser.SyntaxNode,
+    identifier: Parser.SyntaxNode,
+  ): Parser.SyntaxNode[];
 
   removeAnnotationFromOtherGroups(
     sourceCode: string,

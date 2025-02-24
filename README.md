@@ -77,7 +77,7 @@ For the latest updates, visit our [project board](/projects).
 
 ## Installation
 
-Ensure you have Node.js (>=18) and npm installed.
+Ensure you have Node.js (>=22) and npm installed.
 
 https://nodejs.org/en
 

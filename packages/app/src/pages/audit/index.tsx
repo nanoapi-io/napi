@@ -9,25 +9,26 @@ import {
   useReactFlow,
   MarkerType,
 } from "@xyflow/react";
-import { AuditFile } from "../../service/api/types";
+import { AuditFile, AuditMap } from "../../service/api/types";
 import { useEffect, useState } from "react";
-import FileNode from "../../components/ReactFlow/AuditTree/FileNode";
+import AuditFileNode from "../../components/ReactFlow/AuditTree/AuditFileNode";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import Controls from "../../components/ReactFlow/Controls";
 import { useOutletContext } from "react-router";
 import { ReactFlowSkeleton } from "../../components/ReactFlow/Skeleton";
+import WaterMarkRemover from "../../components/ReactFlow/WaterMarkRemover";
 
-export default function Audit() {
+export default function AuditPage() {
   const context = useOutletContext<{
     busy: boolean;
-    files: AuditFile[];
+    auditMap: AuditMap;
     focusedPath: string | undefined;
     onNodeFocus: (path: string) => void;
     onNodeUnfocus: () => void;
   }>();
 
   const nodeTypes = {
-    fileNode: FileNode,
+    auditFileNode: AuditFileNode,
   };
 
   const reactFlow = useReactFlow();
@@ -45,19 +46,8 @@ export default function Audit() {
   const [direction, setDirection] = useState<"TB" | "LR">("TB");
 
   useEffect(() => {
-    if (!context.busy) {
-      const element = document.querySelector(
-        ".react-flow__panel",
-      ) as HTMLElement;
-      if (element) {
-        element.style.display = "none";
-      }
-    }
-  }, [context.busy]);
-
-  useEffect(() => {
-    computeNodesAndEdgesFromFiles(context.files);
-  }, [context.files]);
+    computeNodesAndEdgesFromFiles(context.auditMap);
+  }, [context.auditMap]);
 
   useEffect(() => {
     setNodes((nds) =>
@@ -69,7 +59,7 @@ export default function Audit() {
     );
   }, [context.focusedPath]);
 
-  function computeNodesAndEdgesFromFiles(files: AuditFile[]) {
+  function computeNodesAndEdgesFromFiles(auditMap: AuditMap) {
     const newNodes: Node<
       AuditFile & {
         isBeingDragged: boolean;
@@ -78,7 +68,7 @@ export default function Audit() {
     >[] = [];
     const newEdges: Edge[] = [];
 
-    files.forEach((file) => {
+    Object.values(auditMap).forEach((file) => {
       const node: Node<
         AuditFile & {
           isBeingDragged: boolean;
@@ -92,19 +82,22 @@ export default function Audit() {
           isBeingDragged: false,
           isFocused: false,
         },
-        type: "fileNode",
+        type: "auditFileNode",
       };
       newNodes.push(node);
 
-      file.importSources.forEach((importSource) => {
-        const id = `${file.path}-${importSource}`;
+      Object.values(file.dependenciesMap).forEach((dependency) => {
+        if (dependency.isExternal) {
+          return;
+        }
+        const id = `${file.path}-${dependency.fileId}`;
         if (newEdges.find((edge) => edge.id === id)) {
           return;
         }
         newEdges.push({
-          id: `${file.path}-${importSource}`,
+          id: `${file.path}-${dependency.fileId}`,
           source: file.path,
-          target: importSource,
+          target: dependency.fileId,
           type: "straight",
           markerEnd: {
             type: MarkerType.ArrowClosed,
@@ -202,6 +195,7 @@ export default function Audit() {
       onNodeMouseLeave={onNodeMouseLeave}
       fitView
     >
+      <WaterMarkRemover busy={context.busy} />
       <Controls
         busy={context.busy}
         reactFlow={reactFlow}

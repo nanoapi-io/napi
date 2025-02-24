@@ -17,7 +17,6 @@ export enum TelemetryEvents {
   API_REQUEST_SPLIT = "api_request_split",
 
   API_REQUEST_AUDIT_PROJECT = "api_request_audit_project",
-  API_REQUEST_AUDIT_FILE = "api_request_audit_file",
 }
 
 export interface TelemetryEvent {

@@ -438,6 +438,7 @@ class JavascriptPlugin implements LanguagePlugin {
       );
 
       depExportIdentifiers.push({
+        type: "TODO",
         node: nodeCapture?.node || identifierCapture.node,
         identifierNode: identifierCapture.node,
         aliasNode: aliasCapture ? aliasCapture.node : undefined,
@@ -489,7 +490,7 @@ class JavascriptPlugin implements LanguagePlugin {
     return depExports;
   }
 
-  #getIdentifiersNode(node: Parser.SyntaxNode, identifier: Parser.SyntaxNode) {
+  getIdentifiersNode(node: Parser.SyntaxNode, identifier: Parser.SyntaxNode) {
     const query = new Parser.Query(
       this.parser.getLanguage(),
       this.isTypescript
@@ -521,7 +522,7 @@ class JavascriptPlugin implements LanguagePlugin {
     node: Parser.SyntaxNode,
     identifier: Parser.SyntaxNode,
   ) {
-    const otherIdentifiers = this.#getIdentifiersNode(node, identifier);
+    const otherIdentifiers = this.getIdentifiersNode(node, identifier);
 
     const usageNodes: Parser.SyntaxNode[] = [];
 

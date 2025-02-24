@@ -17,6 +17,9 @@ export const localConfigSchema = z.object({
       targetMaxCharInFile: z.number().optional(),
       targetMaxLineInFile: z.number().optional(),
       targetMaxDepPerFile: z.number().optional(),
+      targetMaxCharPerInstance: z.number().optional(),
+      targetMaxLinePerInstance: z.number().optional(),
+      targetMaxDepPerInstance: z.number().optional(),
     })
     .optional(),
 });

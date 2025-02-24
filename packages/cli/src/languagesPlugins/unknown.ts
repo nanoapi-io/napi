@@ -18,6 +18,15 @@ class UnknownPlugin implements LanguagePlugin {
     return [];
   }
 
+  getIdentifiersNode(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _node: Parser.SyntaxNode,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _identifier: Parser.SyntaxNode,
+  ): Parser.SyntaxNode[] {
+    return [];
+  }
+
   removeAnnotationFromOtherGroups(
     sourceCode: string,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

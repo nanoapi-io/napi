@@ -18,6 +18,7 @@ import EndpointNode from "./EndpointNode";
 import SmoothEdge from "../SmoothEdge";
 import Controls from "../Controls";
 import { ReactFlowSkeleton } from "../Skeleton";
+import WaterMarkRemover from "../WaterMarkRemover";
 
 export default function SplitConfigureTree(props: {
   loading: boolean;
@@ -191,17 +192,6 @@ export default function SplitConfigureTree(props: {
     handleReposition(newDirection);
   }
 
-  useEffect(() => {
-    if (!props.loading) {
-      const element = document.querySelector(
-        ".react-flow__panel",
-      ) as HTMLElement;
-      if (element) {
-        element.style.display = "none";
-      }
-    }
-  }, [props.loading]);
-
   function onNodeDragStart(_event: React.MouseEvent, node: Node) {
     setNodes((nds) =>
       nds.map((n) =>
@@ -237,6 +227,7 @@ export default function SplitConfigureTree(props: {
       onNodeDragStop={onNodeDragStop}
       fitView
     >
+      <WaterMarkRemover busy={props.busy} />
       <Controls
         busy={props.busy}
         reactFlow={reactFlow}

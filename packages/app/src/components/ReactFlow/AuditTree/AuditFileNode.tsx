@@ -3,7 +3,7 @@ import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { Link } from "react-router";
 import { AuditFile } from "../../../service/api/types";
 
-export default function FileNode(
+export default function AuditFileNode(
   props: NodeProps<
     Node<
       AuditFile & {
@@ -42,9 +42,9 @@ export default function FileNode(
       );
     }
 
-    if (props.data.analysis.tooManyDependencies.result === "warning") {
+    if (props.data.analysis.tooManyInternalDependencies.result === "warning") {
       warnings.push(
-        `This file has ${props.data.analysis.tooManyDependencies.value} dependencies. It is very close to the limit of ${props.data.analysis.tooManyDependencies.target}.`,
+        `This file has ${props.data.analysis.tooManyInternalDependencies.value} dependencies. It is very close to the limit of ${props.data.analysis.tooManyInternalDependencies.target}.`,
       );
     }
 
@@ -66,13 +66,24 @@ export default function FileNode(
       );
     }
 
-    if (props.data.analysis.tooManyDependencies.result === "error") {
+    if (props.data.analysis.tooManyInternalDependencies.result === "error") {
       errors.push(
-        `This file has ${props.data.analysis.tooManyDependencies.value} dependencies. It exceeds the limit of ${props.data.analysis.tooManyDependencies.target}.`,
+        `This file has ${props.data.analysis.tooManyInternalDependencies.value} dependencies. It exceeds the limit of ${props.data.analysis.tooManyInternalDependencies.target}.`,
       );
     }
 
-    props.data.circularDependencySources.forEach((source) => {
+    const circularDependencySources: string[] = [];
+    Object.values(props.data.dependenciesMap).forEach((dependency) => {
+      Object.values(props.data.instances).forEach((instance) => {
+        Object.values(instance.dependentsMap).forEach((dependent) => {
+          if (dependent.fileId === dependency.fileId) {
+            circularDependencySources.push(dependency.fileId);
+          }
+        });
+      });
+    });
+
+    circularDependencySources.forEach((source) => {
       errors.push(`This file has a circular dependency with ${source}.`);
     });
 

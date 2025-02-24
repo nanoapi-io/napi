@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { getProjectOverview } from "../service/api/auditApi";
+import { getAuditFiles } from "../service/api/auditApi";
 import { toast } from "react-toastify";
 import ReactFlowLayout from "../layout/ReactFlow";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
-import { AuditFile } from "../service/api/types";
+import { AuditMap } from "../service/api/types";
 import { Outlet } from "react-router";
 
 export default function BaseAudit() {
@@ -11,24 +11,20 @@ export default function BaseAudit() {
 
   const [busy, setBusy] = useState<boolean>(false);
 
-  const [files, setFiles] = useState<(AuditFile & { isFocused?: boolean })[]>(
-    [],
-  );
+  const [auditMap, setAuditMap] = useState<AuditMap>({});
 
   useEffect(() => {
     async function handleOnLoad() {
       setBusy(true);
       try {
-        const projectPromise = getProjectOverview();
+        const projectPromise = getAuditFiles();
         toast.promise(projectPromise, {
           success: "Successfully loaded project overview",
           error: "Failed to load project overview",
           pending: "Loading project overview...",
         });
 
-        const AuditFiles = (await projectPromise).files;
-
-        setFiles(AuditFiles);
+        setAuditMap(await projectPromise);
       } finally {
         setBusy(false);
       }
@@ -47,8 +43,8 @@ export default function BaseAudit() {
       sideBarSlot={
         <FileExplorer
           busy={busy}
-          files={files}
-          focusedId={focusedPath}
+          auditMap={auditMap}
+          focusedPath={focusedPath}
           onNodeFocus={setFocusedPath}
           onNodeUnfocus={() => setFocusedPath(undefined)}
         />
@@ -57,7 +53,7 @@ export default function BaseAudit() {
         <Outlet
           context={{
             busy,
-            files,
+            auditMap,
             focusedPath,
             onNodeFocus: setFocusedPath,
             onNodeUnfocus: () => setFocusedPath(undefined),

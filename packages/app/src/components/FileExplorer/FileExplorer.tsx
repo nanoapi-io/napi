@@ -2,7 +2,7 @@ import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
-import { AuditFile } from "../../service/api/types";
+import { AuditMap } from "../../service/api/types";
 
 interface TreeData {
   id: string;
@@ -13,8 +13,8 @@ interface TreeData {
 
 export default function FileExplorer(props: {
   busy: boolean;
-  files: AuditFile[];
-  focusedId?: string;
+  auditMap: AuditMap;
+  focusedPath?: string;
   onNodeFocus: (id: string) => void;
   onNodeUnfocus: (id: string) => void;
 }) {
@@ -22,10 +22,10 @@ export default function FileExplorer(props: {
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
-  function buildTreeData(files: AuditFile[]): TreeData[] {
+  function buildTreeData(auditMap: AuditMap): TreeData[] {
     let rootNodes: TreeData[] = [];
 
-    files.forEach((file) => {
+    Object.values(auditMap).forEach((file) => {
       // Filter out files that don't match the search
       if (!file.path.toLowerCase().includes(search.toLowerCase())) {
         return;
@@ -112,8 +112,8 @@ export default function FileExplorer(props: {
   }
 
   useEffect(() => {
-    setTreeData(buildTreeData(props.files));
-  }, [props.files, search]);
+    setTreeData(buildTreeData(props.auditMap));
+  }, [props.auditMap, search]);
 
   return (
     <div className="h-full flex flex-col">
@@ -178,7 +178,7 @@ export default function FileExplorer(props: {
             <ScrollArea scrollbars="vertical">
               <ListElement
                 nodes={treeData}
-                focusedId={props.focusedId}
+                focusedId={props.focusedPath}
                 onNodeFocus={props.onNodeFocus}
                 onNodeUnfocus={props.onNodeUnfocus}
               />
