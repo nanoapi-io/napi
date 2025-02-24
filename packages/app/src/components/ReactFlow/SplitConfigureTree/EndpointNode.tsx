@@ -2,8 +2,8 @@ import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { Endpoint } from "../../../service/api/types";
 import { DataList } from "@radix-ui/themes";
 import EndpointNodeContentDialog from "./EndpointNodeContentDialog";
-import MethodBadge from "../../MethodBadge";
-import GroupBadge from "../../GroupBadge";
+import MethodBadge from "../../Badges/MethodBadge";
+import GroupBadge from "../../Badges/GroupBadge";
 
 export default function EndpointNode(
   props: NodeProps<

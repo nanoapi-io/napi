@@ -7,7 +7,7 @@ import {
 } from "@radix-ui/themes";
 import { FormEvent, useState } from "react";
 import { Endpoint } from "../../../service/api/types";
-import MethodBadge from "../../MethodBadge";
+import MethodBadge from "../../Badges/MethodBadge";
 
 export default function EndpointNodeContentDialog(props: {
   busy: boolean;

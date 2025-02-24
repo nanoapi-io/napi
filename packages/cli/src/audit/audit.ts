@@ -218,7 +218,7 @@ export class Audit {
         instanceMap[instanceId] = {
           id: instanceId,
           name: depExportIdentifier.identifierNode.text,
-          type: depExport.type as AuditInstanceType,
+          type: depExportIdentifier.type as AuditInstanceType,
           dependenciesMap,
           dependentsMap: {},
           analysis: {

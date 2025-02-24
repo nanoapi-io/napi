@@ -2,6 +2,7 @@ import { Button, Tooltip } from "@radix-ui/themes";
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { Link } from "react-router";
 import { AuditFile } from "../../../service/api/types";
+import { defaultMaxPathLength, getDisplayedPath } from "../../../helpers";
 
 export default function AuditFileNode(
   props: NodeProps<
@@ -13,16 +14,6 @@ export default function AuditFileNode(
     >
   >,
 ) {
-  const maxPathLength = 25;
-
-  function getDisplayedPath(path: string) {
-    if (path.length > maxPathLength) {
-      return `...${path.slice(-maxPathLength)}`;
-    }
-
-    return path;
-  }
-
   function getWarnings() {
     const warnings: string[] = [];
 
@@ -173,9 +164,9 @@ export default function AuditFileNode(
         to={encodeURIComponent(props.data.path)}
         className="text-center p-5"
       >
-        {props.data.path.length > maxPathLength ? (
+        {props.data.path.length > defaultMaxPathLength ? (
           <Tooltip content={props.data.path}>
-            <div>{getDisplayedPath(props.data.path)}</div>
+            <div>{getDisplayedPath(props.data.path, defaultMaxPathLength)}</div>
           </Tooltip>
         ) : (
           props.data.path

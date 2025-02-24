@@ -12,10 +12,14 @@ import {
   Background,
   BackgroundVariant,
   MarkerType,
+  Position,
 } from "@xyflow/react";
 import Controls from "../../../components/ReactFlow/Controls";
 import WaterMarkRemover from "../../../components/ReactFlow/WaterMarkRemover";
 import Elk, { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk.bundled.js";
+import ContainerReferencesNode from "../../../components/ReactFlow/AuditTree/ContainerReferencesNode";
+import ContainerFileNode from "../../../components/ReactFlow/AuditTree/ContainerFileNode";
+import InstanceNode from "../../../components/ReactFlow/AuditTree/InstanceNode";
 
 export default function AuditFilePage() {
   const params = useParams<{ file: string }>();
@@ -26,6 +30,12 @@ export default function AuditFilePage() {
     // More here, but we do not need it
   }>();
 
+  const nodeTypes = {
+    ContainerReferencesNode,
+    ContainerFileNode,
+    InstanceNode,
+  };
+
   const reactFlow = useReactFlow();
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -33,26 +43,11 @@ export default function AuditFilePage() {
 
   const [direction, setDirection] = useState<"RIGHT" | "DOWN">("DOWN");
 
+  const joinChar = "|";
+
   useEffect(() => {
     async function run() {
-      if (!params.file) {
-        setNodes([]);
-        setEdges([]);
-        return;
-      }
-
-      const currentFile = context.auditMap[params.file];
-
-      if (!currentFile) {
-        setNodes([]);
-        setEdges([]);
-        return;
-      }
-
-      const { nodes, edges } = await computeNodesAndEdgesFromFiles(
-        currentFile,
-        direction,
-      );
+      const { nodes, edges } = await computeNodesAndEdgesFromFiles(direction);
 
       setNodes(nodes);
       setEdges(edges);
@@ -69,7 +64,8 @@ export default function AuditFilePage() {
     const containerDirection = direction === "RIGHT" ? "DOWN" : "RIGHT";
 
     const instanceWidth = 300;
-    const instanceHeight = 100;
+    const currentInstanceHeight = 150;
+    const referenceInstanceHeight = 120;
 
     // build ELk graph
     const graph = {
@@ -96,8 +92,9 @@ export default function AuditFilePage() {
     };
 
     // Current file node
+    const currentFileId = `current${joinChar}${auditFile.path}`;
     const currentFileElkNode = {
-      id: "currentFile",
+      id: currentFileId,
       layoutOptions: {
         "elk.algorithm": "layered",
         "elk.direction": containerDirection,
@@ -122,11 +119,11 @@ export default function AuditFilePage() {
 
     Object.values(auditFile.instances).forEach((instance) => {
       // Current instance node
-      const currentInstanceId = `${auditFile.path}-${instance.id}`;
+      const currentInstanceId = `${currentFileId}|${instance.id}`;
       const currentInstanceElkNode = {
         id: currentInstanceId,
         width: instanceWidth,
-        height: instanceHeight,
+        height: currentInstanceHeight,
       };
 
       currentFileElkNode.children.push(currentInstanceElkNode);
@@ -134,7 +131,7 @@ export default function AuditFilePage() {
       // Gather all dependencies in map to create nodes later
       // And create all the edges now
       Object.values(instance.dependenciesMap).forEach((dependency) => {
-        const targetFileId = `dependency-${dependency.fileId}`;
+        const targetFileId = `dependency${joinChar}${dependency.fileId}`;
 
         let dependencyNode = dependenciesNodeMap.get(targetFileId);
         if (!dependencyNode) {
@@ -142,12 +139,12 @@ export default function AuditFilePage() {
         }
 
         Object.values(dependency.instanceIds).forEach((instanceId) => {
-          const targetInstanceId = `${targetFileId}-${instanceId}`;
+          const targetInstanceId = `${targetFileId}${joinChar}${instanceId}`;
           dependencyNode.set(targetInstanceId, targetInstanceId);
 
           // Add edge to graph to link dependency instance to the current instance
           graph.edges.push({
-            id: `dependency-${targetInstanceId}-${currentInstanceId}`,
+            id: `${targetInstanceId}${joinChar}${currentInstanceId}`,
             sources: [targetInstanceId],
             targets: [currentInstanceId],
           });
@@ -159,7 +156,7 @@ export default function AuditFilePage() {
       // Gather all dependents in map to create nodes later
       // And create all the edges now
       Object.values(instance.dependentsMap).forEach((dependent) => {
-        const targetFileId = `dependent-${dependent.fileId}`;
+        const targetFileId = `dependent${joinChar}${dependent.fileId}`;
 
         let dependentNode = dependentsNodeMap.get(targetFileId);
         if (!dependentNode) {
@@ -167,12 +164,12 @@ export default function AuditFilePage() {
         }
 
         Object.values(dependent.instanceIds).forEach((instanceId) => {
-          const targetInstanceId = `${targetFileId}-${instanceId}`;
+          const targetInstanceId = `${targetFileId}|${instanceId}`;
           dependentNode.set(targetInstanceId, targetInstanceId);
 
           // Add edge to graph to link dependent instance to the current instance
           graph.edges.push({
-            id: `dependent-${currentInstanceId}-${targetInstanceId}`,
+            id: `${currentInstanceId}${joinChar}${targetInstanceId}`,
             sources: [currentInstanceId],
             targets: [targetInstanceId],
           });
@@ -197,7 +194,7 @@ export default function AuditFilePage() {
         const instanceElkNode = {
           id: instanceId,
           width: instanceWidth,
-          height: instanceHeight,
+          height: referenceInstanceHeight,
         };
 
         dependencyElkNode.children.push(instanceElkNode);
@@ -221,7 +218,7 @@ export default function AuditFilePage() {
         const instanceElkNode = {
           id: instanceId,
           width: instanceWidth,
-          height: instanceHeight,
+          height: referenceInstanceHeight,
         };
 
         dependentElkNode.children.push(instanceElkNode);
@@ -248,10 +245,72 @@ export default function AuditFilePage() {
     return layoutedGraph;
   }
 
-  async function computeNodesAndEdgesFromFiles(
-    auditFile: AuditFile,
-    direction: "RIGHT" | "DOWN",
-  ) {
+  function getNodeTypeFromId(id: string) {
+    const parts = id.split(joinChar);
+    if (parts.length === 1) return "ContainerReferencesNode";
+
+    if (parts.length === 2) return "ContainerFileNode";
+
+    return "InstanceNode";
+  }
+
+  function getNodeDataFromId(id: string, auditFile: AuditFile) {
+    const data: Record<string, unknown> = {
+      id,
+    };
+
+    const parts = id.split(joinChar);
+
+    if (parts.length === 1) {
+      data["containerType"] = id as "dependencies" | "dependents";
+      return data;
+    }
+
+    const fileName = parts[1];
+    data["fileName"] = fileName;
+
+    if (parts.length === 2) {
+      return data;
+    }
+
+    const instanceName = parts[2];
+    data["instanceName"] = instanceName;
+
+    if (parts[0] === "current") {
+      const instance = auditFile.instances[instanceName];
+      data["instanceType"] = instance.type;
+      data["analysis"] = instance.analysis;
+      return data;
+    }
+
+    if (parts[0] === "dependency") {
+      const dependency = auditFile.dependenciesMap[parts[1]];
+      const isExternal = dependency.isExternal;
+      data["isExternal"] = isExternal;
+
+      if (!isExternal) {
+        const targetFile = context.auditMap[fileName];
+        const targetInstance = targetFile.instances[instanceName];
+        data["instanceType"] = targetInstance.type;
+      }
+    }
+
+    if (parts[0] === "dependent") {
+      const targetFile = context.auditMap[fileName];
+      const targetInstance = targetFile.instances[instanceName];
+      data["instanceType"] = targetInstance.type;
+    }
+
+    return data;
+  }
+
+  async function computeNodesAndEdgesFromFiles(direction: "RIGHT" | "DOWN") {
+    if (!params.file) return { nodes: [], edges: [] };
+
+    const auditFile = context.auditMap[params.file];
+
+    if (!auditFile) return { nodes: [], edges: [] };
+
     const elkGraph = await generateElkGraph(direction, auditFile);
 
     const nodes: Node[] = [];
@@ -261,16 +320,21 @@ export default function AuditFilePage() {
       elkNode: ElkNode,
       parentId: string | undefined = undefined,
     ) {
-      const { id, x, y, width, height, children } = elkNode;
+      const { id, x = 0, y = 0, width, height, children } = elkNode;
+
+      const data = getNodeDataFromId(id, auditFile);
+      const type = getNodeTypeFromId(id);
 
       const node: Node = {
         id,
-        position: { x: x || 0, y: y || 0 },
+        position: { x, y },
         width,
         height,
-        data: {
-          label: id,
-        },
+        data,
+        targetPosition: direction === "RIGHT" ? Position.Left : Position.Top,
+        sourcePosition:
+          direction === "RIGHT" ? Position.Right : Position.Bottom,
+        type,
         parentId,
         extent: "parent",
       };
@@ -322,7 +386,6 @@ export default function AuditFilePage() {
     }
 
     const { nodes, edges } = (await computeNodesAndEdgesFromFiles(
-      auditFile,
       direction,
     )) as {
       nodes: Node[];
@@ -364,6 +427,7 @@ export default function AuditFilePage() {
 
   return (
     <ReactFlow
+      nodeTypes={nodeTypes}
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
