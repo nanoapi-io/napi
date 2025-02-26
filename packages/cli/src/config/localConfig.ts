@@ -13,7 +13,9 @@ export const localConfigSchema = z.object({
     .optional(),
   audit: z
     .object({
-      patterns: z.array(z.string()).optional(),
+      // patterns: z.array(z.string()).optional(),
+      include: z.array(z.string()).optional(),
+      exclude: z.array(z.string()).optional(),
       targetMaxCharInFile: z.number().optional(),
       targetMaxLineInFile: z.number().optional(),
       targetMaxDepPerFile: z.number().optional(),

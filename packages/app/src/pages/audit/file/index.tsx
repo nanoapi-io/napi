@@ -17,9 +17,11 @@ import {
 import Controls from "../../../components/ReactFlow/Controls";
 import WaterMarkRemover from "../../../components/ReactFlow/WaterMarkRemover";
 import Elk, { ElkExtendedEdge, ElkNode } from "elkjs/lib/elk.bundled.js";
-import ContainerReferencesNode from "../../../components/ReactFlow/AuditTree/ContainerReferencesNode";
-import ContainerFileNode from "../../../components/ReactFlow/AuditTree/ContainerFileNode";
-import InstanceNode from "../../../components/ReactFlow/AuditTree/InstanceNode";
+import ContainerNode from "../../../components/ReactFlow/Audit/AuditFile/ContainerNode";
+import FileNode from "../../../components/ReactFlow/Audit/AuditFile/FileNode";
+import CurrentInstanceNode from "../../../components/ReactFlow/Audit/AuditFile/CurrentInstanceNode";
+import InternalReferenceInstanceNode from "../../../components/ReactFlow/Audit/AuditFile/InternalReferenceInstanceNode";
+import ExternalReferenceInstanceNode from "../../../components/ReactFlow/Audit/AuditFile/ExternalReferenceInstanceNode";
 
 export default function AuditFilePage() {
   const params = useParams<{ file: string }>();
@@ -31,9 +33,11 @@ export default function AuditFilePage() {
   }>();
 
   const nodeTypes = {
-    ContainerReferencesNode,
-    ContainerFileNode,
-    InstanceNode,
+    ContainerNode,
+    FileNode,
+    CurrentInstanceNode,
+    InternalReferenceInstanceNode,
+    ExternalReferenceInstanceNode,
   };
 
   const reactFlow = useReactFlow();
@@ -73,7 +77,7 @@ export default function AuditFilePage() {
       layoutOptions: {
         "org.eclipse.elk.algorithm": "layered",
         "org.eclipse.elk.direction": graphDirection,
-        "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "50",
+        "org.eclipse.elk.layered.spacing.nodeNodeBetweenLayers": "25",
         "org.eclipse.elk.hierarchyHandling": "INCLUDE_CHILDREN",
         "org.eclipse.elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
       },
@@ -163,17 +167,28 @@ export default function AuditFilePage() {
           dependentNode = new Map<string, string>();
         }
 
-        Object.values(dependent.instanceIds).forEach((instanceId) => {
-          const targetInstanceId = `${targetFileId}|${instanceId}`;
-          dependentNode.set(targetInstanceId, targetInstanceId);
+        const dependentInstancesIds = Object.values(dependent.instanceIds);
 
-          // Add edge to graph to link dependent instance to the current instance
+        if (dependentInstancesIds.length === 0) {
+          // Add edge to graph to link dependent file to the current instance
           graph.edges.push({
-            id: `${currentInstanceId}${joinChar}${targetInstanceId}`,
+            id: `${currentInstanceId}${joinChar}${targetFileId}`,
             sources: [currentInstanceId],
-            targets: [targetInstanceId],
+            targets: [targetFileId],
           });
-        });
+        } else {
+          dependentInstancesIds.forEach((instanceId) => {
+            const targetInstanceId = `${targetFileId}|${instanceId}`;
+            dependentNode.set(targetInstanceId, targetInstanceId);
+
+            // Add edge to graph to link dependent instance to the current instance
+            graph.edges.push({
+              id: `${currentInstanceId}${joinChar}${targetInstanceId}`,
+              sources: [currentInstanceId],
+              targets: [targetInstanceId],
+            });
+          });
+        }
 
         dependentsNodeMap.set(targetFileId, dependentNode);
       });
@@ -211,6 +226,8 @@ export default function AuditFilePage() {
           "elk.algorithm": "layered",
           "elk.direction": containerDirection,
         },
+        width: instanceWidth,
+        height: referenceInstanceHeight,
         children: [] as ElkNode[],
       };
 
@@ -245,63 +262,81 @@ export default function AuditFilePage() {
     return layoutedGraph;
   }
 
-  function getNodeTypeFromId(id: string) {
-    const parts = id.split(joinChar);
-    if (parts.length === 1) return "ContainerReferencesNode";
+  function getReactNodeFromElkNode(
+    elkNode: ElkNode,
+    parentId: string | undefined,
+    direction: "RIGHT" | "DOWN",
+    currentAuditFile: AuditFile,
+  ): Node {
+    const { id, x = 0, y = 0, width, height } = elkNode;
 
-    if (parts.length === 2) return "ContainerFileNode";
-
-    return "InstanceNode";
-  }
-
-  function getNodeDataFromId(id: string, auditFile: AuditFile) {
-    const data: Record<string, unknown> = {
+    const node: Node = {
       id,
+      position: { x, y },
+      width,
+      height,
+      data: {
+        id,
+      } as Record<string, unknown>,
+      targetPosition: direction === "RIGHT" ? Position.Left : Position.Top,
+      sourcePosition: direction === "RIGHT" ? Position.Right : Position.Bottom,
+      type: "ContainerNode" as keyof typeof nodeTypes,
+      parentId,
     };
 
     const parts = id.split(joinChar);
-
     if (parts.length === 1) {
-      data["containerType"] = id as "dependencies" | "dependents";
-      return data;
+      node.type = "ContainerNode";
+      node.draggable = false;
     }
-
-    const fileName = parts[1];
-    data["fileName"] = fileName;
 
     if (parts.length === 2) {
-      return data;
+      node.type = "FileNode";
+      const fileName = parts[1];
+      node.data.fileName = fileName;
     }
 
-    const instanceName = parts[2];
-    data["instanceName"] = instanceName;
+    if (parts.length === 3) {
+      const prefix = parts[0];
+      const fileName = parts[1];
+      const instanceName = parts[2];
 
-    if (parts[0] === "current") {
-      const instance = auditFile.instances[instanceName];
-      data["instanceType"] = instance.type;
-      data["analysis"] = instance.analysis;
-      return data;
-    }
+      node.extent = "parent";
+      node.draggable = false;
 
-    if (parts[0] === "dependency") {
-      const dependency = auditFile.dependenciesMap[parts[1]];
-      const isExternal = dependency.isExternal;
-      data["isExternal"] = isExternal;
+      node.data.fileName = fileName;
+      node.data.instanceName = instanceName;
 
-      if (!isExternal) {
-        const targetFile = context.auditMap[fileName];
-        const targetInstance = targetFile.instances[instanceName];
-        data["instanceType"] = targetInstance.type;
+      if (prefix === "dependency") {
+        const dependency = currentAuditFile.dependenciesMap[fileName];
+        const isExternal = dependency.isExternal;
+        if (isExternal) {
+          node.type = "ExternalReferenceInstanceNode";
+          node.data.referenceName = dependency.path;
+        } else {
+          node.type = "InternalReferenceInstanceNode";
+          const auditFile = context.auditMap[fileName];
+          const instance = auditFile.instances[instanceName];
+          node.data.instanceType = instance.type;
+        }
+      }
+
+      if (prefix === "dependent") {
+        node.type = "InternalReferenceInstanceNode";
+        const auditFile = context.auditMap[fileName];
+        const instance = auditFile.instances[instanceName];
+        node.data.instanceType = instance.type;
+      }
+
+      if (prefix === "current") {
+        node.type = "CurrentInstanceNode";
+        const instance = currentAuditFile.instances[instanceName];
+        node.data.instanceType = instance.type;
+        node.data.auditResult = instance.auditResults;
       }
     }
 
-    if (parts[0] === "dependent") {
-      const targetFile = context.auditMap[fileName];
-      const targetInstance = targetFile.instances[instanceName];
-      data["instanceType"] = targetInstance.type;
-    }
-
-    return data;
+    return node;
   }
 
   async function computeNodesAndEdgesFromFiles(direction: "RIGHT" | "DOWN") {
@@ -320,29 +355,17 @@ export default function AuditFilePage() {
       elkNode: ElkNode,
       parentId: string | undefined = undefined,
     ) {
-      const { id, x = 0, y = 0, width, height, children } = elkNode;
-
-      const data = getNodeDataFromId(id, auditFile);
-      const type = getNodeTypeFromId(id);
-
-      const node: Node = {
-        id,
-        position: { x, y },
-        width,
-        height,
-        data,
-        targetPosition: direction === "RIGHT" ? Position.Left : Position.Top,
-        sourcePosition:
-          direction === "RIGHT" ? Position.Right : Position.Bottom,
-        type,
+      const node = getReactNodeFromElkNode(
+        elkNode,
         parentId,
-        extent: "parent",
-      };
+        direction,
+        auditFile,
+      );
 
       nodes.push(node);
 
-      children?.forEach((child) => {
-        traverse(child, id);
+      elkNode.children?.forEach((child) => {
+        traverse(child, elkNode.id);
       });
     }
 
@@ -366,6 +389,9 @@ export default function AuditFilePage() {
 
       edges.push(edge);
     });
+
+    console.log(1111, nodes);
+    console.log(2222, edges);
 
     return { nodes, edges };
   }
@@ -401,26 +427,6 @@ export default function AuditFilePage() {
     handleReposition(newDirection);
   }
 
-  function onNodeDragStart(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: true } }
-          : n,
-      ),
-    );
-  }
-
-  function onNodeDragStop(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: false } }
-          : n,
-      ),
-    );
-  }
-
   if (context.busy) {
     return <ReactFlowSkeleton />;
   }
@@ -431,8 +437,6 @@ export default function AuditFilePage() {
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
-      onNodeDragStart={onNodeDragStart}
-      onNodeDragStop={onNodeDragStop}
       fitView
     >
       <WaterMarkRemover busy={context.busy} />

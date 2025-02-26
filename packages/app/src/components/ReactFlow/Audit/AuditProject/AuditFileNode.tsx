@@ -1,14 +1,13 @@
 import { Button, Tooltip } from "@radix-ui/themes";
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 import { Link } from "react-router";
-import { AuditFile } from "../../../service/api/types";
-import { defaultMaxPathLength, getDisplayedPath } from "../../../helpers";
+import { AuditFile } from "../../../../service/api/types";
+import { defaultMaxPathLength, getDisplayedPath } from "../../../../helpers";
 
 export default function AuditFileNode(
   props: NodeProps<
     Node<
       AuditFile & {
-        isBeingDragged: boolean;
         isFocused: boolean;
       } & Record<string, unknown>
     >
@@ -17,27 +16,19 @@ export default function AuditFileNode(
   function getWarnings() {
     const warnings: string[] = [];
 
-    if (props.data.isUnused) {
-      warnings.push("This file is unused");
-    }
+    props.data.auditResults.forEach((result) => {
+      if (result.result === "warning") {
+        warnings.push(result.message.short);
+      }
+    });
 
-    if (props.data.analysis.tooManyChar.result === "warning") {
-      warnings.push(
-        `This file has ${props.data.analysis.tooManyChar.value} characters. It is very close to the limit of ${props.data.analysis.tooManyChar.target}.`,
-      );
-    }
-
-    if (props.data.analysis.tooManyLines.result === "warning") {
-      warnings.push(
-        `This file has ${props.data.analysis.tooManyLines.value} lines. It is very close to the limit of ${props.data.analysis.tooManyLines.target}.`,
-      );
-    }
-
-    if (props.data.analysis.tooManyInternalDependencies.result === "warning") {
-      warnings.push(
-        `This file has ${props.data.analysis.tooManyInternalDependencies.value} dependencies. It is very close to the limit of ${props.data.analysis.tooManyInternalDependencies.target}.`,
-      );
-    }
+    Object.values(props.data.instances).forEach((instance) => {
+      instance.auditResults.forEach((result) => {
+        if (result.result === "warning") {
+          warnings.push(result.message.short);
+        }
+      });
+    });
 
     return warnings;
   }
@@ -45,23 +36,11 @@ export default function AuditFileNode(
   function getErrors() {
     const errors: string[] = [];
 
-    if (props.data.analysis.tooManyChar.result === "error") {
-      errors.push(
-        `This file has ${props.data.analysis.tooManyChar.value} characters. It exceeds the limit of ${props.data.analysis.tooManyChar.target}.`,
-      );
-    }
-
-    if (props.data.analysis.tooManyLines.result === "error") {
-      errors.push(
-        `This file has ${props.data.analysis.tooManyLines.value} lines. It exceeds the limit of ${props.data.analysis.tooManyLines.target}.`,
-      );
-    }
-
-    if (props.data.analysis.tooManyInternalDependencies.result === "error") {
-      errors.push(
-        `This file has ${props.data.analysis.tooManyInternalDependencies.value} dependencies. It exceeds the limit of ${props.data.analysis.tooManyInternalDependencies.target}.`,
-      );
-    }
+    props.data.auditResults.forEach((result) => {
+      if (result.result === "error") {
+        errors.push(result.message.short);
+      }
+    });
 
     const circularDependencySources: string[] = [];
     Object.values(props.data.dependenciesMap).forEach((dependency) => {
@@ -78,12 +57,20 @@ export default function AuditFileNode(
       errors.push(`This file has a circular dependency with ${source}.`);
     });
 
+    Object.values(props.data.instances).forEach((instance) => {
+      instance.auditResults.forEach((result) => {
+        if (result.result === "error") {
+          errors.push(result.message.short);
+        }
+      });
+    });
+
     return errors;
   }
 
   return (
     <div
-      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-border-light dark:border-border-dark ${props.data.isBeingDragged && "bg-blue-100 dark:bg-blue-900 shadow-lg"} ${props.data.isFocused && "border-2 border-primary-light dark:border-primary-dark"}`}
+      className={`bg-secondarySurface-light dark:bg-secondarySurface-dark rounded-xl border border-border-light dark:border-border-dark ${props.data.isFocused && "border-2 border-primary-light dark:border-primary-dark"}`}
     >
       <Handle
         type="target"

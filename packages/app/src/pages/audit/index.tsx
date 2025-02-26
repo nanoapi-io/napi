@@ -11,7 +11,7 @@ import {
 } from "@xyflow/react";
 import { AuditFile, AuditMap } from "../../service/api/types";
 import { useEffect, useState } from "react";
-import AuditFileNode from "../../components/ReactFlow/AuditTree/AuditFileNode";
+import AuditFileNode from "../../components/ReactFlow/Audit/AuditProject/AuditFileNode";
 import { layoutNodesAndEdges } from "../../service/dagree";
 import Controls from "../../components/ReactFlow/Controls";
 import { useOutletContext } from "react-router";
@@ -36,7 +36,6 @@ export default function AuditPage() {
   const [nodes, setNodes, onNodesChange] = useNodesState<
     Node<
       AuditFile & {
-        isBeingDragged: boolean;
         isFocused: boolean;
       } & Record<string, unknown>
     >
@@ -62,7 +61,6 @@ export default function AuditPage() {
   function computeNodesAndEdgesFromFiles(auditMap: AuditMap) {
     const newNodes: Node<
       AuditFile & {
-        isBeingDragged: boolean;
         isFocused: boolean;
       } & Record<string, unknown>
     >[] = [];
@@ -71,7 +69,6 @@ export default function AuditPage() {
     Object.values(auditMap).forEach((file) => {
       const node: Node<
         AuditFile & {
-          isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>
       > = {
@@ -79,7 +76,6 @@ export default function AuditPage() {
         position: { x: 0, y: 0 },
         data: {
           ...file,
-          isBeingDragged: false,
           isFocused: false,
         },
         type: "auditFileNode",
@@ -116,7 +112,6 @@ export default function AuditPage() {
     ) as {
       nodes: Node<
         AuditFile & {
-          isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>
       >[];
@@ -135,7 +130,6 @@ export default function AuditPage() {
     ) as {
       nodes: Node<
         AuditFile & {
-          isBeingDragged: boolean;
           isFocused: boolean;
         } & Record<string, unknown>
       >[];
@@ -149,26 +143,6 @@ export default function AuditPage() {
     const newDirection = direction === "TB" ? "LR" : "TB";
     setDirection(newDirection);
     handleReposition(newDirection);
-  }
-
-  function onNodeDragStart(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: true } }
-          : n,
-      ),
-    );
-  }
-
-  function onNodeDragStop(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: false } }
-          : n,
-      ),
-    );
   }
 
   function onNodeMouseEnter(_event: React.MouseEvent, node: Node) {
@@ -189,8 +163,6 @@ export default function AuditPage() {
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
-      onNodeDragStart={onNodeDragStart}
-      onNodeDragStop={onNodeDragStop}
       onNodeMouseEnter={onNodeMouseEnter}
       onNodeMouseLeave={onNodeMouseLeave}
       fitView

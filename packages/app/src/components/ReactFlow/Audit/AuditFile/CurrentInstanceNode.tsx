@@ -1,26 +1,45 @@
 import { DataList, Tooltip } from "@radix-ui/themes";
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
-import { defaultMaxPathLength, getDisplayedPath } from "../../../helpers";
-import InstanceTypeBadge from "../../Badges/InstanceTypeBadge";
+import { defaultMaxPathLength, getDisplayedPath } from "../../../../helpers";
+import InstanceTypeBadge from "../../../Badges/InstanceTypeBadge";
+import { AuditResult } from "../../../../service/api/types";
+import { useEffect, useState } from "react";
 
-export default function InstanceNode(
+export default function CurrentInstanceNode(
   props: NodeProps<
     Node<
       {
         fileName: string;
-        isExternal?: boolean;
         instanceName: string;
-        instanceType?: string;
-        analysis?: object;
-        isBeingDragged: boolean;
+        instanceType: string;
+        auditResult: AuditResult[];
       } & Record<string, unknown>
     >
   >,
 ) {
+  const [warnings, setWarnings] = useState<string[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    const warnings: string[] = [];
+    const errors: string[] = [];
+
+    props.data.auditResult.forEach((result) => {
+      if (result.result === "warning") {
+        warnings.push(result.message.short);
+      }
+      if (result.result === "error") {
+        errors.push(result.message.short);
+      }
+    });
+
+    setWarnings(warnings);
+    setErrors(errors);
+  }, [props.data.auditResult]);
+
   const className = [
     "bg-secondarySurface-light dark:bg-secondarySurface-dark",
     "rounded-xl border border-border-light dark:border-border-dark",
-    `${props.data.isBeingDragged && "bg-blue-100 dark:bg-blue-900 shadow-lg"}`,
   ].join(" ");
 
   return (
@@ -109,9 +128,52 @@ export default function InstanceNode(
               </DataList.Value>
             </DataList.Item>
           )}
+          <DataList.Item>
+            <DataList.Label>
+              <div className="text-text-light dark:text-text-dark">
+                Audit Results
+              </div>
+            </DataList.Label>
+            <DataList.Value>
+              <div className="font-bold">
+                {warnings.length === 0 && errors.length === 0 && (
+                  <div className="text-success">No issues found</div>
+                )}
+                {warnings.length > 0 && (
+                  <Tooltip
+                    content={
+                      <ul className="text-md">
+                        {warnings.map((warning) => (
+                          <li key={warning}>{warning}</li>
+                        ))}
+                      </ul>
+                    }
+                  >
+                    <div className="text-warning">
+                      {warnings.length} Warnings found
+                    </div>
+                  </Tooltip>
+                )}
+                {errors.length > 0 && (
+                  <Tooltip
+                    content={
+                      <ul className="text-md">
+                        {errors.map((error) => (
+                          <li key={error}>{error}</li>
+                        ))}
+                      </ul>
+                    }
+                  >
+                    <div className="text-error">
+                      {errors.length} Errors found
+                    </div>
+                  </Tooltip>
+                )}
+              </div>
+            </DataList.Value>
+          </DataList.Item>
         </DataList.Root>
       </div>
-      {/* <div>{JSON.stringify(props.data.analysis, null, 2)}</div> */}
 
       <Handle
         type="source"

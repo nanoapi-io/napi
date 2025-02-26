@@ -58,12 +58,8 @@ export interface AuditInstance {
   // Reverse references from other files' instances, keyed by their file ID
   dependentsMap: Record<string, AuditInstanceReference>;
 
-  // Analysis of various metrics (chars, lines, dependencies, etc.)
-  analysis: {
-    tooManyChar: AuditAnalysis;
-    tooManyLines: AuditAnalysis;
-    tooManyInternalDependencies: AuditAnalysis;
-  };
+  // Overall instance analysis (chars, lines, dependencies, etc.)
+  auditResults: AuditResult[];
 }
 
 export const auditAnalysisResultOk = "ok";
@@ -79,13 +75,18 @@ export type AuditAnalysisResult =
   | typeof auditAnalysisResultError;
 
 /**
- * Captures the numeric result of an audit check and its comparison
- * to a target or threshold.
+ * Represents the result of a single audit check, including the computed
+ * value, target threshold, and a message to display.
  */
-export interface AuditAnalysis {
-  value: number; // actual computed value
-  target: number; // desired threshold
+export interface AuditResult {
+  name: string; // name of the analysis check
+  value: string; // actual computed value
+  target: string; // desired threshold
   result: AuditAnalysisResult; // "ok", "warning", or "error"
+  message: {
+    short: string; // short message to display
+    long: string; // longer explanation or suggestion
+  };
 }
 
 /**
@@ -104,11 +105,7 @@ export interface AuditFile {
   instances: Record<string, AuditInstance>;
 
   // Overall file analysis (chars, lines, etc.)
-  analysis: {
-    tooManyChar: AuditAnalysis;
-    tooManyLines: AuditAnalysis;
-    tooManyInternalDependencies: AuditAnalysis;
-  };
+  auditResults: AuditResult[];
 }
 
 /**

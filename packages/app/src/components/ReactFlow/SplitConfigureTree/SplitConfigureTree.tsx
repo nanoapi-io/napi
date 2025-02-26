@@ -96,7 +96,6 @@ export default function SplitConfigureTree(props: {
           position: { x: 0, y: 0 }, // Initial position, will be updated by Dagre
           data: {
             path: child.path,
-            isBeingDragged: false,
           },
           type: "groupNode",
         };
@@ -147,7 +146,6 @@ export default function SplitConfigureTree(props: {
             onChangeGroup: (group: string) =>
               props.onChangeEndpointGroup(group, endpoint),
             groupColor: color,
-            isBeingDragged: false,
           },
           type: "endpointNode",
         };
@@ -192,26 +190,6 @@ export default function SplitConfigureTree(props: {
     handleReposition(newDirection);
   }
 
-  function onNodeDragStart(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: true } }
-          : n,
-      ),
-    );
-  }
-
-  function onNodeDragStop(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: false } }
-          : n,
-      ),
-    );
-  }
-
   if (props.loading) {
     return <ReactFlowSkeleton />;
   }
@@ -223,8 +201,6 @@ export default function SplitConfigureTree(props: {
       nodes={nodes}
       edges={edges}
       onNodesChange={onNodesChange}
-      onNodeDragStart={onNodeDragStart}
-      onNodeDragStop={onNodeDragStop}
       fitView
     >
       <WaterMarkRemover busy={props.busy} />

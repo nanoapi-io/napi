@@ -3,7 +3,8 @@
   "out": "napi_dist",
   "openaiApiKeyFilePath": "../../.OPENAIKEY",
   "audit": {
-    "patterns": ["src/**"],
+    "include": ["src/**"],
+    "exclude": [],
     "targetMaxCharInFile": 5000,
     "targetMaxLineInFile": 500,
     "targetMaxDepPerFile": 4

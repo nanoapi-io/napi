@@ -1,16 +1,11 @@
 import { Handle, Node, NodeProps, Position } from "@xyflow/react";
 
-export default function ContainerFileNode(
-  props: NodeProps<
-    Node<
-      { fileName: string; isBeingDragged: boolean } & Record<string, unknown>
-    >
-  >,
+export default function FileNode(
+  props: NodeProps<Node<{ fileName: string } & Record<string, unknown>>>,
 ) {
   const className = [
-    "bg-transparent",
-    "rounded-xl border border-background-light dark:border-background-dark",
-    `${props.data.isBeingDragged && "bg-blue-100 dark:bg-blue-900 shadow-lg"}`,
+    "bg-background-light/50 dark:bg-secondarySurface-dark/50",
+    "rounded-2xl border border-background-light dark:border-background-dark",
   ].join(" ");
 
   return (
@@ -28,6 +23,8 @@ export default function ContainerFileNode(
         isConnectable={props.isConnectable}
         className="border-0 bg-transparent"
       />
+
+      {props.data.fileName}
 
       <Handle
         type="source"

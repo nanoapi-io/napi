@@ -1,6 +1,6 @@
 import z from "zod";
-import path from "path";
 import fs from "fs";
+import { globSync } from "glob";
 import { localConfigSchema } from "../config/localConfig";
 import {
   AuditInstanceReference,
@@ -9,10 +9,9 @@ import {
   AuditInstanceType,
   AuditMap,
   auditAnalysisResultOk,
-  AuditAnalysisResult,
   auditAnalysisResultError,
   auditAnalysisResultWarning,
-  AuditAnalysis,
+  AuditResult,
 } from "./types";
 import { getLanguagePlugin } from "../languagesPlugins";
 import UnknownPlugin from "../languagesPlugins/unknown";
@@ -35,11 +34,12 @@ export class Audit {
   }
 
   #getFiles(baseDir: string, config: z.infer<typeof localConfigSchema>) {
-    const patterns = config.audit?.patterns
-      ? config.audit?.patterns.map((pattern) => path.join(baseDir, pattern))
-      : [`${baseDir}/**`];
+    let filePaths = globSync(config.audit?.include || ["**"], {
+      cwd: baseDir,
+      ignore: config.audit?.exclude || [],
+    });
 
-    let filePaths = fs.globSync(patterns);
+    filePaths = filePaths.map((filePath) => `${baseDir}/${filePath}`);
     filePaths = filePaths.filter((filePath) => fs.lstatSync(filePath).isFile());
 
     const files: { path: string; sourceCode: string }[] = [];
@@ -52,6 +52,186 @@ export class Audit {
     return files;
   }
 
+  #getTooManyCharInFileResult(target: number, value: number): AuditResult {
+    const auditResult: AuditResult = {
+      name: "tooManyCharInFile",
+      target: target.toString(),
+      value: value.toString(),
+      result: auditAnalysisResultOk,
+      message: {
+        short: `File has an acceptable number of characters`,
+        long: `The file has ${value} characters, which is less than the target of ${target}.`,
+      },
+    };
+
+    if (target > 0 && value > target) {
+      auditResult.result = auditAnalysisResultError;
+      auditResult.message = {
+        short: `File has too many characters`,
+        long: `The file has ${value} characters, which is more than the target of ${target}.`,
+      };
+    } else if (target > 0 && value > target * 0.9) {
+      auditResult.result = auditAnalysisResultWarning;
+      auditResult.message = {
+        short: `File has many characters`,
+        long: `The file has ${value} characters, which is close to the target of ${target}.`,
+      };
+    }
+
+    return auditResult;
+  }
+
+  #getTooManyCharInInstanceResult(target: number, value: number): AuditResult {
+    const auditResult: AuditResult = {
+      name: "tooManyCharInInstance",
+      target: target.toString(),
+      value: value.toString(),
+      result: auditAnalysisResultOk,
+      message: {
+        short: `Instance has an acceptable number of characters`,
+        long: `The instance has ${value} characters, which is less than the target of ${target}.`,
+      },
+    };
+
+    if (target > 0 && value > target) {
+      auditResult.result = auditAnalysisResultError;
+      auditResult.message = {
+        short: `Instance has too many characters`,
+        long: `The instance has ${value} characters, which is more than the target of ${target}.`,
+      };
+    } else if (target > 0 && value > target * 0.9) {
+      auditResult.result = auditAnalysisResultWarning;
+      auditResult.message = {
+        short: `Instance has many characters`,
+        long: `The instance has ${value} characters, which is close to the target of ${target}.`,
+      };
+    }
+
+    return auditResult;
+  }
+
+  #getTooManyLineInFileResult(target: number, value: number): AuditResult {
+    const auditResult: AuditResult = {
+      name: "tooManyLineInFile",
+      target: target.toString(),
+      value: value.toString(),
+      result: auditAnalysisResultOk,
+      message: {
+        short: `File has an acceptable number of lines`,
+        long: `The file has ${value} lines, which is less than the target of ${target}.`,
+      },
+    };
+
+    if (target > 0 && value > target) {
+      auditResult.result = auditAnalysisResultError;
+      auditResult.message = {
+        short: `File has too many lines`,
+        long: `The file has ${value} lines, which is more than the target of ${target}.`,
+      };
+    } else if (target > 0 && value > target * 0.9) {
+      auditResult.result = auditAnalysisResultWarning;
+      auditResult.message = {
+        short: `File has many lines`,
+        long: `The file has ${value} lines, which is close to the target of ${target}.`,
+      };
+    }
+
+    return auditResult;
+  }
+
+  #getTooManyLineInInstanceResult(target: number, value: number): AuditResult {
+    const auditResult: AuditResult = {
+      name: "tooManyLineInInstance",
+      target: target.toString(),
+      value: value.toString(),
+      result: auditAnalysisResultOk,
+      message: {
+        short: `Instance has an acceptable number of lines`,
+        long: `The instance has ${value} lines, which is less than the target of ${target}.`,
+      },
+    };
+
+    if (target > 0 && value > target) {
+      auditResult.result = auditAnalysisResultError;
+      auditResult.message = {
+        short: `Instance has too many lines`,
+        long: `The instance has ${value} lines, which is more than the target of ${target}.`,
+      };
+    } else if (target > 0 && value > target * 0.9) {
+      auditResult.result = auditAnalysisResultWarning;
+      auditResult.message = {
+        short: `Instance has many lines`,
+        long: `The instance has ${value} lines, which is close to the target of ${target}.`,
+      };
+    }
+
+    return auditResult;
+  }
+
+  #getTooManyInternalDependenciesInFileResult(
+    target: number,
+    value: number,
+  ): AuditResult {
+    const auditResult: AuditResult = {
+      name: "tooManyInternalDependenciesInFile",
+      target: target.toString(),
+      value: value.toString(),
+      result: auditAnalysisResultOk,
+      message: {
+        short: `File has an acceptable number of internal dependencies`,
+        long: `The file has ${value} internal dependencies, which is less than the target of ${target}.`,
+      },
+    };
+
+    if (target > 0 && value > target) {
+      auditResult.result = auditAnalysisResultError;
+      auditResult.message = {
+        short: `File has too many internal dependencies`,
+        long: `The file has ${value} internal dependencies, which is more than the target of ${target}.`,
+      };
+    } else if (target > 0 && value > target * 0.9) {
+      auditResult.result = auditAnalysisResultWarning;
+      auditResult.message = {
+        short: `File has many internal dependencies`,
+        long: `The file has ${value} internal dependencies, which is close to the target of ${target}.`,
+      };
+    }
+
+    return auditResult;
+  }
+
+  #getTooManyInternalDependenciesInInstanceResult(
+    target: number,
+    value: number,
+  ): AuditResult {
+    const auditResult: AuditResult = {
+      name: "tooManyInternalDependenciesInInstance",
+      target: target.toString(),
+      value: value.toString(),
+      result: auditAnalysisResultOk,
+      message: {
+        short: `Instance has an acceptable number of internal dependencies`,
+        long: `The instance has ${value} internal dependencies, which is less than the target of ${target}.`,
+      },
+    };
+
+    if (target > 0 && value > target) {
+      auditResult.result = auditAnalysisResultError;
+      auditResult.message = {
+        short: `Instance has too many internal dependencies`,
+        long: `The instance has ${value} internal dependencies, which is more than the target of ${target}.`,
+      };
+    } else if (target > 0 && value > target * 0.9) {
+      auditResult.result = auditAnalysisResultWarning;
+      auditResult.message = {
+        short: `Instance has many internal dependencies`,
+        long: `The instance has ${value} internal dependencies, which is close to the target of ${target}.`,
+      };
+    }
+
+    return auditResult;
+  }
+
   #initAuditMap(
     baseDir: string,
     files: { path: string; sourceCode: string }[],
@@ -62,20 +242,18 @@ export class Audit {
     files.forEach((file) => {
       const plugin = getLanguagePlugin(baseDir, file.path);
 
-      const tooManyChar = this.#getAnalysis(
-        file.sourceCode.length,
+      const tooManyCharInFileResult = this.#getTooManyCharInFileResult(
         config.audit?.targetMaxCharInFile || 0,
+        file.sourceCode.length,
       );
 
-      const tooManyLines = this.#getAnalysis(
-        file.sourceCode.split("\n").length,
+      const tooManyLineInFileResult = this.#getTooManyLineInFileResult(
         config.audit?.targetMaxLineInFile || 0,
+        file.sourceCode.split("\n").length,
       );
 
       if (plugin.constructor === UnknownPlugin) {
         console.warn(`Unknown file type, ignoring: ${file.path}`);
-
-        const tooManyInternalDependencies = this.#getAnalysis(0, 0);
 
         auditMap[file.path] = {
           id: file.path,
@@ -83,16 +261,19 @@ export class Audit {
           isUnknown: true,
           instances: {},
           dependenciesMap: {},
-          analysis: {
-            tooManyChar,
-            tooManyLines,
-            tooManyInternalDependencies,
-          },
+          auditResults: [tooManyCharInFileResult, tooManyLineInFileResult],
         };
         return;
       }
 
-      const tree = plugin.parser.parse(file.sourceCode);
+      let tree: Parser.Tree;
+      try {
+        tree = plugin.parser.parse(file.sourceCode);
+      } catch (e) {
+        console.warn(`Failed to parse file, ignoring: ${file.path}`);
+        console.warn(e);
+        return;
+      }
 
       const depExports = plugin.getExports(tree.rootNode);
       const depImports = plugin.getImports(file.path, tree.rootNode);
@@ -114,10 +295,11 @@ export class Audit {
         dependenciesMap,
       ).filter((dep) => !dep.isExternal).length;
 
-      const tooManyInternalDependencies = this.#getAnalysis(
-        internalDependencySourcesCount,
-        config.audit?.targetMaxDepPerFile || 0,
-      );
+      const tooManyInternalDependenciesResult =
+        this.#getTooManyInternalDependenciesInFileResult(
+          config.audit?.targetMaxDepPerFile || 0,
+          internalDependencySourcesCount,
+        );
 
       auditMap[file.path] = {
         id: file.path,
@@ -125,15 +307,17 @@ export class Audit {
         isUnknown: false,
         instances,
         dependenciesMap,
-        analysis: {
-          tooManyChar,
-          tooManyLines,
-          tooManyInternalDependencies,
-        },
+        auditResults: [
+          tooManyCharInFileResult,
+          tooManyLineInFileResult,
+          tooManyInternalDependenciesResult,
+        ],
       };
     });
 
     this.#populateDependentsMap(auditMap);
+
+    this.#performPostAuditAnalysis(auditMap);
 
     return auditMap;
   }
@@ -196,24 +380,25 @@ export class Audit {
           depImports,
         );
 
-        const tooManyChar = this.#getAnalysis(
-          depExportIdentifier.node.text.length,
+        const tooManyCharResult = this.#getTooManyCharInInstanceResult(
           config.audit?.targetMaxCharPerInstance || 0,
+          depExportIdentifier.node.text.length,
         );
 
-        const tooManyLines = this.#getAnalysis(
-          depExportIdentifier.node.text.split("\n").length,
+        const tooManyLinesResult = this.#getTooManyLineInInstanceResult(
           config.audit?.targetMaxLinePerInstance || 0,
+          depExportIdentifier.node.text.split("\n").length,
         );
 
         const internalDependencySourcesCount = Object.values(
           dependenciesMap,
         ).filter((dep) => !dep.isExternal).length;
 
-        const tooManyInternalDependencies = this.#getAnalysis(
-          internalDependencySourcesCount,
-          config.audit?.targetMaxDepPerInstance || 0,
-        );
+        const tooManyInternalDependenciesResult =
+          this.#getTooManyInternalDependenciesInInstanceResult(
+            config.audit?.targetMaxDepPerInstance || 0,
+            internalDependencySourcesCount,
+          );
 
         instanceMap[instanceId] = {
           id: instanceId,
@@ -221,11 +406,11 @@ export class Audit {
           type: depExportIdentifier.type as AuditInstanceType,
           dependenciesMap,
           dependentsMap: {},
-          analysis: {
-            tooManyChar,
-            tooManyLines,
-            tooManyInternalDependencies,
-          },
+          auditResults: [
+            tooManyCharResult,
+            tooManyLinesResult,
+            tooManyInternalDependenciesResult,
+          ],
         };
       });
     });
@@ -337,23 +522,80 @@ export class Audit {
     });
   }
 
-  #getAnalysis(value: number, target: number) {
-    let result: AuditAnalysisResult = auditAnalysisResultOk;
+  #performPostAuditAnalysis(auditMap: AuditMap) {
+    Object.values(auditMap).forEach((auditFile) => {
+      // check if file is unused
+      let isUsed = false;
+      Object.values(auditMap).forEach((targetFile) => {
+        if (targetFile.dependenciesMap[auditFile.id]) {
+          isUsed = true;
+          return;
+        }
+      });
+      if (!isUsed) {
+        // add warning for unused file
+        auditFile.auditResults.push({
+          name: "unusedFile",
+          target: auditFile.id,
+          value: "",
+          result: auditAnalysisResultWarning,
+          message: {
+            short: "This file is not used in any other file.",
+            long: "This file is not used in any other file.",
+          },
+        });
+      }
 
-    if (target === 0) {
-      result = auditAnalysisResultOk;
-    } else if (value > target) {
-      result = auditAnalysisResultError;
-    } else if (value > target * 0.9) {
-      result = auditAnalysisResultWarning;
-    }
+      // check for unused instances
+      Object.values(auditFile.instances).forEach((instance) => {
+        let isUsed = false;
+        Object.values(auditMap).forEach((targetFile) => {
+          if (targetFile.dependenciesMap[auditFile.id]) {
+            targetFile.dependenciesMap[auditFile.id].instances.forEach(() => {
+              isUsed = true;
+              return;
+            });
+          }
+        });
+        if (!isUsed) {
+          // add warning for unused instance
+          auditFile.auditResults.push({
+            name: "unusedInstance",
+            target: instance.id,
+            value: "",
+            result: auditAnalysisResultWarning,
+            message: {
+              short: "This instance is not used in any file.",
+              long: "This instance is not used in any file.",
+            },
+          });
+        }
+      });
 
-    const analysis: AuditAnalysis = {
-      value,
-      target,
-      result,
-    };
+      // check for circular dependencies
+      const circularDependencySources: string[] = [];
+      Object.values(auditFile.dependenciesMap).forEach((dependency) => {
+        Object.values(auditFile.instances).forEach((instance) => {
+          Object.values(instance.dependentsMap).forEach((dependent) => {
+            if (dependent.fileId === dependency.fileId) {
+              circularDependencySources.push(dependency.fileId);
+            }
+          });
+        });
+      });
 
-    return analysis;
+      circularDependencySources.forEach((source) => {
+        auditFile.auditResults.push({
+          name: "circularDependency",
+          target: source,
+          value: "",
+          result: auditAnalysisResultError,
+          message: {
+            short: `This file has a circular dependency with ${source}.`,
+            long: `This file has a circular dependency with ${source}.`,
+          },
+        });
+      });
+    });
   }
 }
