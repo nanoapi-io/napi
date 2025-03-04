@@ -1,5 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+// /** @type {import('tailwindcss').Config} */
+
+const config = {
   darkMode: "selector",
   important: true,
   content: [
@@ -41,15 +42,19 @@ export default {
           light: "#6B7280",
         },
         primary: {
-          dark: "#5848E8",
-          light: "#4F46E5",
+          // In dark mode we use a lighter shade so white text pops
+          dark: "#695AF0",
+          // In light mode, we brighten the color a bit so dark text has good contrast
+          light: "#7B74FF",
         },
         secondary: {
-          dark: "#D62B80",
-          light: "#D62B80",
+          dark: "#E43F8C",
+          light: "#F1729E", // A brighter variant for light mode
         },
       },
     },
   },
   plugins: [],
 };
+
+export default config;

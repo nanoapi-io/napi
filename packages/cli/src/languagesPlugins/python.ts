@@ -95,7 +95,9 @@ class PythonPlugin implements LanguagePlugin {
     for (const ext of [".py", ".pyc"]) {
       const resolvedPath = path.resolve(`${resolvedImportSource}${ext}`);
       if (fs.existsSync(resolvedPath)) {
-        return resolvedPath;
+        // remove basedir from path
+        const relativePath = path.relative(this.baseDir, resolvedPath);
+        return relativePath;
       }
     }
 
@@ -103,7 +105,12 @@ class PythonPlugin implements LanguagePlugin {
     try {
       const resolvedPathWithAnyExt = require.resolve(resolvedPath);
       if (fs.existsSync(resolvedPathWithAnyExt)) {
-        return resolvedPathWithAnyExt;
+        // remove basedir from path
+        const relativePath = path.relative(
+          this.baseDir,
+          resolvedPathWithAnyExt,
+        );
+        return relativePath;
       }
     } catch {
       return undefined;
@@ -121,7 +128,7 @@ class PythonPlugin implements LanguagePlugin {
 
   #resolveRelativeImportSource(filePath: string, importSouce: string) {
     const importPath = path.resolve(
-      path.dirname(filePath),
+      path.dirname(path.join(this.baseDir, filePath)),
       path.join(...importSouce.split(".")),
     );
 

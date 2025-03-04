@@ -11,6 +11,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": ["vite.config.ts", "src"],
+  "include": ["vite.config.ts", "src", "postcss.config.js", "tailwind.config.ts"],
   "exclude": ["node_modules", "src/**/*.test.ts"]
 }

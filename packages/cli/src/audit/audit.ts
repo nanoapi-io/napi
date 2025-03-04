@@ -1,5 +1,5 @@
 import z from "zod";
-import fs from "fs";
+import { lstatSync, readFileSync } from "fs";
 import { globSync } from "glob";
 import { localConfigSchema } from "../config/localConfig";
 import {
@@ -23,30 +23,36 @@ import {
 import Parser from "tree-sitter";
 
 export class Audit {
+  private baseDir: string;
+  private config: z.infer<typeof localConfigSchema>;
   auditMap: AuditMap;
 
   constructor(baseDir: string, config: z.infer<typeof localConfigSchema>) {
-    const files = this.#getFiles(baseDir, config);
+    this.baseDir = baseDir;
+    this.config = config;
 
-    const auditMap = this.#initAuditMap(baseDir, files, config);
+    const files = this.#getFiles();
+
+    const auditMap = this.#initAuditMap(files);
 
     this.auditMap = auditMap;
   }
 
-  #getFiles(baseDir: string, config: z.infer<typeof localConfigSchema>) {
-    let filePaths = globSync(config.audit?.include || ["**"], {
-      cwd: baseDir,
-      ignore: config.audit?.exclude || [],
+  #getFiles() {
+    const filePaths = globSync(this.config.audit?.include || ["**"], {
+      cwd: this.baseDir,
+      ignore: this.config.audit?.exclude || [],
     });
-
-    filePaths = filePaths.map((filePath) => `${baseDir}/${filePath}`);
-    filePaths = filePaths.filter((filePath) => fs.lstatSync(filePath).isFile());
 
     const files: { path: string; sourceCode: string }[] = [];
 
     filePaths.forEach((filePath) => {
-      const sourceCode = fs.readFileSync(filePath, "utf8");
-      files.push({ path: filePath, sourceCode });
+      const fullPath = `${this.baseDir}/${filePath}`;
+      if (lstatSync(fullPath).isFile()) {
+        // TODO for bigger file, try another encoding to read the file
+        const sourceCode = readFileSync(fullPath, "utf8");
+        files.push({ path: filePath, sourceCode });
+      }
     });
 
     return files;
@@ -232,23 +238,20 @@ export class Audit {
     return auditResult;
   }
 
-  #initAuditMap(
-    baseDir: string,
-    files: { path: string; sourceCode: string }[],
-    config: z.infer<typeof localConfigSchema>,
-  ) {
+  #initAuditMap(files: { path: string; sourceCode: string }[]) {
     const auditMap: AuditMap = {};
 
     files.forEach((file) => {
-      const plugin = getLanguagePlugin(baseDir, file.path);
+      const fullPath = `${this.baseDir}/${file.path}`;
+      const plugin = getLanguagePlugin(this.baseDir, fullPath);
 
       const tooManyCharInFileResult = this.#getTooManyCharInFileResult(
-        config.audit?.targetMaxCharInFile || 0,
+        this.config.audit?.targetMaxCharInFile || 0,
         file.sourceCode.length,
       );
 
       const tooManyLineInFileResult = this.#getTooManyLineInFileResult(
-        config.audit?.targetMaxLineInFile || 0,
+        this.config.audit?.targetMaxLineInFile || 0,
         file.sourceCode.split("\n").length,
       );
 
@@ -280,9 +283,9 @@ export class Audit {
 
       const instances = this.#initInstancesInMap(
         plugin,
+        file.path,
         depExports,
         depImports,
-        config,
       );
 
       const dependenciesMap = this.#buildFileDependenciesMap(
@@ -297,7 +300,7 @@ export class Audit {
 
       const tooManyInternalDependenciesResult =
         this.#getTooManyInternalDependenciesInFileResult(
-          config.audit?.targetMaxDepPerFile || 0,
+          this.config.audit?.targetMaxDepPerFile || 0,
           internalDependencySourcesCount,
         );
 
@@ -362,9 +365,9 @@ export class Audit {
 
   #initInstancesInMap(
     plugin: LanguagePlugin,
+    currentFilePath: string,
     depExports: DepExport[],
     depImports: DepImport[],
-    config: z.infer<typeof localConfigSchema>,
   ) {
     const instanceMap: Record<string, AuditInstance> = {};
 
@@ -376,17 +379,19 @@ export class Audit {
 
         const dependenciesMap = this.#buildInstanceDependenciesMap(
           plugin,
+          currentFilePath,
           depExportIdentifier,
           depImports,
+          depExports,
         );
 
         const tooManyCharResult = this.#getTooManyCharInInstanceResult(
-          config.audit?.targetMaxCharPerInstance || 0,
+          this.config.audit?.targetMaxCharPerInstance || 0,
           depExportIdentifier.node.text.length,
         );
 
         const tooManyLinesResult = this.#getTooManyLineInInstanceResult(
-          config.audit?.targetMaxLinePerInstance || 0,
+          this.config.audit?.targetMaxLinePerInstance || 0,
           depExportIdentifier.node.text.split("\n").length,
         );
 
@@ -396,7 +401,7 @@ export class Audit {
 
         const tooManyInternalDependenciesResult =
           this.#getTooManyInternalDependenciesInInstanceResult(
-            config.audit?.targetMaxDepPerInstance || 0,
+            this.config.audit?.targetMaxDepPerInstance || 0,
             internalDependencySourcesCount,
           );
 
@@ -420,13 +425,15 @@ export class Audit {
 
   #buildInstanceDependenciesMap(
     plugin: LanguagePlugin,
-    depExportIdentifier: DepExport["identifiers"][0],
+    currentFilePath: string,
+    currentDepExportIdentifier: DepExport["identifiers"][0],
     depImports: DepImport[],
+    depExports: DepExport[],
   ) {
     const dependenciesMap: Record<string, AuditInstanceReference> = {};
 
     depImports.forEach((depImport) => {
-      const AuditInstanceReference: AuditInstanceReference = {
+      const auditInstanceReference: AuditInstanceReference = {
         isExternal: depImport.isExternal,
         fileId: depImport.source,
         path: depImport.source,
@@ -440,19 +447,55 @@ export class Audit {
           : depImportIdentifier.identifierNode;
 
         const matchNodes = plugin.getIdentifiersNode(
-          depExportIdentifier.node,
+          currentDepExportIdentifier.node,
           lookupIdentifierNode,
         );
 
         if (matchNodes.length > 0) {
-          AuditInstanceReference.instanceIds.push(instanceId);
+          auditInstanceReference.instanceIds.push(instanceId);
         }
       });
 
-      if (AuditInstanceReference.instanceIds.length > 0) {
-        dependenciesMap[depImport.source] = AuditInstanceReference;
+      if (auditInstanceReference.instanceIds.length > 0) {
+        dependenciesMap[depImport.source] = auditInstanceReference;
       }
     });
+
+    const auditInstanceReference: AuditInstanceReference = {
+      isExternal: false,
+      fileId: currentFilePath,
+      path: currentFilePath,
+      instanceIds: [],
+    };
+    depExports.forEach((depExport) => {
+      depExport.identifiers.forEach((depExportIdentifier) => {
+        if (
+          depExportIdentifier.identifierNode.text ===
+          currentDepExportIdentifier.identifierNode.text
+        ) {
+          // skip the current instance, we don't want to include it in the dependenciesMap
+          return;
+        }
+
+        const instanceId = depExportIdentifier.identifierNode.text;
+        const lookupIdentifierNode = depExportIdentifier.aliasNode
+          ? depExportIdentifier.aliasNode
+          : depExportIdentifier.identifierNode;
+
+        const matchNodes = plugin.getIdentifiersNode(
+          currentDepExportIdentifier.node,
+          lookupIdentifierNode,
+        );
+
+        if (matchNodes.length > 0) {
+          auditInstanceReference.instanceIds.push(instanceId);
+        }
+      });
+    });
+
+    if (auditInstanceReference.instanceIds.length > 0) {
+      dependenciesMap[currentFilePath] = auditInstanceReference;
+    }
 
     return dependenciesMap;
   }

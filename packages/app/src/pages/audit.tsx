@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { getAuditFiles } from "../service/api/auditApi";
 import { toast } from "react-toastify";
-import ReactFlowLayout from "../layout/ReactFlow";
+import GraphLayout from "../layout/GraphLayout";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
 import { AuditMap } from "../service/api/types";
 import { Outlet } from "react-router";
 
-export default function BaseAudit() {
+export default function BaseAuditPage() {
   const initialized = useRef(false);
 
   const [busy, setBusy] = useState<boolean>(false);
@@ -36,27 +36,14 @@ export default function BaseAudit() {
     }
   }, []);
 
-  const [focusedPath, setFocusedPath] = useState<string | undefined>(undefined);
-
   return (
-    <ReactFlowLayout
-      sideBarSlot={
-        <FileExplorer
-          busy={busy}
-          auditMap={auditMap}
-          focusedPath={focusedPath}
-          onNodeFocus={setFocusedPath}
-          onNodeUnfocus={() => setFocusedPath(undefined)}
-        />
-      }
-      chartSlot={
+    <GraphLayout
+      sideBarSlot={<FileExplorer busy={busy} auditMap={auditMap} />}
+      graphSlot={
         <Outlet
           context={{
             busy,
             auditMap,
-            focusedPath,
-            onNodeFocus: setFocusedPath,
-            onNodeUnfocus: () => setFocusedPath(undefined),
           }}
         />
       }

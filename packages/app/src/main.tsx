@@ -11,9 +11,10 @@ import SplitConfigure from "./pages/splitConfigure";
 import { createHashRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
 import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
-import BaseAudit from "./pages/audit";
-import Audit from "./pages/audit/index";
-import AuditFile from "./pages/audit/file";
+import BaseAuditPage from "./pages/audit";
+import AuditPage from "./pages/audit/index";
+import AuditFilePage from "./pages/audit/file";
+import AuditInstancePage from "./pages/audit/file/instance";
 
 const router = createHashRouter([
   {
@@ -22,15 +23,19 @@ const router = createHashRouter([
   },
   {
     path: "/audit",
-    element: <BaseAudit />,
+    element: <BaseAuditPage />,
     children: [
       {
         path: "/audit",
-        element: <Audit />,
+        element: <AuditPage />,
       },
       {
         path: "/audit/:file",
-        element: <AuditFile />,
+        element: <AuditFilePage />,
+      },
+      {
+        path: "/audit/:file/:instance",
+        element: <AuditInstancePage />,
       },
     ],
   },

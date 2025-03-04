@@ -2,9 +2,9 @@ import { Button } from "@radix-ui/themes";
 import { useContext } from "react";
 import { ThemeContext } from "../contexts/ThemeContext";
 
-export default function ReactFlowLayout(props: {
+export default function GraphLayout(props: {
   sideBarSlot?: React.ReactNode;
-  chartSlot: React.ReactNode;
+  graphSlot: React.ReactNode;
 }) {
   const themeContext = useContext(ThemeContext);
 
@@ -69,7 +69,7 @@ export default function ReactFlowLayout(props: {
           </div>
         </div>
         <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl overflow-hidden">
-          {props.chartSlot}
+          {props.graphSlot}
         </div>
       </div>
     </div>

@@ -14,9 +14,6 @@ interface TreeData {
 export default function FileExplorer(props: {
   busy: boolean;
   auditMap: AuditMap;
-  focusedPath?: string;
-  onNodeFocus: (id: string) => void;
-  onNodeUnfocus: (id: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
@@ -49,7 +46,7 @@ export default function FileExplorer(props: {
         // If not, create a new node
         if (!existingNode) {
           existingNode = {
-            id: `/${cumulativePath}`,
+            id: cumulativePath,
             level: 0,
             name: segment,
             children: [],
@@ -159,7 +156,7 @@ export default function FileExplorer(props: {
               onChange={(e) => setSearch(e.target.value)}
               className={`transition-all duration-300 overflow-hidden ${!isOpen && "w-0"}`}
             >
-              <TextField.Slot className="w-full">
+              <TextField.Slot>
                 <svg
                   width="20px"
                   height="20px"
@@ -176,12 +173,7 @@ export default function FileExplorer(props: {
               </TextField.Slot>
             </TextField.Root>
             <ScrollArea scrollbars="vertical">
-              <ListElement
-                nodes={treeData}
-                focusedId={props.focusedPath}
-                onNodeFocus={props.onNodeFocus}
-                onNodeUnfocus={props.onNodeUnfocus}
-              />
+              <ListElement nodes={treeData} />
             </ScrollArea>
           </>
         )}
@@ -190,35 +182,17 @@ export default function FileExplorer(props: {
   );
 }
 
-function ListElement(props: {
-  nodes: TreeData[];
-  focusedId?: string;
-  onNodeFocus(node: string): void;
-  onNodeUnfocus(node: string): void;
-}) {
+function ListElement(props: { nodes: TreeData[] }) {
   return (
     <ul>
       {props.nodes.map((node) => {
-        return (
-          <NodeElement
-            key={node.id}
-            node={node}
-            focusedId={props.focusedId}
-            onNodeFocus={props.onNodeFocus}
-            onNodeUnfocus={props.onNodeUnfocus}
-          />
-        );
+        return <NodeElement key={node.id} node={node} />;
       })}
     </ul>
   );
 }
 
-function NodeElement(props: {
-  node: TreeData;
-  focusedId?: string;
-  onNodeFocus(node: string): void;
-  onNodeUnfocus(node: string): void;
-}) {
+function NodeElement(props: { node: TreeData }) {
   const params = useParams<{ file?: string }>();
 
   const [isOpen, setIsOpen] = useState(true);
@@ -275,10 +249,8 @@ function NodeElement(props: {
           </Button>
         ) : (
           <Button
-            className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-surface-light dark:bg-surface-dark"} ${props.focusedId === props.node.id && "bg-primary-light dark:bg-primary-dark"}`}
+            className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-surface-light dark:bg-surface-dark"}`}
             variant="ghost"
-            onMouseEnter={() => props.onNodeFocus(props.node.id)}
-            onMouseLeave={() => props.onNodeUnfocus(props.node.id)}
           >
             <Link
               to={
@@ -308,14 +280,7 @@ function NodeElement(props: {
           </Button>
         )}
       </div>
-      {isOpen && (
-        <ListElement
-          nodes={props.node.children || []}
-          focusedId={props.focusedId}
-          onNodeFocus={props.onNodeFocus}
-          onNodeUnfocus={props.onNodeUnfocus}
-        />
-      )}
+      {isOpen && <ListElement nodes={props.node.children || []} />}
     </li>
   );
 }
