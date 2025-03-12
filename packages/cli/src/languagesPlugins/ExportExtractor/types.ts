@@ -1,11 +1,22 @@
 import Parser from "tree-sitter";
 
+export const functionEntity = "function";
+export const classEntity = "class";
+export const variableEntity = "variable";
+export const unknownEntity = "unknown";
+
+export type EntityType =
+  | typeof functionEntity
+  | typeof classEntity
+  | typeof variableEntity
+  | typeof unknownEntity;
+
 /**
  * Represents an exported member (e.g., function, class, variable).
  */
 export interface ExportMember {
   /** The type of the exported member (e.g., `"function"`, `"class"`, `"variable"`). */
-  type: string;
+  type: EntityType;
   /** The syntax node representing the entire exported member. */
   node: Parser.SyntaxNode;
   /** The syntax node of the identifier (e.g., function or class name). */
