@@ -1,52 +1,26 @@
 import {
   Button,
-  Dialog,
-  // TextField
+  Dialog
 } from "@radix-ui/themes";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function NewWorkspaceDialog() {
+export default function WelcomeModal(props: {
+  isOpen?: boolean;
+  setIsOpen?: (value: boolean) => void;
+}) {
   const [open, setOpen] = useState(false);
-  // const [workspaceName, setWorkspaceName] = useState("");
-  // const [workspaceDescription, setWorkspaceDescription] = useState("");
 
-  // const createNewWorkspace = async (e: any) => {
-  //   e.preventDefault();
-  //   try {
-  //     const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/workspaces`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-  //       },
-  //       body: JSON.stringify({
-  //         name: workspaceName,
-  //         description: workspaceDescription,
-  //       }),
-  //     });
-  //     if (response.ok) {
-  //       console.log("Workspace created successfully");
-  //       setWorkspaceName("");
-  //       setWorkspaceDescription("");
-  //       setOpen(false);
-  //       window.location.reload();
-  //     } else {
-  //       console.error("Failed to create workspace");
-  //     }
-  //   } catch (error) {
-  //     console.error("Failed to create workspace", error);
-  //   }
-  // };
+  useEffect(() => {
+    const viewedIntro = localStorage.getItem("viewedIntro");
+    if (viewedIntro) return;
+    setOpen(true);
+    localStorage.setItem("viewedIntro", "true");
+  }, []);
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
+    <Dialog.Root open={props?.isOpen || open} onOpenChange={setOpen}>
       <Dialog.Trigger>
-        <button className="text-md font-bold flex gap-x-2 text-white bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg px-3 py-2.5 transition-all">
-          <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="my-auto">
-            <path d="M13 3C13 2.44772 12.5523 2 12 2C11.4477 2 11 2.44772 11 3V11H3C2.44772 11 2 11.4477 2 12C2 12.5523 2.44772 13 3 13H11V21C11 21.5523 11.4477 22 12 22C12.5523 22 13 21.5523 13 21V13H21C21.5523 13 22 12.5523 22 12C22 11.4477 21.5523 11 21 11H13V3Z" fill="currentColor"/>
-          </svg>
-          New Workspace
-        </button>
+        <div></div>
       </Dialog.Trigger>
       <Dialog.Content className="bg-secondarySurface-light text-text-light dark:bg-secondarySurface-dark dark:text-text-dark border-0">
         <Dialog.Title>
@@ -67,7 +41,7 @@ export default function NewWorkspaceDialog() {
         <p className="text-lg text-text-gray text-center pb-5 px-5">If you'd like to see these views with your own projects, please reach out to our team to schedule a personalized demo at: <a href="mailto:info@nanoapi.io?subject=Request for Live Demo" target="_blank" className="text-primary-light dark:text-primary-dark underline">info@nanoapi.io</a></p>
         <div className="w-full flex justify-center">
           <Button type="submit" 
-            onClick={() => setOpen(false)}
+            onClick={() => props?.setIsOpen ? props?.setIsOpen(false) : setOpen(false)}
             className="mt-5 text-lg w-full font-bold bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg cursor-pointer px-6 py-5 transition-all">
             Continue
           </Button>

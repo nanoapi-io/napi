@@ -8,7 +8,7 @@ export default function AccountMenu() {
   const [loggedIn] = useState(true);
   const [avatar, setAvatar] = useState("https://randomuser.me/api/portraits/men/75.jpg");
   const [name, setName] = useState("Demo User");
-  const [username, setUsername] = useState("@DemoUser");
+  const [username, setUsername] = useState("DemoUser");
 
   const logOut = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();

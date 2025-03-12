@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { Card, TextField, Spinner } from "@radix-ui/themes";
 import ChangeThemeButton from "../../components/ChangeThemeButton";
@@ -41,6 +41,17 @@ export default function AccessDemo() {
     setLoading(false);
     navigate("/dashboard");
   }
+
+  const handleAccessedBefore = () => {
+    const accessKey = localStorage.getItem("access");
+    if (accessKey) {
+      navigate("/dashboard");
+    }
+  }
+
+  useEffect(() => {
+    handleAccessedBefore();
+  }, []);
 
   return (
     <>

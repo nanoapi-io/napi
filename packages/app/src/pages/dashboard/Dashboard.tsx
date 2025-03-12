@@ -13,6 +13,7 @@ import { Bar, Line } from "react-chartjs-2"
 import ChangeThemeButton from "../../components/ChangeThemeButton"
 import DownloadReportDialog from "./DownloadReportDialog"
 import AccountMenu from "../../components/AccountMenu"
+import WelcomeModal from "../../components/WelcomeModal"
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend)
 
@@ -168,6 +169,8 @@ export default function Dashboard() {
           <Bar data={projectErrorData} options={projectErrorOptions} />
         </Card>
       </div>
+
+      <WelcomeModal />
     </div>
   )
 }

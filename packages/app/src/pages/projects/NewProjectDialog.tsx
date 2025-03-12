@@ -1,42 +1,42 @@
 import {
   Button,
   Dialog,
-  TextField
+  // TextField
 } from "@radix-ui/themes";
-import { useState, useContext } from "react";
-import { StoreContext } from "../../contexts/StoreContext";
+import { useState } from "react";
+// import { StoreContext } from "../../contexts/StoreContext";
 
 export default function NewProjectDialog() {
-  const { state } = useContext(StoreContext);
+  // const { state } = useContext(StoreContext);
   const [open, setOpen] = useState(false);
-  const [_, setShowNextStep] = useState(false);
-  const [projectName, setProjectName] = useState("");
-  const [projectDescription, setProjectDescription] = useState("");
+  // const [_, setShowNextStep] = useState(false);
+  // const [projectName, setProjectName] = useState("");
+  // const [projectDescription, setProjectDescription] = useState("");
 
-  const createNewProject = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/projects`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("jwt")}`,
-        },
-        body: JSON.stringify({
-          name: projectName,
-          description: projectDescription,
-          workspaceId: state.activeWorkspace,
-        }),
-      });
-      if (response.ok) {
-        console.log("Project created successfully");
-        setShowNextStep(true);
-      } else {
-        console.error("Failed to create project");
-      }
-    } catch (error) {
-      console.error("Failed to create project", error);
-    }
-  }
+  // const createNewProject = async () => {
+  //   try {
+  //     const response = await fetch(`${process.env.REACT_APP_BACKEND_API_URL}/api/v1/projects`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${localStorage.getItem("jwt")}`,
+  //       },
+  //       body: JSON.stringify({
+  //         name: projectName,
+  //         description: projectDescription,
+  //         workspaceId: state.activeWorkspace,
+  //       }),
+  //     });
+  //     if (response.ok) {
+  //       console.log("Project created successfully");
+  //       setShowNextStep(true);
+  //     } else {
+  //       console.error("Failed to create project");
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to create project", error);
+  //   }
+  // }
 
 
 
@@ -62,34 +62,18 @@ export default function NewProjectDialog() {
             </Dialog.Close>
           </div>
         </Dialog.Title>
-        <h1 className="text-3xl font-bold text-center p-4">New Project</h1>
-        <p className="text-lg text-text-gray text-center pb-3">Create a new project</p>
-        <form onSubmit={createNewProject}>
-          <div className="flex flex-col gap-y-4 p-4">
-            <div>
-              <label htmlFor="projectName" className="font-sm font-semibold p-1">Workspace Name</label>
-              <TextField.Root 
-                id="projectName"
-                size="3" 
-                placeholder="Enter project name" 
-                value={projectDescription} 
-                onChange={(e) => setProjectName(e.target.value)} />
-            </div>
-            <div>
-              <label htmlFor="projectDescription" className="font-sm font-semibold p-1">Project Description</label>
-              <TextField.Root 
-                id="projectDescription"
-                size="3" 
-                placeholder="Enter project description" 
-                value={projectDescription} 
-                onChange={(e) => setProjectDescription(e.target.value)}/>
-            </div>
-            <Button type="submit" 
-              className="mt-5 mx-auto text-lg font-bold bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg px-6 py-5 transition-all">
-              Next
-            </Button>
-          </div>
-        </form>
+        <h1 className="text-3xl font-bold text-center p-4">👋 Hey there!</h1>
+        <p className="text-xl text- text-center pb-5">Welcome to the NanoAPI live demo</p>
+        <p className="text-lg text-text-gray text-center pb-5 px-5">This is a live demo prefilled with <b>static</b> data from one of our customer's projects, available for you to view and inspect to see how our tool works.</p> 
+        <p className="text-lg text-text-gray text-center pb-5 px-5">You may notice some functionality is disabled, which is intentional for the purpose of keeping this demo clean and clear.</p>
+        <p className="text-lg text-text-gray text-center pb-5 px-5">If you'd like to see these views with your own projects, please reach out to our team to schedule a personalized demo at: <a href="mailto:info@nanoapi.io?subject=Request for Live Demo" target="_blank" className="text-primary-light dark:text-primary-dark underline">info@nanoapi.io</a></p>
+        <div className="w-full flex justify-center">
+          <Button type="submit" 
+            onClick={() => setOpen(false)}
+            className="mt-5 text-lg w-full font-bold bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg cursor-pointer px-6 py-5 transition-all">
+            Continue
+          </Button>
+        </div>
       </Dialog.Content>
     </Dialog.Root>
   );

@@ -31,9 +31,18 @@ export default function DownloadReportDialog() {
             </Dialog.Close>
           </div>
         </Dialog.Title>
-        <h1 className="text-3xl font-bold text-center p-4">Download Benchmark Report</h1>
-        <p className="text-lg text-text-gray text-center pb-3">Create a new report</p>
-
+        <h1 className="text-3xl font-bold text-center p-4">👋 Hey there!</h1>
+        <p className="text-xl text- text-center pb-5">Welcome to the NanoAPI live demo</p>
+        <p className="text-lg text-text-gray text-center pb-5 px-5">This is a live demo prefilled with <b>static</b> data from one of our customer's projects, available for you to view and inspect to see how our tool works.</p> 
+        <p className="text-lg text-text-gray text-center pb-5 px-5">You may notice some functionality is disabled, which is intentional for the purpose of keeping this demo clean and clear.</p>
+        <p className="text-lg text-text-gray text-center pb-5 px-5">If you'd like to see these views with your own projects, please reach out to our team to schedule a personalized demo at: <a href="mailto:info@nanoapi.io?subject=Request for Live Demo" target="_blank" className="text-primary-light dark:text-primary-dark underline">info@nanoapi.io</a></p>
+        <div className="w-full flex justify-center">
+          <Button type="submit" 
+            onClick={() => setOpen(false)}
+            className="mt-5 text-lg w-full font-bold bg-primary-light dark:bg-primary-dark hover:bg-primary-hoverLight dark:hover:bg-primary-hoverDark rounded-lg cursor-pointer px-6 py-5 transition-all">
+            Continue
+          </Button>
+        </div>
       </Dialog.Content>
     </Dialog.Root>
   );
