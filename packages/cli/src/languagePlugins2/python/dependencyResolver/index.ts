@@ -1,7 +1,7 @@
 import Parser from "tree-sitter";
 import { PythonModuleResolver } from "../moduleResolver";
 import { PythonExportResolver } from "../exportResolver";
-import { ImportedModule, PythonImportResolver } from "../importResolver";
+import { PythonImportResolver } from "../importResolver";
 
 export interface FileDependency {
   source: string;
