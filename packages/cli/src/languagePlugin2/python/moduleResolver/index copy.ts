@@ -1,4 +1,5 @@
 import path from "path";
+import { PythonExportResolver } from "../exportResolver";
 
 /**
  * PythonModuleResolver is responsible for mapping Python files to their module names
@@ -6,11 +7,13 @@ import path from "path";
  */
 export class PythonModuleResolver {
   private fileSet: Set<string>; // Set of all Python file paths in the project
+  exportResolver: PythonExportResolver;
   private moduleMap = new Map<string, string>(); // Maps file paths to module names
   private cache = new Map<string, string | undefined>(); // Cache to resolve module paths faster
 
-  constructor(fileSet: Set<string>) {
+  constructor(fileSet: Set<string>, exportResolver: PythonExportResolver) {
     this.fileSet = fileSet;
+    this.exportResolver = exportResolver;
     this.init();
   }
 
@@ -27,18 +30,20 @@ export class PythonModuleResolver {
   }
 
   /**
-   * Converts a file path into a Python module name.
+   * Converts a file path into a Python-style module name, e.g.:
+   *   "/project/utils.py" => "project.utils"
    */
   public getModuleName(filePath: string): string {
     if (!filePath.endsWith(".py")) return ""; // ✅ Ignore non-Python files
 
-    let relativePath = path.normalize(filePath).replace(/\\/g, "/"); // ✅ Normalize slashes
+    let relativePath = path.normalize(filePath).replace(/\\/g, "/"); // ✅ Normalize slashes (Windows)
 
-    // If the file is __init__.py, remove it to get the package name
+    // If the file is __init__.py, drop it from the path so that we get the package name
     if (relativePath.endsWith("/__init__.py")) {
       relativePath = relativePath.replace("/__init__.py", "");
     }
 
+    // Replace .py extension, then replace slash by dot
     return relativePath.replace(/\.py$/, "").replace(/\//g, ".");
   }
 
@@ -53,7 +58,6 @@ export class PythonModuleResolver {
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey);
     }
-
     let resolvedPath: string | undefined;
 
     if (importedModuleName.startsWith(".")) {
@@ -83,10 +87,16 @@ export class PythonModuleResolver {
     const parentDirs = currentDir.split(path.sep);
 
     const relativeMatch = importedModuleName.match(/^\.+/);
-    const relativeLevels =
-      relativeMatch && relativeMatch[0].length > 1
-        ? relativeMatch[0].length - 1
-        : 0;
+    if (!relativeMatch) {
+      // This is unexpected, but we should handle it gracefully
+      console.error(
+        `Invalid relative import: ${importedModuleName} in ${currentFilePath}`,
+      );
+      return undefined;
+    }
+
+    // . -> 0 (sibling), .. -> 1 (parent), ... -> 2 (grandparent), etc.
+    const relativeLevels = Math.max(relativeMatch[0].length - 1, 0);
 
     // ✅ Prevent moving above the project root
     if (relativeLevels >= parentDirs.length) {
@@ -131,7 +141,7 @@ export class PythonModuleResolver {
     const currentDir = path.dirname(currentFilePath);
     const pathParts = currentDir.split(path.sep);
 
-    for (let i = pathParts.length; i > 0; i--) {
+    for (let i = pathParts.length; i >= 0; i--) {
       const rootPath = pathParts.slice(0, i).join(path.sep);
       const modulePath = importedModuleName.replace(/\./g, path.sep);
 
@@ -141,7 +151,7 @@ export class PythonModuleResolver {
       const possiblePackage = path.join(rootPath, modulePath, "__init__.py");
       if (this.fileSet.has(possiblePackage)) return possiblePackage;
 
-      // ✅ Stop early if the package does not exist
+      // // ✅ Stop early if the package does exist
       if (
         this.fileSet.has(
           path.join(rootPath, modulePath.split(path.sep)[0], "__init__.py"),

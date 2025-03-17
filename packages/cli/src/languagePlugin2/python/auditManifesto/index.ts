@@ -26,7 +26,6 @@ export interface FileManifesto {
     dependencies: {
       source: string;
       isExternal: boolean;
-      isUsed: boolean;
       symbolIds: string[];
     }[];
     dependents: {
@@ -42,8 +41,8 @@ export class PythonAuditManifesto {
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   private parser = pythonParser;
   private exportResolver: PythonExportResolver;
-  private importResolver: PythonImportResolver;
   private moduleResolver: PythonModuleResolver;
+  private importResolver: PythonImportResolver;
 
   constructor(workDir: string, filePaths: string[]) {
     const files = this.parseFiles(workDir, filePaths);
@@ -51,8 +50,11 @@ export class PythonAuditManifesto {
     this.files = files;
 
     const fileSet = new Set(files.keys());
-    this.moduleResolver = new PythonModuleResolver(fileSet);
     this.exportResolver = new PythonExportResolver(this.parser, this.files);
+    this.moduleResolver = new PythonModuleResolver(
+      fileSet,
+      this.exportResolver,
+    );
     this.importResolver = new PythonImportResolver(
       this.parser,
       this.files,
@@ -102,6 +104,14 @@ export class PythonAuditManifesto {
 
   public run() {
     console.log(this.files.size, " files to process");
+
+    console.log(
+      this.importResolver.getImportedModules("api/wizards/services.py"),
+    );
+    console.log(this.exportResolver.getSymbols("api/data/hobbits.py"));
+
+    // eslint-disable-next-line no-constant-condition
+    if (2 === 1 + 1) return [];
 
     const filesDependencies = new Map<string, FileDependencies>();
 
@@ -159,8 +169,7 @@ export class PythonAuditManifesto {
           symbolManifesto.dependencies.push({
             source: dependency.source,
             isExternal: dependency.isExternal,
-            isUsed: dependency.isUsed,
-            symbolIds: dependency.symbols.map((symbol) => symbol.id),
+            symbolIds: dependency.symbolIds,
           });
         });
 
@@ -227,7 +236,12 @@ export class PythonAuditManifesto {
 
     manifesto.forEach((fileManifesto) => {
       console.log("Manifesto for file: ", fileManifesto.filePath);
-      console.log(JSON.stringify(fileManifesto, null, 2));
+      if (
+        // fileManifesto.filePath === "api/wizards/views.py" ||
+        fileManifesto.filePath === "api/wizards/services.py"
+      ) {
+        console.log(JSON.stringify(fileManifesto, null, 2));
+      }
     });
 
     return manifesto;

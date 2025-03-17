@@ -4,6 +4,11 @@ export const PYTHON_CLASS_TYPE = "class";
 export const PYTHON_FUNCTION_TYPE = "function";
 export const PYTHON_VARIABLE_TYPE = "variable";
 
+export type SymbolType =
+  | typeof PYTHON_CLASS_TYPE
+  | typeof PYTHON_FUNCTION_TYPE
+  | typeof PYTHON_VARIABLE_TYPE;
+
 /**
  * Represents an exported symbol in a Python module.
  * Symbols can be classes, functions, or variables.
@@ -12,10 +17,8 @@ export interface ExportedSymbol {
   id: string;
   node: Parser.SyntaxNode;
   identifierNode: Parser.SyntaxNode;
-  type:
-    | typeof PYTHON_CLASS_TYPE
-    | typeof PYTHON_FUNCTION_TYPE
-    | typeof PYTHON_VARIABLE_TYPE;
+  type: SymbolType;
+  supportsWildcardImport: boolean;
 }
 
 /**
@@ -85,6 +88,7 @@ export class PythonExportResolver {
         node,
         identifierNode,
         type: PYTHON_CLASS_TYPE,
+        supportsWildcardImport: false,
       });
     });
 
@@ -119,6 +123,7 @@ export class PythonExportResolver {
         node,
         identifierNode,
         type: PYTHON_CLASS_TYPE,
+        supportsWildcardImport: false,
       });
     });
 
@@ -160,6 +165,7 @@ export class PythonExportResolver {
         type: PYTHON_FUNCTION_TYPE,
         node,
         identifierNode,
+        supportsWildcardImport: false,
       });
     });
 
@@ -194,6 +200,7 @@ export class PythonExportResolver {
         type: PYTHON_FUNCTION_TYPE,
         node,
         identifierNode,
+        supportsWildcardImport: false,
       });
     });
 
@@ -252,6 +259,7 @@ export class PythonExportResolver {
               type: PYTHON_VARIABLE_TYPE,
               node,
               identifierNode: child,
+              supportsWildcardImport: false,
             });
           }
         });
@@ -261,11 +269,50 @@ export class PythonExportResolver {
           type: PYTHON_VARIABLE_TYPE,
           node,
           identifierNode,
+          supportsWildcardImport: false,
         });
       }
     });
 
     return exportedSymbols;
+  }
+
+  /**
+   * Extracts the __all__ elements from a Python file.
+   * Return empty list if __all__ is not defined.
+   *
+   * @param fileNode The root syntax node of the file.
+   * @returns A list of exported symbols defined in the __all__ variable.
+   */
+  private get__all__(fileNode: Parser.SyntaxNode): string[] {
+    const query = new Parser.Query(
+      this.parser.getLanguage(),
+      `
+        (module
+          (expression_statement
+            (assignment
+              left: (identifier) @identifier (#eq? @identifier "__all__")
+              right: (list
+                (string
+                  (string_content) @element
+                )
+              )
+            )
+          )
+        )
+      `,
+    );
+
+    const captures = query.captures(fileNode);
+
+    const elements: string[] = [];
+    captures.forEach(({ node, name }) => {
+      if (name === "element") {
+        elements.push(node.text);
+      }
+    });
+
+    return elements;
   }
 
   /**
@@ -299,6 +346,17 @@ export class PythonExportResolver {
     exportedSymbols.push(...this.getClass(fileNode));
     exportedSymbols.push(...this.getFunctions(fileNode));
     exportedSymbols.push(...this.getVariable(fileNode));
+
+    const __all__ = this.get__all__(fileNode);
+    exportedSymbols.map((symbol) => {
+      if (__all__.length > 0) {
+        // If __all__ is defined, only symbols in __all__ are exported with wildcard import
+        symbol.supportsWildcardImport = __all__.includes(symbol.id);
+      } else {
+        // If __all__ is not defined, all symbols are exported with wildcard import (default behavior)
+        symbol.supportsWildcardImport = true;
+      }
+    });
 
     // Store result in cache
     this.exportedSymbolCache.set(cacheKey, exportedSymbols);

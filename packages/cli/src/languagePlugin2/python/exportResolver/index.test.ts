@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import Parser from "tree-sitter";
-import { PythonExportResolver } from "../exportResolver";
+import { PythonExportResolver } from ".";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 
 describe("PythonExportResolver", () => {
@@ -84,7 +84,7 @@ describe("PythonExportResolver", () => {
     resolver = new PythonExportResolver(pythonParser, files);
   });
 
-  // ✅ Test class extraction
+  // Test class extraction
   test("should extract classes from a module", () => {
     const symbols = resolver.getSymbols("project/module.py");
 
@@ -96,7 +96,7 @@ describe("PythonExportResolver", () => {
     );
   });
 
-  // ✅ Test function extraction
+  // Test function extraction
   test("should extract functions from a module", () => {
     const symbols = resolver.getSymbols("project/module.py");
 
@@ -108,7 +108,7 @@ describe("PythonExportResolver", () => {
     );
   });
 
-  // ✅ Test variable extraction
+  // Test variable extraction
   test("should extract top-level variables", () => {
     const symbols = resolver.getSymbols("project/module.py");
     expect(symbols).toEqual(
@@ -120,7 +120,7 @@ describe("PythonExportResolver", () => {
     );
   });
 
-  // ✅ Test mixed extraction
+  // Test mixed extraction
   test("should extract all symbols from a module", () => {
     const symbols = resolver.getSymbols("project/complex.py");
 
@@ -134,7 +134,7 @@ describe("PythonExportResolver", () => {
     );
   });
 
-  // ✅ Test caching
+  // Test caching
   test("should cache exported symbols", () => {
     const filePath = "project/module.py";
     const cacheKey = `${filePath}|symbols`;
@@ -144,20 +144,20 @@ describe("PythonExportResolver", () => {
     expect(resolver["exportedSymbolCache"].has(cacheKey)).toBe(true);
 
     const symbolsSecondCall = resolver.getSymbols(filePath);
-    expect(symbolsSecondCall).toBe(symbolsFirstCall); // ✅ Should return cached result
+    expect(symbolsSecondCall).toBe(symbolsFirstCall);
   });
 
-  // ✅ Test empty files
+  // Test empty files
   test("should return an empty array for files with no symbols", () => {
     const symbols = resolver.getSymbols("project/empty.py");
     expect(symbols).toEqual([]);
   });
 
-  // ✅ Test to ensure `__all__` is NOT detected as a variable export
+  // Test __all__ behavior: __all__ should not be exported as a variable.
   test("should ignore __all__ as a variable export", () => {
     const symbols = resolver.getSymbols("project/module_with_all.py");
 
-    // Should detect the actual symbols
+    // Should detect the actual symbols from the file.
     expect(symbols).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ id: "ExportedClass", type: "class" }),
@@ -166,7 +166,34 @@ describe("PythonExportResolver", () => {
       ]),
     );
 
-    // ❌ Should NOT include `__all__`
+    // __all__ itself should not appear.
     expect(symbols.some((symbol) => symbol.id === "__all__")).toBe(false);
+  });
+
+  // Test that supportsWildcardImport is set correctly when __all__ is defined.
+  test("should set supportsWildcardImport based on __all__ when defined", () => {
+    const symbols = resolver.getSymbols("project/module_with_all.py");
+    const exportedClass = symbols.find((sym) => sym.id === "ExportedClass");
+    const exportedFunction = symbols.find(
+      (sym) => sym.id === "exported_function",
+    );
+    const someVariable = symbols.find((sym) => sym.id === "some_variable");
+
+    expect(exportedClass).toBeDefined();
+    expect(exportedFunction).toBeDefined();
+    expect(someVariable).toBeDefined();
+
+    // According to __all__, only "ExportedClass" and "exported_function" should support wildcard import.
+    expect(exportedClass?.supportsWildcardImport).toBe(true);
+    expect(exportedFunction?.supportsWildcardImport).toBe(true);
+    expect(someVariable?.supportsWildcardImport).toBe(false);
+  });
+
+  // Test that supportsWildcardImport is true for all symbols if __all__ is not defined.
+  test("should set supportsWildcardImport to true when __all__ is not defined", () => {
+    const symbols = resolver.getSymbols("project/module.py");
+    symbols.forEach((sym) => {
+      expect(sym.supportsWildcardImport).toBe(true);
+    });
   });
 });

@@ -183,6 +183,8 @@ export class PythonImportResolver {
             resolvedSource,
             importedName,
           );
+
+          console.log(222, importedName, importedModulePath);
         }
 
         if (importedModulePath) {
@@ -385,7 +387,7 @@ export class PythonImportResolver {
         (module
           (expression_statement
             (assignment
-              left: (identifier) @var_name (#eq? @var_name "__all__")
+              left: ((identifier) @var_name (#eq? @var_name "__all__"))
               right: (list
                 (string
                   (string_content) @element
