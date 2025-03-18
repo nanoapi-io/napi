@@ -1,4 +1,4 @@
-import Parser from "tree-sitter";
+import Parser, { Language } from "tree-sitter";
 import {
   LanguagePlugin,
   DepImportIdentifier,
@@ -20,7 +20,7 @@ class PythonPlugin implements LanguagePlugin {
   constructor(baseDir: string) {
     this.baseDir = baseDir;
     this.parser = new Parser();
-    this.parser.setLanguage(Python);
+    this.parser.setLanguage(Python as Language);
   }
 
   commentPrefix = "#";
@@ -492,7 +492,7 @@ class PythonPlugin implements LanguagePlugin {
       `
       (
         (identifier) @identifier
-        (#eq? @identifier "${identifier.text}") 
+        (#eq? @identifier "${identifier.text}")
       )
       `,
     );
