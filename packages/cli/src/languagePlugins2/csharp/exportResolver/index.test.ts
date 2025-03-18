@@ -69,7 +69,7 @@ describe("CsharpExportResolver", () => {
         },
       ],
     ]);
-    resolver = new CsharpExportResolver(csharpParser, files);
+    resolver = new CsharpExportResolver(files);
   });
 
   test("getSymbols", () => {

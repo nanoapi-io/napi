@@ -20,14 +20,11 @@ export interface ExportedSymbol {
 
 export class CsharpExportResolver {
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
-  //private parser: Parser;
   private exportedSymbolCache = new Map<string, ExportedSymbol[]>();
 
   constructor(
-    parser: Parser,
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   ) {
-    this.parser = parser;
     this.files = files;
   }
 
