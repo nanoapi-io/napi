@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "vitest";
-import Parser from "tree-sitter";
+import Parser, { Language } from "tree-sitter";
 import Python from "tree-sitter-python";
 import { PythonModuleMapper, ModuleNode } from "./index";
 import { PythonExportResolver } from "../exportResolver";
@@ -35,7 +35,7 @@ describe("ModuleMapper - Complex Project Structure", () => {
 
   beforeAll(() => {
     parser = new Parser();
-    parser.setLanguage(Python);
+    parser.setLanguage(Python as Language);
 
     // Define a complex project structure with various kinds of modules.
     const filesContent: Record<string, string> = {
