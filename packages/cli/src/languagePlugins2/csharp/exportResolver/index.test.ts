@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import Parser from "tree-sitter";
 import { CsharpExportResolver } from ".";
-import { CsharpParser } from "../../../helpers/treeSitter/parsers";
+import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 describe("CsharpExportResolver", () => {
   let resolver: CsharpExportResolver;
@@ -13,7 +13,7 @@ describe("CsharpExportResolver", () => {
         "project/MyClass.cs",
         {
           path: "project/MyClass.cs",
-          rootNode: csParser.parse(`
+          rootNode: csharpParser.parse(`
             public class MyClass
             {
             }

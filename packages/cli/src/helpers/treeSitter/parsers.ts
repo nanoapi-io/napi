@@ -2,6 +2,7 @@ import Parser from "tree-sitter";
 import Python from "tree-sitter-python";
 import Javascript from "tree-sitter-javascript";
 import Typescript from "tree-sitter-typescript";
+import CSharp from "tree-sitter-c-sharp";
 
 const pythonParser = new Parser();
 pythonParser.setLanguage(Python);
@@ -12,4 +13,7 @@ javascriptParser.setLanguage(Javascript);
 const typescriptParser = new Parser();
 typescriptParser.setLanguage(Typescript.typescript);
 
-export { pythonParser, javascriptParser, typescriptParser };
+const csharpParser = new Parser();
+csharpParser.setLanguage(CSharp);
+
+export { pythonParser, javascriptParser, typescriptParser, csharpParser };
