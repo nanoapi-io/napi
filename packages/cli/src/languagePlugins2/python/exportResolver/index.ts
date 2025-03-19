@@ -33,7 +33,7 @@ export interface ExportedSymbol {
 export class PythonExportResolver {
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   private parser: Parser;
-  private exportedSymbolCache = new Map<string, ExportedSymbol[]>(); // Caching extracted symbols for efficiency
+  private cache = new Map<string, ExportedSymbol[]>(); // Caching extracted symbols for efficiency
 
   constructor(
     parser: Parser,
@@ -50,7 +50,7 @@ export class PythonExportResolver {
    * @returns Cached exported symbols if available, otherwise undefined.
    */
   private getFromExportedSymbolCache(cacheKey: string) {
-    return this.exportedSymbolCache.get(cacheKey) || undefined;
+    return this.cache.get(cacheKey) || undefined;
   }
 
   /**
@@ -359,7 +359,7 @@ export class PythonExportResolver {
     });
 
     // Store result in cache
-    this.exportedSymbolCache.set(cacheKey, exportedSymbols);
+    this.cache.set(cacheKey, exportedSymbols);
 
     return exportedSymbols;
   }

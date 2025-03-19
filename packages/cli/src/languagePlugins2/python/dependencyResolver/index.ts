@@ -1,271 +1,280 @@
 import Parser from "tree-sitter";
-import { PythonModuleResolver } from "../moduleResolver";
+import { PythonModuleMapper } from "../moduleMapper";
 import { PythonExportResolver } from "../exportResolver";
-import { PythonImportResolver } from "../importResolver";
+import {
+  ImportStatement,
+  ImportStatementModule,
+  PythonImportResolver,
+} from "../importResolver";
 
 export interface FileDependency {
-  source: string;
+  id: string;
   isExternal: boolean;
+  isExplicit: boolean;
   isUsed: boolean;
-  symbols: { id: string; isUsed: boolean }[];
+  symbols: Map<string, { id: string; isUsed: boolean; isExplicit: boolean }>;
 }
 
 export interface SymbolDependency {
-  source: string;
+  id: string;
   isExternal: boolean;
-  symbolIds: string[];
+  symbolIds: Map<string, string>;
 }
 
-export interface FileDependencies {
-  dependencies: Map<string, FileDependency>;
+export interface FileDependencyManifesto {
+  filePath: string;
+  fileDependencies: Map<string, FileDependency>;
   symbols: {
     id: string;
     type: string;
-    dependencies: Map<string, SymbolDependency>;
+    symbolDependencies: Map<string, SymbolDependency>;
   }[];
 }
 
+export type ProjectDependencyManifesto = Map<string, FileDependencyManifesto>;
+
 export class PythonDependencyResolver {
-  private file: { path: string; rootNode: Parser.SyntaxNode };
   private parser: Parser;
-  moduleResolver: PythonModuleResolver;
-  exportResolver: PythonExportResolver;
+  private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+  private moduleMapper: PythonModuleMapper;
+  private exportResolver: PythonExportResolver;
   private importResolver: PythonImportResolver;
 
   constructor(
-    file: { path: string; rootNode: Parser.SyntaxNode },
     parser: Parser,
-    moduleResolver: PythonModuleResolver,
+    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    moduleMapper: PythonModuleMapper,
     exportResolver: PythonExportResolver,
     importResolver: PythonImportResolver,
   ) {
-    this.file = file;
     this.parser = parser;
-    this.moduleResolver = moduleResolver;
+    this.files = files;
+    this.moduleMapper = moduleMapper;
     this.exportResolver = exportResolver;
     this.importResolver = importResolver;
   }
 
-  private getImportRanges() {
-    const ranges: { start: number; end: number }[] = [];
+  private isUsedInTargetNode(
+    targetNode: Parser.SyntaxNode,
+    importStatements: ImportStatement[],
+    lookupValue: {
+      moduleName?: string; // e.g., "utils" or "apps.utils"
+      symbolName?: string; // e.g., "MyClass" or "my_function"
+    },
+  ) {
+    if (!lookupValue.moduleName && !lookupValue.symbolName) {
+      throw new Error(
+        "Invalid lookup value. Need at least one of moduleName or symbolName.",
+      );
+    }
 
-    const importQuery = new Parser.Query(
-      this.parser.getLanguage(),
-      `
-      (import_statement) @import
-      (import_from_statement) @import
+    let query: Parser.Query;
+    if (lookupValue.moduleName && lookupValue.symbolName) {
+      query = new Parser.Query(
+        this.parser.getLanguage(),
+        `
+        (attribute) @attr (#eq? @attr "${lookupValue.moduleName}.${lookupValue.symbolName}")
       `,
-    );
+      );
+    } else {
+      if (lookupValue.moduleName) {
+        const modulePart = lookupValue.moduleName.split(".");
+        if (modulePart.length > 1) {
+          query = new Parser.Query(
+            this.parser.getLanguage(),
+            `
+            (attribute) @attr (#eq? @attr "${lookupValue.moduleName}")
+          `,
+          );
+        } else {
+          query = new Parser.Query(
+            this.parser.getLanguage(),
+            `
+            (identifier) @identifier (#eq? @identifier "${lookupValue.moduleName}")
+          `,
+          );
+        }
+      } else {
+        query = new Parser.Query(
+          this.parser.getLanguage(),
+          `
+          (identifier) @identifier (#eq? @identifier "${lookupValue.symbolName}")
+        `,
+        );
+      }
+    }
 
-    const importCaptures = importQuery.captures(this.file.rootNode);
-
-    importCaptures.forEach(({ node }) => {
-      ranges.push({
-        start: node.startIndex,
-        end: node.endIndex,
+    const capture = query.captures(targetNode);
+    capture.forEach(({ node }) => {
+      let presentOutsideOfImports = false;
+      importStatements.forEach((importStatement) => {
+        if (
+          // Check if the node is outside of the import statement
+          node.startIndex > importStatement.node.startIndex &&
+          node.endIndex < importStatement.node.endIndex
+        ) {
+          presentOutsideOfImports = true;
+        }
       });
+
+      if (presentOutsideOfImports) {
+        return true;
+      }
     });
 
-    return ranges;
+    return false;
   }
 
-  private isInsideImportRange(
-    node: Parser.SyntaxNode,
-    importRanges: { start: number; end: number }[],
+  private updateFromImportStatementModule(
+    fileDependencies: Map<string, FileDependency>,
+    file: { path: string; rootNode: Parser.SyntaxNode },
+    importStatements: ImportStatement[],
+    importStatementModule: ImportStatementModule,
   ) {
-    return importRanges.some(({ start, end }) => {
-      return node.startIndex >= start && node.endIndex <= end;
+    const isExternal = importStatementModule.module === undefined;
+    const isFileModule = importStatementModule.module?.filePath !== undefined;
+    // TODO if it is internal module and not a filModule, we need to check for usage of sub modules and their symbol recursively!
+    // And add the symbol or module used
+    // I think we can look using tree sitter query for a match and check if parent is also atribute and match the submodule or symbol.
+    // eg: we match on module, parent is module.submodule, parent is module.submodule.symbol -> we can add symbol as a dependency symbol
+
+    const depId =
+      importStatementModule.module?.filePath || importStatementModule.source;
+
+    let fileDependency = fileDependencies.get(depId);
+    if (!fileDependency) {
+      fileDependency = {
+        id: depId,
+        isExternal: isExternal,
+        isExplicit: importStatementModule.isExplicitelyImported,
+        isUsed: false,
+        symbols: new Map(),
+      };
+    }
+
+    let isUsedInFile = false;
+
+    if (importStatementModule.symbols.length > 0) {
+      importStatementModule.symbols.forEach((symbol) => {
+        const lookupSymbolRef = symbol.alias || symbol.id;
+        let lookupValue = { symbolName: undefined, moduleName: undefined } as {
+          symbolName?: string;
+          moduleName?: string;
+        };
+        if (symbol.isExplicitelyImported) {
+          lookupValue = { symbolName: lookupSymbolRef };
+        } else {
+          lookupValue = {
+            moduleName:
+              importStatementModule.alias || importStatementModule.source,
+            symbolName: lookupSymbolRef,
+          };
+        }
+        const isUsed = this.isUsedInTargetNode(
+          file.rootNode,
+          importStatements,
+          lookupValue,
+        );
+
+        // Update isUsedInFile if needed
+        isUsedInFile = isUsedInFile || isUsed;
+
+        const symbolDependency = fileDependency.symbols.get(symbol.id);
+        if (!symbolDependency) {
+          // Add the symbol to the file dependency
+          fileDependency.symbols.set(symbol.id, {
+            id: symbol.id,
+            isUsed,
+            isExplicit: symbol.isExplicitelyImported,
+          });
+        } else {
+          // Update isUsed if needed
+          fileDependency.symbols.set(symbol.id, {
+            ...symbolDependency,
+            isUsed: symbolDependency.isUsed || isUsed,
+          });
+        }
+      });
+    } else {
+      const lookupModuleRef =
+        importStatementModule.alias || importStatementModule.source;
+      isUsedInFile = this.isUsedInTargetNode(file.rootNode, importStatements, {
+        moduleName: lookupModuleRef,
+      });
+    }
+
+    fileDependencies.set(depId, {
+      ...fileDependency,
+      isUsed: fileDependency.isUsed || isUsedInFile,
     });
+
+    return fileDependencies;
   }
 
   private getFileDependencies(
-    fileNode: Parser.SyntaxNode,
-    importedModules: ImportedModule[],
-    importRanges: { start: number; end: number }[],
-  ) {
-    const dependencies = new Map<string, FileDependency>();
+    file: { path: string; rootNode: Parser.SyntaxNode },
+    importStatements: ImportStatement[],
+  ): Map<string, FileDependency> {
+    let fileDependencies = new Map<string, FileDependency>();
 
-    importedModules.forEach((importedModule) => {
-      // add to dependencies
-      const key = importedModule.resolvedSource || importedModule.source;
-      let dependency = dependencies.get(key);
-      if (!dependency) {
-        dependency = {
-          source: importedModule.resolvedSource || importedModule.source,
-          isExternal: importedModule.resolvedSource ? false : true,
-          isUsed: false,
-          symbols: [],
-        };
-      }
-
-      // Check all symbols first
-      if (importedModule.symbols) {
-        importedModule.symbols.forEach((symbol) => {
-          console.log(11111, importedModule);
-          const lookupString = symbol.alias || symbol.id;
-
-          const query = new Parser.Query(
-            this.parser.getLanguage(),
-            `
-            ((identifier) @identifier (#eq? @identifier "${lookupString}"))
-            `,
-          );
-
-          const captures = query.captures(fileNode);
-          const isUsed = captures.some(({ node }) => {
-            return !this.isInsideImportRange(node, importRanges);
-          });
-
-          // Add to dependencies
-          dependency.symbols.push({
-            id: symbol.id,
-            isUsed,
-          });
-
-          if (isUsed) {
-            // Set isUsed to true
-            dependency.isUsed = true;
-          }
-        });
-      } else {
-        // Check for module usage
-        const lookupString = importedModule.alias || importedModule.source;
-
-        const query = new Parser.Query(
-          this.parser.getLanguage(),
-          `
-          ((identifier) @identifier (#eq? @identifier "${lookupString}"))
-          `,
+    importStatements.forEach((importStatement) => {
+      importStatement.modules.forEach((importStatementModule) => {
+        fileDependencies = this.updateFromImportStatementModule(
+          fileDependencies,
+          file,
+          importStatements,
+          importStatementModule,
         );
-
-        const captures = query.captures(fileNode);
-        captures.forEach(({ node }) => {
-          if (this.isInsideImportRange(node, importRanges)) {
-            // Set isUsed to true
-            const dependency = dependencies.get(key);
-            if (dependency) {
-              dependency.isUsed = true;
-            }
-            return;
-          }
-        });
-      }
-
-      // Add to dependencies
-      dependencies.set(key, dependency);
-    });
-
-    return dependencies;
-  }
-
-  private getSymbolDependencies(
-    symbolNode: Parser.SyntaxNode,
-    importedModules: ImportedModule[],
-    importRanges: { start: number; end: number }[],
-  ) {
-    const dependencies = new Map<string, SymbolDependency>();
-
-    importedModules.forEach((importedModule) => {
-      // add to dependencies
-      const key = importedModule.resolvedSource || importedModule.source;
-      let dependency = dependencies.get(key);
-      if (!dependency) {
-        dependency = {
-          source: importedModule.resolvedSource || importedModule.source,
-          isExternal: importedModule.resolvedSource ? false : true,
-          symbolIds: [],
-        };
-      }
-
-      let isUsed = false;
-
-      // Check all symbols first
-      if (importedModule.symbols) {
-        importedModule.symbols.forEach((symbol) => {
-          const lookupString = symbol.alias || symbol.id;
-
-          const query = new Parser.Query(
-            this.parser.getLanguage(),
-            `
-            (identifier) @identifier (#eq? @identifier "${lookupString}")
-            `,
-          );
-
-          const captures = query.captures(symbolNode);
-          const symbolIsUsed = captures.some(({ node }) => {
-            return !this.isInsideImportRange(node, importRanges);
-          });
-
-          if (symbolIsUsed) {
-            dependency.symbolIds.push(symbol.id);
-            if (!isUsed) {
-              isUsed = true;
-            }
-          }
-        });
-      } else {
-        // Check for module usage
-        const lookupString = importedModule.alias || importedModule.source;
-
-        const query = new Parser.Query(
-          this.parser.getLanguage(),
-          `
-          (identifier) @identifier (#eq? @identifier "${lookupString}")
-          `,
-        );
-
-        const captures = query.captures(symbolNode);
-        captures.forEach(({ node }) => {
-          if (this.isInsideImportRange(node, importRanges)) {
-            if (!isUsed) {
-              isUsed = true;
-            }
-          }
-        });
-      }
-
-      if (isUsed) {
-        // Add to dependencies if it is used
-        dependencies.set(key, dependency);
-      }
-    });
-
-    return dependencies;
-  }
-
-  public getDependencies() {
-    const exportedSymbols = this.exportResolver.getSymbols(this.file.path);
-    const importedModules = this.importResolver.getImportedModules(
-      this.file.path,
-    );
-
-    const importRanges = this.getImportRanges();
-
-    const fileDependencies: FileDependencies = {
-      dependencies: new Map<string, FileDependency>(),
-      symbols: [],
-    };
-
-    fileDependencies.dependencies = this.getFileDependencies(
-      this.file.rootNode,
-      importedModules || [],
-      importRanges,
-    );
-
-    exportedSymbols.forEach((symbol) => {
-      const dependencies = this.getSymbolDependencies(
-        symbol.node,
-        importedModules || [],
-        importRanges,
-      );
-
-      fileDependencies.symbols.push({
-        id: symbol.id,
-        type: symbol.type,
-        dependencies,
       });
     });
 
     return fileDependencies;
+  }
+
+  private getSymbolDependencies(
+    symbolNode: Parser.SyntaxNode,
+    importStatements: ImportStatement[],
+  ) {
+    const symbolDependencies = new Map<string, SymbolDependency>();
+
+    // TODO: Implement the function to populate the symbolDependencies map
+
+    return symbolDependencies;
+  }
+
+  public getDependenciesForFile(filePath: string) {
+    const file = this.files.get(filePath);
+    if (!file) {
+      throw new Error(`File not found: ${filePath}`);
+    }
+
+    const exportedSymbols = this.exportResolver.getSymbols(filePath);
+    const importedStatements =
+      this.importResolver.getImportStatements(filePath);
+
+    const fileDependencyManifesto: FileDependencyManifesto = {
+      filePath,
+      fileDependencies: new Map<string, FileDependency>(),
+      symbols: [],
+    };
+
+    const fileDependencies = this.getFileDependencies(file, importedStatements);
+
+    fileDependencyManifesto.fileDependencies = fileDependencies;
+
+    exportedSymbols.forEach((symbol) => {
+      const symbolDependencies = this.getSymbolDependencies(
+        symbol.node,
+        importedStatements,
+      );
+
+      fileDependencyManifesto.symbols.push({
+        id: symbol.id,
+        type: symbol.type,
+        symbolDependencies,
+      });
+    });
+
+    return fileDependencyManifesto;
   }
 }
