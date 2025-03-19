@@ -1,7 +1,11 @@
 import { describe, test, expect, beforeAll } from "vitest";
 import Parser from "tree-sitter";
 import Python from "tree-sitter-python";
-import PythonUsageResolver, { ImportUsageResult } from "./index";
+import {
+  PythonUsageResolver,
+  InternalUsageResult,
+  ExternalUsageResult,
+} from "./index";
 import { ModuleNode } from "../moduleMapper";
 
 describe("PythonUsageResolver", () => {
@@ -62,7 +66,7 @@ describe("PythonUsageResolver", () => {
     );
     // We expect one result for the base module.
     expect(results.size).toBe(1);
-    const baseResult = results.get("module.py") as ImportUsageResult;
+    const baseResult = results.get("module.py") as InternalUsageResult;
     expect(baseResult).toBeDefined();
     expect(baseResult.moduleNode.fullName).toBe("module");
     expect(baseResult.symbols).toEqual(["helper_func"]);
@@ -114,7 +118,7 @@ describe("PythonUsageResolver", () => {
     );
     // Expect one result for the submodule.
     expect(results.size).toBe(1);
-    const subResult = results.get("module/submodule.py") as ImportUsageResult;
+    const subResult = results.get("module/submodule.py") as InternalUsageResult;
     expect(subResult).toBeDefined();
     expect(subResult.moduleNode.fullName).toBe("module.submodule");
     // The leftover part of the chain should be "bar"
@@ -177,7 +181,7 @@ describe("PythonUsageResolver", () => {
     expect(results.size).toBe(1);
     const deepResult = results.get(
       "module/submodule/deep.py",
-    ) as ImportUsageResult;
+    ) as InternalUsageResult;
     expect(deepResult).toBeDefined();
     expect(deepResult.moduleNode.fullName).toBe("module.submodule.deep");
     // The leftover part of the chain should be "symbol_func"
@@ -229,7 +233,7 @@ describe("PythonUsageResolver", () => {
     );
     // Expect one result for the submodule.
     expect(results.size).toBe(1);
-    const subResult = results.get("module/submodule.py") as ImportUsageResult;
+    const subResult = results.get("module/submodule.py") as InternalUsageResult;
     expect(subResult).toBeDefined();
     expect(subResult.moduleNode.fullName).toBe("module.submodule");
     // Both "bar" and "baz" should be detected (order may vary).
@@ -318,7 +322,7 @@ describe("PythonUsageResolver", () => {
     );
     // We expect one result for the submodule.
     expect(results.size).toBe(1);
-    const subResult = results.get("module/submodule.py") as ImportUsageResult;
+    const subResult = results.get("module/submodule.py") as InternalUsageResult;
     expect(subResult).toBeDefined();
     expect(subResult.moduleNode.fullName).toBe("module.submodule");
     // The remaining part of the chain should be "bar"
@@ -362,10 +366,168 @@ describe("PythonUsageResolver", () => {
     );
     // We expect one result for the base module.
     expect(results.size).toBe(1);
-    const baseResult = results.get("module.py") as ImportUsageResult;
+    const baseResult = results.get("module.py") as InternalUsageResult;
     expect(baseResult).toBeDefined();
     expect(baseResult.moduleNode.fullName).toBe("module");
     // The explicit symbol should be detected by its alias "hf"
     expect(baseResult.symbols).toEqual(["hf"]);
+  });
+
+  test("should detect usage of symbol from submodule which is used as a symbol itself", () => {
+    const code = `
+      from module import submodule
+
+      def foo():
+          submodule.bar()
+    `;
+
+    const tree = parser.parse(code);
+    const root = tree.rootNode;
+
+    const nodesToExclude = getNodesToExclude(root);
+
+    const baseModule: ModuleNode = {
+      name: "module",
+      fullName: "module",
+      filePath: "module.py",
+      symbols: [],
+      children: new Map(),
+      parent: undefined,
+    };
+
+    const submodule: ModuleNode = {
+      name: "submodule",
+      fullName: "module.submodule",
+      filePath: "module/submodule.py",
+      symbols: [],
+      children: new Map(),
+      parent: baseModule,
+    };
+    baseModule.children.set("submodule", submodule);
+
+    const moduleInfo = {
+      identifier: "module",
+      alias: undefined,
+      moduleNode: baseModule,
+      explicitSymbols: [{ identifier: "submodule", alias: undefined }],
+    };
+
+    const results = usageResolver.resolveUsageForInternalModule(
+      root,
+      moduleInfo,
+      nodesToExclude,
+    );
+
+    expect(results.size).toBe(1);
+    const subResult = results.get("module/submodule.py") as InternalUsageResult;
+    expect(subResult).toBeDefined();
+    expect(subResult.moduleNode.fullName).toBe("module.submodule");
+    expect(subResult.symbols).toEqual(["bar"]);
+  });
+
+  test("should detect explicit external symbol usage", () => {
+    const code = `
+      from external_module import external_func as ef
+
+      def foo():
+          external_module.ef()
+    `;
+    const tree = parser.parse(code);
+    const root = tree.rootNode;
+    const nodesToExclude = getNodesToExclude(root);
+
+    const moduleInfo = {
+      identifier: "external_module",
+      alias: undefined,
+      explicitSymbols: [{ identifier: "external_func", alias: "ef" }],
+    };
+
+    const result = usageResolver.resolveUsageForExternalModule(
+      root,
+      moduleInfo,
+      nodesToExclude,
+    ) as ExternalUsageResult;
+    expect(result).toBeDefined();
+    expect(result.moduleName).toBe("external_module");
+    expect(result.symbols).toEqual(["ef"]);
+  });
+
+  test("should detect external module usage (atomic) when no explicit symbols", () => {
+    const code = `
+      import external_module
+
+      def foo():
+          print(external_module)
+    `;
+    const tree = parser.parse(code);
+    const root = tree.rootNode;
+    const nodesToExclude = getNodesToExclude(root);
+
+    const moduleInfo = {
+      identifier: "external_module",
+      alias: undefined,
+      explicitSymbols: [],
+    };
+
+    const result = usageResolver.resolveUsageForExternalModule(
+      root,
+      moduleInfo,
+      nodesToExclude,
+    ) as ExternalUsageResult;
+    expect(result).toBeDefined();
+    expect(result.moduleName).toBe("external_module");
+    expect(result.symbols).toEqual([]);
+  });
+
+  test("should return undefined for external module if not used", () => {
+    const code = `
+      import external_module
+
+      def foo():
+          print("No usage of external_module")
+    `;
+    const tree = parser.parse(code);
+    const root = tree.rootNode;
+    const nodesToExclude = getNodesToExclude(root);
+
+    const moduleInfo = {
+      identifier: "external_module",
+      alias: undefined,
+      explicitSymbols: [],
+    };
+
+    const result = usageResolver.resolveUsageForExternalModule(
+      root,
+      moduleInfo,
+      nodesToExclude,
+    );
+    expect(result).toBeUndefined();
+  });
+
+  test("should detect external module usage with alias", () => {
+    const code = `
+      import external_module as em
+
+      def foo():
+          print(em)
+    `;
+    const tree = parser.parse(code);
+    const root = tree.rootNode;
+    const nodesToExclude = getNodesToExclude(root);
+
+    const moduleInfo = {
+      identifier: "external_module",
+      alias: "em",
+      explicitSymbols: [],
+    };
+
+    const result = usageResolver.resolveUsageForExternalModule(
+      root,
+      moduleInfo,
+      nodesToExclude,
+    ) as ExternalUsageResult;
+    expect(result).toBeDefined();
+    expect(result.moduleName).toBe("external_module");
+    expect(result.symbols).toEqual([]);
   });
 });
