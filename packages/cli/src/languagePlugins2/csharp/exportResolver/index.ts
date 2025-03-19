@@ -1,15 +1,6 @@
 import Parser from "tree-sitter";
 
-export const CSHARP_CLASS_TYPE = "class";
-export const CSHARP_METHOD_TYPE = "method";
-export const CSHARP_PROPERTY_TYPE = "property";
-export const CSHARP_FIELD_TYPE = "field";
-
-export type SymbolType =
-  | typeof CSHARP_CLASS_TYPE
-  | typeof CSHARP_METHOD_TYPE
-  | typeof CSHARP_PROPERTY_TYPE
-  | typeof CSHARP_FIELD_TYPE;
+export type SymbolType = string;
 
 export interface ExportedSymbol {
   id: string;
@@ -34,7 +25,6 @@ export class CsharpExportResolver {
 
   private getClass(fileNode: Parser.SyntaxNode) {
     const exportedSymbols: ExportedSymbol[] = [];
-    console.log(fileNode);
     fileNode
       .descendantsOfType([
         "class_declaration",
@@ -53,63 +43,9 @@ export class CsharpExportResolver {
           id: identifierNode.text,
           node,
           identifierNode,
-          type: CSHARP_CLASS_TYPE,
+          type: node.type.split("_")[0],
         });
       });
-    return exportedSymbols;
-  }
-
-  private getMethod(fileNode: Parser.SyntaxNode) {
-    const exportedSymbols: ExportedSymbol[] = [];
-    fileNode.descendantsOfType("method_declaration").forEach((node) => {
-      const identifierNode = node.childForFieldName("name");
-      if (!identifierNode) {
-        console.error("No identifier node found for method definition " + node);
-        return;
-      }
-      exportedSymbols.push({
-        id: identifierNode.text,
-        node,
-        identifierNode,
-        type: CSHARP_METHOD_TYPE,
-      });
-    });
-    return exportedSymbols;
-  }
-
-  private getProperty(fileNode: Parser.SyntaxNode) {
-    const exportedSymbols: ExportedSymbol[] = [];
-    fileNode.descendantsOfType("property_declaration").forEach((node) => {
-      const identifierNode = node.childForFieldName("name");
-      if (!identifierNode) {
-        console.error("No identifier node found for prop. definition " + node);
-        return;
-      }
-      exportedSymbols.push({
-        id: identifierNode.text,
-        node,
-        identifierNode,
-        type: CSHARP_PROPERTY_TYPE,
-      });
-    });
-    return exportedSymbols;
-  }
-
-  private getField(fileNode: Parser.SyntaxNode) {
-    const exportedSymbols: ExportedSymbol[] = [];
-    fileNode.descendantsOfType("field_declaration").forEach((node) => {
-      const identifierNode = node.childForFieldName("name");
-      if (!identifierNode) {
-        console.error("No identifier node found for field definition " + node);
-        return;
-      }
-      exportedSymbols.push({
-        id: identifierNode.text,
-        node,
-        identifierNode,
-        type: CSHARP_FIELD_TYPE,
-      });
-    });
     return exportedSymbols;
   }
 
@@ -126,12 +62,7 @@ export class CsharpExportResolver {
       return [];
     }
 
-    const exportedSymbols: ExportedSymbol[] = [
-      ...this.getClass(file.rootNode),
-      ...this.getMethod(file.rootNode),
-      ...this.getProperty(file.rootNode),
-      ...this.getField(file.rootNode),
-    ];
+    const exportedSymbols: ExportedSymbol[] = [...this.getClass(file.rootNode)];
 
     this.exportedSymbolCache.set(cacheKey, exportedSymbols);
     return exportedSymbols;

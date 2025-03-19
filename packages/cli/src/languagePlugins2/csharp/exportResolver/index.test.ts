@@ -1,7 +1,7 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import Parser from "tree-sitter";
 import { CsharpExportResolver } from ".";
-import { csharpParser } from "../../../helpers/treeSitter/parsers";
+import { getCSharpFilesMap } from "../testFiles";
 
 describe("CsharpExportResolver", () => {
   let resolver: CsharpExportResolver;
@@ -9,48 +9,7 @@ describe("CsharpExportResolver", () => {
 
   beforeEach(() => {
     try {
-      files = new Map([
-        [
-          "project/MyClass.cs",
-          {
-            path: "project/MyClass.cs",
-            rootNode: csharpParser.parse(`
-              public class MyClass
-              {
-              }
-              `).rootNode,
-          },
-        ],
-        [
-          "project/Models.cs",
-          {
-            path: "project/Models.cs",
-            rootNode: csharpParser.parse(`
-                public class User
-                {
-                  public string Name { get; set; }
-                }
-                public struct Order
-                {
-                  public int OrderId;
-                  public string Description;
-                }
-                public enum OrderStatus
-                {
-                  Pending,
-                  Completed
-                }
-                `).rootNode,
-          },
-        ],
-        [
-          "project/empty.cs",
-          {
-            path: "project/empty.cs",
-            rootNode: csharpParser.parse("").rootNode,
-          },
-        ],
-      ]);
+      files = getCSharpFilesMap();
       resolver = new CsharpExportResolver(files);
     } catch (error) {
       console.error("Error in beforeEach:", error);
@@ -58,85 +17,133 @@ describe("CsharpExportResolver", () => {
     }
   });
 
-  test("MyClass.cs", () => {
+  test("Namespaced.cs", () => {
     try {
-      const symbols = resolver.getSymbols("project/MyClass.cs");
-      expect(symbols).toMatchObject([
-        {
-          id: "MyClass",
-          identifierNode: { text: "MyClass" },
-          type: "class",
-        },
-      ]);
+      const symbols = resolver.getSymbols("Namespaced.cs");
+      expect(symbols).toEqual(
+        expect.arrayContaining([
+          {
+            id: "MyClass",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "MyClass" }),
+            type: "class",
+          },
+        ]),
+      );
     } catch (error) {
-      console.error("Error in test MyClass.cs:", error);
+      console.error("Error in test Namespaced.cs:", error);
       throw error;
     }
   });
 
   test("Models.cs", () => {
     try {
-      const symbols = resolver.getSymbols("project/Models.cs");
-      expect(symbols).toMatchObject([
-        {
-          id: "User",
-          identifierNode: { text: "User" },
-          type: "class",
-        },
-        {
-          id: "Order",
-          identifierNode: { text: "Order" },
-          type: "class",
-        },
-        {
-          id: "OrderStatus",
-          identifierNode: { text: "OrderStatus" },
-          type: "class",
-        },
-      ]);
+      const symbols = resolver.getSymbols("Models.cs");
+      expect(symbols).toEqual(
+        expect.arrayContaining([
+          {
+            id: "User",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "User" }),
+            type: "class",
+          },
+          {
+            id: "Order",
+            node: expect.objectContaining({ type: "struct_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Order" }),
+            type: "struct",
+          },
+          {
+            id: "OrderStatus",
+            node: expect.objectContaining({ type: "enum_declaration" }),
+            identifierNode: expect.objectContaining({ text: "OrderStatus" }),
+            type: "enum",
+          },
+        ]),
+      );
     } catch (error) {
       console.error("Error in test Models.cs:", error);
       throw error;
     }
   });
 
-  test("empty.cs", () => {
+  test("Variables.cs", () => {
     try {
-      const symbols = resolver.getSymbols("project/empty.cs");
-      expect(symbols).toEqual([]);
+      const symbols = resolver.getSymbols("Variables.cs");
+      expect(symbols).toEqual(
+        expect.arrayContaining([
+          {
+            id: "FarWest",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "FarWest" }),
+            type: "class",
+          },
+          {
+            id: "EastCoast",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "EastCoast" }),
+            type: "class",
+          },
+        ]),
+      );
     } catch (error) {
-      console.error("Error in test empty.cs:", error);
+      console.error("Error in test Variables.cs:", error);
       throw error;
     }
   });
 
-  test("Nested.cs", () => {
+  test("SemiNamespaced.cs", () => {
     try {
-      const symbols = resolver.getSymbols("project/Nested.cs");
-      expect(symbols).toMatchObject([
-        {
-          id: "OuterClass",
-          identifierNode: { text: "OuterClass" },
-          type: "class",
-        },
-        {
-          id: "InnerClass",
-          identifierNode: { text: "InnerClass" },
-          type: "class",
-        },
-        {
-          id: "InnerMethod",
-          identifierNode: { text: "InnerMethod" },
-          type: "method",
-        },
-        {
-          id: "OuterMethod",
-          identifierNode: { text: "OuterMethod" },
-          type: "method",
-        },
-      ]);
+      const symbols = resolver.getSymbols("SemiNamespaced.cs");
+      expect(symbols).toEqual(
+        expect.arrayContaining([
+          {
+            id: "Gordon",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Gordon" }),
+            type: "class",
+          },
+          {
+            id: "Freeman",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Freeman" }),
+            type: "class",
+          },
+          {
+            id: "HeadCrab",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "HeadCrab" }),
+            type: "class",
+          },
+        ]),
+      );
     } catch (error) {
-      console.error("Error in test Nested.cs:", error);
+      console.error("Error in test SemiNamespaced.cs:", error);
+      throw error;
+    }
+  });
+
+  test("IWillOnlyImportHalf.cs", () => {
+    try {
+      const symbols = resolver.getSymbols("IWillOnlyImportHalf.cs");
+      expect(symbols).toEqual(
+        expect.arrayContaining([
+          {
+            id: "Steak",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Steak" }),
+            type: "class",
+          },
+          {
+            id: "Salad",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Salad" }),
+            type: "class",
+          },
+        ]),
+      );
+    } catch (error) {
+      console.error("Error in test IWillOnlyImportHalf.cs:", error);
       throw error;
     }
   });
