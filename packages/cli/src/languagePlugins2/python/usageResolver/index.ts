@@ -151,15 +151,20 @@ export class PythonUsageResolver {
 
     const captures = query.captures(targetNode);
     for (let { node } of captures) {
-      // Skip nodes inside excluded sections.
+      let foundMatchOutsideExcludedNodes = false;
       for (const nodeToExclude of nodesToExclude) {
         if (
           node.startIndex >= nodeToExclude.startIndex &&
           node.endIndex <= nodeToExclude.endIndex
         ) {
           continue;
+        } else {
+          foundMatchOutsideExcludedNodes = true;
+          break;
         }
+      }
 
+      if (foundMatchOutsideExcludedNodes || nodesToExclude.length === 0) {
         // Climb up the AST to capture the full attribute chain (e.g. "module.submodule.bar").
         while (node.parent && node.parent.type === "attribute") {
           node = node.parent;
@@ -306,13 +311,19 @@ export class PythonUsageResolver {
 
     const captures = query.captures(targetNode);
     for (const { node } of captures) {
+      let foundMatchOutsideExcludedNodes = false;
       for (const nodeToExclude of nodesToExclude) {
         if (
           node.startIndex >= nodeToExclude.startIndex &&
           node.endIndex <= nodeToExclude.endIndex
         ) {
           continue;
+        } else {
+          foundMatchOutsideExcludedNodes = true;
+          break;
         }
+      }
+      if (foundMatchOutsideExcludedNodes || nodesToExclude.length === 0) {
         return true;
       }
     }
