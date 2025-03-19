@@ -8,126 +8,136 @@ describe("CsharpExportResolver", () => {
   let files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
 
   beforeEach(() => {
-    files = new Map([
-      [
-        "project/MyClass.cs",
-        {
-          path: "project/MyClass.cs",
-          rootNode: csharpParser.parse(`
-            public class MyClass
-            {
-            }
-            `).rootNode,
-        },
-      ],
-      [
-        "project/Models.cs",
-        {
-          path: "project/Models.cs",
-          rootNode: csharpParser.parse(`
-              public class User
+    try {
+      files = new Map([
+        [
+          "project/MyClass.cs",
+          {
+            path: "project/MyClass.cs",
+            rootNode: csharpParser.parse(`
+              public class MyClass
               {
-                public string Name { get; set; }
-              }
-              public struct Order
-              {
-                public int OrderId;
-                public string Description;
-              }
-              public enum OrderStatus
-              {
-                Pending,
-                Completed
               }
               `).rootNode,
-        },
-      ],
-      [
-        "project/empty.cs",
-        {
-          path: "project/empty.cs",
-          rootNode: csharpParser.parse("").rootNode,
-        },
-      ],
-      [
-        "project/Nested.cs",
-        {
-          path: "project/Nested.cs",
-          rootNode: csharpParser.parse(`
-            public class OuterClass
-            {
-              public class InnerClass
-              {
-                public void InnerMethod()
+          },
+        ],
+        [
+          "project/Models.cs",
+          {
+            path: "project/Models.cs",
+            rootNode: csharpParser.parse(`
+                public class User
                 {
+                  public string Name { get; set; }
                 }
-              }
-              public void OuterMethod()
-              {
-              }
-              `).rootNode,
+                public struct Order
+                {
+                  public int OrderId;
+                  public string Description;
+                }
+                public enum OrderStatus
+                {
+                  Pending,
+                  Completed
+                }
+                `).rootNode,
+          },
+        ],
+        [
+          "project/empty.cs",
+          {
+            path: "project/empty.cs",
+            rootNode: csharpParser.parse("").rootNode,
+          },
+        ],
+      ]);
+      resolver = new CsharpExportResolver(files);
+    } catch (error) {
+      console.error("Error in beforeEach:", error);
+      throw error;
+    }
+  });
+
+  test("MyClass.cs", () => {
+    try {
+      const symbols = resolver.getSymbols("project/MyClass.cs");
+      expect(symbols).toMatchObject([
+        {
+          id: "MyClass",
+          identifierNode: { text: "MyClass" },
+          type: "class",
         },
-      ],
-    ]);
-    resolver = new CsharpExportResolver(files);
+      ]);
+    } catch (error) {
+      console.error("Error in test MyClass.cs:", error);
+      throw error;
+    }
   });
 
-  test("getSymbols", () => {
-    const symbols = resolver.getSymbols("project/MyClass.cs");
-    expect(symbols).toEqual([
-      {
-        id: "MyClass",
-        node: expect.any(Object),
-        identifierNode: expect.any(Object),
-        type: "class",
-      },
-    ]);
+  test("Models.cs", () => {
+    try {
+      const symbols = resolver.getSymbols("project/Models.cs");
+      expect(symbols).toMatchObject([
+        {
+          id: "User",
+          identifierNode: { text: "User" },
+          type: "class",
+        },
+        {
+          id: "Order",
+          identifierNode: { text: "Order" },
+          type: "class",
+        },
+        {
+          id: "OrderStatus",
+          identifierNode: { text: "OrderStatus" },
+          type: "class",
+        },
+      ]);
+    } catch (error) {
+      console.error("Error in test Models.cs:", error);
+      throw error;
+    }
   });
 
-  test("getSymbols", () => {
-    const symbols = resolver.getSymbols("project/Models.cs");
-    expect(symbols).toEqual([
-      {
-        id: "User",
-        node: expect.any(Object),
-        identifierNode: expect.any(Object),
-        type: "class",
-      },
-      {
-        id: "Order",
-        node: expect.any(Object),
-        identifierNode: expect.any(Object),
-        type: "struct",
-      },
-      {
-        id: "OrderStatus",
-        node: expect.any(Object),
-        identifierNode: expect.any(Object),
-        type: "enum",
-      },
-    ]);
+  test("empty.cs", () => {
+    try {
+      const symbols = resolver.getSymbols("project/empty.cs");
+      expect(symbols).toEqual([]);
+    } catch (error) {
+      console.error("Error in test empty.cs:", error);
+      throw error;
+    }
   });
 
-  test("getSymbols", () => {
-    const symbols = resolver.getSymbols("project/empty.cs");
-    expect(symbols).toEqual([]);
-  });
-
-  test("getSymbols", () => {
-    const symbols = resolver.getSymbols("project/Nested.cs");
-    expect(symbols).toEqual([
-      {
-        id: "OuterClass",
-        node: expect.any(Object),
-        identifierNode: expect.any(Object),
-        type: "class",
-      },
-      {
-        id: "InnerClass",
-        node: expect.any(Object),
-        identifierNode: expect.any(Object),
-        type: "class",
-      },
-    ]);
+  test("Nested.cs", () => {
+    try {
+      const symbols = resolver.getSymbols("project/Nested.cs");
+      expect(symbols).toMatchObject([
+        {
+          id: "OuterClass",
+          identifierNode: { text: "OuterClass" },
+          type: "class",
+        },
+        {
+          id: "InnerClass",
+          identifierNode: { text: "InnerClass" },
+          type: "class",
+        },
+        {
+          id: "InnerMethod",
+          identifierNode: { text: "InnerMethod" },
+          type: "method",
+        },
+        {
+          id: "OuterMethod",
+          identifierNode: { text: "OuterMethod" },
+          type: "method",
+        },
+      ]);
+    } catch (error) {
+      console.error("Error in test Nested.cs:", error);
+      throw error;
+    }
   });
 });

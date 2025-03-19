@@ -34,26 +34,35 @@ export class CsharpExportResolver {
 
   private getClass(fileNode: Parser.SyntaxNode) {
     const exportedSymbols: ExportedSymbol[] = [];
-    fileNode.descendantsOfType("class_declaration").forEach((node) => {
-      const identifierNode = node.childForFieldName("identifier");
-      if (!identifierNode) {
-        console.error("No identifier node found for class definition " + node);
-        return;
-      }
-      exportedSymbols.push({
-        id: identifierNode.text,
-        node,
-        identifierNode,
-        type: CSHARP_CLASS_TYPE,
+    console.log(fileNode);
+    fileNode
+      .descendantsOfType([
+        "class_declaration",
+        "struct_declaration",
+        "enum_declaration",
+      ])
+      .forEach((node) => {
+        const identifierNode = node.childForFieldName("name");
+        if (!identifierNode) {
+          console.error(
+            "No identifier node found for class definition " + node,
+          );
+          return;
+        }
+        exportedSymbols.push({
+          id: identifierNode.text,
+          node,
+          identifierNode,
+          type: CSHARP_CLASS_TYPE,
+        });
       });
-    });
     return exportedSymbols;
   }
 
   private getMethod(fileNode: Parser.SyntaxNode) {
     const exportedSymbols: ExportedSymbol[] = [];
     fileNode.descendantsOfType("method_declaration").forEach((node) => {
-      const identifierNode = node.childForFieldName("identifier");
+      const identifierNode = node.childForFieldName("name");
       if (!identifierNode) {
         console.error("No identifier node found for method definition " + node);
         return;
@@ -71,7 +80,7 @@ export class CsharpExportResolver {
   private getProperty(fileNode: Parser.SyntaxNode) {
     const exportedSymbols: ExportedSymbol[] = [];
     fileNode.descendantsOfType("property_declaration").forEach((node) => {
-      const identifierNode = node.childForFieldName("identifier");
+      const identifierNode = node.childForFieldName("name");
       if (!identifierNode) {
         console.error("No identifier node found for prop. definition " + node);
         return;
@@ -89,7 +98,7 @@ export class CsharpExportResolver {
   private getField(fileNode: Parser.SyntaxNode) {
     const exportedSymbols: ExportedSymbol[] = [];
     fileNode.descendantsOfType("field_declaration").forEach((node) => {
-      const identifierNode = node.childForFieldName("identifier");
+      const identifierNode = node.childForFieldName("name");
       if (!identifierNode) {
         console.error("No identifier node found for field definition " + node);
         return;
