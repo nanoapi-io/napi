@@ -67,31 +67,6 @@ describe("CsharpExportResolver", () => {
     }
   });
 
-  test("Variables.cs", () => {
-    try {
-      const symbols = resolver.getSymbols("Variables.cs");
-      expect(symbols).toEqual(
-        expect.arrayContaining([
-          {
-            id: "FarWest",
-            node: expect.objectContaining({ type: "class_declaration" }),
-            identifierNode: expect.objectContaining({ text: "FarWest" }),
-            type: "class",
-          },
-          {
-            id: "EastCoast",
-            node: expect.objectContaining({ type: "class_declaration" }),
-            identifierNode: expect.objectContaining({ text: "EastCoast" }),
-            type: "class",
-          },
-        ]),
-      );
-    } catch (error) {
-      console.error("Error in test Variables.cs:", error);
-      throw error;
-    }
-  });
-
   test("SemiNamespaced.cs", () => {
     try {
       const symbols = resolver.getSymbols("SemiNamespaced.cs");
@@ -123,9 +98,9 @@ describe("CsharpExportResolver", () => {
     }
   });
 
-  test("IWillOnlyImportHalf.cs", () => {
+  test("2Namespaces1File.cs", () => {
     try {
-      const symbols = resolver.getSymbols("IWillOnlyImportHalf.cs");
+      const symbols = resolver.getSymbols("2Namespaces1File.cs");
       expect(symbols).toEqual(
         expect.arrayContaining([
           {
@@ -135,15 +110,72 @@ describe("CsharpExportResolver", () => {
             type: "class",
           },
           {
+            id: "Cheese",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Cheese" }),
+            type: "class",
+          },
+          {
+            id: "Bun",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Bun" }),
+            type: "class",
+          },
+          {
+            id: "Chicken",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Chicken" }),
+            type: "class",
+          },
+          {
             id: "Salad",
             node: expect.objectContaining({ type: "class_declaration" }),
             identifierNode: expect.objectContaining({ text: "Salad" }),
+            type: "class",
+          },
+          {
+            id: "Bun",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "Bun" }),
             type: "class",
           },
         ]),
       );
     } catch (error) {
       console.error("Error in test IWillOnlyImportHalf.cs:", error);
+      throw error;
+    }
+  });
+
+  test("Nested.cs", () => {
+    try {
+      const symbols = resolver.getSymbols("Nested.cs");
+      expect(symbols).toEqual(
+        expect.arrayContaining([
+          {
+            id: "OuterClass",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "OuterClass" }),
+            type: "class",
+          },
+          {
+            id: "InnerClass",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({ text: "InnerClass" }),
+            type: "class",
+          },
+          {
+            id: "OuterInnerClass",
+            node: expect.objectContaining({ type: "class_declaration" }),
+            identifierNode: expect.objectContaining({
+              text: "OuterInnerClass",
+            }),
+            type: "class",
+          },
+        ]),
+      );
+    } catch (error) {
+      console.error("Error in test Nested.cs:", error);
       throw error;
     }
   });
