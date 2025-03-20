@@ -1,12 +1,10 @@
 import Parser from "tree-sitter";
 
-export type SymbolType = string;
-
 export interface ExportedSymbol {
   id: string;
   node: Parser.SyntaxNode;
   identifierNode: Parser.SyntaxNode;
-  type: SymbolType;
+  type: string;
 }
 
 export class CsharpExportResolver {
