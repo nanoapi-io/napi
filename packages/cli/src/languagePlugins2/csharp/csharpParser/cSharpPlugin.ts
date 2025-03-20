@@ -106,6 +106,19 @@ export class CSharpPlugin {
     current.childrenNamespaces.push(...namespace.childrenNamespaces);
   }
 
+  #assignNamespacesToClasses(tree: Namespace) {
+    tree.classes.forEach((cls) => {
+      cls.namespace = tree.name;
+    });
+
+    tree.childrenNamespaces.forEach((ns) => {
+      ns.classes.forEach((cls) => {
+        cls.namespace = ns.name;
+      });
+      this.#assignNamespacesToClasses(ns);
+    });
+  }
+
   buildNamespaceTree(): Namespace {
     const namespaceTree: Namespace = {
       name: "",
@@ -123,11 +136,52 @@ export class CSharpPlugin {
       this.addNamespaceToTree(namespace, namespaceTree);
     });
 
+    this.#assignNamespacesToClasses(namespaceTree);
+
     // I don't understand why, but the first element is always empty
     return namespaceTree.childrenNamespaces[0];
   }
 
+  #findNamespaceInTree(
+    tree: Namespace,
+    namespaceName: string,
+  ): Namespace | null {
+    if (namespaceName.includes(".")) {
+      const parts = namespaceName.split(".");
+      const simpleNamespaceName = parts[0];
+      const rest = parts.slice(1).join(".");
+
+      const namespace = tree.childrenNamespaces.find(
+        (ns) => ns.name === simpleNamespaceName,
+      );
+      if (namespace) {
+        return this.#findNamespaceInTree(namespace, rest);
+      }
+    }
+
+    return (
+      tree.childrenNamespaces.find((ns) => ns.name === namespaceName) ?? null
+    );
+  }
+
   #findClassInTree(tree: Namespace, className: string): NamespaceClass | null {
+    // Management of qualified names
+    if (className.includes(".")) {
+      const parts = className.split(".");
+      const namespaceName = parts.slice(0, -1).join(".");
+      const simpleClassName = parts[parts.length - 1];
+
+      const namespace = this.#findNamespaceInTree(tree, namespaceName);
+      if (namespace) {
+        return (
+          namespace.classes.find((cls) => cls.name === simpleClassName) ?? null
+        );
+      } else {
+        // In case the qualifier is actually not a namespace but a class
+        // Check OuterInnerClass in the tests.
+        return this.#findClassInTree(tree, namespaceName);
+      }
+    }
     if (tree.classes.some((cls) => cls.name === className)) {
       return tree.classes.find((cls) => cls.name === className) ?? null;
     }
@@ -157,10 +211,13 @@ export class CSharpPlugin {
         ((object_creation_expression
           type: (identifier) @classname
         ))
-        ((using_directive
-          (qualified_name
-              name: (identifier) @classname
-        )))
+        (variable_declaration
+          type: (identifier) @classname
+        )
+        (qualified_name
+          qualifier: (identifier)
+          name: (identifier)
+        ) @qual_name
       `,
     )
       .captures(node)
@@ -176,9 +233,14 @@ export class CSharpPlugin {
   }
 
   getUsedFilesFromFile(namespaceTree: Namespace, file: File): NamespaceClass[] {
-    return this.#getCalledClasses(file.rootNode, namespaceTree).filter(
-      (cls) => cls.filepath !== "",
-    );
+    return this.#getCalledClasses(file.rootNode, namespaceTree)
+      .filter((cls) => cls.filepath !== "")
+      .filter(
+        (cls, index, self) =>
+          self.findIndex(
+            (c) => c.name === cls.name && c.namespace === cls.namespace,
+          ) === index,
+      );
   }
 
   getUsedFilesFromContent(

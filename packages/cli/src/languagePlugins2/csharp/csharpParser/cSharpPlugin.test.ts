@@ -6,6 +6,7 @@ import { File } from "./types";
 describe("CSharpPlugin", () => {
   const files: Map<string, File> = getCSharpFilesMap();
   const plugin: CSharpPlugin = new CSharpPlugin(files);
+  const programcs: File = files.get("Program.cs") as File;
 
   test("2Namespaces1File.cs", () => {
     const file = files.get("2Namespaces1File.cs") as File;
@@ -113,6 +114,54 @@ describe("CSharpPlugin", () => {
             childrenNamespaces: [],
           },
         ],
+      },
+    ]);
+  });
+  test("Import resolver", () => {
+    const usedFiles = plugin.getUsedFilesFromFile(
+      plugin.buildNamespaceTree(),
+      programcs,
+    );
+    expect(usedFiles).toMatchObject([
+      {
+        name: "Bun",
+        filepath: "2Namespaces1File.cs",
+        namespace: "BeefBurger",
+      },
+      {
+        name: "Bun",
+        filepath: "2Namespaces1File.cs",
+        namespace: "ChickenBurger",
+      },
+      {
+        name: "MyClass",
+        filepath: "Namespaced.cs",
+        namespace: "MyNamespace",
+      },
+      {
+        name: "Gordon",
+        filepath: "SemiNamespaced.cs",
+        namespace: "HalfNamespace",
+      },
+      {
+        name: "Freeman",
+        filepath: "SemiNamespaced.cs",
+        namespace: "",
+      },
+      {
+        name: "OuterClass",
+        filepath: "Nested.cs",
+        namespace: "OuterNamespace",
+      },
+      {
+        name: "InnerClass",
+        filepath: "Nested.cs",
+        namespace: "InnerNamespace",
+      },
+      {
+        name: "OrderStatus",
+        filepath: "Models.cs",
+        namespace: "",
       },
     ]);
   });

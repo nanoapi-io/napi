@@ -7,6 +7,7 @@ export interface File {
 
 export interface NamespaceClass {
   name: string;
+  namespace?: string;
   filepath: string;
 }
 
