@@ -2,7 +2,7 @@ import yargs from "yargs";
 import { globalOptions } from "../../helpers/options";
 import { getConfigFromWorkDir } from "../../../config/localConfig";
 import { globSync } from "glob";
-import { PythonAuditManifesto } from "../../../languagePlugins2/python/auditManifesto";
+import { PythonAuditManifesto } from "../../../languagePlugins/python/auditManifesto";
 
 async function handler(
   argv: yargs.ArgumentsCamelCase<

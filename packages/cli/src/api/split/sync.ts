@@ -4,7 +4,7 @@ import DependencyTreeManager from "../../dependencyManager/dependencyManager";
 import AnnotationManager, {
   CannotParseAnnotationError,
 } from "../../annotationManager";
-import { getLanguagePlugin } from "../../languagesPlugins";
+import { getLanguagePlugin } from "../../legacyLanguagesPlugins";
 import { replaceIndexesFromSourceCode } from "../../helpers/file";
 import { localConfigSchema } from "../../config/localConfig";
 import path from "path";

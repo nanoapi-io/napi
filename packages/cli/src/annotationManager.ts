@@ -1,5 +1,5 @@
 import { Group } from "./dependencyManager/types";
-import { LanguagePlugin } from "./languagesPlugins/types";
+import { LanguagePlugin } from "./legacyLanguagesPlugins/types";
 
 export class CannotParseAnnotationError extends Error {
   constructor() {

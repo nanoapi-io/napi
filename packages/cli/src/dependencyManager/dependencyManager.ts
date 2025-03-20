@@ -2,7 +2,7 @@ import fs from "fs";
 
 import { DependencyTree, Group, Endpoint } from "./types";
 import AnnotationManager from "../annotationManager";
-import { getLanguagePlugin } from "../languagesPlugins";
+import { getLanguagePlugin } from "../legacyLanguagesPlugins";
 import { File } from "../splitRunner/types";
 import path from "path";
 
