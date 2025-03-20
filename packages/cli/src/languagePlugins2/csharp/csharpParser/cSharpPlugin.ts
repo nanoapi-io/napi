@@ -123,7 +123,8 @@ export class CSharpPlugin {
       this.addNamespaceToTree(namespace, namespaceTree);
     });
 
-    return namespaceTree;
+    // I don't understand why, but the first element is always empty
+    return namespaceTree.childrenNamespaces[0];
   }
 
   #findClassInTree(tree: Namespace, className: string): NamespaceClass | null {
