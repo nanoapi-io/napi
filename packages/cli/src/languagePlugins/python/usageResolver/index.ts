@@ -57,6 +57,28 @@ export class PythonUsageResolver {
   }
 
   /**
+   * Checks if the given node is inside (contained within) any node in nodesToExclude.
+   *
+   * @param node The AST node to check.
+   * @param nodesToExclude The nodes that exclude usage (e.g., import statements).
+   * @returns True if `node` is inside any excluded node, false otherwise.
+   */
+  private isNodeInsideAnyExclude(
+    node: Parser.SyntaxNode,
+    nodesToExclude: Parser.SyntaxNode[],
+  ): boolean {
+    if (nodesToExclude.length === 0) {
+      return false;
+    }
+    return nodesToExclude.some((excludeNode) => {
+      return (
+        node.startIndex >= excludeNode.startIndex &&
+        node.endIndex <= excludeNode.endIndex
+      );
+    });
+  }
+
+  /**
    * Searches for the usage of a specific symbol in the AST,
    * while ignoring nodes (like import statements) provided in nodesToExclude.
    *
@@ -82,14 +104,11 @@ export class PythonUsageResolver {
 
     const captures = query.captures(targetNode);
     for (const { node } of captures) {
-      // Skip nodes that fall inside excluded regions (e.g. import statements)
-      for (const nodeToExclude of nodesToExclude) {
-        if (
-          node.startIndex >= nodeToExclude.startIndex &&
-          node.endIndex <= nodeToExclude.endIndex
-        ) {
-          continue;
-        }
+      const isInsideNodesToExclude = this.isNodeInsideAnyExclude(
+        node,
+        nodesToExclude,
+      );
+      if (!isInsideNodesToExclude) {
         // Use module.filePath or module.fullName as the key.
         const key = module.filePath || module.fullName;
         const result = results.get(key);
@@ -151,20 +170,11 @@ export class PythonUsageResolver {
 
     const captures = query.captures(targetNode);
     for (let { node } of captures) {
-      let foundMatchOutsideExcludedNodes = false;
-      for (const nodeToExclude of nodesToExclude) {
-        if (
-          node.startIndex >= nodeToExclude.startIndex &&
-          node.endIndex <= nodeToExclude.endIndex
-        ) {
-          continue;
-        } else {
-          foundMatchOutsideExcludedNodes = true;
-          break;
-        }
-      }
-
-      if (foundMatchOutsideExcludedNodes || nodesToExclude.length === 0) {
+      const isInsideNodesToExclude = this.isNodeInsideAnyExclude(
+        node,
+        nodesToExclude,
+      );
+      if (!isInsideNodesToExclude) {
         // Climb up the AST to capture the full attribute chain (e.g. "module.submodule.bar").
         while (node.parent && node.parent.type === "attribute") {
           node = node.parent;
@@ -311,19 +321,11 @@ export class PythonUsageResolver {
 
     const captures = query.captures(targetNode);
     for (const { node } of captures) {
-      let foundMatchOutsideExcludedNodes = false;
-      for (const nodeToExclude of nodesToExclude) {
-        if (
-          node.startIndex >= nodeToExclude.startIndex &&
-          node.endIndex <= nodeToExclude.endIndex
-        ) {
-          continue;
-        } else {
-          foundMatchOutsideExcludedNodes = true;
-          break;
-        }
-      }
-      if (foundMatchOutsideExcludedNodes || nodesToExclude.length === 0) {
+      const isInsideNodesToExclude = this.isNodeInsideAnyExclude(
+        node,
+        nodesToExclude,
+      );
+      if (!isInsideNodesToExclude) {
         return true;
       }
     }

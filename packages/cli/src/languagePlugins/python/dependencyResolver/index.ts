@@ -18,22 +18,24 @@ export interface ModuleDependency {
  * Contains file-level dependencies and per-exported-symbol dependencies.
  */
 export interface FileDependencies {
+  // The path to the analyzed file.
   filePath: string;
+  // The number of characters in the file.
+  characterCount: number;
+  // The number of lines in the file.
+  lineCount: number;
   // Map of module dependencies detected at the file level.
-  fileDependencies: Map<string, ModuleDependency>;
+  dependencies: Map<string, ModuleDependency>;
   // Array of dependencies specific to each exported symbol.
   symbols: {
     id: string;
+    characterCount: number;
+    lineCount: number;
     type: string;
     // Dependencies detected within the exported symbol's AST subtree.
-    fileDependencies: Map<string, ModuleDependency>;
+    dependencies: Map<string, ModuleDependency>;
   }[];
 }
-
-/**
- * A mapping from file paths to their dependency information.
- */
-export type ProjectDependencyManifesto = Map<string, FileDependencies>;
 
 /**
  * PythonDependencyResolver analyzes a Python file's AST to build a dependency manifesto.
@@ -81,10 +83,10 @@ export class PythonDependencyResolver {
     const query = new Parser.Query(
       this.parser.getLanguage(),
       `
-      [
+      ([
         (import_from_statement) @imp
         (import_statement) @imp
-      ]
+      ])
       `,
     );
     const captures = query.captures(targetNode);
@@ -231,27 +233,39 @@ export class PythonDependencyResolver {
       this.importResolver.getImportStatements(filePath);
 
     // Compute file-level dependencies using the file's root AST node.
-    const fileDependencies = this.getTargetNodeDependencies(
+    const dependencies = this.getTargetNodeDependencies(
       file.rootNode,
       importedStatements,
     );
 
+    const characterCount = file.rootNode.endIndex - file.rootNode.startIndex;
+    const lineCount =
+      file.rootNode.endPosition.row - file.rootNode.startPosition.row + 1;
+
     const fileDependencyManifesto: FileDependencies = {
       filePath,
-      fileDependencies,
+      characterCount,
+      lineCount,
+      dependencies,
       symbols: [],
     };
 
     // For each exported symbol, compute its dependencies using the symbol's AST subtree.
     exportedSymbols.forEach((symbol) => {
-      const symDeps = this.getTargetNodeDependencies(
+      const symDependencies = this.getTargetNodeDependencies(
         symbol.node,
         importedStatements,
       );
+      const symbolCharacterCount =
+        symbol.node.endIndex - symbol.node.startIndex;
+      const symbolLineCount =
+        symbol.node.endPosition.row - symbol.node.startPosition.row + 1;
       fileDependencyManifesto.symbols.push({
         id: symbol.id,
+        characterCount: symbolCharacterCount,
+        lineCount: symbolLineCount,
         type: symbol.type,
-        fileDependencies: symDeps,
+        dependencies: symDependencies,
       });
     });
 

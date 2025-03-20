@@ -1,8 +1,7 @@
 import yargs from "yargs";
 import { globalOptions } from "../../helpers/options";
 import { getConfigFromWorkDir } from "../../../config/localConfig";
-import { globSync } from "glob";
-import { PythonAuditManifesto } from "../../../languagePlugins/python/auditManifesto";
+import { generateAuditResponse } from "../../../api/audit/service";
 
 async function handler(
   argv: yargs.ArgumentsCamelCase<
@@ -18,18 +17,10 @@ async function handler(
     return;
   }
 
-  const filePaths = globSync(napiConfig.audit?.include || ["**"], {
-    cwd: argv.workdir,
-    nodir: true,
-    ignore: napiConfig.audit?.exclude || [],
-  });
+  const response = generateAuditResponse(argv.workdir, napiConfig);
 
-  const pythonAuditManifesto = new PythonAuditManifesto(
-    argv.workdir,
-    filePaths,
-  );
+  console.log(JSON.stringify(response.dependencyManifesto, null, 2));
 
-  pythonAuditManifesto.run();
   console.timeEnd("run");
 }
 
