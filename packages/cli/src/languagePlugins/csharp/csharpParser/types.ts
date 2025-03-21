@@ -7,6 +7,7 @@ export interface File {
 
 export interface NamespaceClass {
   name: string;
+  node: Parser.SyntaxNode;
   namespace?: string;
   filepath: string;
 }

@@ -82,6 +82,7 @@ export class CSharpPlugin {
         // Missing interface_declaration, idk if it's needed
         .map((child) => ({
           name: this.#getName(child),
+          node: child,
           filepath: this.#currentFile,
         }))
     );
@@ -247,6 +248,7 @@ export class CSharpPlugin {
         return (
           this.#findClassInTree(namespaceTree, className) ?? {
             name: className,
+            node: capture.node, // Inaccurate, here for placeholder.
             filepath: "",
           }
         );
