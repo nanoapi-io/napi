@@ -3,6 +3,7 @@
   "out": "napi_dist",
   "openaiApiKeyFilePath": "../../.OPENAIKEY",
   "audit": {
+    "language": "python",
     "include": ["app.py", "api/**"],
     "exclude": [],
     "targetMaxCharInFile": 5000,

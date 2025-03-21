@@ -139,9 +139,9 @@ describe("PythonExportResolver", () => {
     const filePath = "project/module.py";
     const cacheKey = `${filePath}|symbols`;
 
-    expect(resolver["exportedSymbolCache"].has(cacheKey)).toBe(false);
+    expect(resolver["cache"].has(cacheKey)).toBe(false);
     const symbolsFirstCall = resolver.getSymbols(filePath);
-    expect(resolver["exportedSymbolCache"].has(cacheKey)).toBe(true);
+    expect(resolver["cache"].has(cacheKey)).toBe(true);
 
     const symbolsSecondCall = resolver.getSymbols(filePath);
     expect(symbolsSecondCall).toBe(symbolsFirstCall);

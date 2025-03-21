@@ -1,5 +1,5 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
-import { AuditMap } from "../../../service/api/types";
+import { AuditResponse } from "../../../service/api/auditApi/types";
 import tailwindConfig from "../../../../tailwind.config";
 
 export interface NodeElementDefinition extends ElementDefinition {
@@ -32,11 +32,14 @@ export interface EdgeElementDefinition extends ElementDefinition {
   };
 }
 
-export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
+export function getCyElements(
+  auditResponse: AuditResponse,
+  currentFilePath: string,
+) {
   const joinChar = "|";
 
-  const auditFile = auditMap[currentFilePath];
-  if (!auditFile) {
+  const currentFile = auditResponse.dependencyManifesto[currentFilePath];
+  if (!currentFile) {
     throw new Error(`File not found in audit map: ${currentFilePath}`);
   }
 
@@ -56,17 +59,19 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
   const y = 0;
 
   // Current file
-  const currentFileId = auditFile.id;
+  const currentFileId = currentFile.id;
   const errorMessages: string[] = [];
   const warningMessages: string[] = [];
 
-  Object.values(auditFile.auditResults).forEach((auditResult) => {
-    if (auditResult.result === "error") {
-      errorMessages.push(auditResult.message.long);
-    } else if (auditResult.result === "warning") {
-      warningMessages.push(auditResult.message.long);
-    }
-  });
+  const fileAuditManifesto = auditResponse.auditManifesto[currentFile.id];
+  if (fileAuditManifesto) {
+    Object.values(fileAuditManifesto.errors).forEach((auditMessage) => {
+      errorMessages.push(auditMessage.shortMessage);
+    });
+    Object.values(fileAuditManifesto.warnings).forEach((auditMessage) => {
+      warningMessages.push(auditMessage.shortMessage);
+    });
+  }
 
   const label = getNodeLabel({
     isExpanded: false,
@@ -95,20 +100,24 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
   };
   nodeMap[currentFileId] = { element: currentFileElement, children: {} };
 
-  Object.values(auditFile.instances).forEach((instance) => {
+  Object.values(currentFile.symbols).forEach((currentSymbol) => {
     // Current instances
-    const currentInstanceId = `${currentFileId}${joinChar}${instance.id}`;
+    const currentSymbolId = `${currentFileId}${joinChar}${currentSymbol.id}`;
 
     const errorMessages: string[] = [];
     const warningMessages: string[] = [];
 
-    Object.values(instance.auditResults).forEach((auditResult) => {
-      if (auditResult.result === "error") {
-        errorMessages.push(auditResult.message.long);
-      } else if (auditResult.result === "warning") {
-        warningMessages.push(auditResult.message.long);
+    if (fileAuditManifesto) {
+      const symbolAuditManifesto = fileAuditManifesto.symbols[currentSymbol.id];
+      if (symbolAuditManifesto) {
+        Object.values(symbolAuditManifesto.errors).forEach((auditMessage) => {
+          errorMessages.push(auditMessage.shortMessage);
+        });
+        Object.values(symbolAuditManifesto.warnings).forEach((auditMessage) => {
+          warningMessages.push(auditMessage.shortMessage);
+        });
       }
-    });
+    }
 
     const label = getNodeLabel({
       isExpanded: false,
@@ -116,8 +125,8 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
       type: "instance",
       fileName: currentFileId,
       instance: {
-        name: instance.id,
-        type: instance.type,
+        name: currentSymbol.id,
+        type: currentSymbol.type,
       },
       errorMessages,
       warningMessages,
@@ -125,7 +134,7 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
 
     const instanceElement: NodeElementDefinition = {
       data: {
-        id: currentInstanceId,
+        id: currentSymbolId,
         label,
         position: { x, y },
         isExpanded: false,
@@ -136,23 +145,23 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
         customData: {
           fileName: currentFileId,
           instance: {
-            name: instance.id,
-            type: instance.type,
+            name: currentSymbol.id,
+            type: currentSymbol.type,
           },
           errorMessages,
           warningMessages,
         },
       },
     };
-    nodeMap[currentFileId].children[currentInstanceId] = {
+    nodeMap[currentFileId].children[currentSymbolId] = {
       element: instanceElement,
       children: {},
     };
 
     // Dependencies
-    Object.values(instance.dependenciesMap).forEach((dependencyFile) => {
+    Object.values(currentSymbol.dependencies).forEach((dependencyFile) => {
       // Dependency file
-      const dependencyFileId = dependencyFile.fileId;
+      const dependencyFileId = dependencyFile.id;
 
       const label = getNodeLabel({
         isExpanded: false,
@@ -187,72 +196,72 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
       }
 
       // Dependency instances
-      Object.values(dependencyFile.instanceIds).forEach(
-        (dependencyInstanceId) => {
-          const id = `${dependencyFileId}${joinChar}${dependencyInstanceId}`;
-          const instanceType =
-            auditMap[dependencyFileId]?.instances[dependencyInstanceId]?.type;
+      Object.values(dependencyFile.symbols).forEach((dependencySymbolId) => {
+        const id = `${dependencyFileId}${joinChar}${dependencySymbolId}`;
+        const instanceType =
+          auditResponse.dependencyManifesto[dependencyFileId]?.symbols[
+            dependencySymbolId
+          ]?.type;
 
-          const label = getNodeLabel({
+        const label = getNodeLabel({
+          isExpanded: false,
+          isExternal: dependencyFile.isExternal,
+          type: "instance",
+          fileName: dependencyFileId,
+          instance: {
+            name: dependencySymbolId,
+            type: instanceType,
+          },
+          errorMessages: [],
+          warningMessages: [],
+        });
+
+        const dependencyInstanceElement: NodeElementDefinition = {
+          data: {
+            id,
+            label,
+            position: { x, y },
             isExpanded: false,
-            isExternal: dependencyFile.isExternal,
             type: "instance",
-            fileName: dependencyFileId,
-            instance: {
-              name: dependencyInstanceId,
-              type: instanceType,
-            },
-            errorMessages: [],
-            warningMessages: [],
-          });
-
-          const dependencyInstanceElement: NodeElementDefinition = {
-            data: {
-              id,
-              label,
-              position: { x, y },
-              isExpanded: false,
-              type: "instance",
-              isCurrentFile: false,
-              isExternal: dependencyFile.isExternal,
-              parent: dependencyFileId,
-              customData: {
-                fileName: dependencyFileId,
-                instance: {
-                  name: dependencyInstanceId,
-                  type: instanceType, // TODO: update when
-                },
-                errorMessages: [],
-                warningMessages: [],
+            isCurrentFile: false,
+            isExternal: dependencyFile.isExternal,
+            parent: dependencyFileId,
+            customData: {
+              fileName: dependencyFileId,
+              instance: {
+                name: dependencySymbolId,
+                type: instanceType,
               },
+              errorMessages: [],
+              warningMessages: [],
             },
-          };
-          nodeMap[dependencyFileId].children[dependencyInstanceId] = {
-            element: dependencyInstanceElement,
-            children: {},
-          };
+          },
+        };
+        nodeMap[dependencyFileId].children[dependencySymbolId] = {
+          element: dependencyInstanceElement,
+          children: {},
+        };
 
-          // Edges
-          const edgeElement: EdgeElementDefinition = {
-            data: {
-              source: id,
-              target: currentInstanceId,
-              type: "dependency",
-            },
-          };
-          edges.push(edgeElement);
-        },
-      );
+        // Edges
+        const edgeElement: EdgeElementDefinition = {
+          data: {
+            source: id,
+            target: currentSymbolId,
+            type: "dependency",
+          },
+        };
+        edges.push(edgeElement);
+      });
     });
 
     // Dependents
-    Object.values(instance.dependentsMap).forEach((dependentFile) => {
+    Object.values(currentSymbol.dependents).forEach((dependentFile) => {
       // Dependent file
-      const dependentFileId = dependentFile.fileId;
+      const dependentFileId = dependentFile.id;
 
       const label = getNodeLabel({
         isExpanded: false,
-        isExternal: dependentFile.isExternal,
+        isExternal: false,
         type: "file",
         fileName: dependentFileId,
         errorMessages: [],
@@ -267,7 +276,7 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
           isExpanded: false,
           type: "file",
           isCurrentFile: false,
-          isExternal: dependentFile.isExternal,
+          isExternal: false,
           customData: {
             fileName: dependentFileId,
             errorMessages: [],
@@ -288,12 +297,12 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
         return;
       }
 
-      const dependentInstanceIds = Object.values(dependentFile.instanceIds);
-      if (dependentInstanceIds.length === 0) {
+      const dependentFileSymbolIds = Object.values(dependentFile.symbols);
+      if (dependentFileId.length === 0) {
         // Dependent file has no instances, create edge to file
         const edgeElement: EdgeElementDefinition = {
           data: {
-            source: currentInstanceId,
+            source: currentSymbolId,
             target: dependentFileId,
             type: "dependent",
           },
@@ -301,18 +310,20 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
         edges.push(edgeElement);
       } else {
         // Dependent instances
-        dependentInstanceIds.forEach((dependentInstanceId) => {
-          const id = `${dependentFileId}${joinChar}${dependentInstanceId}`;
+        dependentFileSymbolIds.forEach((dependentFileSymbolId) => {
+          const id = `${dependentFileId}${joinChar}${dependentFileSymbolId}`;
           const instanceType =
-            auditMap[dependentFileId].instances[dependentInstanceId].type;
+            auditResponse.dependencyManifesto[dependentFileId]?.symbols[
+              dependentFileSymbolId
+            ]?.type;
 
           const label = getNodeLabel({
             isExpanded: false,
-            isExternal: dependentFile.isExternal,
+            isExternal: false,
             type: "instance",
             fileName: dependentFileId,
             instance: {
-              name: dependentInstanceId,
+              name: dependentFileSymbolId,
               type: instanceType,
             },
             errorMessages: [],
@@ -327,12 +338,12 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
               isExpanded: false,
               type: "instance",
               isCurrentFile: false,
-              isExternal: dependentFile.isExternal,
+              isExternal: false,
               parent: dependentFileId,
               customData: {
                 fileName: dependentFileId,
                 instance: {
-                  name: dependentInstanceId,
+                  name: dependentFileSymbolId,
                   type: instanceType,
                 },
                 errorMessages: [],
@@ -340,7 +351,7 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
               },
             },
           };
-          nodeMap[dependentFileId].children[dependentInstanceId] = {
+          nodeMap[dependentFileId].children[dependentFileSymbolId] = {
             element: dependentInstanceElement,
             children: {},
           };
@@ -348,7 +359,7 @@ export function getCyElements(auditMap: AuditMap, currentFilePath: string) {
           // Edges
           const edgeElement: EdgeElementDefinition = {
             data: {
-              source: currentInstanceId,
+              source: currentSymbolId,
               target: id,
               type: "dependent",
             },

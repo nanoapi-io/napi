@@ -1,6 +1,6 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config";
-import { AuditMap } from "../../../service/api/types";
+import { AuditResponse } from "../../../service/api/auditApi/types";
 
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
@@ -23,7 +23,7 @@ export interface EdgeElementDefinition extends ElementDefinition {
   };
 }
 
-export function getCyElements(auditMap: AuditMap) {
+export function getCyElements(auditResponse: AuditResponse) {
   const nodes: NodeElementDefinition[] = [];
   const edges: EdgeElementDefinition[] = [];
 
@@ -32,33 +32,35 @@ export function getCyElements(auditMap: AuditMap) {
   const x = 0;
   const y = 0;
 
-  Object.values(auditMap).forEach((auditFile) => {
+  Object.values(auditResponse.dependencyManifesto).forEach((fileManifesto) => {
     const errorMessages: string[] = [];
     const warningMessages: string[] = [];
 
-    Object.values(auditFile.auditResults).forEach((auditResult) => {
-      if (auditResult.result === "error") {
-        errorMessages.push(auditResult.message.short);
-      } else if (auditResult.result === "warning") {
-        warningMessages.push(auditResult.message.short);
-      }
-    });
+    const fileAuditManifesto = auditResponse.auditManifesto[fileManifesto.id];
+    if (fileAuditManifesto) {
+      Object.values(fileAuditManifesto.errors).forEach((auditMessage) => {
+        errorMessages.push(auditMessage.shortMessage);
+      });
+      Object.values(fileAuditManifesto.warnings).forEach((auditMessage) => {
+        warningMessages.push(auditMessage.shortMessage);
+      });
+    }
 
     const label = getNodeLabel({
       isExpanded: false,
-      fileName: auditFile.id,
+      fileName: fileManifesto.id,
       errorMessages,
       warningMessages,
     });
 
     const nodeElement: NodeElementDefinition = {
       data: {
-        id: auditFile.id,
+        id: fileManifesto.id,
         label,
         position: { x, y },
         isExpanded: false,
         customData: {
-          fileName: auditFile.id,
+          fileName: fileManifesto.id,
           errorMessages,
           warningMessages,
         },
@@ -68,14 +70,14 @@ export function getCyElements(auditMap: AuditMap) {
     nodes.push(nodeElement);
 
     const edgeElements: EdgeElementDefinition[] = [];
-    Object.values(auditFile.dependenciesMap).forEach((dependency) => {
+    Object.values(fileManifesto.dependencies).forEach((dependency) => {
       if (dependency.isExternal) {
         return;
       }
       const edgeElement: EdgeElementDefinition = {
         data: {
-          source: auditFile.id,
-          target: dependency.fileId,
+          source: fileManifesto.id,
+          target: dependency.id,
         },
       };
       edgeElements.push(edgeElement);
@@ -122,11 +124,9 @@ export function getCyStyle(theme: "light" | "dark") {
 export function getCyLayout(animate = true) {
   return {
     name: "cose-bilkent",
-    quality: "proof",
+    quality: "draft",
     animate: animate ? "end" : false,
-    idealEdgeLength: 75,
-    tilingPaddingVertical: 100,
-    tilingPaddingHorizontal: 100,
+    idealEdgeLength: 1000,
   };
 }
 

@@ -1,0 +1,79 @@
+import z from "zod";
+import { localConfigSchema } from "../../config/localConfig";
+import { globSync } from "glob";
+import { generateDependencyManifesto } from "../../manifestos/dependencyManifesto";
+import { readFileSync } from "fs";
+import { join } from "path";
+import Parser from "tree-sitter";
+import { pythonParser } from "../../helpers/treeSitter/parsers";
+import { generateAuditManifesto } from "../../manifestos/auditManifesto";
+
+export function generateAuditResponse(
+  workDir: string,
+  napiConfig: z.infer<typeof localConfigSchema>,
+) {
+  const supportedLanguages = {
+    ["python" as string]: {
+      parser: pythonParser,
+      validExtensions: [".py"],
+    },
+  };
+
+  const supportedLanguage = supportedLanguages[napiConfig.audit.language];
+  if (!supportedLanguages) {
+    throw new Error(
+      `
+      Unsupported language: ${napiConfig.audit.language}.
+      List of supported languages: ${Object.keys(supportedLanguages).join(", ")}
+      Set one of the supported languages in your .napirc file (audit.language).
+      `,
+    );
+  }
+
+  const parser = supportedLanguage.parser;
+  const validExtensions = supportedLanguage.validExtensions;
+
+  const filePaths = globSync(napiConfig.audit?.include || ["**"], {
+    cwd: workDir,
+    nodir: true,
+    ignore: napiConfig.audit?.exclude || [],
+  });
+
+  const files = new Map<
+    string,
+    { path: string; rootNode: Parser.SyntaxNode }
+  >();
+  filePaths.forEach((filePath) => {
+    const extension = filePath.split(".").pop();
+    if (!extension || !validExtensions.includes(`.${extension}`)) {
+      return;
+    }
+    let fileContent: string;
+    try {
+      const fullPath = join(workDir, filePath);
+      fileContent = readFileSync(fullPath, "utf-8");
+    } catch (e) {
+      console.error(`Error reading ${filePath}, skipping`);
+      console.error(e);
+      return;
+    }
+    try {
+      const rootNode = parser.parse(fileContent, undefined, {
+        bufferSize: fileContent.length + 10,
+      }).rootNode;
+      files.set(filePath, { path: filePath, rootNode });
+    } catch (e) {
+      console.error(`Error parsing ${filePath}, skipping`);
+      console.error(e);
+    }
+  });
+
+  const dependencyManifesto = generateDependencyManifesto(files, parser);
+
+  const auditManifesto = generateAuditManifesto(dependencyManifesto);
+
+  return {
+    dependencyManifesto,
+    auditManifesto,
+  };
+}

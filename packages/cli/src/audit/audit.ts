@@ -13,13 +13,13 @@ import {
   auditAnalysisResultWarning,
   AuditResult,
 } from "./types";
-import { getLanguagePlugin } from "../languagesPlugins";
-import UnknownPlugin from "../languagesPlugins/unknown";
+import { getLanguagePlugin } from "../legacyLanguagesPlugins";
+import UnknownPlugin from "../legacyLanguagesPlugins/unknown";
 import {
   DepExport,
   DepImport,
   LanguagePlugin,
-} from "../languagesPlugins/types";
+} from "../legacyLanguagesPlugins/types";
 import Parser from "tree-sitter";
 
 export class Audit {

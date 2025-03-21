@@ -1,7 +1,7 @@
 import fs from "fs";
 import DependencyTreeManager from "../../../dependencyManager/dependencyManager";
 import OpenAI from "openai";
-import { getLanguagePlugin } from "../../../languagesPlugins";
+import { getLanguagePlugin } from "../../../legacyLanguagesPlugins";
 import { File } from "../../../splitRunner/types";
 import { removeIndexesFromSourceCode } from "../../../helpers/file";
 import prompts from "prompts";

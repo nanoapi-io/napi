@@ -2,7 +2,6 @@ import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
-import { AuditMap } from "../../service/api/types";
 
 interface TreeData {
   id: string;
@@ -13,23 +12,23 @@ interface TreeData {
 
 export default function FileExplorer(props: {
   busy: boolean;
-  auditMap: AuditMap;
+  paths: string[];
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
-  function buildTreeData(auditMap: AuditMap): TreeData[] {
+  function buildTreeData(paths: string[]): TreeData[] {
     let rootNodes: TreeData[] = [];
 
-    Object.values(auditMap).forEach((file) => {
+    paths.forEach((path) => {
       // Filter out files that don't match the search
-      if (!file.path.toLowerCase().includes(search.toLowerCase())) {
+      if (!path.toLowerCase().includes(search.toLowerCase())) {
         return;
       }
 
       // Split path by '/' to get each directory/file name
-      const parts = file.path.split("/");
+      const parts = path.split("/");
 
       let currentLevel = rootNodes;
       let cumulativePath = "";
@@ -109,8 +108,8 @@ export default function FileExplorer(props: {
   }
 
   useEffect(() => {
-    setTreeData(buildTreeData(props.auditMap));
-  }, [props.auditMap, search]);
+    setTreeData(buildTreeData(props.paths));
+  }, [props.paths, search]);
 
   return (
     <div className="h-full flex flex-col">
