@@ -14,7 +14,7 @@ export default function FileExplorer(props: {
   busy: boolean;
   paths: string[];
 }) {
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
@@ -194,7 +194,7 @@ function ListElement(props: { nodes: TreeData[] }) {
 function NodeElement(props: { node: TreeData }) {
   const params = useParams<{ file?: string }>();
 
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleToggle = () => {
     setIsOpen((value) => !value);
