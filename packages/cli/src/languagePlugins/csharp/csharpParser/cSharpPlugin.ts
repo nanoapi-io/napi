@@ -20,12 +20,6 @@ export class CSharpPlugin {
     return this.#getNamespacesFromRootNode(file.rootNode);
   }
 
-  getNamespacesFromContent(file: string): Namespace[] {
-    const tree = this.parser.parse(file);
-    this.#currentFile = "";
-    return this.#getNamespacesFromRootNode(tree.rootNode);
-  }
-
   #getNamespacesFromRootNode(node: Parser.SyntaxNode): Namespace[] {
     return [
       {
@@ -84,7 +78,7 @@ export class CSharpPlugin {
     );
   }
 
-  addNamespaceToTree(namespace: Namespace, tree: Namespace) {
+  #addNamespaceToTree(namespace: Namespace, tree: Namespace) {
     const parts = namespace.name.split(".");
     let current = tree;
 
@@ -133,7 +127,7 @@ export class CSharpPlugin {
     });
 
     this.#namespaces.forEach((namespace) => {
-      this.addNamespaceToTree(namespace, namespaceTree);
+      this.#addNamespaceToTree(namespace, namespaceTree);
     });
 
     this.#assignNamespacesToClasses(namespaceTree);
@@ -241,15 +235,5 @@ export class CSharpPlugin {
             (c) => c.name === cls.name && c.namespace === cls.namespace,
           ) === index,
       );
-  }
-
-  getUsedFilesFromContent(
-    namespaceTree: Namespace,
-    file: string,
-  ): NamespaceClass[] {
-    const tree = this.parser.parse(file);
-    return this.#getCalledClasses(tree.rootNode, namespaceTree).filter(
-      (cls) => cls.filepath !== "",
-    );
   }
 }
