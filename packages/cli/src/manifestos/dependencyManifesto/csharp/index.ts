@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { DependencyManifesto, FileManifesto } from "..";
+import { DependencyManifesto, FileManifesto, SymbolType } from "..";
 import { CSharpPlugin } from "../../../languagePlugins/csharp/csharpParser";
 import { Namespace } from "../../../languagePlugins/csharp/csharpParser/types";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
@@ -60,7 +60,7 @@ export function generateCSharpDependencyManifesto(
     const fileManifest: FileManifesto = {
       id: f.path,
       filePath: f.path,
-      characterCount: 0, // TODO: Implement
+      characterCount: f.rootNode.endIndex,
       lineCount: f.rootNode.endPosition.row,
       language: csharpParser.getLanguage().name,
       symbols: {},
@@ -78,9 +78,9 @@ export function generateCSharpDependencyManifesto(
     for (const symbol of fileDependencies) {
       fileManifest.symbols[symbol.name] = {
         id: symbol.name,
-        characterCount: 0, // TODO: Implement
+        characterCount: symbol.node.endIndex - symbol.node.startIndex,
         lineCount: symbol.node.endPosition.row - symbol.node.startPosition.row,
-        type: symbol.type,
+        type: symbol.type as SymbolType,
         dependencies: {},
         dependents: {}, // TODO: Implement
       };
