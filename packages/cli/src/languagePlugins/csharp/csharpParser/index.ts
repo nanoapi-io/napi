@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { File, Namespace, NamespaceClass } from "./types";
+import { File, Namespace, ExportedSymbol } from "./types";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 export class CSharpPlugin {
@@ -70,7 +70,7 @@ export class CSharpPlugin {
   }
 
   // Gets the classes, structs and enums from a node
-  #getClassesFromNode(node: Parser.SyntaxNode): NamespaceClass[] {
+  #getClassesFromNode(node: Parser.SyntaxNode): ExportedSymbol[] {
     return (
       node.children
         .filter(
@@ -82,6 +82,7 @@ export class CSharpPlugin {
         // Missing interface_declaration, idk if it's needed
         .map((child) => ({
           name: this.#getName(child),
+          type: child.type.replace("_declaration", ""),
           node: child,
           filepath: this.#currentFile,
         }))
@@ -182,7 +183,7 @@ export class CSharpPlugin {
     );
   }
 
-  #findClassInTree(tree: Namespace, className: string): NamespaceClass | null {
+  #findClassInTree(tree: Namespace, className: string): ExportedSymbol | null {
     // Management of qualified names
     if (className.includes(".")) {
       const parts = className.split(".");
@@ -221,7 +222,7 @@ export class CSharpPlugin {
   #getCalledClasses(
     node: Parser.SyntaxNode,
     namespaceTree: Namespace,
-  ): NamespaceClass[] {
+  ): ExportedSymbol[] {
     return new Parser.Query(
       this.parser.getLanguage(),
       `
@@ -248,6 +249,7 @@ export class CSharpPlugin {
         return (
           this.#findClassInTree(namespaceTree, className) ?? {
             name: className,
+            type: "class", // Inaccurate, here for placeholder.
             node: capture.node, // Inaccurate, here for placeholder.
             filepath: "",
           }
@@ -259,7 +261,7 @@ export class CSharpPlugin {
   getDependenciesFromFile(
     namespaceTree: Namespace,
     file: File,
-  ): NamespaceClass[] {
+  ): ExportedSymbol[] {
     return this.#getCalledClasses(file.rootNode, namespaceTree)
       .filter((cls) => cls.filepath !== "")
       .filter(
@@ -273,7 +275,7 @@ export class CSharpPlugin {
   getDependenciesFromNode(
     namespaceTree: Namespace,
     node: Parser.SyntaxNode,
-  ): NamespaceClass[] {
+  ): ExportedSymbol[] {
     return this.#getCalledClasses(node, namespaceTree)
       .filter((cls) => cls.filepath !== "")
       .filter(

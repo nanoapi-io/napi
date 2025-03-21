@@ -5,8 +5,9 @@ export interface File {
   rootNode: Parser.SyntaxNode;
 }
 
-export interface NamespaceClass {
+export interface ExportedSymbol {
   name: string;
+  type: string;
   node: Parser.SyntaxNode;
   namespace?: string;
   filepath: string;
@@ -14,6 +15,6 @@ export interface NamespaceClass {
 
 export interface Namespace {
   name: string;
-  classes: NamespaceClass[];
+  classes: ExportedSymbol[];
   childrenNamespaces: Namespace[];
 }
