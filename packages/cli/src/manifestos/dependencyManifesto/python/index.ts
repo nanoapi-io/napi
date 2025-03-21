@@ -52,17 +52,25 @@ function generateDependentsForManifesto(
 export function generatePythonDependencyManifesto(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
 ): DependencyManifesto {
+  console.time("generatePythonDependencyManifesto");
+
   const parser = pythonParser;
 
+  console.time("generatePythonDependencyManifesto:initialization");
+  console.info("Initializing Python export resolver...");
   const exportResolver = new PythonExportResolver(parser, files);
+  console.info("Initializing Python module mapper...");
   const moduleMapper = new PythonModuleMapper(files, exportResolver);
+  console.info("Initializing Python import resolver...");
   const importResolver = new PythonImportResolver(
     parser,
     files,
     moduleMapper,
     exportResolver,
   );
+  console.info("Initializing Python usage resolver...");
   const usageResolver = new PythonUsageResolver(parser);
+  console.info("Initializing Python dependency resolver...");
   const dependencyResolver = new PythonDependencyResolver(
     parser,
     files,
@@ -71,9 +79,15 @@ export function generatePythonDependencyManifesto(
     usageResolver,
   );
 
+  console.timeEnd("generatePythonDependencyManifesto:initialization");
+
+  console.time("generatePythonDependencyManifesto:processing");
+  console.info("Generating Python dependency manifesto...");
   let manifesto: DependencyManifesto = {};
 
+  let i = 0;
   for (const [, { path }] of files) {
+    console.info(`Processing file ${i++}/${files.size}: ${path}`);
     const fileDependencies = dependencyResolver.getFileDependencies(path);
     const fileManifesto: FileManifesto = {
       id: path,
@@ -115,7 +129,19 @@ export function generatePythonDependencyManifesto(
     manifesto[path] = fileManifesto;
   }
 
+  console.info(`Generated Python dependency manifesto for ${files.size} files`);
+
+  console.timeEnd("generatePythonDependencyManifesto:processing");
+
+  console.time("generatePythonDependencyManifesto:dependents");
+  console.info("Generating Python dependents...");
   manifesto = generateDependentsForManifesto(manifesto);
+  console.info("Generated Python dependents");
+  console.timeEnd("generatePythonDependencyManifesto:dependents");
+
+  console.info("Python dependency manifesto generated");
+
+  console.timeEnd("generatePythonDependencyManifesto");
 
   return manifesto;
 }

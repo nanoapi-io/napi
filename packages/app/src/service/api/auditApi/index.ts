@@ -1,7 +1,7 @@
 import { AuditResponse } from "./types";
 
 export async function getAudit() {
-  const response = await fetch("/api/audit/2", {
+  const response = await fetch("/api/audit/", {
     method: "GET",
   });
 

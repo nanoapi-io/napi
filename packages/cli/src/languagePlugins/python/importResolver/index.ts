@@ -326,7 +326,7 @@ export class PythonImportResolver {
           alias: undefined,
           module: undefined,
           isExplicitelyImported: true,
-          symbols: [],
+          symbols,
         });
       } else {
         importStatement.members.forEach((member) => {

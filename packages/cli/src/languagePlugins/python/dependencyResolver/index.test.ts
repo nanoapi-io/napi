@@ -83,7 +83,6 @@ describe("PythonDependencyResolver", () => {
           `).rootNode,
         },
       ],
-
       // A file that imports multiple symbols from the same module, but only uses some.
       [
         "project/app/multiple_symbols_import.py",
@@ -116,7 +115,6 @@ describe("PythonDependencyResolver", () => {
           `).rootNode,
         },
       ],
-
       // A file that uses aliased imports.
       [
         "project/app/aliased_imports.py",
@@ -130,11 +128,8 @@ describe("PythonDependencyResolver", () => {
           `).rootNode,
         },
       ],
-
       // A file that imports and uses an external module.
-      // For demonstration, treat "math" as external; the usage resolver
-      // should detect usage of "sqrt" but can't resolve an internal path,
-      // so it will mark it as isExternal: true.
+      // For demonstration, treat "math" as external.
       [
         "project/app/external_usage.py",
         {
@@ -151,7 +146,6 @@ describe("PythonDependencyResolver", () => {
           `).rootNode,
         },
       ],
-
       // A file that has multiple exports, each using different imports.
       [
         "project/app/multiple_exports.py",
@@ -166,6 +160,19 @@ describe("PythonDependencyResolver", () => {
 
           def export_two():
               submodule.bar()
+          `).rootNode,
+        },
+      ],
+      [
+        "project/app/internal_dependency.py",
+        {
+          path: "project/app/internal_dependency.py",
+          rootNode: parser.parse(`
+          def alpha():
+              beta()
+
+          def beta():
+              alpha()
           `).rootNode,
         },
       ],
@@ -190,10 +197,6 @@ describe("PythonDependencyResolver", () => {
       usageResolver,
     );
   });
-
-  // ------------------------------------------------------------------
-  // Original tests
-  // ------------------------------------------------------------------
 
   test("should resolve file-level dependencies for used submodule", () => {
     const manifesto = dependencyResolver.getFileDependencies(
@@ -232,10 +235,6 @@ describe("PythonDependencyResolver", () => {
     expect(manifesto.dependencies.size).toBe(0);
     expect(manifesto.symbols).toHaveLength(0);
   });
-
-  // ------------------------------------------------------------------
-  // Additional tests
-  // ------------------------------------------------------------------
 
   test("1. multiple imports: only submodule is used", () => {
     const manifesto = dependencyResolver.getFileDependencies(
@@ -396,5 +395,33 @@ describe("PythonDependencyResolver", () => {
     const exportTwoDeps = exportTwo?.dependencies.get("module/submodule.py");
     expect(exportTwoDeps).toBeDefined();
     expect(exportTwoDeps?.symbols.has("bar")).toBe(true);
+  });
+
+  test("6. internal dependencies: exported symbols reference each other", () => {
+    const manifesto = dependencyResolver.getFileDependencies(
+      "project/app/internal_dependency.py",
+    );
+    // Our internal_dependency.py defines two exports: "alpha" and "beta".
+    // They reference each other, so each symbol's dependencies should include the file itself,
+    // with the corresponding other symbol noted.
+    const internalFilePath = "project/app/internal_dependency.py";
+    const alphaDep = manifesto.symbols.find((s) => s.id === "alpha");
+    expect(alphaDep).toBeDefined();
+    const betaDep = manifesto.symbols.find((s) => s.id === "beta");
+    expect(betaDep).toBeDefined();
+
+    // For "alpha", we expect a dependency on "beta"
+    const alphaInternalDep = alphaDep?.dependencies.get(
+      internalFilePath,
+    ) as ModuleDependency;
+    expect(alphaInternalDep).toBeDefined();
+    expect(alphaInternalDep.symbols.has("beta")).toBe(true);
+
+    // For "beta", we expect a dependency on "alpha"
+    const betaInternalDep = betaDep?.dependencies.get(
+      internalFilePath,
+    ) as ModuleDependency;
+    expect(betaInternalDep).toBeDefined();
+    expect(betaInternalDep.symbols.has("alpha")).toBe(true);
   });
 });
