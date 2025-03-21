@@ -682,7 +682,8 @@ class PythonPlugin implements LanguagePlugin {
       indexesToRemove,
     );
 
-    return updatedSourceCode;
+    // Remove trailing whitespace
+    return updatedSourceCode.replaceAll(" \n", "\n");
   }
 }
 
