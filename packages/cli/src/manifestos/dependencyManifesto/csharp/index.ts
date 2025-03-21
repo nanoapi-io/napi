@@ -57,6 +57,8 @@ export function generateCSharpDependencyManifesto(
 
   for (const [, f] of files) {
     const fileDependencies = plugin.getDependenciesFromFile(tree, f);
+    const fileNamespaces = plugin.getNamespacesFromFile(f);
+    const exportedSymbols = plugin.getClassesFromNamespaces(fileNamespaces);
     const fileManifest: FileManifesto = {
       id: f.path,
       filePath: f.path,
@@ -68,30 +70,40 @@ export function generateCSharpDependencyManifesto(
     };
 
     for (const dep of fileDependencies) {
-      fileManifest.dependencies[dep.name] = {
+      const dependencyKey = dep.namespace
+        ? dep.namespace + "." + dep.name
+        : dep.name;
+      fileManifest.dependencies[dependencyKey] = {
         id: dep.filepath,
         isExternal: false,
         symbols: {},
       };
     }
 
-    for (const symbol of fileDependencies) {
+    for (const symbol of exportedSymbols) {
       fileManifest.symbols[symbol.name] = {
         id: symbol.name,
         characterCount: symbol.node.endIndex - symbol.node.startIndex,
         lineCount: symbol.node.endPosition.row - symbol.node.startPosition.row,
         type: symbol.type as SymbolType,
         dependencies: {},
-        dependents: {}, // TODO: Implement
+        dependents: {},
       };
 
       const symbolDep = plugin.getDependenciesFromNode(tree, symbol.node);
       for (const dep of symbolDep) {
-        fileManifest.symbols[symbol.name].dependencies[dep.name] = {
-          id: dep.filepath,
-          isExternal: false,
-          symbols: {},
-        };
+        const depFile = files.get(dep.filepath);
+        if (depFile) {
+          fileManifest.symbols[symbol.name].dependencies[dep.filepath] = {
+            id: dep.filepath,
+            isExternal: false,
+            symbols: Object.fromEntries(
+              plugin
+                .getClassesFromNamespaces(plugin.getNamespacesFromFile(depFile))
+                .map((s) => [s.name, s.name]),
+            ),
+          };
+        }
       }
     }
     manifesto[f.path] = fileManifest;

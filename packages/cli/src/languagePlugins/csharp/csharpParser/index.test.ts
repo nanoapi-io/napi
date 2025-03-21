@@ -156,7 +156,7 @@ describe("CSharpPlugin", () => {
       {
         name: "InnerClass",
         filepath: "Nested.cs",
-        namespace: "InnerNamespace",
+        namespace: "OuterNamespace.InnerNamespace",
       },
       {
         name: "OrderStatus",

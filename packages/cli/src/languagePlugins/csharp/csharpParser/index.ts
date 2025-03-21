@@ -89,6 +89,17 @@ export class CSharpPlugin {
     );
   }
 
+  getClassesFromNamespaces(namespaces: Namespace[]): ExportedSymbol[] {
+    let classes: ExportedSymbol[] = [];
+    namespaces.forEach((ns) => {
+      classes = classes.concat(ns.classes);
+      classes = classes.concat(
+        this.getClassesFromNamespaces(ns.childrenNamespaces),
+      );
+    });
+    return classes;
+  }
+
   // Adds a namespace to the final tree.
   #addNamespaceToTree(namespace: Namespace, tree: Namespace) {
     // Deconstruct the namespace's name, so that A.B
@@ -121,16 +132,17 @@ export class CSharpPlugin {
 
   // Assigns namespaces to classes, used for ambiguity resolution.
   // check 2Namespaces1File.cs for an example.
-  #assignNamespacesToClasses(tree: Namespace) {
+  #assignNamespacesToClasses(tree: Namespace, parentNamespace = "") {
+    const fullNamespace = parentNamespace
+      ? `${parentNamespace}.${tree.name}`
+      : tree.name;
+
     tree.classes.forEach((cls) => {
-      cls.namespace = tree.name;
+      cls.namespace = fullNamespace;
     });
 
     tree.childrenNamespaces.forEach((ns) => {
-      ns.classes.forEach((cls) => {
-        cls.namespace = ns.name;
-      });
-      this.#assignNamespacesToClasses(ns);
+      this.#assignNamespacesToClasses(ns, fullNamespace);
     });
   }
 
