@@ -2,7 +2,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import cytoscape, { Core, EventObjectNode } from "cytoscape";
 import Controls from "../../../components/Cytoscape/Controls";
 import { useOutletContext, useParams, useNavigate } from "react-router";
-import { AuditMap } from "../../../service/api/types";
 import coseBilkent from "cytoscape-cose-bilkent";
 import { ThemeContext } from "../../../contexts/ThemeContext";
 import { resizeNodeFromLabel } from "../../../helpers/cytoscape/sizeAndPosition";
@@ -14,14 +13,12 @@ import {
   getNodeLabel,
 } from "../../../helpers/cytoscape/views/auditFile";
 import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton";
+import { AuditContext } from "../../audit";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
   const params = useParams<{ file: string }>();
-  const context = useOutletContext<{
-    busy: boolean;
-    auditMap: AuditMap;
-  }>();
+  const context = useOutletContext<AuditContext>();
 
   const themeContext = useContext(ThemeContext);
 
@@ -37,7 +34,7 @@ export default function AuditFilePage() {
       setCyInstance(undefined);
     }
 
-    if (Object.values(context.auditMap).length === 0) {
+    if (Object.values(context.auditResponse.dependencyManifesto).length === 0) {
       return;
     }
     if (!params.file) {
@@ -52,7 +49,7 @@ export default function AuditFilePage() {
     const style = getCyStyle(themeContext.theme);
     cy.style(style);
 
-    const elements = getCyElements(context.auditMap, params.file);
+    const elements = getCyElements(context.auditResponse, params.file);
     cy.add(elements);
     cy.nodes().forEach((node) => {
       resizeNodeFromLabel(node, node.data("label"));
@@ -70,7 +67,7 @@ export default function AuditFilePage() {
       cy.destroy();
       setCyInstance(undefined);
     };
-  }, [params.file, context.auditMap]);
+  }, [params.file, context.auditResponse]);
 
   useEffect(() => {
     cyInstance?.style(getCyStyle(themeContext.theme));

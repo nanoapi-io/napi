@@ -11,19 +11,17 @@ export const localConfigSchema = z.object({
       apiKeyFilePath: z.string().optional(),
     })
     .optional(),
-  audit: z
-    .object({
-      // patterns: z.array(z.string()).optional(),
-      include: z.array(z.string()).optional(),
-      exclude: z.array(z.string()).optional(),
-      targetMaxCharInFile: z.number().optional(),
-      targetMaxLineInFile: z.number().optional(),
-      targetMaxDepPerFile: z.number().optional(),
-      targetMaxCharPerInstance: z.number().optional(),
-      targetMaxLinePerInstance: z.number().optional(),
-      targetMaxDepPerInstance: z.number().optional(),
-    })
-    .optional(),
+  audit: z.object({
+    language: z.string(), // python for now, more later
+    include: z.array(z.string()).optional(),
+    exclude: z.array(z.string()).optional(),
+    targetMaxCharInFile: z.number().optional(),
+    targetMaxLineInFile: z.number().optional(),
+    targetMaxDepPerFile: z.number().optional(),
+    targetMaxCharPerInstance: z.number().optional(),
+    targetMaxLinePerInstance: z.number().optional(),
+    targetMaxDepPerInstance: z.number().optional(),
+  }),
 });
 
 export const napiConfigFileName = ".napirc";

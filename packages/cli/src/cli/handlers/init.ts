@@ -77,6 +77,7 @@ async function handler(
       entrypoint: relativeFilePath,
       out: "napi_dist",
       audit: {
+        language: "python",
         targetMaxCharInFile: 5000,
         targetMaxLineInFile: 500,
         targetMaxDepPerFile: 4,

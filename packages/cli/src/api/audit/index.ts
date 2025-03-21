@@ -35,7 +35,7 @@ export function getAuditApi(
     }
   });
 
-  auditApi.get("/audit", (_req, res) => {
+  auditApi.get("/2", (_req, res) => {
     const startTime = Date.now();
     trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
       message: "API request audit project started",

@@ -1,6 +1,3 @@
-import Parser from "tree-sitter";
-import { generatePythonDependencyManifesto } from "./python";
-
 /** Identifies the "class" instance type. */
 export const classSymbolType = "class";
 
@@ -99,33 +96,32 @@ export interface FileManifesto {
  * dependency graph or manifesto. */
 export type DependencyManifesto = Record<string, FileManifesto>;
 
-const handlerMap: Record<
-  string,
-  (
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-  ) => DependencyManifesto
-> = {
-  python: generatePythonDependencyManifesto,
-};
-
-export class UnsupportedLanguageError extends Error {
-  constructor(language: string) {
-    const supportedLanguages = Object.keys(handlerMap).join(", ");
-    super(
-      `Unsupported language: ${language}. Supported languages: ${supportedLanguages}`,
-    );
-  }
+export interface AuditMessage {
+  shortMessage: string;
+  longMessage: string;
+  code: string;
+  value: string;
+  target: string;
+  severity: number;
 }
 
-export function generateDependencyManifesto(
-  files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-  parser: Parser,
-): DependencyManifesto {
-  const languageName = parser.getLanguage().name;
-  const handler = handlerMap[languageName];
-  if (!handler) {
-    throw new UnsupportedLanguageError(languageName);
-  }
+export interface SymbolAuditManifesto {
+  id: string;
+  warnings: AuditMessage[];
+  errors: AuditMessage[];
+}
 
-  return handler(files);
+export interface FileAuditManifesto {
+  id: string;
+  filePath: string;
+  warnings: AuditMessage[];
+  errors: AuditMessage[];
+  symbols: Record<string, SymbolAuditManifesto>;
+}
+
+export type AuditManifesto = Record<string, FileAuditManifesto>;
+
+export interface AuditResponse {
+  dependencyManifesto: DependencyManifesto;
+  auditManifesto: AuditManifesto;
 }

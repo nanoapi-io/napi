@@ -12,19 +12,40 @@ export function generateAuditResponse(
   workDir: string,
   napiConfig: z.infer<typeof localConfigSchema>,
 ) {
+  const supportedLanguages = {
+    ["python" as string]: {
+      parser: pythonParser,
+      validExtensions: [".py"],
+    },
+  };
+
+  const supportedLanguage = supportedLanguages[napiConfig.audit.language];
+  if (!supportedLanguages) {
+    throw new Error(
+      `
+      Unsupported language: ${napiConfig.audit.language}.
+      List of supported languages: ${Object.keys(supportedLanguages).join(", ")}
+      Set one of the supported languages in your .napirc file (audit.language).
+      `,
+    );
+  }
+
+  const parser = supportedLanguage.parser;
+  const validExtensions = supportedLanguage.validExtensions;
+
   const filePaths = globSync(napiConfig.audit?.include || ["**"], {
     cwd: workDir,
     nodir: true,
     ignore: napiConfig.audit?.exclude || [],
   });
 
-  const parser = pythonParser;
   const files = new Map<
     string,
     { path: string; rootNode: Parser.SyntaxNode }
   >();
   filePaths.forEach((filePath) => {
-    if (!filePath.endsWith(".py")) {
+    const extension = filePath.split(".").pop();
+    if (!extension || !validExtensions.includes(`.${extension}`)) {
       return;
     }
     let fileContent: string;
@@ -47,10 +68,7 @@ export function generateAuditResponse(
     }
   });
 
-  const dependencyManifesto = generateDependencyManifesto(
-    files,
-    parser.getLanguage(),
-  );
+  const dependencyManifesto = generateDependencyManifesto(files, parser);
 
   const auditManifesto = generateAuditManifesto(dependencyManifesto);
 

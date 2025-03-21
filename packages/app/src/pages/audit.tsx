@@ -1,30 +1,44 @@
 import { useEffect, useRef, useState } from "react";
-import { getAuditFiles } from "../service/api/auditApi";
+import { getAudit } from "../service/api/auditApi";
 import { toast } from "react-toastify";
 import GraphLayout from "../layout/GraphLayout";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
-import { AuditMap } from "../service/api/types";
+import { AuditResponse } from "../service/api/auditApi/types";
 import { Outlet } from "react-router";
+
+export interface AuditContext {
+  busy: boolean;
+  auditResponse: AuditResponse;
+}
 
 export default function BaseAuditPage() {
   const initialized = useRef(false);
 
   const [busy, setBusy] = useState<boolean>(false);
 
-  const [auditMap, setAuditMap] = useState<AuditMap>({});
+  const [paths, setPaths] = useState<string[]>([]);
+  const [auditResponse, setAuditResponse] = useState<AuditResponse>({
+    dependencyManifesto: {},
+    auditManifesto: {},
+  });
 
   useEffect(() => {
     async function handleOnLoad() {
       setBusy(true);
       try {
-        const projectPromise = getAuditFiles();
-        toast.promise(projectPromise, {
+        const auditResponsePromise = getAudit();
+        toast.promise(auditResponsePromise, {
           success: "Successfully loaded project overview",
           error: "Failed to load project overview",
           pending: "Loading project overview...",
         });
 
-        setAuditMap(await projectPromise);
+        const auditResponse = await auditResponsePromise;
+        const paths = Object.values(auditResponse.dependencyManifesto).map(
+          (fileManifesto) => fileManifesto.filePath,
+        );
+        setPaths(paths);
+        setAuditResponse(auditResponse);
       } finally {
         setBusy(false);
       }
@@ -38,12 +52,12 @@ export default function BaseAuditPage() {
 
   return (
     <GraphLayout
-      sideBarSlot={<FileExplorer busy={busy} auditMap={auditMap} />}
+      sideBarSlot={<FileExplorer busy={busy} paths={paths} />}
       graphSlot={
         <Outlet
           context={{
             busy,
-            auditMap,
+            auditResponse,
           }}
         />
       }

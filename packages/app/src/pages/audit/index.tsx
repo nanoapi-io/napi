@@ -1,4 +1,3 @@
-import { AuditMap } from "../../service/api/types";
 import { useContext, useEffect, useRef, useState } from "react";
 import Controls from "../../components/Cytoscape/Controls";
 import { useNavigate, useOutletContext } from "react-router";
@@ -15,13 +14,11 @@ import {
   NodeElementDefinition,
 } from "../../helpers/cytoscape/views/audit";
 import { ThemeContext } from "../../contexts/ThemeContext";
+import { AuditContext } from "../audit";
 
 export default function AuditPage() {
   const navigate = useNavigate();
-  const context = useOutletContext<{
-    busy: boolean;
-    auditMap: AuditMap;
-  }>();
+  const context = useOutletContext<AuditContext>();
 
   const themeContext = useContext(ThemeContext);
 
@@ -37,7 +34,7 @@ export default function AuditPage() {
       setCyInstance(undefined);
     }
 
-    if (Object.values(context.auditMap).length === 0) {
+    if (Object.values(context.auditResponse.dependencyManifesto).length === 0) {
       return;
     }
 
@@ -49,7 +46,7 @@ export default function AuditPage() {
     const style = getCyStyle(themeContext.theme);
     cy.style(style);
 
-    const elements = getCyElements(context.auditMap);
+    const elements = getCyElements(context.auditResponse);
     cy.add(elements);
     cy.nodes().forEach((node) => {
       resizeNodeFromLabel(node, node.data("label"));
@@ -67,7 +64,7 @@ export default function AuditPage() {
       cy.destroy();
       setCyInstance(undefined);
     };
-  }, [context.auditMap]);
+  }, [context.auditResponse]);
 
   useEffect(() => {
     cyInstance?.style(getCyStyle(themeContext.theme));
