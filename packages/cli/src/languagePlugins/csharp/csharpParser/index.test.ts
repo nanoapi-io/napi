@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CSharpPlugin } from "./cSharpPlugin";
+import { CSharpPlugin } from ".";
 import { getCSharpFilesMap } from "../testFiles";
 import { File } from "./types";
 
@@ -118,7 +118,7 @@ describe("CSharpPlugin", () => {
     ]);
   });
   test("Import resolver", () => {
-    const usedFiles = plugin.getUsedFilesFromFile(
+    const usedFiles = plugin.getDependenciesFromFile(
       plugin.buildNamespaceTree(),
       programcs,
     );

@@ -256,8 +256,25 @@ export class CSharpPlugin {
   }
 
   // Gets the classes used in a file.
-  getUsedFilesFromFile(namespaceTree: Namespace, file: File): NamespaceClass[] {
+  getDependenciesFromFile(
+    namespaceTree: Namespace,
+    file: File,
+  ): NamespaceClass[] {
     return this.#getCalledClasses(file.rootNode, namespaceTree)
+      .filter((cls) => cls.filepath !== "")
+      .filter(
+        (cls, index, self) =>
+          self.findIndex(
+            (c) => c.name === cls.name && c.namespace === cls.namespace,
+          ) === index,
+      );
+  }
+
+  getDependenciesFromNode(
+    namespaceTree: Namespace,
+    node: Parser.SyntaxNode,
+  ): NamespaceClass[] {
+    return this.#getCalledClasses(node, namespaceTree)
       .filter((cls) => cls.filepath !== "")
       .filter(
         (cls, index, self) =>
