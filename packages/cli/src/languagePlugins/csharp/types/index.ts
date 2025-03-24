@@ -15,6 +15,6 @@ export interface ExportedSymbol {
 
 export interface Namespace {
   name: string;
-  classes: ExportedSymbol[];
+  exports: ExportedSymbol[];
   childrenNamespaces: Namespace[];
 }

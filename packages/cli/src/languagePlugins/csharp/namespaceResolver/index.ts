@@ -28,7 +28,7 @@ export class NamespaceResolver {
     return [
       {
         name: "",
-        classes: this.#getExportsFromNode(node),
+        exports: this.#getExportsFromNode(node),
         childrenNamespaces: this.#getNamespacesFromNode(node),
       },
     ];
@@ -40,7 +40,7 @@ export class NamespaceResolver {
       .filter((child) => child.type === "namespace_declaration")
       .map((child) => ({
         name: this.#getName(child),
-        classes: this.#getExportsFromNode(this.#getDeclarationList(child)),
+        exports: this.#getExportsFromNode(this.#getDeclarationList(child)),
         childrenNamespaces: this.#getNamespacesFromNode(
           this.#getDeclarationList(child),
         ),
@@ -91,7 +91,7 @@ export class NamespaceResolver {
   getExportsFromNamespaces(namespaces: Namespace[]): ExportedSymbol[] {
     let classes: ExportedSymbol[] = [];
     namespaces.forEach((ns) => {
-      classes = classes.concat(ns.classes);
+      classes = classes.concat(ns.exports);
       classes = classes.concat(
         this.getExportsFromNamespaces(ns.childrenNamespaces),
       );
@@ -115,7 +115,7 @@ export class NamespaceResolver {
       if (!child) {
         child = {
           name: part,
-          classes: [],
+          exports: [],
           childrenNamespaces: [],
         };
         current.childrenNamespaces.push(child);
@@ -125,7 +125,7 @@ export class NamespaceResolver {
 
     // Once we're done with the parts, we add the classes
     // and children namespaces to the current namespace.
-    current.classes.push(...namespace.classes);
+    current.exports.push(...namespace.exports);
     current.childrenNamespaces.push(...namespace.childrenNamespaces);
   }
 
@@ -136,7 +136,7 @@ export class NamespaceResolver {
       ? `${parentNamespace}.${tree.name}`
       : tree.name;
 
-    tree.classes.forEach((cls) => {
+    tree.exports.forEach((cls) => {
       cls.namespace = fullNamespace;
     });
 
@@ -149,7 +149,7 @@ export class NamespaceResolver {
   buildNamespaceTree(): Namespace {
     const namespaceTree: Namespace = {
       name: "",
-      classes: [],
+      exports: [],
       childrenNamespaces: [],
     };
 

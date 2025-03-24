@@ -13,11 +13,11 @@ describe("NamespaceResolver", () => {
     expect(namespaces).toMatchObject([
       {
         name: "",
-        classes: [],
+        exports: [],
         childrenNamespaces: [
           {
             name: "BeefBurger",
-            classes: [
+            exports: [
               { name: "Steak", filepath: "2Namespaces1File.cs" },
               { name: "Cheese", filepath: "2Namespaces1File.cs" },
               { name: "Bun", filepath: "2Namespaces1File.cs" },
@@ -26,7 +26,7 @@ describe("NamespaceResolver", () => {
           },
           {
             name: "ChickenBurger",
-            classes: [
+            exports: [
               { name: "Chicken", filepath: "2Namespaces1File.cs" },
               { name: "Salad", filepath: "2Namespaces1File.cs" },
               { name: "Bun", filepath: "2Namespaces1File.cs" },
@@ -44,7 +44,7 @@ describe("NamespaceResolver", () => {
     expect(namespaces).toMatchObject([
       {
         name: "",
-        classes: [
+        exports: [
           { name: "User", type: "class", filepath: "Models.cs" },
           { name: "Order", type: "struct", filepath: "Models.cs" },
           { name: "OrderStatus", type: "enum", filepath: "Models.cs" },
@@ -62,11 +62,11 @@ describe("NamespaceResolver", () => {
     expect(namespaces).toMatchObject([
       {
         name: "",
-        classes: [],
+        exports: [],
         childrenNamespaces: [
           {
             name: "MyNamespace",
-            classes: [{ name: "MyClass", filepath: "Namespaced.cs" }],
+            exports: [{ name: "MyClass", filepath: "Namespaced.cs" }],
             childrenNamespaces: [],
           },
         ],
@@ -80,15 +80,15 @@ describe("NamespaceResolver", () => {
     expect(namespaces).toMatchObject([
       {
         name: "",
-        classes: [],
+        exports: [],
         childrenNamespaces: [
           {
             name: "OuterNamespace",
-            classes: [{ name: "OuterClass", filepath: "Nested.cs" }],
+            exports: [{ name: "OuterClass", filepath: "Nested.cs" }],
             childrenNamespaces: [
               {
                 name: "InnerNamespace",
-                classes: [{ name: "InnerClass", filepath: "Nested.cs" }],
+                exports: [{ name: "InnerClass", filepath: "Nested.cs" }],
                 childrenNamespaces: [],
               },
             ],
@@ -104,14 +104,14 @@ describe("NamespaceResolver", () => {
     expect(namespaces).toMatchObject([
       {
         name: "",
-        classes: [
+        exports: [
           { name: "Freeman", filepath: "SemiNamespaced.cs" },
           { name: "HeadCrab", filepath: "SemiNamespaced.cs" },
         ],
         childrenNamespaces: [
           {
             name: "HalfNamespace",
-            classes: [{ name: "Gordon", filepath: "SemiNamespaced.cs" }],
+            exports: [{ name: "Gordon", filepath: "SemiNamespaced.cs" }],
             childrenNamespaces: [],
           },
         ],

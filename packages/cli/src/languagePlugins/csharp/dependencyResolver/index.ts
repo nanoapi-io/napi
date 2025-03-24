@@ -43,7 +43,7 @@ export class DependencyResolver {
       const namespace = this.#findNamespaceInTree(tree, namespaceName);
       if (namespace) {
         return (
-          namespace.classes.find((cls) => cls.name === simpleClassName) ?? null
+          namespace.exports.find((cls) => cls.name === simpleClassName) ?? null
         );
       } else {
         // In case the qualifier is actually not a namespace but a class
@@ -52,8 +52,8 @@ export class DependencyResolver {
       }
     }
     // Find the class in the current node's classes.
-    if (tree.classes.some((cls) => cls.name === className)) {
-      return tree.classes.find((cls) => cls.name === className) ?? null;
+    if (tree.exports.some((cls) => cls.name === className)) {
+      return tree.exports.find((cls) => cls.name === className) ?? null;
     }
 
     // Recursively search in children namespaces.
