@@ -18,18 +18,11 @@ export class NamespaceResolver {
   // Parses namespaces from a file along with the exported classes
   getNamespacesFromFile(file: File): Namespace[] {
     this.#currentFile = file.path;
-    return this.#getNamespacesFromRootNode(file.rootNode);
-  }
-
-  // Parses namespaces from the root node of a file
-  // Needed as some classes aren't in a namespace,
-  // so we start with the "" namespace.
-  #getNamespacesFromRootNode(node: Parser.SyntaxNode): Namespace[] {
     return [
       {
         name: "",
-        exports: this.#getExportsFromNode(node),
-        childrenNamespaces: this.#getNamespacesFromNode(node),
+        exports: this.#getExportsFromNode(file.rootNode),
+        childrenNamespaces: this.#getNamespacesFromNode(file.rootNode),
       },
     ];
   }
