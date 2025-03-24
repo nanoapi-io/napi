@@ -91,7 +91,7 @@ describe("Should get imports properly", () => {
     const imports = plugin.getImports(entryPointPath, tree.rootNode);
 
     expect(imports.length).toBe(1);
-    expect(imports[0].source).toBe("");
+    expect(imports[0].source).toBe("module");
     expect(imports[0].node.text).toBe(node);
     expect(imports[0].isExternal).toBe(true);
 
@@ -481,7 +481,7 @@ from module import foo, bar
 foo()
     `,
       expectedSourceCode: `
-from module import foo, 
+from module import foo,
 foo()
     `,
     },
@@ -513,7 +513,7 @@ from module import foo as f, bar as b
 f()
 `,
       expectedSourceCode: `
-from module import foo as f, 
+from module import foo as f,
 f()
 `,
     },

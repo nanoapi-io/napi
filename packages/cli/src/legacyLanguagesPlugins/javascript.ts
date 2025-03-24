@@ -1,4 +1,4 @@
-import Parser from "tree-sitter";
+import Parser, { Language } from "tree-sitter";
 import {
   LanguagePlugin,
   DepImportIdentifier,
@@ -25,7 +25,7 @@ class JavascriptPlugin implements LanguagePlugin {
     this.parser = new Parser();
     this.isTypescript = isTypescript;
     const language = isTypescript ? Typescript.typescript : Javascript;
-    this.parser.setLanguage(language);
+    this.parser.setLanguage(language as Language);
   }
 
   commentPrefix = "//";
@@ -382,7 +382,7 @@ class JavascriptPlugin implements LanguagePlugin {
                 name: (type_identifier) @identifier
               )
             ])
-          ]         
+          ]
         )
         `
         : `
@@ -412,7 +412,7 @@ class JavascriptPlugin implements LanguagePlugin {
                 )
               )
             ])
-          ]         
+          ]
         )
         `,
     );

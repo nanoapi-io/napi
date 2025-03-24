@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeAll } from "vitest";
-import Parser from "tree-sitter";
+import Parser, { Language } from "tree-sitter";
 import Python from "tree-sitter-python";
 import {
   PythonUsageResolver,
@@ -14,7 +14,7 @@ describe("PythonUsageResolver", () => {
 
   beforeAll(() => {
     parser = new Parser();
-    parser.setLanguage(Python);
+    parser.setLanguage(Python as Language);
     usageResolver = new PythonUsageResolver(parser);
   });
 
@@ -278,7 +278,7 @@ describe("PythonUsageResolver", () => {
   test("should detect usage when module is imported with alias", () => {
     const code = `
       import module as mod
-  
+
       def foo():
           print(mod.submodule.bar)
     `;
@@ -332,7 +332,7 @@ describe("PythonUsageResolver", () => {
   test("should detect explicit symbol usage with alias", () => {
     const code = `
       from module import helper_func as hf
-  
+
       def foo():
           module.hf()
     `;

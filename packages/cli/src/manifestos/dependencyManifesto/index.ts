@@ -4,6 +4,12 @@ import { generatePythonDependencyManifesto } from "./python";
 /** Identifies the "class" instance type. */
 export const classSymbolType = "class";
 
+/** Identifies the "struct" instance type. */
+export const structSymbolType = "struct";
+
+/** Identifies the "enum" instance type. */
+export const enumSymbolType = "enum";
+
 /** Identifies the "function" instance type. */
 export const functionSymbolType = "function";
 
@@ -12,12 +18,16 @@ export const variableSymbolType = "variable";
 
 /** Possible categories of an instance (symbol) within a file:
  * - class
+ * - struct
+ * - enum
  * - function
  * - variable */
 export type SymbolType =
   | typeof classSymbolType
   | typeof functionSymbolType
-  | typeof variableSymbolType;
+  | typeof variableSymbolType
+  | typeof structSymbolType
+  | typeof enumSymbolType;
 
 /** Represents a single dependency. For example, if File A depends on
 File B, `DependencyInfo` captures how A uses B's symbols. */
