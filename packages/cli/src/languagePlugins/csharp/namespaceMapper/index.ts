@@ -16,7 +16,6 @@ export interface SymbolNode {
 
 export class CSharpNamespaceMapper {
   #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
-  #namespaces: NamespaceNode[] = [];
   #nsResolver: CSharpNamespaceResolver;
 
   constructor(
@@ -84,16 +83,13 @@ export class CSharpNamespaceMapper {
 
     // Parse all files.
     this.#files.forEach((file) => {
-      this.#namespaces = this.#namespaces.concat(
-        this.#nsResolver
-          .getNamespacesFromFile(file)
-          .map((ns) => ns as NamespaceNode),
-      );
-    });
+      const namespaces = this.#nsResolver
+        .getNamespacesFromFile(file)
+        .map((ns) => ns as NamespaceNode);
 
-    // Add all namespaces to the tree.
-    this.#namespaces.forEach((namespace) => {
-      this.#addNamespaceToTree(namespace, namespaceTree);
+      namespaces.forEach((namespace) => {
+        this.#addNamespaceToTree(namespace, namespaceTree);
+      });
     });
 
     // Assign namespaces to classes.
