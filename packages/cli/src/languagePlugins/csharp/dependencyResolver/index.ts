@@ -48,7 +48,7 @@ export class DependencyResolver {
       } else {
         // In case the qualifier is actually not a namespace but a class
         // Check OuterInnerClass in the tests.
-        return this.#findClassInTree(tree, namespaceName);
+        return this.#findClassInTree(this.nsTree, namespaceName);
       }
     }
     // Find the class in the current node's classes.
@@ -96,16 +96,9 @@ export class DependencyResolver {
       .captures(node)
       .map((capture) => {
         const className = capture.node.text;
-        return (
-          // TODO : Throw error if not found
-          this.#findClassInTree(namespaceTree, className) ?? {
-            name: className,
-            type: "class", // Inaccurate, here for placeholder.
-            node: capture.node, // Inaccurate, here for placeholder.
-            filepath: "",
-          }
-        );
-      });
+        return this.#findClassInTree(namespaceTree, className);
+      })
+      .filter((cls): cls is ExportedSymbol => cls !== null);
   }
 
   // Gets the classes used in a file.
