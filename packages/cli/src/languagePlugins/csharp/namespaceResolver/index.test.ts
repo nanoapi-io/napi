@@ -45,9 +45,10 @@ describe("NamespaceResolver", () => {
       {
         name: "",
         classes: [
-          { name: "User", filepath: "Models.cs" },
-          { name: "Order", filepath: "Models.cs" },
-          { name: "OrderStatus", filepath: "Models.cs" },
+          { name: "User", type: "class", filepath: "Models.cs" },
+          { name: "Order", type: "struct", filepath: "Models.cs" },
+          { name: "OrderStatus", type: "enum", filepath: "Models.cs" },
+          { name: "IOrder", type: "interface", filepath: "Models.cs" },
         ],
         childrenNamespaces: [],
       },

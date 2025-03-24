@@ -71,22 +71,20 @@ export class NamespaceResolver {
 
   // Gets the classes, structs and enums from a node
   #getExportsFromNode(node: Parser.SyntaxNode): ExportedSymbol[] {
-    return (
-      node.children
-        .filter(
-          (child) =>
-            child.type === "class_declaration" ||
-            child.type === "struct_declaration" ||
-            child.type === "enum_declaration",
-        )
-        // Missing interface_declaration, idk if it's needed
-        .map((child) => ({
-          name: this.#getName(child),
-          type: child.type.replace("_declaration", ""),
-          node: child,
-          filepath: this.#currentFile,
-        }))
-    );
+    return node.children
+      .filter(
+        (child) =>
+          child.type === "class_declaration" ||
+          child.type === "struct_declaration" ||
+          child.type === "enum_declaration" ||
+          child.type === "interface_declaration",
+      )
+      .map((child) => ({
+        name: this.#getName(child),
+        type: child.type.replace("_declaration", ""),
+        node: child,
+        filepath: this.#currentFile,
+      }));
   }
 
   getExportsFromNamespaces(namespaces: Namespace[]): ExportedSymbol[] {

@@ -14,3 +14,7 @@ public enum OrderStatus
     Pending,
     Completed
 }
+public interface IOrder
+{
+    void Process();
+}
