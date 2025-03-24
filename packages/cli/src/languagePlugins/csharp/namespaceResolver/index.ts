@@ -36,6 +36,7 @@ export interface Namespace {
 export class NamespaceResolver {
   parser: Parser = csharpParser;
   #currentFile: string;
+  #cache: Map<string, Namespace[]> = new Map<string, Namespace[]>();
 
   constructor() {
     this.#currentFile = "";
@@ -43,14 +44,24 @@ export class NamespaceResolver {
 
   // Parses namespaces from a file along with the exported classes
   getNamespacesFromFile(file: File): Namespace[] {
+    // Check if the file is already in the cache
+    const cacheValue = this.#cache.get(file.path);
+    if (cacheValue) {
+      return cacheValue;
+    }
+    // Set the current file, so that we can keep track of it in the recursive functions
     this.#currentFile = file.path;
-    return [
+    // Get the namespaces from the root node
+    const namespaces = [
       {
         name: "",
         exports: this.#getExportsFromNode(file.rootNode),
         childrenNamespaces: this.#getNamespacesFromNode(file.rootNode),
       },
     ];
+    // Cache the namespaces
+    this.#cache.set(file.path, namespaces);
+    return namespaces;
   }
 
   // Recursively parses namespaces from a node
