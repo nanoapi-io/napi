@@ -30,6 +30,8 @@ export interface ExportedSymbol {
 
 export interface Namespace {
   name: string;
+  node: Parser.SyntaxNode;
+  identifierNode?: Parser.SyntaxNode; // Optional because the root namespace doesn't have an identifier
   exports: ExportedSymbol[];
   childrenNamespaces: Namespace[];
 }
@@ -56,6 +58,8 @@ export class NamespaceResolver {
     const namespaces = [
       {
         name: "",
+        node: file.rootNode,
+        identifierNode: undefined,
         exports: this.#getExportsFromNode(file.rootNode),
         childrenNamespaces: this.#getNamespacesFromNode(file.rootNode),
       },
@@ -71,6 +75,8 @@ export class NamespaceResolver {
       .filter((child) => child.type === "namespace_declaration")
       .map((child) => ({
         name: this.#getIdentifierNode(child).text,
+        node: child,
+        identifierNode: this.#getIdentifierNode(child),
         exports: this.#getExportsFromNode(this.#getDeclarationList(child)),
         childrenNamespaces: this.#getNamespacesFromNode(
           this.#getDeclarationList(child),
