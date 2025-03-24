@@ -36,7 +36,7 @@ export interface Namespace {
   childrenNamespaces: Namespace[];
 }
 
-export class NamespaceResolver {
+export class CSharpNamespaceResolver {
   parser: Parser = csharpParser;
   #currentFile: string;
   #cache: Map<string, Namespace[]> = new Map<string, Namespace[]>();

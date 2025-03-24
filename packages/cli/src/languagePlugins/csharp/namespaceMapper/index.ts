@@ -1,6 +1,6 @@
 import Parser from "tree-sitter";
 import {
-  NamespaceResolver,
+  CSharpNamespaceResolver,
   Namespace,
   ExportedSymbol,
 } from "../namespaceResolver";
@@ -11,16 +11,16 @@ export interface NamespaceNode {
   childrenNamespaces: NamespaceNode[];
 }
 
-export class NamespaceMapper {
+export class CSharpNamespaceMapper {
   #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   #namespaces: Namespace[] = [];
-  #nsResolver: NamespaceResolver;
+  #nsResolver: CSharpNamespaceResolver;
 
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   ) {
     this.#files = files;
-    this.#nsResolver = new NamespaceResolver();
+    this.#nsResolver = new CSharpNamespaceResolver();
   }
 
   // Adds a namespace to the final tree.

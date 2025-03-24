@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { NamespaceResolver, File } from ".";
+import { CSharpNamespaceResolver, File } from ".";
 import { getCSharpFilesMap } from "../testFiles";
 
 describe("NamespaceResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
-  const nsResolver: NamespaceResolver = new NamespaceResolver();
+  const nsResolver: CSharpNamespaceResolver = new CSharpNamespaceResolver();
 
   test("2Namespaces1File.cs", () => {
     const file = files.get("2Namespaces1File.cs") as File;

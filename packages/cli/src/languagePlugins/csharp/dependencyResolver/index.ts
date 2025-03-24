@@ -1,20 +1,20 @@
 import Parser from "tree-sitter";
-import { Namespace, ExportedSymbol, File } from "../namespaceResolver";
-import { NamespaceMapper } from "../namespaceMapper";
+import { ExportedSymbol, File } from "../namespaceResolver";
+import { CSharpNamespaceMapper, NamespaceNode } from "../namespaceMapper";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
-export class DependencyResolver {
+export class CSharpDependencyResolver {
   parser: Parser = csharpParser;
-  private nsTree: Namespace;
+  private nsTree: NamespaceNode;
 
-  constructor(nsMapper: NamespaceMapper) {
+  constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsTree = nsMapper.buildNamespaceTree();
   }
 
   #findNamespaceInTree(
-    tree: Namespace,
+    tree: NamespaceNode,
     namespaceName: string,
-  ): Namespace | null {
+  ): NamespaceNode | null {
     if (namespaceName.includes(".")) {
       const parts = namespaceName.split(".");
       const simpleNamespaceName = parts[0];
@@ -33,7 +33,10 @@ export class DependencyResolver {
     );
   }
 
-  #findClassInTree(tree: Namespace, className: string): ExportedSymbol | null {
+  #findClassInTree(
+    tree: NamespaceNode,
+    className: string,
+  ): ExportedSymbol | null {
     // Management of qualified names
     if (className.includes(".")) {
       const parts = className.split(".");
@@ -71,7 +74,7 @@ export class DependencyResolver {
   // Query may have to be updated to include more cases.
   #getCalledClasses(
     node: Parser.SyntaxNode,
-    namespaceTree: Namespace,
+    namespaceTree: NamespaceNode,
   ): ExportedSymbol[] {
     return new Parser.Query(
       this.parser.getLanguage(),

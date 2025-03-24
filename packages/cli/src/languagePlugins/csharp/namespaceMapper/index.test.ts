@@ -1,11 +1,11 @@
 import { describe, test, expect } from "vitest";
-import { NamespaceMapper } from ".";
+import { CSharpNamespaceMapper } from ".";
 import { getCSharpFilesMap } from "../testFiles";
 import { File } from "../namespaceResolver";
 
 describe("NamespaceMapper", () => {
   const files: Map<string, File> = getCSharpFilesMap();
-  const nsMapper = new NamespaceMapper(files);
+  const nsMapper = new CSharpNamespaceMapper(files);
 
   test("should build a namespace tree", () => {
     const nsTree = nsMapper.buildNamespaceTree();

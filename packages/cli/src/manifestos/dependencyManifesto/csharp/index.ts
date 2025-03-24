@@ -1,9 +1,9 @@
 import Parser from "tree-sitter";
 import { DependencyManifesto, FileManifesto, SymbolType } from "..";
-import { NamespaceResolver } from "../../../languagePlugins/csharp/namespaceResolver";
-import { DependencyResolver } from "../../../languagePlugins/csharp/dependencyResolver";
+import { CSharpNamespaceResolver } from "../../../languagePlugins/csharp/namespaceResolver";
+import { CSharpDependencyResolver } from "../../../languagePlugins/csharp/dependencyResolver";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
-import { NamespaceMapper } from "../../../languagePlugins/csharp/namespaceMapper";
+import { CSharpNamespaceMapper } from "../../../languagePlugins/csharp/namespaceMapper";
 
 function generateDependentsForManifesto(
   manifesto: DependencyManifesto,
@@ -51,9 +51,11 @@ function generateDependentsForManifesto(
 export function generateCSharpDependencyManifesto(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
 ): DependencyManifesto {
-  const nsResolver: NamespaceResolver = new NamespaceResolver();
-  const nsMapper: NamespaceMapper = new NamespaceMapper(files);
-  const depResolver: DependencyResolver = new DependencyResolver(nsMapper);
+  const nsResolver: CSharpNamespaceResolver = new CSharpNamespaceResolver();
+  const nsMapper: CSharpNamespaceMapper = new CSharpNamespaceMapper(files);
+  const depResolver: CSharpDependencyResolver = new CSharpDependencyResolver(
+    nsMapper,
+  );
   let manifesto: DependencyManifesto = {};
 
   for (const [, f] of files) {

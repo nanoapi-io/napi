@@ -1,13 +1,15 @@
 import { describe, expect, test } from "vitest";
 import { File } from "../namespaceResolver";
-import { NamespaceMapper } from "../namespaceMapper";
+import { CSharpNamespaceMapper } from "../namespaceMapper";
 import { getCSharpFilesMap } from "../testFiles";
-import { DependencyResolver } from ".";
+import { CSharpDependencyResolver } from ".";
 
 describe("DependencyResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
-  const nsMapper = new NamespaceMapper(files);
-  const depResolver: DependencyResolver = new DependencyResolver(nsMapper);
+  const nsMapper = new CSharpNamespaceMapper(files);
+  const depResolver: CSharpDependencyResolver = new CSharpDependencyResolver(
+    nsMapper,
+  );
   const programcs: File = files.get("Program.cs") as File;
 
   test("Import resolver", () => {
