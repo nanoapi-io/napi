@@ -1,6 +1,19 @@
 import Parser from "tree-sitter";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
+export const CSHARP_CLASS_TYPE = "class";
+export const CSHARP_STRUCT_TYPE = "struct";
+export const CSHARP_ENUM_TYPE = "enum";
+export const CSHARP_INTERFACE_TYPE = "interface";
+export const CSHARP_DELEGATE_TYPE = "delegate";
+
+export type SymbolType =
+  | typeof CSHARP_CLASS_TYPE
+  | typeof CSHARP_STRUCT_TYPE
+  | typeof CSHARP_ENUM_TYPE
+  | typeof CSHARP_INTERFACE_TYPE
+  | typeof CSHARP_DELEGATE_TYPE;
+
 export interface File {
   path: string;
   rootNode: Parser.SyntaxNode;
@@ -8,7 +21,7 @@ export interface File {
 
 export interface ExportedSymbol {
   name: string;
-  type: string;
+  type: SymbolType;
   node: Parser.SyntaxNode;
   namespace?: string;
   filepath: string;
@@ -93,7 +106,7 @@ export class NamespaceResolver {
       )
       .map((child) => ({
         name: this.#getName(child),
-        type: child.type.replace("_declaration", ""),
+        type: child.type.replace("_declaration", "") as SymbolType,
         node: child,
         filepath: this.#currentFile,
       }));
