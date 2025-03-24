@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { NamespaceResolver } from "../namespaceResolver";
+import { NamespaceResolver, File } from "../namespaceResolver";
 import { getCSharpFilesMap } from "../testFiles";
 import { DependencyResolver } from ".";
-import { File } from "../types";
 
 describe("DependencyResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();

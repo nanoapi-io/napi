@@ -1,6 +1,10 @@
 import Parser from "tree-sitter";
-import { File, Namespace, ExportedSymbol } from "../types";
-import { NamespaceResolver } from "../namespaceResolver";
+import {
+  NamespaceResolver,
+  Namespace,
+  ExportedSymbol,
+  File,
+} from "../namespaceResolver";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 export class DependencyResolver {
