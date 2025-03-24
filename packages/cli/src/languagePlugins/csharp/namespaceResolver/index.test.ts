@@ -42,7 +42,7 @@ describe("NamespaceResolver", () => {
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
-        name: "",
+        name: "MyApp.Models",
         exports: [
           { name: "User", type: "class", filepath: "Models.cs" },
           { name: "Order", type: "struct", filepath: "Models.cs" },

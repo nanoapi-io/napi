@@ -51,7 +51,7 @@ describe("DependencyResolver", () => {
       {
         name: "OrderStatus",
         filepath: "Models.cs",
-        namespace: "",
+        namespace: "MyApp.Models",
       },
     ]);
   });

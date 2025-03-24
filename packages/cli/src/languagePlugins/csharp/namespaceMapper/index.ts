@@ -23,19 +23,21 @@ export class NamespaceMapper {
     // For each part of the namespace, we check if it's
     // already in the tree. If it is, we go to the next
     // part. If it isn't, we add it to the tree.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    parts.forEach((part, _) => {
-      let child = current.childrenNamespaces.find((ns) => ns.name === part);
-      if (!child) {
-        child = {
-          name: part,
-          exports: [],
-          childrenNamespaces: [],
-        };
-        current.childrenNamespaces.push(child);
-      }
-      current = child;
-    });
+    if (namespace.name !== "") {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      parts.forEach((part, _) => {
+        let child = current.childrenNamespaces.find((ns) => ns.name === part);
+        if (!child) {
+          child = {
+            name: part,
+            exports: [],
+            childrenNamespaces: [],
+          };
+          current.childrenNamespaces.push(child);
+        }
+        current = child;
+      });
+    }
 
     // Once we're done with the parts, we add the classes
     // and children namespaces to the current namespace.
@@ -83,6 +85,6 @@ export class NamespaceMapper {
     this.#assignNamespacesToClasses(namespaceTree);
 
     // I don't understand why, but the root element is always empty
-    return namespaceTree.childrenNamespaces[0];
+    return namespaceTree;
   }
 }

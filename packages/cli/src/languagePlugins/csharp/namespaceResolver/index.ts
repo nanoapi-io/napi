@@ -54,18 +54,53 @@ export class NamespaceResolver {
     }
     // Set the current file, so that we can keep track of it in the recursive functions
     this.#currentFile = file.path;
-    // Get the namespaces from the root node
-    const namespaces = [
-      {
-        name: "",
-        node: file.rootNode,
-        exports: this.#getExportsFromNode(file.rootNode),
-        childrenNamespaces: this.#getNamespacesFromNode(file.rootNode),
-      },
-    ];
+    // Different behavior if the file has a file-scoped namespace
+    const fileScopedNamespace = this.#getFileScopedNamespaceDeclaration(
+      file.rootNode,
+    );
+    let namespaces: Namespace[];
+    if (fileScopedNamespace) {
+      // Get the namespaces from the file-scoped namespace
+      namespaces = [
+        {
+          name: fileScopedNamespace,
+          node: file.rootNode,
+          exports: this.#getExportsFromNode(file.rootNode),
+          childrenNamespaces: [],
+        },
+      ];
+      // Cache the namespaces
+      this.#cache.set(file.path, namespaces);
+      return namespaces;
+    } else {
+      // Get the namespaces from the root node
+      namespaces = [
+        {
+          name: "",
+          node: file.rootNode,
+          exports: this.#getExportsFromNode(file.rootNode),
+          childrenNamespaces: this.#getNamespacesFromNode(file.rootNode),
+        },
+      ];
+    }
     // Cache the namespaces
     this.#cache.set(file.path, namespaces);
     return namespaces;
+  }
+
+  #getFileScopedNamespaceDeclaration(
+    node: Parser.SyntaxNode,
+  ): string | undefined {
+    return new Parser.Query(
+      this.parser.getLanguage(),
+      `
+      (file_scoped_namespace_declaration
+        name: (qualified_name) @id
+      )
+      `,
+    )
+      .captures(node)
+      .map((capture) => capture.node.text)[0];
   }
 
   // Recursively parses namespaces from a node

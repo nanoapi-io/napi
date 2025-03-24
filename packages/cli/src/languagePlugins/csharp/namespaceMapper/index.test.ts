@@ -12,11 +12,6 @@ describe("NamespaceMapper", () => {
     expect(nsTree).toMatchObject({
       name: "",
       exports: [
-        { name: "User", type: "class", filepath: "Models.cs" },
-        { name: "Order", type: "struct", filepath: "Models.cs" },
-        { name: "OrderStatus", type: "enum", filepath: "Models.cs" },
-        { name: "IOrder", type: "interface", filepath: "Models.cs" },
-        { name: "OrderDelegate", type: "delegate", filepath: "Models.cs" },
         { name: "Freeman", filepath: "SemiNamespaced.cs" },
         { name: "HeadCrab", filepath: "SemiNamespaced.cs" },
       ],
@@ -38,6 +33,23 @@ describe("NamespaceMapper", () => {
             { name: "Bun", filepath: "2Namespaces1File.cs" },
           ],
           childrenNamespaces: [],
+        },
+        {
+          name: "MyApp",
+          exports: [],
+          childrenNamespaces: [
+            {
+              name: "Models",
+              exports: [
+                { name: "User", filepath: "Models.cs" },
+                { name: "Order", filepath: "Models.cs" },
+                { name: "OrderStatus", filepath: "Models.cs" },
+                { name: "IOrder", filepath: "Models.cs" },
+                { name: "OrderDelegate", filepath: "Models.cs" },
+              ],
+              childrenNamespaces: [],
+            },
+          ],
         },
         {
           name: "MyNamespace",
