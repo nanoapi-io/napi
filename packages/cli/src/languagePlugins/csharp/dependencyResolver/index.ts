@@ -1,18 +1,14 @@
 import Parser from "tree-sitter";
-import {
-  NamespaceResolver,
-  Namespace,
-  ExportedSymbol,
-  File,
-} from "../namespaceResolver";
+import { Namespace, ExportedSymbol, File } from "../namespaceResolver";
+import { NamespaceMapper } from "../namespaceMapper";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 export class DependencyResolver {
   parser: Parser = csharpParser;
   private nsTree: Namespace;
 
-  constructor(nsResolver: NamespaceResolver) {
-    this.nsTree = nsResolver.buildNamespaceTree();
+  constructor(nsMapper: NamespaceMapper) {
+    this.nsTree = nsMapper.buildNamespaceTree();
   }
 
   #findNamespaceInTree(

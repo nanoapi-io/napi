@@ -1,0 +1,88 @@
+import Parser from "tree-sitter";
+import { NamespaceResolver, Namespace } from "../namespaceResolver";
+
+export class NamespaceMapper {
+  #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+  #namespaces: Namespace[] = [];
+  #nsResolver: NamespaceResolver;
+
+  constructor(
+    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+  ) {
+    this.#files = files;
+    this.#nsResolver = new NamespaceResolver();
+  }
+
+  // Adds a namespace to the final tree.
+  #addNamespaceToTree(namespace: Namespace, tree: Namespace) {
+    // Deconstruct the namespace's name, so that A.B
+    // becomes B, child of A.
+    const parts = namespace.name.split(".");
+    let current = tree;
+
+    // For each part of the namespace, we check if it's
+    // already in the tree. If it is, we go to the next
+    // part. If it isn't, we add it to the tree.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    parts.forEach((part, _) => {
+      let child = current.childrenNamespaces.find((ns) => ns.name === part);
+      if (!child) {
+        child = {
+          name: part,
+          exports: [],
+          childrenNamespaces: [],
+        };
+        current.childrenNamespaces.push(child);
+      }
+      current = child;
+    });
+
+    // Once we're done with the parts, we add the classes
+    // and children namespaces to the current namespace.
+    current.exports.push(...namespace.exports);
+    current.childrenNamespaces.push(...namespace.childrenNamespaces);
+  }
+
+  // Assigns namespaces to classes, used for ambiguity resolution.
+  // check 2Namespaces1File.cs for an example.
+  #assignNamespacesToClasses(tree: Namespace, parentNamespace = "") {
+    const fullNamespace = parentNamespace
+      ? `${parentNamespace}.${tree.name}`
+      : tree.name;
+
+    tree.exports.forEach((cls) => {
+      cls.namespace = fullNamespace;
+    });
+
+    tree.childrenNamespaces.forEach((ns) => {
+      this.#assignNamespacesToClasses(ns, fullNamespace);
+    });
+  }
+
+  // Builds a tree of namespaces from the parsed files.
+  buildNamespaceTree(): Namespace {
+    const namespaceTree: Namespace = {
+      name: "",
+      exports: [],
+      childrenNamespaces: [],
+    };
+
+    // Parse all files.
+    this.#files.forEach((file) => {
+      this.#namespaces = this.#namespaces.concat(
+        this.#nsResolver.getNamespacesFromFile(file),
+      );
+    });
+
+    // Add all namespaces to the tree.
+    this.#namespaces.forEach((namespace) => {
+      this.#addNamespaceToTree(namespace, namespaceTree);
+    });
+
+    // Assign namespaces to classes.
+    this.#assignNamespacesToClasses(namespaceTree);
+
+    // I don't understand why, but the root element is always empty
+    return namespaceTree.childrenNamespaces[0];
+  }
+}

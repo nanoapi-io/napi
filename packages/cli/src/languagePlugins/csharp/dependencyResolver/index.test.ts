@@ -1,12 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { NamespaceResolver, File } from "../namespaceResolver";
+import { File } from "../namespaceResolver";
+import { NamespaceMapper } from "../namespaceMapper";
 import { getCSharpFilesMap } from "../testFiles";
 import { DependencyResolver } from ".";
 
 describe("DependencyResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
-  const nsResolver: NamespaceResolver = new NamespaceResolver(files);
-  const depResolver: DependencyResolver = new DependencyResolver(nsResolver);
+  const nsMapper = new NamespaceMapper(files);
+  const depResolver: DependencyResolver = new DependencyResolver(nsMapper);
   const programcs: File = files.get("Program.cs") as File;
 
   test("Import resolver", () => {

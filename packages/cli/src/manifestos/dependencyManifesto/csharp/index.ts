@@ -3,6 +3,7 @@ import { DependencyManifesto, FileManifesto, SymbolType } from "..";
 import { NamespaceResolver } from "../../../languagePlugins/csharp/namespaceResolver";
 import { DependencyResolver } from "../../../languagePlugins/csharp/dependencyResolver";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
+import { NamespaceMapper } from "../../../languagePlugins/csharp/namespaceMapper";
 
 function generateDependentsForManifesto(
   manifesto: DependencyManifesto,
@@ -50,8 +51,9 @@ function generateDependentsForManifesto(
 export function generateCSharpDependencyManifesto(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
 ): DependencyManifesto {
-  const nsResolver: NamespaceResolver = new NamespaceResolver(files);
-  const depResolver: DependencyResolver = new DependencyResolver(nsResolver);
+  const nsResolver: NamespaceResolver = new NamespaceResolver();
+  const nsMapper: NamespaceMapper = new NamespaceMapper(files);
+  const depResolver: DependencyResolver = new DependencyResolver(nsMapper);
   let manifesto: DependencyManifesto = {};
 
   for (const [, f] of files) {

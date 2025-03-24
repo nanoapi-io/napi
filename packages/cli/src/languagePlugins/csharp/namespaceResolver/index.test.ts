@@ -4,7 +4,7 @@ import { getCSharpFilesMap } from "../testFiles";
 
 describe("NamespaceResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
-  const nsResolver: NamespaceResolver = new NamespaceResolver(files);
+  const nsResolver: NamespaceResolver = new NamespaceResolver();
 
   test("2Namespaces1File.cs", () => {
     const file = files.get("2Namespaces1File.cs") as File;
