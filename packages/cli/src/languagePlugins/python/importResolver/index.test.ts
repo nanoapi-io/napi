@@ -503,7 +503,7 @@ describe("PythonImportResolver", () => {
     );
   });
 
-  test.only("should resolve external import 'from externalModule import symb1'", () => {
+  test("should resolve external import 'from externalModule import symb1'", () => {
     const importStatements = resolver.getImportStatements(
       "project/app/main.py",
     );
