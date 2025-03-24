@@ -57,7 +57,7 @@ export function generateCSharpDependencyManifesto(
   for (const [, f] of files) {
     const fileDependencies = depResolver.getDependenciesFromFile(f);
     const fileNamespaces = nsResolver.getNamespacesFromFile(f);
-    const exportedSymbols = nsResolver.getClassesFromNamespaces(fileNamespaces);
+    const exportedSymbols = nsResolver.getExportsFromNamespaces(fileNamespaces);
     const fileManifest: FileManifesto = {
       id: f.path,
       filePath: f.path,
@@ -98,7 +98,7 @@ export function generateCSharpDependencyManifesto(
             isExternal: false,
             symbols: Object.fromEntries(
               nsResolver
-                .getClassesFromNamespaces(
+                .getExportsFromNamespaces(
                   nsResolver.getNamespacesFromFile(depFile),
                 )
                 .map((s) => [s.name, s.name]),

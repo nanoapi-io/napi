@@ -28,7 +28,7 @@ export class NamespaceResolver {
     return [
       {
         name: "",
-        classes: this.#getClassesFromNode(node),
+        classes: this.#getExportsFromNode(node),
         childrenNamespaces: this.#getNamespacesFromNode(node),
       },
     ];
@@ -40,7 +40,7 @@ export class NamespaceResolver {
       .filter((child) => child.type === "namespace_declaration")
       .map((child) => ({
         name: this.#getName(child),
-        classes: this.#getClassesFromNode(this.#getDeclarationList(child)),
+        classes: this.#getExportsFromNode(this.#getDeclarationList(child)),
         childrenNamespaces: this.#getNamespacesFromNode(
           this.#getDeclarationList(child),
         ),
@@ -70,7 +70,7 @@ export class NamespaceResolver {
   }
 
   // Gets the classes, structs and enums from a node
-  #getClassesFromNode(node: Parser.SyntaxNode): ExportedSymbol[] {
+  #getExportsFromNode(node: Parser.SyntaxNode): ExportedSymbol[] {
     return (
       node.children
         .filter(
@@ -89,12 +89,12 @@ export class NamespaceResolver {
     );
   }
 
-  getClassesFromNamespaces(namespaces: Namespace[]): ExportedSymbol[] {
+  getExportsFromNamespaces(namespaces: Namespace[]): ExportedSymbol[] {
     let classes: ExportedSymbol[] = [];
     namespaces.forEach((ns) => {
       classes = classes.concat(ns.classes);
       classes = classes.concat(
-        this.getClassesFromNamespaces(ns.childrenNamespaces),
+        this.getExportsFromNamespaces(ns.childrenNamespaces),
       );
     });
     return classes;
