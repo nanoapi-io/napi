@@ -30,7 +30,7 @@ export interface ExportedSymbol {
 
 export interface Namespace {
   name: string;
-  node?: Parser.SyntaxNode; // Optional because some namespaces are merely theoretical
+  node: Parser.SyntaxNode;
   identifierNode?: Parser.SyntaxNode; // Optional because the root namespace doesn't have an identifier
   exports: ExportedSymbol[];
   childrenNamespaces: Namespace[];

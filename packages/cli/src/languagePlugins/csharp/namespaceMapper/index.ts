@@ -1,5 +1,15 @@
 import Parser from "tree-sitter";
-import { NamespaceResolver, Namespace } from "../namespaceResolver";
+import {
+  NamespaceResolver,
+  Namespace,
+  ExportedSymbol,
+} from "../namespaceResolver";
+
+export interface NamespaceNode {
+  name: string;
+  exports: ExportedSymbol[];
+  childrenNamespaces: NamespaceNode[];
+}
 
 export class NamespaceMapper {
   #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
@@ -14,7 +24,7 @@ export class NamespaceMapper {
   }
 
   // Adds a namespace to the final tree.
-  #addNamespaceToTree(namespace: Namespace, tree: Namespace) {
+  #addNamespaceToTree(namespace: NamespaceNode, tree: NamespaceNode) {
     // Deconstruct the namespace's name, so that A.B
     // becomes B, child of A.
     const parts = namespace.name.split(".");
@@ -47,7 +57,7 @@ export class NamespaceMapper {
 
   // Assigns namespaces to classes, used for ambiguity resolution.
   // check 2Namespaces1File.cs for an example.
-  #assignNamespacesToClasses(tree: Namespace, parentNamespace = "") {
+  #assignNamespacesToClasses(tree: NamespaceNode, parentNamespace = "") {
     const fullNamespace = parentNamespace
       ? `${parentNamespace}.${tree.name}`
       : tree.name;
@@ -62,8 +72,8 @@ export class NamespaceMapper {
   }
 
   // Builds a tree of namespaces from the parsed files.
-  buildNamespaceTree(): Namespace {
-    const namespaceTree: Namespace = {
+  buildNamespaceTree(): NamespaceNode {
+    const namespaceTree: NamespaceNode = {
       name: "",
       exports: [],
       childrenNamespaces: [],
