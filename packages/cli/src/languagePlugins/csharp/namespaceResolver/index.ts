@@ -23,6 +23,7 @@ export interface ExportedSymbol {
   name: string;
   type: SymbolType;
   node: Parser.SyntaxNode;
+  identifierNode: Parser.SyntaxNode;
   namespace?: string;
   filepath: string;
 }
@@ -69,7 +70,7 @@ export class NamespaceResolver {
     return node.children
       .filter((child) => child.type === "namespace_declaration")
       .map((child) => ({
-        name: this.#getName(child),
+        name: this.#getIdentifierNode(child).text,
         exports: this.#getExportsFromNode(this.#getDeclarationList(child)),
         childrenNamespaces: this.#getNamespacesFromNode(
           this.#getDeclarationList(child),
@@ -89,14 +90,14 @@ export class NamespaceResolver {
   }
 
   // Gets the name from a node
-  #getName(node: Parser.SyntaxNode): string {
+  #getIdentifierNode(node: Parser.SyntaxNode): Parser.SyntaxNode {
     return new Parser.Query(
       this.parser.getLanguage(),
       `
         (identifier) @name
         (qualified_name) @name
       `,
-    ).captures(node)[0].node.text;
+    ).captures(node)[0].node;
   }
 
   // Gets the classes, structs and enums from a node
@@ -111,9 +112,10 @@ export class NamespaceResolver {
           child.type === "delegate_declaration",
       )
       .map((child) => ({
-        name: this.#getName(child),
+        name: this.#getIdentifierNode(child).text,
         type: child.type.replace("_declaration", "") as SymbolType,
         node: child,
+        identifierNode: this.#getIdentifierNode(child),
         filepath: this.#currentFile,
       }));
   }
