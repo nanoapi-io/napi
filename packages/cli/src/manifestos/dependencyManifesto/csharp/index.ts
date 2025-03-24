@@ -1,7 +1,7 @@
 import Parser from "tree-sitter";
 import { DependencyManifesto, FileManifesto, SymbolType } from "..";
-import { CSharpPlugin } from "../../../languagePlugins/csharp/csharpParser";
-import { Namespace } from "../../../languagePlugins/csharp/csharpParser/types";
+import { NamespaceResolver } from "../../../languagePlugins/csharp/namespaceResolver";
+import { DependencyResolver } from "../../../languagePlugins/csharp/dependencyResolver";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 function generateDependentsForManifesto(
@@ -50,15 +50,14 @@ function generateDependentsForManifesto(
 export function generateCSharpDependencyManifesto(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
 ): DependencyManifesto {
-  const plugin: CSharpPlugin = new CSharpPlugin(files);
+  const nsResolver: NamespaceResolver = new NamespaceResolver(files);
+  const depResolver: DependencyResolver = new DependencyResolver(nsResolver);
   let manifesto: DependencyManifesto = {};
 
-  const tree: Namespace = plugin.buildNamespaceTree();
-
   for (const [, f] of files) {
-    const fileDependencies = plugin.getDependenciesFromFile(tree, f);
-    const fileNamespaces = plugin.getNamespacesFromFile(f);
-    const exportedSymbols = plugin.getClassesFromNamespaces(fileNamespaces);
+    const fileDependencies = depResolver.getDependenciesFromFile(f);
+    const fileNamespaces = nsResolver.getNamespacesFromFile(f);
+    const exportedSymbols = nsResolver.getClassesFromNamespaces(fileNamespaces);
     const fileManifest: FileManifesto = {
       id: f.path,
       filePath: f.path,
@@ -90,7 +89,7 @@ export function generateCSharpDependencyManifesto(
         dependents: {},
       };
 
-      const symbolDep = plugin.getDependenciesFromNode(tree, symbol.node);
+      const symbolDep = depResolver.getDependenciesFromNode(symbol.node);
       for (const dep of symbolDep) {
         const depFile = files.get(dep.filepath);
         if (depFile) {
@@ -98,8 +97,10 @@ export function generateCSharpDependencyManifesto(
             id: dep.filepath,
             isExternal: false,
             symbols: Object.fromEntries(
-              plugin
-                .getClassesFromNamespaces(plugin.getNamespacesFromFile(depFile))
+              nsResolver
+                .getClassesFromNamespaces(
+                  nsResolver.getNamespacesFromFile(depFile),
+                )
                 .map((s) => [s.name, s.name]),
             ),
           };

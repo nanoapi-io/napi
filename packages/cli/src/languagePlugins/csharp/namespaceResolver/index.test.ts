@@ -1,16 +1,15 @@
 import { describe, expect, test } from "vitest";
-import { CSharpPlugin } from ".";
+import { NamespaceResolver } from ".";
 import { getCSharpFilesMap } from "../testFiles";
-import { File } from "./types";
+import { File } from "../types";
 
-describe("CSharpPlugin", () => {
+describe("NamespaceResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
-  const plugin: CSharpPlugin = new CSharpPlugin(files);
-  const programcs: File = files.get("Program.cs") as File;
+  const nsResolver: NamespaceResolver = new NamespaceResolver(files);
 
   test("2Namespaces1File.cs", () => {
     const file = files.get("2Namespaces1File.cs") as File;
-    const namespaces = plugin.getNamespacesFromFile(file);
+    const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
         name: "",
@@ -41,7 +40,7 @@ describe("CSharpPlugin", () => {
 
   test("Models.cs", () => {
     const file = files.get("Models.cs") as File;
-    const namespaces = plugin.getNamespacesFromFile(file);
+    const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
         name: "",
@@ -57,7 +56,7 @@ describe("CSharpPlugin", () => {
 
   test("Namespaced.cs", () => {
     const file = files.get("Namespaced.cs") as File;
-    const namespaces = plugin.getNamespacesFromFile(file);
+    const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
         name: "",
@@ -75,7 +74,7 @@ describe("CSharpPlugin", () => {
 
   test("Nested.cs", () => {
     const file = files.get("Nested.cs") as File;
-    const namespaces = plugin.getNamespacesFromFile(file);
+    const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
         name: "",
@@ -99,7 +98,7 @@ describe("CSharpPlugin", () => {
 
   test("SemiNamespaced.cs", () => {
     const file = files.get("SemiNamespaced.cs") as File;
-    const namespaces = plugin.getNamespacesFromFile(file);
+    const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
         name: "",
@@ -114,54 +113,6 @@ describe("CSharpPlugin", () => {
             childrenNamespaces: [],
           },
         ],
-      },
-    ]);
-  });
-  test("Import resolver", () => {
-    const usedFiles = plugin.getDependenciesFromFile(
-      plugin.buildNamespaceTree(),
-      programcs,
-    );
-    expect(usedFiles).toMatchObject([
-      {
-        name: "Bun",
-        filepath: "2Namespaces1File.cs",
-        namespace: "BeefBurger",
-      },
-      {
-        name: "Bun",
-        filepath: "2Namespaces1File.cs",
-        namespace: "ChickenBurger",
-      },
-      {
-        name: "MyClass",
-        filepath: "Namespaced.cs",
-        namespace: "MyNamespace",
-      },
-      {
-        name: "Gordon",
-        filepath: "SemiNamespaced.cs",
-        namespace: "HalfNamespace",
-      },
-      {
-        name: "Freeman",
-        filepath: "SemiNamespaced.cs",
-        namespace: "",
-      },
-      {
-        name: "OuterClass",
-        filepath: "Nested.cs",
-        namespace: "OuterNamespace",
-      },
-      {
-        name: "InnerClass",
-        filepath: "Nested.cs",
-        namespace: "OuterNamespace.InnerNamespace",
-      },
-      {
-        name: "OrderStatus",
-        filepath: "Models.cs",
-        namespace: "",
       },
     ]);
   });

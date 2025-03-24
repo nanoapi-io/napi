@@ -1,8 +1,8 @@
 import Parser from "tree-sitter";
-import { File, Namespace, ExportedSymbol } from "./types";
+import { File, Namespace, ExportedSymbol } from "../types";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
-export class CSharpPlugin {
+export class NamespaceResolver {
   parser: Parser = csharpParser;
   #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   #currentFile: string;
@@ -171,130 +171,5 @@ export class CSharpPlugin {
 
     // I don't understand why, but the root element is always empty
     return namespaceTree.childrenNamespaces[0];
-  }
-
-  #findNamespaceInTree(
-    tree: Namespace,
-    namespaceName: string,
-  ): Namespace | null {
-    if (namespaceName.includes(".")) {
-      const parts = namespaceName.split(".");
-      const simpleNamespaceName = parts[0];
-      const rest = parts.slice(1).join(".");
-
-      const namespace = tree.childrenNamespaces.find(
-        (ns) => ns.name === simpleNamespaceName,
-      );
-      if (namespace) {
-        return this.#findNamespaceInTree(namespace, rest);
-      }
-    }
-
-    return (
-      tree.childrenNamespaces.find((ns) => ns.name === namespaceName) ?? null
-    );
-  }
-
-  #findClassInTree(tree: Namespace, className: string): ExportedSymbol | null {
-    // Management of qualified names
-    if (className.includes(".")) {
-      const parts = className.split(".");
-      const namespaceName = parts.slice(0, -1).join(".");
-      const simpleClassName = parts[parts.length - 1];
-
-      const namespace = this.#findNamespaceInTree(tree, namespaceName);
-      if (namespace) {
-        return (
-          namespace.classes.find((cls) => cls.name === simpleClassName) ?? null
-        );
-      } else {
-        // In case the qualifier is actually not a namespace but a class
-        // Check OuterInnerClass in the tests.
-        return this.#findClassInTree(tree, namespaceName);
-      }
-    }
-    // Find the class in the current node's classes.
-    if (tree.classes.some((cls) => cls.name === className)) {
-      return tree.classes.find((cls) => cls.name === className) ?? null;
-    }
-
-    // Recursively search in children namespaces.
-    for (const namespace of tree.childrenNamespaces) {
-      const found = this.#findClassInTree(namespace, className);
-      if (found) {
-        return found;
-      }
-    }
-
-    return null;
-  }
-
-  // Gets the classes used in a file.
-  // Query may have to be updated to include more cases.
-  #getCalledClasses(
-    node: Parser.SyntaxNode,
-    namespaceTree: Namespace,
-  ): ExportedSymbol[] {
-    return new Parser.Query(
-      this.parser.getLanguage(),
-      `
-        ((invocation_expression
-          function:
-              (member_access_expression
-                  expression: (identifier) @classname
-        )))
-        ((object_creation_expression
-          type: (identifier) @classname
-        ))
-        (variable_declaration
-          type: (identifier) @classname
-        )
-        (qualified_name
-          qualifier: (identifier)
-          name: (identifier)
-        ) @qual_name
-      `,
-    )
-      .captures(node)
-      .map((capture) => {
-        const className = capture.node.text;
-        return (
-          this.#findClassInTree(namespaceTree, className) ?? {
-            name: className,
-            type: "class", // Inaccurate, here for placeholder.
-            node: capture.node, // Inaccurate, here for placeholder.
-            filepath: "",
-          }
-        );
-      });
-  }
-
-  // Gets the classes used in a file.
-  getDependenciesFromFile(
-    namespaceTree: Namespace,
-    file: File,
-  ): ExportedSymbol[] {
-    return this.#getCalledClasses(file.rootNode, namespaceTree)
-      .filter((cls) => cls.filepath !== "")
-      .filter(
-        (cls, index, self) =>
-          self.findIndex(
-            (c) => c.name === cls.name && c.namespace === cls.namespace,
-          ) === index,
-      );
-  }
-
-  getDependenciesFromNode(
-    namespaceTree: Namespace,
-    node: Parser.SyntaxNode,
-  ): ExportedSymbol[] {
-    return this.#getCalledClasses(node, namespaceTree)
-      .filter((cls) => cls.filepath !== "")
-      .filter(
-        (cls, index, self) =>
-          self.findIndex(
-            (c) => c.name === cls.name && c.namespace === cls.namespace,
-          ) === index,
-      );
   }
 }

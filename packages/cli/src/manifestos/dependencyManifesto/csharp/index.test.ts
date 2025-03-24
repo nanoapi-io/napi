@@ -3,10 +3,9 @@ import { generateCSharpDependencyManifesto } from ".";
 import { getCSharpFilesMap } from "../../../languagePlugins/csharp/testFiles";
 
 describe("CSharpDependencyManifesto", function () {
+  const files = getCSharpFilesMap();
+  const manifesto = generateCSharpDependencyManifesto(files);
   test("should generate a dependency manifesto for CSharp files", () => {
-    const files = getCSharpFilesMap();
-    const manifesto = generateCSharpDependencyManifesto(files);
-
     expect(manifesto).toBeDefined();
     expect(Object.keys(manifesto).length).toBe(6);
     expect(Object.keys(manifesto["Program.cs"].symbols).length).toBe(1);
@@ -18,4 +17,15 @@ describe("CSharpDependencyManifesto", function () {
       ).length,
     ).toBe(1);
   });
+
+  test("Dependents are recorded", () => {
+    const dependents = manifesto["Namespaced.cs"].symbols["MyClass"].dependents;
+    expect(Object.keys(dependents).length).toBe(1);
+    expect(dependents["Program.cs"].symbols["Program"]).toBe("Program");
+  });
+
+  // TODO
+  // test("should handle external dependencies", () => {
+  //   expect(manifesto["Program.cs"].dependencies["System"].isExternal).toBe(true);
+  // });
 });
