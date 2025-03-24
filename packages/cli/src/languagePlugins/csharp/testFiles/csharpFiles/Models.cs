@@ -18,3 +18,4 @@ public interface IOrder
 {
     void Process();
 }
+public delegate void OrderDelegate(int orderId);

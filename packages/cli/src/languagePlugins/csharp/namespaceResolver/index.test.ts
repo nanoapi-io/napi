@@ -49,6 +49,7 @@ describe("NamespaceResolver", () => {
           { name: "Order", type: "struct", filepath: "Models.cs" },
           { name: "OrderStatus", type: "enum", filepath: "Models.cs" },
           { name: "IOrder", type: "interface", filepath: "Models.cs" },
+          { name: "OrderDelegate", type: "delegate", filepath: "Models.cs" },
         ],
         childrenNamespaces: [],
       },

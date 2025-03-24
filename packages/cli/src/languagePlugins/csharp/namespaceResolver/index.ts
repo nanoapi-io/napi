@@ -77,7 +77,8 @@ export class NamespaceResolver {
           child.type === "class_declaration" ||
           child.type === "struct_declaration" ||
           child.type === "enum_declaration" ||
-          child.type === "interface_declaration",
+          child.type === "interface_declaration" ||
+          child.type === "delegate_declaration",
       )
       .map((child) => ({
         name: this.#getName(child),
