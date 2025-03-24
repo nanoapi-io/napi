@@ -1,4 +1,10 @@
-import { ElementDefinition, StylesheetJson } from "cytoscape";
+import {
+  Core,
+  ElementDefinition,
+  LayoutOptions,
+  NodeCollection,
+  StylesheetJson,
+} from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config";
 import { AuditResponse } from "../../../service/api/auditApi/types";
 
@@ -101,7 +107,7 @@ export function getCyStyle(theme: "light" | "dark") {
         color: tailwindConfig.theme.extend.colors.text[theme],
         "background-color":
           tailwindConfig.theme.extend.colors.background[theme],
-        "border-width": 2,
+        "border-width": 1,
         "border-color": tailwindConfig.theme.extend.colors.border[theme],
         "text-valign": "center",
         "text-halign": "center",
@@ -109,25 +115,117 @@ export function getCyStyle(theme: "light" | "dark") {
       },
     },
     {
+      selector: "node.focus",
+      style: {
+        "border-width": 3,
+        "border-color": tailwindConfig.theme.extend.colors.secondary[theme],
+        "z-index": 1000,
+      },
+    },
+    {
+      selector: "node.background",
+      style: {
+        opacity: 0.3,
+      },
+    },
+    {
       selector: "edge",
       style: {
         width: 2,
         "line-color": tailwindConfig.theme.extend.colors.text[theme],
+        "line-opacity": 1,
         "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
         "target-arrow-shape": "triangle",
         "curve-style": "bezier",
       },
     },
+    {
+      selector: "edge.background",
+      style: {
+        "line-opacity": 0.1,
+        width: 5,
+      },
+    },
+    {
+      selector: "edge.focus",
+      style: {
+        "line-opacity": 1,
+        width: 5,
+        "z-index": 1000,
+      },
+    },
+    {
+      selector: "edge.dependency", // class focus and class dependency
+      style: {
+        "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
+        "target-arrow-color":
+          tailwindConfig.theme.extend.colors.secondary[theme],
+      },
+    },
+    {
+      selector: "edge.dependent",
+      style: {
+        "line-color": tailwindConfig.theme.extend.colors.primary[theme],
+        "target-arrow-color": tailwindConfig.theme.extend.colors.primary[theme],
+      },
+    },
   ] as StylesheetJson;
 }
 
-export function getCyLayout(animate = true) {
+export function getCyLayout(
+  cyInstance: Core,
+  selectedNodes: NodeCollection,
+  options?: {
+    animate?: boolean;
+    keepBoundingBox?: boolean;
+  },
+) {
+  let idealEdgeLength = 0;
+  if (selectedNodes.length < 10) {
+    idealEdgeLength = 25;
+  } else if (selectedNodes.length < 50) {
+    idealEdgeLength = 40;
+  } else if (selectedNodes.length < 100) {
+    idealEdgeLength = 60;
+  } else if (selectedNodes.length < 200) {
+    idealEdgeLength = 100;
+  } else if (selectedNodes.length < 500) {
+    idealEdgeLength = 150;
+  } else if (selectedNodes.length < 1000) {
+    idealEdgeLength = 200;
+  } else {
+    idealEdgeLength = 300;
+  }
+
+  const boundingBox =
+    options?.keepBoundingBox && cyInstance.elements().renderedBoundingBox();
+
+  let numIter = 0;
+  if (selectedNodes.length < 50) {
+    numIter = 1000;
+  } else if (selectedNodes.length < 100) {
+    numIter = 500;
+  } else if (selectedNodes.length < 200) {
+    numIter = 300;
+  } else if (selectedNodes.length < 500) {
+    numIter = 200;
+  } else if (selectedNodes.length < 1000) {
+    numIter = 100;
+  } else {
+    numIter = 50;
+  }
+
   return {
-    name: "cose-bilkent",
-    quality: "draft",
-    animate: animate ? "end" : false,
-    idealEdgeLength: 1000,
-  };
+    name: "cose",
+    quality: "default",
+    animate: options?.animate ? "end" : false,
+    idealEdgeLength,
+    fit: boundingBox ? true : true,
+    // boundingBox,
+    nodeDimensionsIncludeLabels: true,
+    randomize: true,
+    numIter,
+  } as LayoutOptions;
 }
 
 const errorChar = "❗";

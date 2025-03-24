@@ -252,10 +252,46 @@ export class PythonDependencyResolver {
 
     // For each exported symbol, compute its dependencies using the symbol's AST subtree.
     exportedSymbols.forEach((symbol) => {
+      // Get the symbol's dependencies from the import statements.
       const symDependencies = this.getTargetNodeDependencies(
         symbol.node,
         importedStatements,
       );
+
+      // Check if other symbols are used in the symbol's
+      exportedSymbols.forEach((otherSymbol) => {
+        if (otherSymbol.id === symbol.id) {
+          return;
+        }
+
+        const nodesToExclude = this.getNodeToExcludeFromUsage(symbol.node);
+
+        const isUsed = this.usageResolver.isRefUsed(
+          symbol.node,
+          nodesToExclude,
+          otherSymbol.identifierNode.text,
+        );
+
+        if (isUsed) {
+          // get/add current file to dependency
+          let fileDep = symDependencies.get(filePath);
+          if (!fileDep) {
+            fileDep = {
+              id: filePath,
+              isExternal: false,
+              symbols: new Map(),
+            };
+          }
+          // get/add other symbol to dependency
+          let otherSymbolDep = fileDep.symbols.get(otherSymbol.id);
+          if (!otherSymbolDep) {
+            otherSymbolDep = otherSymbol.id;
+          }
+          fileDep.symbols.set(otherSymbol.id, otherSymbolDep);
+          symDependencies.set(fileDep.id, fileDep);
+        }
+      });
+
       const symbolCharacterCount =
         symbol.node.endIndex - symbol.node.startIndex;
       const symbolLineCount =

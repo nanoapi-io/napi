@@ -309,7 +309,7 @@ export class PythonUsageResolver {
    * @param refName The reference name to look for.
    * @returns True if the reference is used, otherwise false.
    */
-  private isExternalRefUsed(
+  public isRefUsed(
     targetNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
     refName: string,
@@ -365,7 +365,7 @@ export class PythonUsageResolver {
     // If explicit symbols are provided, check each.
     if (module.explicitSymbols.length > 0) {
       for (const symbol of module.explicitSymbols) {
-        const isUsed = this.isExternalRefUsed(
+        const isUsed = this.isRefUsed(
           targetNode,
           nodesToExclude,
           symbol.alias || symbol.identifier,
@@ -378,7 +378,7 @@ export class PythonUsageResolver {
     }
 
     // Otherwise, check for usage of the module itself.
-    const isUsed = this.isExternalRefUsed(
+    const isUsed = this.isRefUsed(
       targetNode,
       nodesToExclude,
       module.alias || module.identifier,
