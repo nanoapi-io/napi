@@ -9,66 +9,10 @@ import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 export class CSharpDependencyResolver {
   parser: Parser = csharpParser;
-  private nsTree: NamespaceNode;
+  private nsMapper: CSharpNamespaceMapper;
 
   constructor(nsMapper: CSharpNamespaceMapper) {
-    this.nsTree = nsMapper.buildNamespaceTree();
-  }
-
-  #findNamespaceInTree(
-    tree: NamespaceNode,
-    namespaceName: string,
-  ): NamespaceNode | null {
-    if (namespaceName.includes(".")) {
-      const parts = namespaceName.split(".");
-      const simpleNamespaceName = parts[0];
-      const rest = parts.slice(1).join(".");
-
-      const namespace = tree.childrenNamespaces.find(
-        (ns) => ns.name === simpleNamespaceName,
-      );
-      if (namespace) {
-        return this.#findNamespaceInTree(namespace, rest);
-      }
-    }
-
-    return (
-      tree.childrenNamespaces.find((ns) => ns.name === namespaceName) ?? null
-    );
-  }
-
-  #findClassInTree(tree: NamespaceNode, className: string): SymbolNode | null {
-    // Management of qualified names
-    if (className.includes(".")) {
-      const parts = className.split(".");
-      const namespaceName = parts.slice(0, -1).join(".");
-      const simpleClassName = parts[parts.length - 1];
-
-      const namespace = this.#findNamespaceInTree(tree, namespaceName);
-      if (namespace) {
-        return (
-          namespace.exports.find((cls) => cls.name === simpleClassName) ?? null
-        );
-      } else {
-        // In case the qualifier is actually not a namespace but a class
-        // Check OuterInnerClass in the tests.
-        return this.#findClassInTree(this.nsTree, namespaceName);
-      }
-    }
-    // Find the class in the current node's classes.
-    if (tree.exports.some((cls) => cls.name === className)) {
-      return tree.exports.find((cls) => cls.name === className) ?? null;
-    }
-
-    // Recursively search in children namespaces.
-    for (const namespace of tree.childrenNamespaces) {
-      const found = this.#findClassInTree(namespace, className);
-      if (found) {
-        return found;
-      }
-    }
-
-    return null;
+    this.nsMapper = nsMapper;
   }
 
   // Gets the classes used in a file.
@@ -100,14 +44,14 @@ export class CSharpDependencyResolver {
       .captures(node)
       .map((capture) => {
         const className = capture.node.text;
-        return this.#findClassInTree(namespaceTree, className);
+        return this.nsMapper.findClassInTree(namespaceTree, className);
       })
       .filter((cls): cls is SymbolNode => cls !== null);
   }
 
   // Gets the classes used in a file.
   getDependenciesFromFile(file: File): SymbolNode[] {
-    return this.#getCalledClasses(file.rootNode, this.nsTree)
+    return this.#getCalledClasses(file.rootNode, this.nsMapper.nsTree)
       .filter((cls) => cls.filepath !== "")
       .filter(
         (cls, index, self) =>
@@ -118,7 +62,7 @@ export class CSharpDependencyResolver {
   }
 
   getDependenciesFromNode(node: Parser.SyntaxNode): SymbolNode[] {
-    return this.#getCalledClasses(node, this.nsTree)
+    return this.#getCalledClasses(node, this.nsMapper.nsTree)
       .filter((cls) => cls.filepath !== "")
       .filter(
         (cls, index, self) =>

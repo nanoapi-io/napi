@@ -1,5 +1,9 @@
 import Parser from "tree-sitter";
-import { CSharpNamespaceMapper } from "../namespaceMapper";
+import {
+  CSharpNamespaceMapper,
+  NamespaceNode,
+  SymbolNode,
+} from "../namespaceMapper";
 
 export const GLOBAL_USING = "global";
 export const LOCAL_USING = "local";
@@ -15,8 +19,25 @@ export type UsingType =
 export interface UsingDirective {
   node: Parser.SyntaxNode;
   type: UsingType;
-  import: string;
+  idf: string;
   alias?: string;
+}
+
+export interface InternalSymbol {
+  usingtype: UsingType;
+  alias?: string;
+  symbol: SymbolNode | NamespaceNode;
+}
+
+export interface ExternalSymbol {
+  usingtype: UsingType;
+  alias?: string;
+  name: string;
+}
+
+export interface ResolvedImports {
+  internal: InternalSymbol[];
+  external: ExternalSymbol[];
 }
 
 export class CSharpUsingResolver {
@@ -45,10 +66,10 @@ export class CSharpUsingResolver {
           (child.type === "identifier" || child.type === "qualified_name") &&
           child !== node.childForFieldName("name"),
       );
-      const imprt = importNode ? importNode.text : "";
+      const idf = importNode ? importNode.text : "";
       const aliasNode = node.childForFieldName("name");
       const alias = aliasNode ? aliasNode.text : undefined;
-      return { node, type, import: imprt, alias };
+      return { node, type, idf, alias };
     });
     return this.usingDirectives;
   }
@@ -65,5 +86,30 @@ export class CSharpUsingResolver {
       return GLOBAL_USING;
     }
     return LOCAL_USING;
+  }
+
+  private resolveUsingDirective(
+    directive: UsingDirective,
+  ): InternalSymbol | ExternalSymbol {
+    const { type, idf, alias } = directive;
+    const symbol = this.nsMapper.findAnyInTree(this.nsMapper.nsTree, idf);
+    if (symbol) {
+      return { usingtype: type, alias, symbol };
+    }
+    return { usingtype: type, alias, name: idf };
+  }
+
+  public resolveUsingDirectives(filepath: string): ResolvedImports {
+    const internal: InternalSymbol[] = [];
+    const external: ExternalSymbol[] = [];
+    this.parseUsingDirectives(filepath).forEach((directive) => {
+      const resolved = this.resolveUsingDirective(directive);
+      if ("symbol" in resolved) {
+        internal.push(resolved);
+      } else {
+        external.push(resolved);
+      }
+    });
+    return { internal, external };
   }
 }
