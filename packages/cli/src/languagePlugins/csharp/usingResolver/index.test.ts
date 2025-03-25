@@ -16,7 +16,7 @@ describe("UsingResolver", () => {
   const resolver = new CSharpUsingResolver(nsmapper);
 
   test("Should resolve all use cases of 'using'", () => {
-    const usingDirectives = resolver.resolveUsingDirectives("Usage.cs");
+    const usingDirectives = resolver.parseUsingDirectives("Usage.cs");
     expect(usingDirectives).toMatchObject([
       {
         type: GLOBAL_USING,

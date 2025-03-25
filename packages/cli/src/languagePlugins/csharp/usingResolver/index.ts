@@ -28,7 +28,7 @@ export class CSharpUsingResolver {
   }
 
   // Parses the file and returns all using directives.
-  public resolveUsingDirectives(filepath: string): UsingDirective[] {
+  public parseUsingDirectives(filepath: string): UsingDirective[] {
     const file = this.nsMapper.getFile(filepath);
     if (!file) {
       return [];
