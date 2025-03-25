@@ -1,6 +1,10 @@
 import Parser from "tree-sitter";
-import { ExportedSymbol, File } from "../namespaceResolver";
-import { CSharpNamespaceMapper, NamespaceNode } from "../namespaceMapper";
+import { File } from "../namespaceResolver";
+import {
+  CSharpNamespaceMapper,
+  NamespaceNode,
+  SymbolNode,
+} from "../namespaceMapper";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 export class CSharpDependencyResolver {
@@ -33,10 +37,7 @@ export class CSharpDependencyResolver {
     );
   }
 
-  #findClassInTree(
-    tree: NamespaceNode,
-    className: string,
-  ): ExportedSymbol | null {
+  #findClassInTree(tree: NamespaceNode, className: string): SymbolNode | null {
     // Management of qualified names
     if (className.includes(".")) {
       const parts = className.split(".");
@@ -75,7 +76,7 @@ export class CSharpDependencyResolver {
   #getCalledClasses(
     node: Parser.SyntaxNode,
     namespaceTree: NamespaceNode,
-  ): ExportedSymbol[] {
+  ): SymbolNode[] {
     return new Parser.Query(
       this.parser.getLanguage(),
       `
@@ -101,11 +102,11 @@ export class CSharpDependencyResolver {
         const className = capture.node.text;
         return this.#findClassInTree(namespaceTree, className);
       })
-      .filter((cls): cls is ExportedSymbol => cls !== null);
+      .filter((cls): cls is SymbolNode => cls !== null);
   }
 
   // Gets the classes used in a file.
-  getDependenciesFromFile(file: File): ExportedSymbol[] {
+  getDependenciesFromFile(file: File): SymbolNode[] {
     return this.#getCalledClasses(file.rootNode, this.nsTree)
       .filter((cls) => cls.filepath !== "")
       .filter(
@@ -116,7 +117,7 @@ export class CSharpDependencyResolver {
       );
   }
 
-  getDependenciesFromNode(node: Parser.SyntaxNode): ExportedSymbol[] {
+  getDependenciesFromNode(node: Parser.SyntaxNode): SymbolNode[] {
     return this.#getCalledClasses(node, this.nsTree)
       .filter((cls) => cls.filepath !== "")
       .filter(
