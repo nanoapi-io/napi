@@ -68,6 +68,8 @@ export function generateAuditResponse(
     }
   });
 
+  console.info(`Parsed ${files.size} files`);
+
   const dependencyManifesto = generateDependencyManifesto(files, parser);
 
   const auditManifesto = generateAuditManifesto(dependencyManifesto);

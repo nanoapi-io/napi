@@ -23,9 +23,11 @@ export default function AuditPage() {
   const themeContext = useContext(ThemeContext);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [busy, setBusy] = useState<boolean>(true);
   const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
 
   useEffect(() => {
+    setBusy(true);
     // If we already have an instance, reinstantiate it
     // This prevents some bugs with data not being updated
     // when new file is selected
@@ -52,12 +54,14 @@ export default function AuditPage() {
       resizeNodeFromLabel(node, node.data("label"));
     });
 
-    const layout = getCyLayout(false);
+    const layout = getCyLayout(cy, cy.nodes());
     cy.layout(layout).run();
 
     createCyListeners(cy);
 
     setCyInstance(cy);
+
+    setBusy(false);
 
     // Cleanup on unmount
     return () => {
@@ -79,15 +83,68 @@ export default function AuditPage() {
 
       const isExpanded = !data.isExpanded;
 
+      const allElements = cy.elements();
+      const closedNeighborhood = node.closedNeighborhood();
+      const outsideOfNeighborhood = cy
+        .elements()
+        .difference(closedNeighborhood);
+
+      const expandedNodes = allElements.nodes(`[isExpanded]`);
+      // Need to recompute label for these, we collapse them all
+      expandedNodes.forEach((node) => {
+        const data = node.data() as NodeElementDefinition["data"];
+        const label = getNodeLabel({
+          isExpanded: false,
+          fileName: data.customData.fileName,
+          errorMessages: data.customData.errorMessages,
+          warningMessages: data.customData.warningMessages,
+        });
+        node.data({ label, isExpanded: false });
+        resizeNodeFromLabel(node, label);
+      });
+
+      // expand or collapse  clicked node
       const label = getNodeLabel({
         isExpanded,
         fileName: data.customData.fileName,
         errorMessages: data.customData.errorMessages,
         warningMessages: data.customData.warningMessages,
       });
-
       node.data({ label, isExpanded });
       resizeNodeFromLabel(node, label);
+
+      // remove all, clean state
+      allElements.removeClass([
+        "background",
+        "focus",
+        "dependency",
+        "dependent",
+      ]);
+
+      if (isExpanded) {
+        // set background to all outside elements
+        outsideOfNeighborhood.addClass(["background"]);
+        // set focus to all connected nodes, and remove other classes
+        closedNeighborhood.addClass(["focus"]);
+
+        const dependencyEdges = node
+          .connectedEdges()
+          .filter((edge) => edge.source() === node);
+        dependencyEdges.addClass("dependency");
+        const dependentEdges = node
+          .connectedEdges()
+          .filter((edge) => edge.target() === node);
+        dependentEdges.addClass("dependent");
+      }
+
+      if (isExpanded) {
+        // layout closed neighborhood
+        const layout = getCyLayout(cy, closedNeighborhood, {
+          animate: true,
+          keepBoundingBox: true,
+        });
+        closedNeighborhood.makeLayout(layout).run();
+      }
     });
 
     // On double tap we redirect to file or instance view
@@ -107,17 +164,21 @@ export default function AuditPage() {
 
   function onLayout() {
     if (cyInstance) {
-      const layout = getCyLayout();
+      const layout = getCyLayout(cyInstance, cyInstance.nodes());
       cyInstance.makeLayout(layout).run();
     }
   }
 
   return (
     <div className="relative w-full h-full">
-      {(context.busy || !cyInstance) && <CytoscapeSkeleton />}
+      {(context.busy || busy || !cyInstance) && <CytoscapeSkeleton />}
 
       {cyInstance && (
-        <Controls busy={false} cy={cyInstance} onLayout={onLayout} />
+        <Controls
+          busy={context.busy || busy}
+          cy={cyInstance}
+          onLayout={onLayout}
+        />
       )}
 
       <div ref={containerRef} className="relative w-full h-full z-1" />

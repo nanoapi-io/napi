@@ -43,6 +43,8 @@ describe("PythonImportResolver", () => {
               from .local_module import local_func
               from ..parent_module import parent_func
               from app.multi import a, b, c
+              from externalModule import symb1
+              from externalModule import symb2 as s2
             `).rootNode,
         },
       ],
@@ -454,7 +456,7 @@ describe("PythonImportResolver", () => {
     const importStatements = resolver.getImportStatements(
       "project/app/main.py",
     );
-    // Our main file now also contains: "from app.multi import a, b"
+    // Our main file now also contains: "from app.multi import a, b, c"
     const multiImport = importStatements.find(
       (stmt) =>
         stmt.node.type === "import_from_statement" &&
@@ -466,7 +468,7 @@ describe("PythonImportResolver", () => {
     expect(multiImport.members).toHaveLength(1);
     // In our implementation, the member node for from-import is the module name
     expect(multiImport.members[0].node.text.trim()).toBe("app.multi");
-    // And memberSymbols should contain both "a" and "b"
+    // And memberSymbols should contain "a", "b", and "c"
     expect(multiImport.members[0].memberSymbols).toHaveLength(3);
     const symbols = multiImport.members[0].memberSymbols;
     expect(symbols.map((s) => s.identifierNode.text.trim())).toEqual([
@@ -499,6 +501,94 @@ describe("PythonImportResolver", () => {
         }),
       ]),
     );
+  });
+
+  test("should resolve external import 'from externalModule import symb1'", () => {
+    const importStatements = resolver.getImportStatements(
+      "project/app/main.py",
+    );
+    const externalImport = importStatements.find(
+      (stmt) =>
+        stmt.node.type === "import_from_statement" &&
+        stmt.node.text.trim() === "from externalModule import symb1",
+    ) as ImportStatement;
+    expect(externalImport).toBeDefined();
+    expect(externalImport.node.text.trim()).toBe(
+      "from externalModule import symb1",
+    );
+    expect(externalImport.sourceNode?.text).toBe("externalModule");
+    expect(externalImport.members).toHaveLength(1);
+    expect(externalImport.members[0].node.text.trim()).toBe("externalModule");
+    expect(externalImport.members[0].memberIdentifierNode.text.trim()).toBe(
+      "externalModule",
+    );
+    expect(externalImport.members[0].memberAliasNode).toBeUndefined();
+    expect(externalImport.members[0].memberSymbols).toHaveLength(1);
+    expect(externalImport.members[0].memberSymbols[0].node.text.trim()).toBe(
+      "symb1",
+    );
+    expect(
+      externalImport.members[0].memberSymbols[0].identifierNode.text.trim(),
+    ).toBe("symb1");
+    expect(
+      externalImport.members[0].memberSymbols[0].aliasNode,
+    ).toBeUndefined();
+    expect(externalImport.modules).toHaveLength(1);
+    expect(externalImport.modules[0].source).toBe("externalModule");
+    expect(externalImport.modules[0].alias).toBeUndefined();
+    // External modules remain unresolved.
+    expect(externalImport.modules[0].module).toBeUndefined();
+    // The module's exported symbols should now include the imported symbol.
+    expect(externalImport.modules[0].symbols).toHaveLength(1);
+    expect(externalImport.modules[0].symbols[0]).toEqual({
+      id: "symb1",
+      alias: undefined,
+      isExplicitelyImported: true,
+    });
+  });
+
+  test("should resolve external import 'from externalModule import symb2 as s2'", () => {
+    const importStatements = resolver.getImportStatements(
+      "project/app/main.py",
+    );
+    const externalImport = importStatements.find(
+      (stmt) =>
+        stmt.node.type === "import_from_statement" &&
+        stmt.node.text.trim() === "from externalModule import symb2 as s2",
+    ) as ImportStatement;
+    expect(externalImport).toBeDefined();
+    expect(externalImport.node.text.trim()).toBe(
+      "from externalModule import symb2 as s2",
+    );
+    expect(externalImport.sourceNode?.text).toBe("externalModule");
+    expect(externalImport.members).toHaveLength(1);
+    expect(externalImport.members[0].node.text.trim()).toBe("externalModule");
+    expect(externalImport.members[0].memberIdentifierNode.text.trim()).toBe(
+      "externalModule",
+    );
+    expect(externalImport.members[0].memberAliasNode).toBeUndefined();
+    expect(externalImport.members[0].memberSymbols).toHaveLength(1);
+    expect(externalImport.members[0].memberSymbols[0].node.text.trim()).toBe(
+      "symb2 as s2",
+    );
+    expect(
+      externalImport.members[0].memberSymbols[0].identifierNode.text.trim(),
+    ).toBe("symb2");
+    expect(
+      externalImport.members[0].memberSymbols[0].aliasNode?.text.trim(),
+    ).toBe("s2");
+    expect(externalImport.modules).toHaveLength(1);
+    expect(externalImport.modules[0].source).toBe("externalModule");
+    expect(externalImport.modules[0].alias).toBeUndefined();
+    // External modules remain unresolved.
+    expect(externalImport.modules[0].module).toBeUndefined();
+    // The module's exported symbols should now include the imported symbol with alias.
+    expect(externalImport.modules[0].symbols).toHaveLength(1);
+    expect(externalImport.modules[0].symbols[0]).toEqual({
+      id: "symb2",
+      alias: "s2",
+      isExplicitelyImported: true,
+    });
   });
 
   test("should return an empty array for a file with no imports", () => {

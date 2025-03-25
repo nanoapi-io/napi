@@ -1,19 +1,21 @@
 import Parser from "tree-sitter";
-import {
-  CSharpNamespaceResolver,
-  Namespace,
-  ExportedSymbol,
-} from "../namespaceResolver";
+import { CSharpNamespaceResolver, SymbolType } from "../namespaceResolver";
 
 export interface NamespaceNode {
   name: string;
-  exports: ExportedSymbol[];
+  exports: SymbolNode[];
   childrenNamespaces: NamespaceNode[];
+}
+
+export interface SymbolNode {
+  name: string;
+  type: SymbolType;
+  namespace: string; // Kept for ambiguity resolution
+  filepath: string;
 }
 
 export class CSharpNamespaceMapper {
   #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
-  #namespaces: Namespace[] = [];
   #nsResolver: CSharpNamespaceResolver;
 
   constructor(
@@ -81,14 +83,13 @@ export class CSharpNamespaceMapper {
 
     // Parse all files.
     this.#files.forEach((file) => {
-      this.#namespaces = this.#namespaces.concat(
-        this.#nsResolver.getNamespacesFromFile(file),
-      );
-    });
+      const namespaces = this.#nsResolver
+        .getNamespacesFromFile(file)
+        .map((ns) => ns as NamespaceNode);
 
-    // Add all namespaces to the tree.
-    this.#namespaces.forEach((namespace) => {
-      this.#addNamespaceToTree(namespace, namespaceTree);
+      namespaces.forEach((namespace) => {
+        this.#addNamespaceToTree(namespace, namespaceTree);
+      });
     });
 
     // Assign namespaces to classes.
