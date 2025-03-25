@@ -14,6 +14,7 @@ describe("NamespaceMapper", () => {
       exports: [
         { name: "Freeman", filepath: "SemiNamespaced.cs" },
         { name: "HeadCrab", filepath: "SemiNamespaced.cs" },
+        { name: "Usage", filepath: "Usage.cs" },
       ],
       childrenNamespaces: [
         {

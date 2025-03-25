@@ -7,7 +7,7 @@ describe("CSharpDependencyManifesto", function () {
   const manifesto = generateCSharpDependencyManifesto(files);
   test("should generate a dependency manifesto for CSharp files", () => {
     expect(manifesto).toBeDefined();
-    expect(Object.keys(manifesto).length).toBe(6);
+    expect(Object.keys(manifesto).length).toBe(7);
     expect(Object.keys(manifesto["Program.cs"].symbols).length).toBe(1);
     expect(Object.keys(manifesto["Program.cs"].dependencies).length).toBe(8);
     expect(
