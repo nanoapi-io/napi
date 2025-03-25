@@ -25,6 +25,10 @@ export class CSharpNamespaceMapper {
     this.#nsResolver = new CSharpNamespaceResolver();
   }
 
+  getFile(key: string) {
+    return this.#files.get(key);
+  }
+
   // Adds a namespace to the final tree.
   #addNamespaceToTree(namespace: NamespaceNode, tree: NamespaceNode) {
     // Deconstruct the namespace's name, so that A.B
