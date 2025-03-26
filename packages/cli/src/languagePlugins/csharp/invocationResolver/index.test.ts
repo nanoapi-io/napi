@@ -64,7 +64,6 @@ describe("DependencyResolver", () => {
           namespace: "MyApp.Models",
         },
       ],
-      resolvedNamespaces: [],
       unresolved: ["System.Math"],
     });
   });

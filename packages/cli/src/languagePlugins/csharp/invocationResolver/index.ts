@@ -9,7 +9,6 @@ import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 export interface Invocations {
   resolvedSymbols: SymbolNode[];
-  resolvedNamespaces: NamespaceNode[];
   unresolved: string[];
 }
 
@@ -43,7 +42,6 @@ export class CSharpInvocationResolver {
   ): Invocations {
     const invocations: Invocations = {
       resolvedSymbols: [],
-      resolvedNamespaces: [],
       unresolved: [],
     };
     // Query to capture object creation expressions and variable declarations
@@ -72,14 +70,8 @@ export class CSharpInvocationResolver {
       if (cls) {
         invocations.resolvedSymbols.push(cls);
       } else {
-        // If class not found, try to find the namespace
-        const ns = this.nsMapper.findNamespaceInTree(namespaceTree, classname);
-        if (ns) {
-          invocations.resolvedNamespaces.push(ns);
-        } else {
-          // If neither class nor namespace found, mark as unresolved
-          invocations.unresolved.push(classname);
-        }
+        // If class not found, mark as unresolved
+        invocations.unresolved.push(classname);
       }
     });
     return invocations;
@@ -94,7 +86,6 @@ export class CSharpInvocationResolver {
     const variablenames = this.#getVariables(node);
     const invocations: Invocations = {
       resolvedSymbols: [],
-      resolvedNamespaces: [],
       unresolved: [],
     };
     // Query to capture invocation expressions
@@ -122,14 +113,8 @@ export class CSharpInvocationResolver {
       if (cls) {
         invocations.resolvedSymbols.push(cls);
       } else {
-        // If class not found, try to find the namespace
-        const ns = this.nsMapper.findNamespaceInTree(namespaceTree, classname);
-        if (ns) {
-          invocations.resolvedNamespaces.push(ns);
-        } else {
-          // If neither class nor namespace found, mark as unresolved
-          invocations.unresolved.push(classname);
-        }
+        // If class not found, mark as unresolved
+        invocations.unresolved.push(classname);
       }
     });
     return invocations;
@@ -140,7 +125,6 @@ export class CSharpInvocationResolver {
     const file = this.nsMapper.getFile(filepath) as File;
     const invocations: Invocations = {
       resolvedSymbols: [],
-      resolvedNamespaces: [],
       unresolved: [],
     };
     // Get classes called in variable declarations and object creations
@@ -159,12 +143,6 @@ export class CSharpInvocationResolver {
       ...new Set([
         ...calledClasses.resolvedSymbols,
         ...invocationExpressions.resolvedSymbols,
-      ]),
-    ];
-    invocations.resolvedNamespaces = [
-      ...new Set([
-        ...calledClasses.resolvedNamespaces,
-        ...invocationExpressions.resolvedNamespaces,
       ]),
     ];
     invocations.unresolved = [
