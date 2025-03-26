@@ -5,45 +5,52 @@ import {
   SymbolNode,
 } from "../namespaceMapper";
 
+// Constants representing different types of 'using' directives in C#
 export const GLOBAL_USING = "global";
 export const LOCAL_USING = "local";
 export const USING_STATIC = "static";
 export const USING_ALIAS = "alias";
 
+// Type alias for the different 'using' directive types
 export type UsingType =
   | typeof GLOBAL_USING
   | typeof LOCAL_USING
   | typeof USING_STATIC
   | typeof USING_ALIAS;
 
+// Interface representing a 'using' directive in the code
 export interface UsingDirective {
-  node: Parser.SyntaxNode;
-  type: UsingType;
-  idf: string;
-  alias?: string;
+  node: Parser.SyntaxNode; // The syntax node corresponding to the 'using' directive
+  type: UsingType; // The type of 'using' directive
+  idf: string; // The identifier or qualified name being imported
+  alias?: string; // Optional alias for the imported identifier
 }
 
+// Interface representing an internal symbol resolved from a 'using' directive
 export interface InternalSymbol {
-  usingtype: UsingType;
-  alias?: string;
-  symbol?: SymbolNode;
-  namespace?: NamespaceNode;
+  usingtype: UsingType; // The type of 'using' directive
+  alias?: string; // Optional alias for the symbol
+  symbol?: SymbolNode; // The symbol node if it is a class or type
+  namespace?: NamespaceNode; // The namespace node if it is a namespace
 }
 
+// Interface representing an external symbol resolved from a 'using' directive
 export interface ExternalSymbol {
-  usingtype: UsingType;
-  alias?: string;
-  name: string;
+  usingtype: UsingType; // The type of 'using' directive
+  alias?: string; // Optional alias for the symbol
+  name: string; // The name of the external symbol
 }
 
+// Interface representing the resolved imports from a file
 export interface ResolvedImports {
-  internal: InternalSymbol[];
-  external: ExternalSymbol[];
+  internal: InternalSymbol[]; // List of internal symbols
+  external: ExternalSymbol[]; // List of external symbols
 }
 
+// Class responsible for resolving 'using' directives in C# files
 export class CSharpUsingResolver {
-  private nsMapper: CSharpNamespaceMapper;
-  private usingDirectives: UsingDirective[] = [];
+  private nsMapper: CSharpNamespaceMapper; // Mapper for namespaces and symbols
+  private usingDirectives: UsingDirective[] = []; // List of parsed 'using' directives
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
@@ -75,6 +82,7 @@ export class CSharpUsingResolver {
     return this.usingDirectives;
   }
 
+  // Determines the type of 'using' directive based on its text content
   private getUsingType(node: Parser.SyntaxNode): UsingType {
     // There is probably a cleaner way to do this.
     if (node.text.includes("using static")) {
@@ -89,6 +97,7 @@ export class CSharpUsingResolver {
     return LOCAL_USING;
   }
 
+  // Resolves a single 'using' directive to either an internal or external symbol
   private resolveUsingDirective(
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
@@ -107,6 +116,7 @@ export class CSharpUsingResolver {
     return { usingtype: type, alias, name: idf };
   }
 
+  // Resolves all 'using' directives in a file and categorizes them into internal and external symbols
   public resolveUsingDirectives(filepath: string): ResolvedImports {
     const internal: InternalSymbol[] = [];
     const external: ExternalSymbol[] = [];
