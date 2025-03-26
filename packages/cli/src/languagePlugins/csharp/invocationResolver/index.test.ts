@@ -10,51 +10,62 @@ describe("DependencyResolver", () => {
   const depResolver: CSharpInvocationResolver = new CSharpInvocationResolver(
     nsMapper,
   );
-  const programcs: File = files.get("Program.cs") as File;
 
   test("Import resolver", () => {
-    const usedFiles = depResolver.getDependenciesFromFile(programcs);
-    expect(usedFiles).toMatchObject([
-      {
-        name: "Bun",
-        filepath: "2Namespaces1File.cs",
-        namespace: "BeefBurger",
-      },
-      {
-        name: "Bun",
-        filepath: "2Namespaces1File.cs",
-        namespace: "ChickenBurger",
-      },
-      {
-        name: "MyClass",
-        filepath: "Namespaced.cs",
-        namespace: "MyNamespace",
-      },
-      {
-        name: "Gordon",
-        filepath: "SemiNamespaced.cs",
-        namespace: "HalfNamespace",
-      },
-      {
-        name: "Freeman",
-        filepath: "SemiNamespaced.cs",
-        namespace: "",
-      },
-      {
-        name: "OuterClass",
-        filepath: "Nested.cs",
-        namespace: "OuterNamespace",
-      },
-      {
-        name: "InnerClass",
-        filepath: "Nested.cs",
-        namespace: "OuterNamespace.InnerNamespace",
-      },
-      {
-        name: "OrderStatus",
-        filepath: "Models.cs",
-        namespace: "MyApp.Models",
-      },
-    ]);
+    const usedFiles = depResolver.getInvocationsFromFile("Program.cs");
+    expect(usedFiles).toMatchObject({
+      resolvedSymbols: [
+        {
+          name: "Bun",
+          type: "class",
+          filepath: "2Namespaces1File.cs",
+          namespace: "BeefBurger",
+        },
+        {
+          name: "Bun",
+          type: "class",
+          filepath: "2Namespaces1File.cs",
+          namespace: "ChickenBurger",
+        },
+        {
+          name: "MyClass",
+          type: "class",
+          filepath: "Namespaced.cs",
+          namespace: "MyNamespace",
+        },
+        {
+          name: "Gordon",
+          type: "class",
+          filepath: "SemiNamespaced.cs",
+          namespace: "HalfNamespace",
+        },
+        {
+          name: "Freeman",
+          type: "class",
+          filepath: "SemiNamespaced.cs",
+          namespace: "",
+        },
+        {
+          name: "OuterClass",
+          type: "class",
+          filepath: "Nested.cs",
+          namespace: "OuterNamespace",
+        },
+        {
+          name: "InnerClass",
+          type: "class",
+          filepath: "Nested.cs",
+          namespace: "OuterNamespace.InnerNamespace",
+        },
+        {
+          name: "OrderStatus",
+          type: "enum",
+          filepath: "Models.cs",
+          namespace: "MyApp.Models",
+        },
+      ],
+      resolvedNamespaces: [],
+      unresolved: ["System.Math"],
+    });
   });
 });

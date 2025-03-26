@@ -22,6 +22,7 @@ namespace Tests
             InnerClass innerClass = new InnerClass();
             innerClass.InnerMethod();
             OrderStatus orderStatus = OrderStatus.Pending;
+            System.Math.Abs(-1).Equals(1).ToString();
         }
     }
 }

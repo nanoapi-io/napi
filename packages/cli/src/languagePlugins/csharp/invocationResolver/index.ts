@@ -7,6 +7,12 @@ import {
 } from "../namespaceMapper";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
+export interface Invocations {
+  resolvedSymbols: SymbolNode[];
+  resolvedNamespaces: NamespaceNode[];
+  unresolved: string[];
+}
+
 export class CSharpInvocationResolver {
   parser: Parser = csharpParser;
   private nsMapper: CSharpNamespaceMapper;
@@ -15,60 +21,158 @@ export class CSharpInvocationResolver {
     this.nsMapper = nsMapper;
   }
 
-  // Gets the classes used in a file.
-  // Query may have to be updated to include more cases.
-  #getCalledClasses(
-    node: Parser.SyntaxNode,
-    namespaceTree: NamespaceNode,
-  ): SymbolNode[] {
+  // Retrieves variable names from the given syntax node.
+  #getVariables(node: Parser.SyntaxNode): string[] {
     return new Parser.Query(
       this.parser.getLanguage(),
       `
-        ((invocation_expression
-          function:
-              (member_access_expression
-                  expression: (identifier) @classname
-        )))
-        ((object_creation_expression
-          type: (identifier) @classname
-        ))
-        (variable_declaration
-          type: (identifier) @classname
-        )
-        (qualified_name
-          qualifier: (identifier)
-          name: (identifier)
-        ) @qual_name
+      (variable_declarator
+        name: (identifier) @varname
+      )
       `,
     )
       .captures(node)
-      .map((capture) => {
-        const className = capture.node.text;
-        return this.nsMapper.findClassInTree(namespaceTree, className);
-      })
-      .filter((cls): cls is SymbolNode => cls !== null);
+      .map((ctc) => ctc.node.text);
+  }
+
+  // Gets the classes that are called for variable declarations and object creations.
+  // This does not manage static calls such as System.Math.Abs(-1).
+  #getCalledClasses(
+    node: Parser.SyntaxNode,
+    namespaceTree: NamespaceNode,
+  ): Invocations {
+    const invocations: Invocations = {
+      resolvedSymbols: [],
+      resolvedNamespaces: [],
+      unresolved: [],
+    };
+    // Query to capture object creation expressions and variable declarations
+    const catches = new Parser.Query(
+      this.parser.getLanguage(),
+      `
+      ((object_creation_expression
+        type: (identifier) @classname
+      ))
+      ((object_creation_expression
+        type: (qualified_name) @classname
+      ))
+      (variable_declaration
+        type: (identifier) @classname
+      )
+      (variable_declaration
+        type: (qualified_name) @classname
+      )
+      `,
+    ).captures(node);
+    // Process each captured class name
+    catches.forEach((ctc) => {
+      const classname = ctc.node.text;
+      // Try to find the class in the namespace tree
+      const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
+      if (cls) {
+        invocations.resolvedSymbols.push(cls);
+      } else {
+        // If class not found, try to find the namespace
+        const ns = this.nsMapper.findNamespaceInTree(namespaceTree, classname);
+        if (ns) {
+          invocations.resolvedNamespaces.push(ns);
+        } else {
+          // If neither class nor namespace found, mark as unresolved
+          invocations.unresolved.push(classname);
+        }
+      }
+    });
+    return invocations;
+  }
+
+  // Resolves invocation expressions within the given syntax node.
+  #resolveInvocationExpressions(
+    node: Parser.SyntaxNode,
+    namespaceTree: NamespaceNode,
+  ): Invocations {
+    // Get variable names to filter out variable-based invocations
+    const variablenames = this.#getVariables(node);
+    const invocations: Invocations = {
+      resolvedSymbols: [],
+      resolvedNamespaces: [],
+      unresolved: [],
+    };
+    // Query to capture invocation expressions
+    const catches = new Parser.Query(
+      this.parser.getLanguage(),
+      `
+      (expression_statement
+        (invocation_expression) @func
+      )
+      `,
+    ).captures(node);
+    // Process each captured function invocation
+    catches.forEach((ctc) => {
+      const func = ctc.node.text;
+      // The query gives us a full function invocation,
+      // but we only want a class or namespace name.
+      const funcParts = func.split(".").filter((part) => !part.includes("("));
+      const classname = funcParts.join(".");
+      // If the function is called from a variable, then we ignore it.
+      if (variablenames.includes(classname)) {
+        return;
+      }
+      // Try to find the class in the namespace tree
+      const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
+      if (cls) {
+        invocations.resolvedSymbols.push(cls);
+      } else {
+        // If class not found, try to find the namespace
+        const ns = this.nsMapper.findNamespaceInTree(namespaceTree, classname);
+        if (ns) {
+          invocations.resolvedNamespaces.push(ns);
+        } else {
+          // If neither class nor namespace found, mark as unresolved
+          invocations.unresolved.push(classname);
+        }
+      }
+    });
+    return invocations;
   }
 
   // Gets the classes used in a file.
-  getDependenciesFromFile(file: File): SymbolNode[] {
-    return this.#getCalledClasses(file.rootNode, this.nsMapper.nsTree)
-      .filter((cls) => cls.filepath !== "")
-      .filter(
-        (cls, index, self) =>
-          self.findIndex(
-            (c) => c.name === cls.name && c.namespace === cls.namespace,
-          ) === index,
-      );
-  }
+  getInvocationsFromFile(filepath: string): Invocations {
+    const file = this.nsMapper.getFile(filepath) as File;
+    const invocations: Invocations = {
+      resolvedSymbols: [],
+      resolvedNamespaces: [],
+      unresolved: [],
+    };
+    // Get classes called in variable declarations and object creations
+    const calledClasses = this.#getCalledClasses(
+      file.rootNode,
+      this.nsMapper.nsTree,
+    );
+    // Resolve invocation expressions
+    const invocationExpressions = this.#resolveInvocationExpressions(
+      file.rootNode,
+      this.nsMapper.nsTree,
+    );
 
-  getDependenciesFromNode(node: Parser.SyntaxNode): SymbolNode[] {
-    return this.#getCalledClasses(node, this.nsMapper.nsTree)
-      .filter((cls) => cls.filepath !== "")
-      .filter(
-        (cls, index, self) =>
-          self.findIndex(
-            (c) => c.name === cls.name && c.namespace === cls.namespace,
-          ) === index,
-      );
+    // Combine results from both methods, ensuring uniqueness with Set
+    invocations.resolvedSymbols = [
+      ...new Set([
+        ...calledClasses.resolvedSymbols,
+        ...invocationExpressions.resolvedSymbols,
+      ]),
+    ];
+    invocations.resolvedNamespaces = [
+      ...new Set([
+        ...calledClasses.resolvedNamespaces,
+        ...invocationExpressions.resolvedNamespaces,
+      ]),
+    ];
+    invocations.unresolved = [
+      ...new Set([
+        ...calledClasses.unresolved,
+        ...invocationExpressions.unresolved,
+      ]),
+    ];
+    return invocations;
   }
 }
