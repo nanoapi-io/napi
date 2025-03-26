@@ -1,17 +1,19 @@
 import Parser from "tree-sitter";
 import { CSharpNamespaceResolver, SymbolType } from "../namespaceResolver";
 
+// Interface representing a namespace node in the namespace tree
 export interface NamespaceNode {
-  name: string;
-  exports: SymbolNode[];
-  childrenNamespaces: NamespaceNode[];
+  name: string; // The name of the namespace
+  exports: SymbolNode[]; // List of classes and types exported by the namespace
+  childrenNamespaces: NamespaceNode[]; // List of child namespaces
 }
 
+// Interface representing a symbol node in the namespace tree
 export interface SymbolNode {
-  name: string;
-  type: SymbolType;
+  name: string; // The name of the symbol
+  type: SymbolType; // The type of the symbol (class, interface, etc.)
   namespace: string; // Kept for ambiguity resolution
-  filepath: string;
+  filepath: string; // The file path where the symbol is defined
 }
 
 export class CSharpNamespaceMapper {

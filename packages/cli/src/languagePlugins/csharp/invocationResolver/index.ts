@@ -8,9 +8,10 @@ import {
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
 
+// Interface representing the invocations in a file
 export interface Invocations {
-  resolvedSymbols: SymbolNode[];
-  unresolved: string[];
+  resolvedSymbols: SymbolNode[]; // List of resolved symbols
+  unresolved: string[]; // List of unresolved symbols (usually external imports)
 }
 
 export class CSharpInvocationResolver {
