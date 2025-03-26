@@ -17,12 +17,18 @@ export interface SymbolNode {
 export class CSharpNamespaceMapper {
   #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   #nsResolver: CSharpNamespaceResolver;
+  nsTree: NamespaceNode;
 
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   ) {
     this.#files = files;
     this.#nsResolver = new CSharpNamespaceResolver();
+    this.nsTree = this.buildNamespaceTree();
+  }
+
+  getFile(key: string) {
+    return this.#files.get(key);
   }
 
   // Adds a namespace to the final tree.
@@ -97,5 +103,61 @@ export class CSharpNamespaceMapper {
 
     // I don't understand why, but the root element is always empty
     return namespaceTree;
+  }
+
+  findNamespaceInTree(
+    tree: NamespaceNode,
+    namespaceName: string,
+  ): NamespaceNode | null {
+    if (namespaceName.includes(".")) {
+      const parts = namespaceName.split(".");
+      const simpleNamespaceName = parts[0];
+      const rest = parts.slice(1).join(".");
+
+      const namespace = tree.childrenNamespaces.find(
+        (ns) => ns.name === simpleNamespaceName,
+      );
+      if (namespace) {
+        return this.findNamespaceInTree(namespace, rest);
+      }
+    }
+
+    return (
+      tree.childrenNamespaces.find((ns) => ns.name === namespaceName) ?? null
+    );
+  }
+
+  findClassInTree(tree: NamespaceNode, className: string): SymbolNode | null {
+    // Management of qualified names
+    if (className.includes(".")) {
+      const parts = className.split(".");
+      const namespaceName = parts.slice(0, -1).join(".");
+      const simpleClassName = parts[parts.length - 1];
+
+      const namespace = this.findNamespaceInTree(tree, namespaceName);
+      if (namespace) {
+        return (
+          namespace.exports.find((cls) => cls.name === simpleClassName) ?? null
+        );
+      } else {
+        // In case the qualifier is actually not a namespace but a class
+        // Check OuterInnerClass in the tests.
+        return this.findClassInTree(this.nsTree, namespaceName);
+      }
+    }
+    // Find the class in the current node's classes.
+    if (tree.exports.some((cls) => cls.name === className)) {
+      return tree.exports.find((cls) => cls.name === className) ?? null;
+    }
+
+    // Recursively search in children namespaces.
+    for (const namespace of tree.childrenNamespaces) {
+      const found = this.findClassInTree(namespace, className);
+      if (found) {
+        return found;
+      }
+    }
+
+    return null;
   }
 }
