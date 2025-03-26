@@ -2,6 +2,7 @@ using MyNamespace;
 using HalfNamespace;
 using OuterNamespace;
 using OuterNamespace.InnerNamespace;
+using BeefBurger;
 
 namespace Tests
 {
@@ -9,7 +10,7 @@ namespace Tests
     {
         static void Main(string[] args)
         {
-            BeefBurger.Bun beefBun = new BeefBurger.Bun();
+            Bun beefBun = new Bun();
             ChickenBurger.Bun chickenBun = new ChickenBurger.Bun();
             MyClass myClass = new MyClass();
             myClass.MyMethod();

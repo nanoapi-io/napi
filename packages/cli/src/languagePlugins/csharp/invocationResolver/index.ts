@@ -6,6 +6,7 @@ import {
   SymbolNode,
 } from "../namespaceMapper";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
+import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
 
 export interface Invocations {
   resolvedSymbols: SymbolNode[];
@@ -15,9 +16,16 @@ export interface Invocations {
 export class CSharpInvocationResolver {
   parser: Parser = csharpParser;
   private nsMapper: CSharpNamespaceMapper;
+  private usingResolver: CSharpUsingResolver;
+  private resolvedImports: ResolvedImports;
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
+    this.usingResolver = new CSharpUsingResolver(nsMapper);
+    this.resolvedImports = {
+      internal: [],
+      external: [],
+    };
   }
 
   // Retrieves variable names from the given syntax node.
@@ -65,6 +73,15 @@ export class CSharpInvocationResolver {
     // Process each captured class name
     catches.forEach((ctc) => {
       const classname = ctc.node.text;
+      // Try to find the class in the resolved imports
+      const ucls = this.usingResolver.findClassInImports(
+        this.resolvedImports,
+        classname,
+      );
+      if (ucls) {
+        invocations.resolvedSymbols.push(ucls);
+        return;
+      }
       // Try to find the class in the namespace tree
       const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
       if (cls) {
@@ -108,6 +125,15 @@ export class CSharpInvocationResolver {
       if (variablenames.includes(classname)) {
         return;
       }
+      // Try to find the class in the resolved imports
+      const ucls = this.usingResolver.findClassInImports(
+        this.resolvedImports,
+        classname,
+      );
+      if (ucls) {
+        invocations.resolvedSymbols.push(ucls);
+        return;
+      }
       // Try to find the class in the namespace tree
       const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
       if (cls) {
@@ -122,6 +148,7 @@ export class CSharpInvocationResolver {
 
   // Gets the classes used in a file.
   getInvocationsFromFile(filepath: string): Invocations {
+    this.resolvedImports = this.usingResolver.resolveUsingDirectives(filepath);
     const file = this.nsMapper.getFile(filepath) as File;
     const invocations: Invocations = {
       resolvedSymbols: [],

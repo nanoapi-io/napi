@@ -130,4 +130,45 @@ export class CSharpUsingResolver {
     });
     return { internal, external };
   }
+
+  public findClassInImports(
+    imports: ResolvedImports,
+    className: string,
+  ): SymbolNode | null {
+    // Handle qualified class names with aliases
+    const parts = className.split(".");
+    for (let i = 0; i < parts.length; i++) {
+      const aliasMatch = imports.internal.find(
+        (symbol) => symbol.alias === parts[i],
+      );
+      if (aliasMatch && aliasMatch.symbol) {
+        parts[i] = aliasMatch.symbol.name;
+      }
+    }
+    const reconstructedClassName = parts.join(".");
+    // Check if the class is directly imported
+    const found = imports.internal.find(
+      (symbol) =>
+        "symbol" in symbol &&
+        (symbol.symbol?.name === reconstructedClassName ||
+          symbol.alias === reconstructedClassName),
+    );
+    if (found) {
+      return found.symbol ?? null;
+    }
+    // Check if the class is imported through a namespace
+    for (const symbol of imports.internal) {
+      if ("namespace" in symbol && symbol.namespace) {
+        const nsFound = this.nsMapper.findClassInTree(
+          symbol.namespace,
+          reconstructedClassName,
+        );
+        if (nsFound) {
+          return nsFound;
+        }
+      }
+    }
+
+    return null;
+  }
 }
