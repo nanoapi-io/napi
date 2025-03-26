@@ -22,7 +22,7 @@ export type UsingType =
 export interface UsingDirective {
   node: Parser.SyntaxNode; // The syntax node corresponding to the 'using' directive
   type: UsingType; // The type of 'using' directive
-  idf: string; // The identifier or qualified name being imported
+  id: string; // The identifier or qualified name being imported
   alias?: string; // Optional alias for the imported identifier
 }
 
@@ -74,10 +74,10 @@ export class CSharpUsingResolver {
           (child.type === "identifier" || child.type === "qualified_name") &&
           child !== node.childForFieldName("name"),
       );
-      const idf = importNode ? importNode.text : "";
+      const id = importNode ? importNode.text : "";
       const aliasNode = node.childForFieldName("name");
       const alias = aliasNode ? aliasNode.text : undefined;
-      return { node, type, idf, alias };
+      return { node, type, id, alias };
     });
     return this.usingDirectives;
   }
@@ -101,19 +101,19 @@ export class CSharpUsingResolver {
   private resolveUsingDirective(
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
-    const { type, idf, alias } = directive;
-    const symbol = this.nsMapper.findClassInTree(this.nsMapper.nsTree, idf);
+    const { type, id, alias } = directive;
+    const symbol = this.nsMapper.findClassInTree(this.nsMapper.nsTree, id);
     if (symbol) {
       return { usingtype: type, alias, symbol };
     }
     const namespace = this.nsMapper.findNamespaceInTree(
       this.nsMapper.nsTree,
-      idf,
+      id,
     );
     if (namespace) {
       return { usingtype: type, alias, namespace };
     }
-    return { usingtype: type, alias, name: idf };
+    return { usingtype: type, alias, name: id };
   }
 
   // Resolves all 'using' directives in a file and categorizes them into internal and external symbols

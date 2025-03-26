@@ -20,28 +20,28 @@ describe("UsingResolver", () => {
     expect(usingDirectives).toMatchObject([
       {
         type: GLOBAL_USING,
-        idf: "System.IO",
+        id: "System.IO",
       },
       {
         type: LOCAL_USING,
-        idf: "System",
+        id: "System",
       },
       {
         type: LOCAL_USING,
-        idf: "System.Collections.Generic",
+        id: "System.Collections.Generic",
       },
       {
         type: USING_STATIC,
-        idf: "System.Math",
+        id: "System.Math",
       },
       {
         type: USING_ALIAS,
-        idf: "MyApp.Models.User",
+        id: "MyApp.Models.User",
         alias: "Guy",
       },
       {
         type: USING_ALIAS,
-        idf: "HalfNamespace",
+        id: "HalfNamespace",
         alias: "Valve",
       },
     ]);
