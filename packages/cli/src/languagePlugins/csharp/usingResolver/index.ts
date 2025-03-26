@@ -26,7 +26,8 @@ export interface UsingDirective {
 export interface InternalSymbol {
   usingtype: UsingType;
   alias?: string;
-  symbol: SymbolNode | NamespaceNode;
+  symbol?: SymbolNode;
+  namespace?: NamespaceNode;
 }
 
 export interface ExternalSymbol {
@@ -92,9 +93,16 @@ export class CSharpUsingResolver {
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
     const { type, idf, alias } = directive;
-    const symbol = this.nsMapper.findAnyInTree(this.nsMapper.nsTree, idf);
+    const symbol = this.nsMapper.findClassInTree(this.nsMapper.nsTree, idf);
     if (symbol) {
       return { usingtype: type, alias, symbol };
+    }
+    const namespace = this.nsMapper.findNamespaceInTree(
+      this.nsMapper.nsTree,
+      idf,
+    );
+    if (namespace) {
+      return { usingtype: type, alias, namespace };
     }
     return { usingtype: type, alias, name: idf };
   }
@@ -104,10 +112,10 @@ export class CSharpUsingResolver {
     const external: ExternalSymbol[] = [];
     this.parseUsingDirectives(filepath).forEach((directive) => {
       const resolved = this.resolveUsingDirective(directive);
-      if ("symbol" in resolved) {
+      if ("symbol" in resolved || "namespace" in resolved) {
         internal.push(resolved);
       } else {
-        external.push(resolved);
+        external.push(resolved as ExternalSymbol);
       }
     });
     return { internal, external };

@@ -160,16 +160,4 @@ export class CSharpNamespaceMapper {
 
     return null;
   }
-
-  findAnyInTree(
-    tree: NamespaceNode,
-    name: string,
-  ): NamespaceNode | SymbolNode | null {
-    const namespace = this.findNamespaceInTree(tree, name);
-    if (namespace) {
-      return namespace;
-    }
-
-    return this.findClassInTree(tree, name);
-  }
 }

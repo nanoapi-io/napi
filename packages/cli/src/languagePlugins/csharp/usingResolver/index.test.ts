@@ -63,7 +63,7 @@ describe("UsingResolver", () => {
         {
           usingtype: USING_ALIAS,
           alias: "Valve",
-          symbol: {
+          namespace: {
             name: "HalfNamespace",
             exports: expect.any(Array),
             childrenNamespaces: expect.any(Array),
