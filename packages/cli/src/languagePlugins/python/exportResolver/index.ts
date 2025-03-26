@@ -223,7 +223,7 @@ export class PythonExportResolver {
         (module
           (expression_statement
             (assignment
-              left: (_)
+              left: ([(pattern_list) (identifier)])
               right: (_)?
             )
           ) @node
