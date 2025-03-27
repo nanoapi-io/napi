@@ -77,12 +77,14 @@ describe("InvocationResolver", () => {
       type: "class",
       filepath: "Namespaced.cs",
       namespace: "MyNamespace",
+      node: {} as Parser.SyntaxNode,
     };
     const headcrab: SymbolNode = {
       name: "HeadCrab",
       type: "class",
       filepath: "SemiNamespaced.cs",
       namespace: "",
+      node: {} as Parser.SyntaxNode,
     };
     expect(invResolver.isUsedInFile("Program.cs", myclass)).toBe(true);
     expect(invResolver.isUsedInFile("Program.cs", headcrab)).toBe(false);
