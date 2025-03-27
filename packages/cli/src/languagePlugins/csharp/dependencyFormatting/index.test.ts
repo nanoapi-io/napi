@@ -45,7 +45,7 @@ describe("Dependency formatting", () => {
           type: "class",
           dependents: {},
         },
-        Gordon: {
+        "HalfNamespace.Gordon": {
           id: "Gordon",
           type: "class",
           dependents: {
