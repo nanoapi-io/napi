@@ -76,6 +76,10 @@ export class CSharpUsingResolver {
   private nsMapper: CSharpNamespaceMapper;
   /** List of parsed 'using' directives */
   private usingDirectives: UsingDirective[] = [];
+  private cachedImports: Map<string, ResolvedImports> = new Map<
+    string,
+    ResolvedImports
+  >();
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
@@ -159,6 +163,9 @@ export class CSharpUsingResolver {
    * @returns A ResolvedImports object containing internal and external symbols.
    */
   public resolveUsingDirectives(filepath: string): ResolvedImports {
+    if (this.cachedImports.has(filepath)) {
+      return this.cachedImports.get(filepath) as ResolvedImports;
+    }
     const internal: InternalSymbol[] = [];
     const external: ExternalSymbol[] = [];
     this.parseUsingDirectives(filepath).forEach((directive) => {
@@ -169,7 +176,9 @@ export class CSharpUsingResolver {
         external.push(resolved as ExternalSymbol);
       }
     });
-    return { internal, external };
+    const resolvedimports = { internal, external };
+    this.cachedImports.set(filepath, resolvedimports);
+    return resolvedimports;
   }
 
   /**
