@@ -1,20 +1,19 @@
 import { describe, test, expect, beforeAll } from "vitest";
-import Parser, { Language } from "tree-sitter";
-import Python from "tree-sitter-python";
+import Parser from "tree-sitter";
 import {
   PythonUsageResolver,
   InternalUsageResult,
   ExternalUsageResult,
 } from "./index";
-import { ModuleNode } from "../moduleMapper";
+import { PYTHON_MODULE_TYPE, PythonModule } from "../moduleResolver";
+import { pythonParser } from "../../../helpers/treeSitter/parsers";
 
 describe("PythonUsageResolver", () => {
   let parser: Parser;
   let usageResolver: PythonUsageResolver;
 
   beforeAll(() => {
-    parser = new Parser();
-    parser.setLanguage(Python as Language);
+    parser = pythonParser;
     usageResolver = new PythonUsageResolver(parser);
   });
 
@@ -44,12 +43,12 @@ describe("PythonUsageResolver", () => {
     const root = tree.rootNode;
     const nodesToExclude = getNodesToExclude(root);
 
-    // Dummy ModuleNode for base module.
-    const baseModule: ModuleNode = {
+    // Dummy PythonModule for base module.
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
@@ -59,7 +58,7 @@ describe("PythonUsageResolver", () => {
       {
         identifier: "module",
         alias: undefined,
-        moduleNode: baseModule,
+        pythonModule: baseModule,
         explicitSymbols: [{ identifier: "helper_func", alias: undefined }],
       },
       nodesToExclude,
@@ -83,21 +82,21 @@ describe("PythonUsageResolver", () => {
     const root = tree.rootNode;
     const nodesToExclude = getNodesToExclude(root);
 
-    // Dummy ModuleNode for base module.
-    const baseModule: ModuleNode = {
+    // Dummy PythonModule for base module.
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
-    // Child ModuleNode representing submodule.
-    const submodule: ModuleNode = {
+    // Child PythonModule representing submodule.
+    const submodule: PythonModule = {
       name: "submodule",
       fullName: "module.submodule",
-      filePath: "module/submodule.py",
-      symbols: [],
+      path: "module/submodule.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: baseModule,
     };
@@ -107,7 +106,7 @@ describe("PythonUsageResolver", () => {
     const moduleInfo = {
       identifier: "module",
       alias: undefined,
-      moduleNode: baseModule,
+      pythonModule: baseModule,
       explicitSymbols: [],
     };
 
@@ -137,28 +136,28 @@ describe("PythonUsageResolver", () => {
     const nodesToExclude = getNodesToExclude(root);
 
     // Build a deeper module tree.
-    const baseModule: ModuleNode = {
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
-    const submodule: ModuleNode = {
+    const submodule: PythonModule = {
       name: "submodule",
       fullName: "module.submodule",
-      filePath: "module/submodule.py",
-      symbols: [],
+      path: "module/submodule.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: baseModule,
     };
     baseModule.children.set("submodule", submodule);
-    const deepModule: ModuleNode = {
+    const deepModule: PythonModule = {
       name: "deep",
       fullName: "module.submodule.deep",
-      filePath: "module/submodule/deep.py",
-      symbols: [],
+      path: "module/submodule/deep.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: submodule,
     };
@@ -168,7 +167,7 @@ describe("PythonUsageResolver", () => {
     const moduleInfo = {
       identifier: "module",
       alias: undefined,
-      moduleNode: baseModule,
+      pythonModule: baseModule,
       explicitSymbols: [],
     };
 
@@ -201,19 +200,19 @@ describe("PythonUsageResolver", () => {
     const nodesToExclude = getNodesToExclude(root);
 
     // Create module tree.
-    const baseModule: ModuleNode = {
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
-    const submodule: ModuleNode = {
+    const submodule: PythonModule = {
       name: "submodule",
       fullName: "module.submodule",
-      filePath: "module/submodule.py",
-      symbols: [],
+      path: "module/submodule.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: baseModule,
     };
@@ -222,7 +221,7 @@ describe("PythonUsageResolver", () => {
     const moduleInfo = {
       identifier: "module",
       alias: undefined,
-      moduleNode: baseModule,
+      pythonModule: baseModule,
       explicitSymbols: [],
     };
 
@@ -251,11 +250,11 @@ describe("PythonUsageResolver", () => {
     const root = tree.rootNode;
     const nodesToExclude = getNodesToExclude(root);
 
-    const baseModule: ModuleNode = {
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
@@ -263,7 +262,7 @@ describe("PythonUsageResolver", () => {
     const moduleInfo = {
       identifier: "module",
       alias: undefined,
-      moduleNode: baseModule,
+      pythonModule: baseModule,
       explicitSymbols: [],
     };
 
@@ -286,22 +285,22 @@ describe("PythonUsageResolver", () => {
     const root = tree.rootNode;
     const nodesToExclude = getNodesToExclude(root);
 
-    // Create a dummy ModuleNode for the base module "module".
-    const baseModule: ModuleNode = {
+    // Create a dummy PythonModule for the base module "module".
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
 
-    // Create a child ModuleNode representing a submodule.
-    const submodule: ModuleNode = {
+    // Create a child PythonModule representing a submodule.
+    const submodule: PythonModule = {
       name: "submodule",
       fullName: "module.submodule",
-      filePath: "module/submodule.py",
-      symbols: [],
+      path: "module/submodule.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: baseModule,
     };
@@ -311,7 +310,7 @@ describe("PythonUsageResolver", () => {
     const moduleInfo = {
       identifier: "module",
       alias: "mod",
-      moduleNode: baseModule,
+      pythonModule: baseModule,
       explicitSymbols: [] as { identifier: string; alias?: string }[],
     };
 
@@ -340,12 +339,12 @@ describe("PythonUsageResolver", () => {
     const root = tree.rootNode;
     const nodesToExclude = getNodesToExclude(root);
 
-    // Create a dummy ModuleNode for the base module.
-    const baseModule: ModuleNode = {
+    // Create a dummy PythonModule for the base module.
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
@@ -355,7 +354,7 @@ describe("PythonUsageResolver", () => {
     const moduleInfo = {
       identifier: "module",
       alias: undefined,
-      moduleNode: baseModule,
+      pythonModule: baseModule,
       explicitSymbols: [{ identifier: "helper_func", alias: "hf" }],
     };
 
@@ -386,20 +385,20 @@ describe("PythonUsageResolver", () => {
 
     const nodesToExclude = getNodesToExclude(root);
 
-    const baseModule: ModuleNode = {
+    const baseModule: PythonModule = {
       name: "module",
       fullName: "module",
-      filePath: "module.py",
-      symbols: [],
+      path: "module.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: undefined,
     };
 
-    const submodule: ModuleNode = {
+    const submodule: PythonModule = {
       name: "submodule",
       fullName: "module.submodule",
-      filePath: "module/submodule.py",
-      symbols: [],
+      path: "module/submodule.py",
+      type: PYTHON_MODULE_TYPE,
       children: new Map(),
       parent: baseModule,
     };
@@ -408,7 +407,7 @@ describe("PythonUsageResolver", () => {
     const moduleInfo = {
       identifier: "module",
       alias: undefined,
-      moduleNode: baseModule,
+      pythonModule: baseModule,
       explicitSymbols: [{ identifier: "submodule", alias: undefined }],
     };
 

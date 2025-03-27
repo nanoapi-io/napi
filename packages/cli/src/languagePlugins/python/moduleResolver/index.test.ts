@@ -1,11 +1,11 @@
-// PythonSimpleModuleMapper.test.ts
+// PythonModuleResolver.test.ts
 import { beforeAll, describe, expect, test } from "vitest";
 import Parser from "tree-sitter";
 import {
-  PythonSimpleModuleMapper,
+  PythonModuleResolver,
   PYTHON_MODULE_TYPE,
   PYTHON_NAMESPACE_MODULE_TYPE,
-  PythonSimpleModule,
+  PythonModule,
   PYTHON_PACKAGE_MODULE_TYPE,
 } from "./index"; // adjust the path if necessary
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
@@ -27,13 +27,13 @@ function createFiles(paths: string[]) {
   return fileMap;
 }
 
-describe("PythonSimpleModuleMapper, map resolution", () => {
+describe("PythonModuleResolver, map resolution", () => {
   test("should build module map for a single .py file", () => {
     // For a simple file "foo.py" at the root.
     const files = createFiles(["foo.py"]);
 
-    const mapper = new PythonSimpleModuleMapper(files);
-    const root = mapper.moduleMap;
+    const mapper = new PythonModuleResolver(files);
+    const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
     expect(root.name).toBe("");
@@ -44,7 +44,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(root.children.size).toBe(1);
 
     // Expect a child with key "foo" (derived from "foo.py")
-    const fooModule = root.children.get("foo") as PythonSimpleModule;
+    const fooModule = root.children.get("foo") as PythonModule;
     expect(fooModule).toBeDefined();
     expect(fooModule.name).toBe("foo");
     expect(fooModule.type).toBe(PYTHON_MODULE_TYPE);
@@ -56,8 +56,8 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     // For a package with an __init__.py file.
     const files = createFiles(["pkg/__init__.py"]);
 
-    const mapper = new PythonSimpleModuleMapper(files);
-    const root = mapper.moduleMap;
+    const mapper = new PythonModuleResolver(files);
+    const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
     expect(root.name).toBe("");
@@ -68,7 +68,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(root.children.size).toBe(1);
 
     // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonSimpleModule;
+    const pkgModule = root.children.get("pkg") as PythonModule;
     expect(pkgModule).toBeDefined();
     expect(pkgModule.name).toBe("pkg");
     expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -82,8 +82,8 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     // For a package with an __init__.py file and a module.
     const files = createFiles(["pkg/__init__.py", "pkg/module.py"]);
 
-    const mapper = new PythonSimpleModuleMapper(files);
-    const root = mapper.moduleMap;
+    const mapper = new PythonModuleResolver(files);
+    const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
     expect(root.name).toBe("");
@@ -94,7 +94,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(root.children.size).toBe(1);
 
     // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonSimpleModule;
+    const pkgModule = root.children.get("pkg") as PythonModule;
     expect(pkgModule).toBeDefined();
     expect(pkgModule.name).toBe("pkg");
     expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -104,7 +104,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(pkgModule.parent).toBe(root);
 
     // Expect a child with key "module" (derived from "pkg/module.py")
-    const moduleModule = pkgModule.children.get("module") as PythonSimpleModule;
+    const moduleModule = pkgModule.children.get("module") as PythonModule;
     expect(moduleModule).toBeDefined();
     expect(moduleModule.name).toBe("module");
     expect(moduleModule.type).toBe(PYTHON_MODULE_TYPE);
@@ -118,8 +118,8 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     // For a package with an __init__.py file and a nested package.
     const files = createFiles(["pkg/__init__.py", "pkg/subpkg/__init__.py"]);
 
-    const mapper = new PythonSimpleModuleMapper(files);
-    const root = mapper.moduleMap;
+    const mapper = new PythonModuleResolver(files);
+    const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
     expect(root.name).toBe("");
@@ -130,7 +130,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(root.children.size).toBe(1);
 
     // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonSimpleModule;
+    const pkgModule = root.children.get("pkg") as PythonModule;
     expect(pkgModule).toBeDefined();
     expect(pkgModule.name).toBe("pkg");
     expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -140,7 +140,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(pkgModule.parent).toBe(root);
 
     // Expect a child with key "subpkg" (derived from "pkg/subpkg/__init__.py")
-    const subpkgModule = pkgModule.children.get("subpkg") as PythonSimpleModule;
+    const subpkgModule = pkgModule.children.get("subpkg") as PythonModule;
     expect(subpkgModule).toBeDefined();
     expect(subpkgModule.name).toBe("subpkg");
     expect(subpkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -158,8 +158,8 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
       "pkg/subpkg/__init__.py",
     ]);
 
-    const mapper = new PythonSimpleModuleMapper(files);
-    const root = mapper.moduleMap;
+    const mapper = new PythonModuleResolver(files);
+    const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
     expect(root.name).toBe("");
@@ -170,7 +170,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(root.children.size).toBe(1);
 
     // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonSimpleModule;
+    const pkgModule = root.children.get("pkg") as PythonModule;
     expect(pkgModule).toBeDefined();
     expect(pkgModule.name).toBe("pkg");
     expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -180,7 +180,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(pkgModule.parent).toBe(root);
 
     // Expect a child with key "module" (derived from "pkg/module.py")
-    const moduleModule = pkgModule.children.get("module") as PythonSimpleModule;
+    const moduleModule = pkgModule.children.get("module") as PythonModule;
     expect(moduleModule).toBeDefined();
     expect(moduleModule.name).toBe("module");
     expect(moduleModule.type).toBe(PYTHON_MODULE_TYPE);
@@ -190,7 +190,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(moduleModule.parent).toBe(pkgModule);
 
     // Expect a child with key "subpkg" (derived from "pkg/subpkg/__init__.py")
-    const subpkgModule = pkgModule.children.get("subpkg") as PythonSimpleModule;
+    const subpkgModule = pkgModule.children.get("subpkg") as PythonModule;
     expect(subpkgModule).toBeDefined();
     expect(subpkgModule.name).toBe("subpkg");
     expect(subpkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -209,8 +209,8 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
       "pkg/subpkg/submodule.py",
     ]);
 
-    const mapper = new PythonSimpleModuleMapper(files);
-    const root = mapper.moduleMap;
+    const mapper = new PythonModuleResolver(files);
+    const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
     expect(root.name).toBe("");
@@ -221,7 +221,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(root.children.size).toBe(1);
 
     // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonSimpleModule;
+    const pkgModule = root.children.get("pkg") as PythonModule;
     expect(pkgModule).toBeDefined();
     expect(pkgModule.name).toBe("pkg");
     expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -231,7 +231,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(pkgModule.parent).toBe(root);
 
     // Expect a child with key "module" (derived from "pkg/module.py")
-    const moduleModule = pkgModule.children.get("module") as PythonSimpleModule;
+    const moduleModule = pkgModule.children.get("module") as PythonModule;
     expect(moduleModule).toBeDefined();
     expect(moduleModule.name).toBe("module");
     expect(moduleModule.type).toBe(PYTHON_MODULE_TYPE);
@@ -241,7 +241,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     expect(moduleModule.parent).toBe(pkgModule);
 
     // Expect a child with key "subpkg" (derived from "pkg/subpkg/__init__.py")
-    const subpkgModule = pkgModule.children.get("subpkg") as PythonSimpleModule;
+    const subpkgModule = pkgModule.children.get("subpkg") as PythonModule;
     expect(subpkgModule).toBeDefined();
     expect(subpkgModule.name).toBe("subpkg");
     expect(subpkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
@@ -253,7 +253,7 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
     // Expect a child with key "submodule"
     const submoduleModule = subpkgModule.children.get(
       "submodule",
-    ) as PythonSimpleModule;
+    ) as PythonModule;
     expect(submoduleModule).toBeDefined();
     expect(submoduleModule.name).toBe("submodule");
     expect(submoduleModule.type).toBe(PYTHON_MODULE_TYPE);
@@ -264,8 +264,8 @@ describe("PythonSimpleModuleMapper, map resolution", () => {
   });
 });
 
-describe("PythonSimpleModuleMapper, resolveImport method - Complex Cases", () => {
-  let mapper: PythonSimpleModuleMapper;
+describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
+  let mapper: PythonModuleResolver;
 
   beforeAll(() => {
     // Simulate a more complex project structure:
@@ -289,14 +289,14 @@ describe("PythonSimpleModuleMapper, resolveImport method - Complex Cases", () =>
       `project${sep}util.py`,
     ];
     const files = createFiles(paths);
-    mapper = new PythonSimpleModuleMapper(files);
+    mapper = new PythonModuleResolver(files);
   });
 
   test("should resolve relative import '..helper' from 'project/pkg/subpkg/submodule.py'", () => {
     // From "project/pkg/subpkg/submodule.py", the relative import "..helper"
     // means: go up one level (to pkg/subpkg's parent, which is pkg) and then look for "helper".
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveImport(currentFile, "..helper");
+    const resolved = mapper.resolveModule(currentFile, "..helper");
     expect(resolved).toBeDefined();
     // Expect resolved module to have name "helper" and fullName "project.pkg.helper"
     expect(resolved?.name).toBe("helper");
@@ -306,7 +306,7 @@ describe("PythonSimpleModuleMapper, resolveImport method - Complex Cases", () =>
   test("should resolve relative import '..module' from 'project/pkg/subpkg/submodule.py'", () => {
     // Similarly, "..module" should resolve to "project/pkg/module.py"
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveImport(currentFile, "..module");
+    const resolved = mapper.resolveModule(currentFile, "..module");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("module");
     expect(resolved?.fullName).toBe("project.pkg.module");
@@ -317,7 +317,7 @@ describe("PythonSimpleModuleMapper, resolveImport method - Complex Cases", () =>
     // From "project/pkg/subpkg/submodule.py", two levels up is "project"
     // Then look for "main" within "project", i.e. "project/main.py".
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveImport(currentFile, "...main");
+    const resolved = mapper.resolveModule(currentFile, "...main");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("main");
     expect(resolved?.fullName).toBe("project.main");
@@ -327,7 +327,7 @@ describe("PythonSimpleModuleMapper, resolveImport method - Complex Cases", () =>
     // From a nested module, absolute import "pkg.helper" should be resolved.
     // The algorithm walks upward until it finds the correct candidate.
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveImport(currentFile, "pkg.helper");
+    const resolved = mapper.resolveModule(currentFile, "pkg.helper");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("helper");
     expect(resolved?.fullName).toBe("project.pkg.helper");
@@ -336,7 +336,7 @@ describe("PythonSimpleModuleMapper, resolveImport method - Complex Cases", () =>
   test("should resolve absolute import 'util' from 'project/pkg/subpkg/submodule.py'", () => {
     // From "project/pkg/subpkg/submodule.py", absolute import "util" should resolve to "project/util.py"
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveImport(currentFile, "util");
+    const resolved = mapper.resolveModule(currentFile, "util");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("util");
     expect(resolved?.fullName).toBe("project.util");
@@ -346,7 +346,7 @@ describe("PythonSimpleModuleMapper, resolveImport method - Complex Cases", () =>
     // If we try to go up more levels than exist, expect undefined.
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
     // Here, "....nonexistent" (four dots) would require going up three levels.
-    const resolved = mapper.resolveImport(currentFile, "....nonexistent");
+    const resolved = mapper.resolveModule(currentFile, "....nonexistent");
     expect(resolved).toBeUndefined();
   });
 });

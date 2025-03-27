@@ -2,7 +2,7 @@ import Parser from "tree-sitter";
 import { DependencyManifesto, FileManifesto, SymbolType } from "..";
 import { PythonExportResolver } from "../../../languagePlugins/python/exportResolver";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
-import { PythonModuleMapper } from "../../../languagePlugins/python/moduleMapper";
+import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver";
 import { PythonImportResolver } from "../../../languagePlugins/python/importResolver";
 import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolver";
 import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver";
@@ -60,7 +60,7 @@ export function generatePythonDependencyManifesto(
   console.info("Initializing Python export resolver...");
   const exportResolver = new PythonExportResolver(parser, files);
   console.info("Initializing Python module mapper...");
-  const moduleMapper = new PythonModuleMapper(files, exportResolver);
+  const moduleMapper = new PythonModuleResolver(files, exportResolver);
   console.info("Initializing Python import resolver...");
   const importResolver = new PythonImportResolver(
     parser,

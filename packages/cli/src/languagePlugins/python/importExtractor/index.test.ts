@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
-  ExplicitSymbol,
-  fromImportStatementType,
-  normalImportStatementType,
+  ImportItem,
+  FROM_IMPORT_STATEMENT_TYPE,
+  NORMAL_IMPORT_STATEMENT_TYPE,
   PythonImportExtractor,
 } from ".";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
@@ -34,7 +34,7 @@ describe("Python Import Extractor", () => {
     expect(firstImportStatement).toEqual(
       expect.objectContaining({
         node: expect.objectContaining({ text: "import os" }),
-        type: normalImportStatementType,
+        type: NORMAL_IMPORT_STATEMENT_TYPE,
         sourceNode: undefined,
       }),
     );
@@ -46,7 +46,7 @@ describe("Python Import Extractor", () => {
         identifierNode: expect.objectContaining({ text: "os" }),
         aliasNode: undefined,
         isWildcardImport: false,
-        explicitSymbols: undefined,
+        items: undefined,
       }),
     );
 
@@ -54,7 +54,7 @@ describe("Python Import Extractor", () => {
     expect(secondImportStatement).toEqual(
       expect.objectContaining({
         node: expect.objectContaining({ text: "import sys" }),
-        type: normalImportStatementType,
+        type: NORMAL_IMPORT_STATEMENT_TYPE,
         sourceNode: undefined,
       }),
     );
@@ -66,7 +66,7 @@ describe("Python Import Extractor", () => {
         identifierNode: expect.objectContaining({ text: "sys" }),
         aliasNode: undefined,
         isWildcardImport: false,
-        explicitSymbols: undefined,
+        items: undefined,
       }),
     );
   });
@@ -94,7 +94,7 @@ describe("Python Import Extractor", () => {
         node: expect.objectContaining({
           text: "import os as operating_system",
         }),
-        type: normalImportStatementType,
+        type: NORMAL_IMPORT_STATEMENT_TYPE,
         sourceNode: undefined,
       }),
     );
@@ -106,7 +106,7 @@ describe("Python Import Extractor", () => {
         identifierNode: expect.objectContaining({ text: "os" }),
         aliasNode: expect.objectContaining({ text: "operating_system" }),
         isWildcardImport: false,
-        explicitSymbols: undefined,
+        items: undefined,
       }),
     );
   });
@@ -137,7 +137,7 @@ describe("Python Import Extractor", () => {
         node: expect.objectContaining({
           text: "from os import path, environ",
         }),
-        type: fromImportStatementType,
+        type: FROM_IMPORT_STATEMENT_TYPE,
         sourceNode: expect.objectContaining({ text: "os" }),
       }),
     );
@@ -151,9 +151,9 @@ describe("Python Import Extractor", () => {
         isWildcardImport: false,
       }),
     );
-    expect(firstImportStatementMember.explicitSymbols).toHaveLength(2);
+    expect(firstImportStatementMember.items).toHaveLength(2);
     const firstImportStatementMemberFirstSymbol = (
-      firstImportStatementMember.explicitSymbols as ExplicitSymbol[]
+      firstImportStatementMember.items as ImportItem[]
     )[0];
     expect(firstImportStatementMemberFirstSymbol).toEqual(
       expect.objectContaining({
@@ -163,7 +163,7 @@ describe("Python Import Extractor", () => {
       }),
     );
     const firstImportStatementMemberSecondSymbol = (
-      firstImportStatementMember.explicitSymbols as ExplicitSymbol[]
+      firstImportStatementMember.items as ImportItem[]
     )[1];
     expect(firstImportStatementMemberSecondSymbol).toEqual(
       expect.objectContaining({
@@ -179,7 +179,7 @@ describe("Python Import Extractor", () => {
         node: expect.objectContaining({
           text: "from sys import argv",
         }),
-        type: fromImportStatementType,
+        type: FROM_IMPORT_STATEMENT_TYPE,
         sourceNode: expect.objectContaining({ text: "sys" }),
       }),
     );
@@ -193,9 +193,9 @@ describe("Python Import Extractor", () => {
         isWildcardImport: false,
       }),
     );
-    expect(secondImportStatementMember.explicitSymbols).toHaveLength(1);
+    expect(secondImportStatementMember.items).toHaveLength(1);
     const secondImportStatementMemberSymbol = (
-      secondImportStatementMember.explicitSymbols as ExplicitSymbol[]
+      secondImportStatementMember.items as ImportItem[]
     )[0];
     expect(secondImportStatementMemberSymbol).toEqual(
       expect.objectContaining({
@@ -230,7 +230,7 @@ describe("Python Import Extractor", () => {
         node: expect.objectContaining({
           text: "from os import path as os_path",
         }),
-        type: fromImportStatementType,
+        type: FROM_IMPORT_STATEMENT_TYPE,
         sourceNode: expect.objectContaining({ text: "os" }),
       }),
     );
@@ -244,9 +244,9 @@ describe("Python Import Extractor", () => {
         isWildcardImport: false,
       }),
     );
-    expect(importStatementMember.explicitSymbols).toHaveLength(1);
+    expect(importStatementMember.items).toHaveLength(1);
     const importStatementMemberSymbol = (
-      importStatementMember.explicitSymbols as ExplicitSymbol[]
+      importStatementMember.items as ImportItem[]
     )[0];
     expect(importStatementMemberSymbol).toEqual(
       expect.objectContaining({
@@ -279,7 +279,7 @@ describe("Python Import Extractor", () => {
     expect(importStatement).toEqual(
       expect.objectContaining({
         node: expect.objectContaining({ text: "from os import *" }),
-        type: fromImportStatementType,
+        type: FROM_IMPORT_STATEMENT_TYPE,
         sourceNode: expect.objectContaining({ text: "os" }),
       }),
     );
@@ -291,7 +291,7 @@ describe("Python Import Extractor", () => {
         identifierNode: expect.objectContaining({ text: "os" }),
         aliasNode: undefined,
         isWildcardImport: true,
-        explicitSymbols: undefined,
+        items: undefined,
       }),
     );
   });
@@ -320,7 +320,7 @@ describe("Python Import Extractor", () => {
     expect(firstImportStatement).toEqual(
       expect.objectContaining({
         node: expect.objectContaining({ text: "import os" }),
-        type: normalImportStatementType,
+        type: NORMAL_IMPORT_STATEMENT_TYPE,
         sourceNode: undefined,
       }),
     );
@@ -330,7 +330,7 @@ describe("Python Import Extractor", () => {
     expect(secondImportStatement).toEqual(
       expect.objectContaining({
         node: expect.objectContaining({ text: "from sys import argv" }),
-        type: fromImportStatementType,
+        type: FROM_IMPORT_STATEMENT_TYPE,
         sourceNode: expect.objectContaining({ text: "sys" }),
       }),
     );

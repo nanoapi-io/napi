@@ -92,14 +92,14 @@ export class PythonUsageResolver {
   private extractUsageOfInternalSymbol(
     targetNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
-    refName: string,
+    symbolText: string,
     module: PythonModule,
     results: Map<string, InternalUsageResult>,
   ) {
     // Create a query that looks for identifiers matching symbolText.
     const query = new Parser.Query(
       this.parser.getLanguage(),
-      `((identifier) @id (#eq? @id "${refName}"))`,
+      `((identifier) @id (#eq? @id "${symbolText}"))`,
     );
 
     const captures = query.captures(targetNode);
@@ -114,14 +114,14 @@ export class PythonUsageResolver {
         const result = results.get(key);
         if (result) {
           // Add symbol if it's not already recorded.
-          if (!result.symbols.includes(refName)) {
-            result.symbols.push(refName);
+          if (!result.symbols.includes(symbolText)) {
+            result.symbols.push(symbolText);
           }
           results.set(key, result);
         } else {
           results.set(key, {
             moduleNode: module,
-            symbols: [refName],
+            symbols: [symbolText],
           });
         }
         // Found the symbol outside the excluded regions; break out.
@@ -148,23 +148,23 @@ export class PythonUsageResolver {
   private extractUsageOfInternalModule(
     targetNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
-    refName: string,
+    moduleText: string,
     module: PythonModule,
     results: Map<string, InternalUsageResult>,
   ) {
     let query: Parser.Query;
 
     // If moduleText contains a dot, search for attribute nodes; otherwise, for identifiers.
-    const parts = refName.split(".");
+    const parts = moduleText.split(".");
     if (parts.length > 1) {
       query = new Parser.Query(
         this.parser.getLanguage(),
-        `((attribute) @attr (#eq? @attr "${refName}"))`,
+        `((attribute) @attr (#eq? @attr "${moduleText}"))`,
       );
     } else {
       query = new Parser.Query(
         this.parser.getLanguage(),
-        `((identifier) @identifier (#eq? @identifier "${refName}"))`,
+        `((identifier) @identifier (#eq? @identifier "${moduleText}"))`,
       );
     }
 
@@ -316,7 +316,7 @@ export class PythonUsageResolver {
   ) {
     const query = new Parser.Query(
       this.parser.getLanguage(),
-      `(([(identifier) (attribute)]) @id (#eq? @id "${refName}"))`,
+      `((identifier) @id (#eq? @id "${refName}"))`,
     );
 
     const captures = query.captures(targetNode);

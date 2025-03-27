@@ -4,7 +4,7 @@ import { ModuleDependency, PythonDependencyResolver } from "./index";
 import { PythonExportResolver } from "../exportResolver";
 import { PythonImportResolver } from "../importResolver";
 import { PythonUsageResolver } from "../usageResolver";
-import { PythonModuleMapper } from "../moduleMapper";
+import { PythonModuleResolver } from "../moduleResolver";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 
 const parser = pythonParser;
@@ -15,7 +15,7 @@ describe("PythonDependencyResolver", () => {
   let exportResolver: PythonExportResolver;
   let importResolver: PythonImportResolver;
   let usageResolver: PythonUsageResolver;
-  let moduleMapper: PythonModuleMapper;
+  let moduleMapper: PythonModuleResolver;
 
   beforeEach(() => {
     // Build an in-memory project file map.
@@ -180,7 +180,7 @@ describe("PythonDependencyResolver", () => {
 
     // Initialize resolvers
     exportResolver = new PythonExportResolver(parser, files);
-    moduleMapper = new PythonModuleMapper(files, exportResolver);
+    moduleMapper = new PythonModuleResolver(files, exportResolver);
     importResolver = new PythonImportResolver(
       parser,
       files,
