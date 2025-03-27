@@ -7,6 +7,7 @@ import {
 } from "../namespaceMapper";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
+import { CSharpNamespaceResolver } from "../namespaceResolver";
 
 /**
  * Interface representing the invocations in a file
@@ -23,6 +24,7 @@ export class CSharpInvocationResolver {
   public nsMapper: CSharpNamespaceMapper;
   private usingResolver: CSharpUsingResolver;
   private resolvedImports: ResolvedImports;
+  private nsResolver: CSharpNamespaceResolver = new CSharpNamespaceResolver();
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
@@ -233,5 +235,36 @@ export class CSharpInvocationResolver {
   public isUsedInFile(filepath: string, symbol: SymbolNode): boolean {
     const invocations = this.getInvocationsFromFile(filepath);
     return invocations.resolvedSymbols.some((inv) => inv.name === symbol.name);
+  }
+
+  /**
+   * Retrieves the list of dependent symbols for a given symbol in a file.
+   * @param filepath - The path of the file being analyzed.
+   * @param symbol - The symbol node to find dependents for.
+   * @returns An array of dependent symbol names.
+   */
+  public getDependentsForSymbol(
+    filepath: string,
+    symbol: SymbolNode,
+  ): string[] {
+    // Get the exported symbols from the namespaces in the file
+    const exportedSymbols = this.nsResolver.getExportsFromNamespaces(
+      this.nsResolver.getNamespacesFromFile(
+        this.nsMapper.getFile(filepath) as File,
+      ),
+    );
+    const dependents: string[] = [];
+    // Iterate over each exported symbol to find invocations
+    for (const exportedSymbol of exportedSymbols) {
+      const invocations = this.getInvocationsFromNode(
+        exportedSymbol.node,
+        filepath,
+      );
+      // Check if the symbol is used in the invocations
+      if (invocations.resolvedSymbols.some((inv) => inv.name === symbol.name)) {
+        dependents.push(exportedSymbol.name);
+      }
+    }
+    return dependents;
   }
 }
