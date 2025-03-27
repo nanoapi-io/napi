@@ -4,15 +4,15 @@ import { CSharpNamespaceMapper } from "../namespaceMapper";
 import { getCSharpFilesMap } from "../testFiles";
 import { CSharpInvocationResolver } from ".";
 
-describe("DependencyResolver", () => {
+describe("InvocationResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
   const nsMapper = new CSharpNamespaceMapper(files);
-  const depResolver: CSharpInvocationResolver = new CSharpInvocationResolver(
+  const invResolver: CSharpInvocationResolver = new CSharpInvocationResolver(
     nsMapper,
   );
 
-  test("Import resolver", () => {
-    const usedFiles = depResolver.getInvocationsFromFile("Program.cs");
+  test("Invocation resolution", () => {
+    const usedFiles = invResolver.getInvocationsFromFile("Program.cs");
     expect(usedFiles).toMatchObject({
       resolvedSymbols: [
         {
