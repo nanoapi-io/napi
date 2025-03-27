@@ -59,7 +59,10 @@ describe("NamespaceMapper", () => {
         },
         {
           name: "OuterNamespace",
-          exports: [{ name: "OuterClass", filepath: "Nested.cs" }],
+          exports: [
+            { name: "OuterClass", filepath: "Nested.cs" },
+            { name: "OuterInnerClass", filepath: "Nested.cs" },
+          ],
           childrenNamespaces: [
             {
               name: "InnerNamespace",

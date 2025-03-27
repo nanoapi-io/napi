@@ -11,52 +11,81 @@ export const LOCAL_USING = "local";
 export const USING_STATIC = "static";
 export const USING_ALIAS = "alias";
 
-// Type alias for the different 'using' directive types
+/** Type alias for the different 'using' directive types */
 export type UsingType =
   | typeof GLOBAL_USING
   | typeof LOCAL_USING
   | typeof USING_STATIC
   | typeof USING_ALIAS;
 
-// Interface representing a 'using' directive in the code
+/**
+ * Interface representing a 'using' directive in the code
+ */
 export interface UsingDirective {
-  node: Parser.SyntaxNode; // The syntax node corresponding to the 'using' directive
-  type: UsingType; // The type of 'using' directive
-  id: string; // The identifier or qualified name being imported
-  alias?: string; // Optional alias for the imported identifier
+  /** The syntax node corresponding to the 'using' directive */
+  node: Parser.SyntaxNode;
+  /** The type of 'using' directive */
+  type: UsingType;
+  /** The identifier or qualified name being imported */
+  id: string;
+  /** Optional alias for the imported identifier */
+  alias?: string;
 }
 
-// Interface representing an internal symbol resolved from a 'using' directive
+/**
+ * Interface representing an internal symbol resolved from a 'using' directive
+ */
 export interface InternalSymbol {
-  usingtype: UsingType; // The type of 'using' directive
-  alias?: string; // Optional alias for the symbol
-  symbol?: SymbolNode; // The symbol node if it is a class or type
-  namespace?: NamespaceNode; // The namespace node if it is a namespace
+  /** The type of 'using' directive */
+  usingtype: UsingType;
+  /** Optional alias for the symbol */
+  alias?: string;
+  /** The symbol node if it is a class or type */
+  symbol?: SymbolNode;
+  /** The namespace node if it is a namespace */
+  namespace?: NamespaceNode;
 }
 
-// Interface representing an external symbol resolved from a 'using' directive
+/**
+ * Interface representing an external symbol resolved from a 'using' directive
+ */
 export interface ExternalSymbol {
-  usingtype: UsingType; // The type of 'using' directive
-  alias?: string; // Optional alias for the symbol
-  name: string; // The name of the external symbol
+  /** The type of 'using' directive */
+  usingtype: UsingType;
+  /** Optional alias for the symbol */
+  alias?: string;
+  /** The name of the external symbol */
+  name: string;
 }
 
-// Interface representing the resolved imports from a file
+/**
+ * Interface representing the resolved imports from a file
+ */
 export interface ResolvedImports {
-  internal: InternalSymbol[]; // List of internal symbols
-  external: ExternalSymbol[]; // List of external symbols
+  /** List of internal symbols */
+  internal: InternalSymbol[];
+  /** List of external symbols */
+  external: ExternalSymbol[];
 }
 
-// Class responsible for resolving 'using' directives in C# files
+/**
+ * Class responsible for resolving 'using' directives in C# files
+ */
 export class CSharpUsingResolver {
-  private nsMapper: CSharpNamespaceMapper; // Mapper for namespaces and symbols
-  private usingDirectives: UsingDirective[] = []; // List of parsed 'using' directives
+  /** Mapper for namespaces and symbols */
+  private nsMapper: CSharpNamespaceMapper;
+  /** List of parsed 'using' directives */
+  private usingDirectives: UsingDirective[] = [];
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
   }
 
-  // Parses the file and returns all using directives.
+  /**
+   * Parses the file and returns all using directives.
+   * @param filepath - The path to the file to parse.
+   * @returns An array of UsingDirective objects.
+   */
   public parseUsingDirectives(filepath: string): UsingDirective[] {
     const file = this.nsMapper.getFile(filepath);
     if (!file) {
@@ -82,7 +111,11 @@ export class CSharpUsingResolver {
     return this.usingDirectives;
   }
 
-  // Determines the type of 'using' directive based on its text content
+  /**
+   * Determines the type of 'using' directive based on its text content.
+   * @param node - The syntax node representing the 'using' directive.
+   * @returns The type of 'using' directive.
+   */
   private getUsingType(node: Parser.SyntaxNode): UsingType {
     // There is probably a cleaner way to do this.
     if (node.text.includes("using static")) {
@@ -97,7 +130,11 @@ export class CSharpUsingResolver {
     return LOCAL_USING;
   }
 
-  // Resolves a single 'using' directive to either an internal or external symbol
+  /**
+   * Resolves a single 'using' directive to either an internal or external symbol.
+   * @param directive - The 'using' directive to resolve.
+   * @returns An InternalSymbol or ExternalSymbol object.
+   */
   private resolveUsingDirective(
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
@@ -116,7 +153,11 @@ export class CSharpUsingResolver {
     return { usingtype: type, alias, name: id };
   }
 
-  // Resolves all 'using' directives in a file and categorizes them into internal and external symbols
+  /**
+   * Resolves all 'using' directives in a file and categorizes them into internal and external symbols.
+   * @param filepath - The path to the file to resolve.
+   * @returns A ResolvedImports object containing internal and external symbols.
+   */
   public resolveUsingDirectives(filepath: string): ResolvedImports {
     const internal: InternalSymbol[] = [];
     const external: ExternalSymbol[] = [];
@@ -129,5 +170,52 @@ export class CSharpUsingResolver {
       }
     });
     return { internal, external };
+  }
+
+  /**
+   * Finds a class in the resolved imports.
+   * @param imports - The resolved imports to search.
+   * @param className - The name of the class to find.
+   * @returns The SymbolNode of the class if found, otherwise null.
+   */
+  public findClassInImports(
+    imports: ResolvedImports,
+    className: string,
+  ): SymbolNode | null {
+    // Handle qualified class names with aliases
+    const parts = className.split(".");
+    for (let i = 0; i < parts.length; i++) {
+      const aliasMatch = imports.internal.find(
+        (symbol) => symbol.alias === parts[i],
+      );
+      if (aliasMatch && aliasMatch.symbol) {
+        parts[i] = aliasMatch.symbol.name;
+      }
+    }
+    const reconstructedClassName = parts.join(".");
+    // Check if the class is directly imported
+    const found = imports.internal.find(
+      (symbol) =>
+        "symbol" in symbol &&
+        (symbol.symbol?.name === reconstructedClassName ||
+          symbol.alias === reconstructedClassName),
+    );
+    if (found) {
+      return found.symbol ?? null;
+    }
+    // Check if the class is imported through a namespace
+    for (const symbol of imports.internal) {
+      if ("namespace" in symbol && symbol.namespace) {
+        const nsFound = this.nsMapper.findClassInTree(
+          symbol.namespace,
+          reconstructedClassName,
+        );
+        if (nsFound) {
+          return nsFound;
+        }
+      }
+    }
+
+    return null;
   }
 }

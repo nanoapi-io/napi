@@ -1,7 +1,9 @@
 using MyNamespace;
 using HalfNamespace;
-using OuterNamespace;
+using static OuterNamespace.OuterClass;
 using OuterNamespace.InnerNamespace;
+using MyApp.Models;
+using BeefBurger;
 
 namespace Tests
 {
@@ -9,19 +11,22 @@ namespace Tests
     {
         static void Main(string[] args)
         {
-            BeefBurger.Bun beefBun = new BeefBurger.Bun();
+            // Test for ambiguity resolution
+            Bun beefBun = new Bun();
             ChickenBurger.Bun chickenBun = new ChickenBurger.Bun();
+            // Regular usage of imported namespaces
             MyClass myClass = new MyClass();
-            myClass.MyMethod();
             Gordon gordon = new Gordon();
             gordon.Crowbar();
+            // Class that is in no namespace
             Freeman freeman = new Freeman();
-            freeman.Shotgun();
-            OuterClass.OuterInnerClass outerInnerClass = new OuterClass.OuterInnerClass();
-            outerInnerClass.OuterInnerMethod();
+            // Nested classes
+            OuterInnerClass outerInnerClass = new OuterInnerClass();
             InnerClass innerClass = new InnerClass();
-            innerClass.InnerMethod();
+            // Enum
             OrderStatus orderStatus = OrderStatus.Pending;
+            // Static class
+            System.Math.Abs(-1).Equals(1).ToString();
         }
     }
 }

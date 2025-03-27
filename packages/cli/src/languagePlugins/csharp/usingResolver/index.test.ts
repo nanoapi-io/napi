@@ -90,4 +90,29 @@ describe("UsingResolver", () => {
       ],
     });
   });
+
+  test("Class resolution", () => {
+    const imports = resolver.resolveUsingDirectives("Usage.cs");
+    const user = resolver.findClassInImports(imports, "User");
+    expect(user).toMatchObject({
+      name: "User",
+      type: "class",
+      namespace: "MyApp.Models",
+      filepath: "Models.cs",
+    });
+    const gordon = resolver.findClassInImports(imports, "Gordon");
+    expect(gordon).toMatchObject({
+      name: "Gordon",
+      type: "class",
+      namespace: "HalfNamespace",
+      filepath: "SemiNamespaced.cs",
+    });
+    const guy = resolver.findClassInImports(imports, "Guy");
+    expect(guy).toMatchObject({
+      name: "User",
+      type: "class",
+      namespace: "MyApp.Models",
+      filepath: "Models.cs",
+    });
+  });
 });
