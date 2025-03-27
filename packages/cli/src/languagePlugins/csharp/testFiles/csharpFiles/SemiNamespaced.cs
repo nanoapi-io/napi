@@ -11,6 +11,7 @@ namespace HalfNamespace
 
 public class Freeman
 {
+    public int Health { get; set; }
     public void Shotgun()
     {
         Console.WriteLine("MyMethod");
@@ -19,8 +20,8 @@ public class Freeman
 
 class HeadCrab
 {
-    public void Bite()
+    public void Bite(Freeman freeman)
     {
-        Console.WriteLine("Bite lol");
+        freeman.Health -= 10;
     }
 }
