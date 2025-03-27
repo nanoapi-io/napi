@@ -1,7 +1,8 @@
 using MyNamespace;
 using HalfNamespace;
-using OuterNamespace.OuterClass.OuterInnerClass;
+using static OuterNamespace.OuterClass;
 using OuterNamespace.InnerNamespace;
+using MyApp.Models;
 using BeefBurger;
 
 namespace Tests
