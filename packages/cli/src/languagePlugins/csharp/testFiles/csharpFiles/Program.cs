@@ -1,6 +1,6 @@
 using MyNamespace;
 using HalfNamespace;
-using OuterNamespace;
+using OuterNamespace.OuterClass.OuterInnerClass;
 using OuterNamespace.InnerNamespace;
 using BeefBurger;
 
@@ -18,7 +18,7 @@ namespace Tests
             gordon.Crowbar();
             Freeman freeman = new Freeman();
             freeman.Shotgun();
-            OuterClass.OuterInnerClass outerInnerClass = new OuterClass.OuterInnerClass();
+            OuterInnerClass outerInnerClass = new OuterInnerClass();
             outerInnerClass.OuterInnerMethod();
             InnerClass innerClass = new InnerClass();
             innerClass.InnerMethod();

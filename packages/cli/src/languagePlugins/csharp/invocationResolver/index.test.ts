@@ -46,7 +46,7 @@ describe("DependencyResolver", () => {
           namespace: "",
         },
         {
-          name: "OuterClass",
+          name: "OuterInnerClass",
           type: "class",
           filepath: "Nested.cs",
           namespace: "OuterNamespace",

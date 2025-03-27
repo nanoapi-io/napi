@@ -83,7 +83,14 @@ describe("NamespaceResolver", () => {
         childrenNamespaces: [
           {
             name: "OuterNamespace",
-            exports: [{ name: "OuterClass", filepath: "Nested.cs" }],
+            exports: [
+              { name: "OuterClass", filepath: "Nested.cs" },
+              {
+                name: "OuterInnerClass",
+                filepath: "Nested.cs",
+                parent: { name: "OuterClass" },
+              },
+            ],
             childrenNamespaces: [
               {
                 name: "InnerNamespace",

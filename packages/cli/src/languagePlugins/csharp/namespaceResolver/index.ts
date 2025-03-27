@@ -30,6 +30,7 @@ export interface ExportedSymbol {
   identifierNode: Parser.SyntaxNode; // The syntax node corresponding to the identifier
   namespace?: string; // The namespace of the symbol
   filepath: string; // The file path where the symbol is defined
+  parent?: ExportedSymbol; // The parent symbol if this is a nested class
 }
 
 // Interface representing a namespace
@@ -147,23 +148,44 @@ export class CSharpNamespaceResolver {
   }
 
   // Gets the classes, structs and enums from a node
-  #getExportsFromNode(node: Parser.SyntaxNode): ExportedSymbol[] {
-    return node.children
-      .filter(
-        (child) =>
-          child.type === "class_declaration" ||
-          child.type === "struct_declaration" ||
-          child.type === "enum_declaration" ||
-          child.type === "interface_declaration" ||
-          child.type === "delegate_declaration",
-      )
-      .map((child) => ({
-        name: this.#getIdentifierNode(child).text,
-        type: child.type.replace("_declaration", "") as SymbolType,
-        node: child,
-        identifierNode: this.#getIdentifierNode(child),
-        filepath: this.#currentFile,
-      }));
+  #getExportsFromNode(
+    node: Parser.SyntaxNode,
+    parent?: ExportedSymbol,
+  ): ExportedSymbol[] {
+    const exports: ExportedSymbol[] = [];
+    node.children.forEach((child) => {
+      if (
+        child.type === "class_declaration" ||
+        child.type === "struct_declaration" ||
+        child.type === "enum_declaration" ||
+        child.type === "interface_declaration" ||
+        child.type === "delegate_declaration"
+      ) {
+        const symbol: ExportedSymbol = {
+          name: this.#getIdentifierNode(child).text,
+          type: child.type.replace("_declaration", "") as SymbolType,
+          node: child,
+          identifierNode: this.#getIdentifierNode(child),
+          filepath: this.#currentFile,
+          parent,
+        };
+        exports.push(symbol);
+        // Recursively get nested classes
+        if (
+          child.children.some(
+            (grandChild) => grandChild.type === "declaration_list",
+          )
+        ) {
+          exports.push(
+            ...this.#getExportsFromNode(
+              this.#getDeclarationList(child),
+              symbol,
+            ),
+          );
+        }
+      }
+    });
+    return exports;
   }
 
   // Recursively gets all the exported classes from a list of namespaces
