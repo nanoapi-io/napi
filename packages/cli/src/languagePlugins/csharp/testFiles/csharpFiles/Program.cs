@@ -10,19 +10,21 @@ namespace Tests
     {
         static void Main(string[] args)
         {
+            // Test for ambiguity resolution
             Bun beefBun = new Bun();
             ChickenBurger.Bun chickenBun = new ChickenBurger.Bun();
+            // Regular usage of imported namespaces
             MyClass myClass = new MyClass();
-            myClass.MyMethod();
             Gordon gordon = new Gordon();
             gordon.Crowbar();
+            // Class that is in no namespace
             Freeman freeman = new Freeman();
-            freeman.Shotgun();
+            // Nested classes
             OuterInnerClass outerInnerClass = new OuterInnerClass();
-            outerInnerClass.OuterInnerMethod();
             InnerClass innerClass = new InnerClass();
-            innerClass.InnerMethod();
+            // Enum
             OrderStatus orderStatus = OrderStatus.Pending;
+            // Static class
             System.Math.Abs(-1).Equals(1).ToString();
         }
     }
