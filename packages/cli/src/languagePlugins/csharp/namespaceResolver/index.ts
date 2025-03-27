@@ -8,7 +8,7 @@ export const CSHARP_ENUM_TYPE = "enum";
 export const CSHARP_INTERFACE_TYPE = "interface";
 export const CSHARP_DELEGATE_TYPE = "delegate";
 
-// Type alias for the different symbol types
+/**  Type alias for the different symbol types */
 export type SymbolType =
   | typeof CSHARP_CLASS_TYPE
   | typeof CSHARP_STRUCT_TYPE
@@ -16,30 +16,50 @@ export type SymbolType =
   | typeof CSHARP_INTERFACE_TYPE
   | typeof CSHARP_DELEGATE_TYPE;
 
-// Interface representing a file
+/**
+ * Interface representing a file
+ */
 export interface File {
-  path: string; // The path of the file
-  rootNode: Parser.SyntaxNode; // The root node of the file
+  /** The path of the file */
+  path: string;
+  /** The root node of the file */
+  rootNode: Parser.SyntaxNode;
 }
 
-// Interface representing an exported symbol
+/**
+ * Interface representing an exported symbol
+ */
 export interface ExportedSymbol {
-  name: string; // The name of the symbol
-  type: SymbolType; // The type of the symbol (i.e. class, struct, enum, etc.)
-  node: Parser.SyntaxNode; // The syntax node corresponding to the symbol
-  identifierNode: Parser.SyntaxNode; // The syntax node corresponding to the identifier
-  namespace?: string; // The namespace of the symbol
-  filepath: string; // The file path where the symbol is defined
-  parent?: ExportedSymbol; // The parent symbol if this is a nested class
+  /** The name of the symbol */
+  name: string;
+  /** The type of the symbol (i.e. class, struct, enum, etc.) */
+  type: SymbolType;
+  /** The syntax node corresponding to the symbol */
+  node: Parser.SyntaxNode;
+  /** The syntax node corresponding to the identifier */
+  identifierNode: Parser.SyntaxNode;
+  /** The namespace of the symbol */
+  namespace?: string;
+  /** The file path where the symbol is defined */
+  filepath: string;
+  /** The parent symbol if this is a nested class */
+  parent?: ExportedSymbol;
 }
 
-// Interface representing a namespace
+/**
+ * Interface representing a namespace
+ */
 export interface Namespace {
-  name: string; // The name of the namespace
-  node: Parser.SyntaxNode; // The syntax node corresponding to the namespace
-  identifierNode?: Parser.SyntaxNode; // Optional because the root namespace doesn't have an identifier
-  exports: ExportedSymbol[]; // List of classes and types exported by the namespace
-  childrenNamespaces: Namespace[]; // List of child namespaces
+  /** The name of the namespace */
+  name: string;
+  /** The syntax node corresponding to the namespace */
+  node: Parser.SyntaxNode;
+  /** Optional because the root namespace doesn't have an identifier */
+  identifierNode?: Parser.SyntaxNode;
+  /** List of classes and types exported by the namespace */
+  exports: ExportedSymbol[];
+  /** List of child namespaces */
+  childrenNamespaces: Namespace[];
 }
 
 export class CSharpNamespaceResolver {
@@ -51,7 +71,11 @@ export class CSharpNamespaceResolver {
     this.#currentFile = "";
   }
 
-  // Parses namespaces from a file along with the exported classes
+  /**
+   * Parses namespaces from a file along with the exported classes
+   * @param file The file to parse
+   * @returns An array of namespaces found in the file
+   */
   getNamespacesFromFile(file: File): Namespace[] {
     // Check if the file is already in the cache
     const cacheValue = this.#cache.get(file.path);
@@ -94,7 +118,11 @@ export class CSharpNamespaceResolver {
     return namespaces;
   }
 
-  // Gets the file-scoped namespace declaration from a node
+  /**
+   * Gets the file-scoped namespace declaration from a node
+   * @param node The syntax node to search for a file-scoped namespace declaration
+   * @returns The name of the file-scoped namespace, if any
+   */
   #getFileScopedNamespaceDeclaration(
     node: Parser.SyntaxNode,
   ): string | undefined {
@@ -110,7 +138,11 @@ export class CSharpNamespaceResolver {
       .map((capture) => capture.node.text)[0];
   }
 
-  // Recursively parses namespaces from a node
+  /**
+   * Recursively parses namespaces from a node
+   * @param node The syntax node to parse for namespaces
+   * @returns An array of namespaces found in the node
+   */
   #getNamespacesFromNode(node: Parser.SyntaxNode): Namespace[] {
     return node.children
       .filter((child) => child.type === "namespace_declaration")
@@ -125,8 +157,12 @@ export class CSharpNamespaceResolver {
       }));
   }
 
-  // Gets the declaration list from a node
-  // i.e. where the classes, namespaces and methods are declared
+  /**
+   * Gets the declaration list from a node
+   * i.e. where the classes, namespaces and methods are declared
+   * @param node The syntax node to search for a declaration list
+   * @returns The declaration list node
+   */
   #getDeclarationList(node: Parser.SyntaxNode): Parser.SyntaxNode {
     return new Parser.Query(
       this.parser.getLanguage(),
@@ -136,7 +172,11 @@ export class CSharpNamespaceResolver {
     ).captures(node)[0].node;
   }
 
-  // Gets the name from a node
+  /**
+   * Gets the name from a node
+   * @param node The syntax node to search for an identifier
+   * @returns The identifier node
+   */
   #getIdentifierNode(node: Parser.SyntaxNode): Parser.SyntaxNode {
     return new Parser.Query(
       this.parser.getLanguage(),
@@ -147,7 +187,12 @@ export class CSharpNamespaceResolver {
     ).captures(node)[0].node;
   }
 
-  // Gets the classes, structs and enums from a node
+  /**
+   * Gets the classes, structs and enums from a node
+   * @param node The syntax node to search for exported symbols
+   * @param parent The parent symbol if this is a nested class
+   * @returns An array of exported symbols found in the node
+   */
   #getExportsFromNode(
     node: Parser.SyntaxNode,
     parent?: ExportedSymbol,
@@ -188,7 +233,11 @@ export class CSharpNamespaceResolver {
     return exports;
   }
 
-  // Recursively gets all the exported classes from a list of namespaces
+  /**
+   * Recursively gets all the exported classes from a list of namespaces
+   * @param namespaces The list of namespaces to search for exported symbols
+   * @returns An array of all exported symbols found in the namespaces
+   */
   getExportsFromNamespaces(namespaces: Namespace[]): ExportedSymbol[] {
     let classes: ExportedSymbol[] = [];
     namespaces.forEach((ns) => {

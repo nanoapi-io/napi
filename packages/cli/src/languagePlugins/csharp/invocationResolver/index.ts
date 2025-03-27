@@ -8,15 +8,19 @@ import {
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
 
-// Interface representing the invocations in a file
+/**
+ * Interface representing the invocations in a file
+ */
 export interface Invocations {
-  resolvedSymbols: SymbolNode[]; // List of resolved symbols
-  unresolved: string[]; // List of unresolved symbols (usually external imports)
+  /** List of resolved symbols */
+  resolvedSymbols: SymbolNode[];
+  /** List of unresolved symbols (usually external imports) */
+  unresolved: string[];
 }
 
 export class CSharpInvocationResolver {
   parser: Parser = csharpParser;
-  private nsMapper: CSharpNamespaceMapper;
+  public nsMapper: CSharpNamespaceMapper;
   private usingResolver: CSharpUsingResolver;
   private resolvedImports: ResolvedImports;
 
@@ -29,12 +33,19 @@ export class CSharpInvocationResolver {
     };
   }
 
-  // Retrieves variable names from the given syntax node.
+  /**
+   * Retrieves variable names from the given syntax node.
+   * @param node - The syntax node to extract variable names from.
+   * @returns An array of variable names.
+   */
   #getVariables(node: Parser.SyntaxNode): string[] {
     return new Parser.Query(
       this.parser.getLanguage(),
       `
       (variable_declarator
+        name: (identifier) @varname
+      )
+      (parameter
         name: (identifier) @varname
       )
       `,
@@ -43,8 +54,39 @@ export class CSharpInvocationResolver {
       .map((ctc) => ctc.node.text);
   }
 
-  // Gets the classes that are called for variable declarations and object creations.
-  // This does not manage static calls such as System.Math.Abs(-1).
+  /**
+   * Resolves a symbol (class or namespace) from the given classname.
+   * @param classname - The name of the class to resolve.
+   * @param namespaceTree - The namespace tree to search within.
+   * @returns The resolved symbol node or null if not found.
+   */
+  private resolveSymbol(
+    classname: string,
+    namespaceTree: NamespaceNode,
+  ): SymbolNode | null {
+    // Try to find the class in the resolved imports
+    const ucls = this.usingResolver.findClassInImports(
+      this.resolvedImports,
+      classname,
+    );
+    if (ucls) {
+      return ucls;
+    }
+    // Try to find the class in the namespace tree
+    const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
+    if (cls) {
+      return cls;
+    }
+    return null;
+  }
+
+  /**
+   * Gets the classes that are called for variable declarations and object creations.
+   * This does not manage static calls such as System.Math.Abs(-1).
+   * @param node - The syntax node to analyze.
+   * @param namespaceTree - The namespace tree to search within.
+   * @returns An object containing resolved and unresolved symbols.
+   */
   #getCalledClasses(
     node: Parser.SyntaxNode,
     namespaceTree: NamespaceNode,
@@ -69,24 +111,20 @@ export class CSharpInvocationResolver {
       (variable_declaration
         type: (qualified_name) @classname
       )
+      (parameter
+        type: (identifier) @classname
+      )
+      (parameter
+        type: (qualified_name) @classname
+      )
       `,
     ).captures(node);
     // Process each captured class name
     catches.forEach((ctc) => {
       const classname = ctc.node.text;
-      // Try to find the class in the resolved imports
-      const ucls = this.usingResolver.findClassInImports(
-        this.resolvedImports,
-        classname,
-      );
-      if (ucls) {
-        invocations.resolvedSymbols.push(ucls);
-        return;
-      }
-      // Try to find the class in the namespace tree
-      const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
-      if (cls) {
-        invocations.resolvedSymbols.push(cls);
+      const resolvedSymbol = this.resolveSymbol(classname, namespaceTree);
+      if (resolvedSymbol) {
+        invocations.resolvedSymbols.push(resolvedSymbol);
       } else {
         // If class not found, mark as unresolved
         invocations.unresolved.push(classname);
@@ -95,7 +133,12 @@ export class CSharpInvocationResolver {
     return invocations;
   }
 
-  // Resolves invocation expressions within the given syntax node.
+  /**
+   * Resolves invocation expressions within the given syntax node.
+   * @param node - The syntax node to analyze.
+   * @param namespaceTree - The namespace tree to search within.
+   * @returns An object containing resolved and unresolved symbols.
+   */
   #resolveInvocationExpressions(
     node: Parser.SyntaxNode,
     namespaceTree: NamespaceNode,
@@ -126,19 +169,9 @@ export class CSharpInvocationResolver {
       if (variablenames.includes(classname)) {
         return;
       }
-      // Try to find the class in the resolved imports
-      const ucls = this.usingResolver.findClassInImports(
-        this.resolvedImports,
-        classname,
-      );
-      if (ucls) {
-        invocations.resolvedSymbols.push(ucls);
-        return;
-      }
-      // Try to find the class in the namespace tree
-      const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
-      if (cls) {
-        invocations.resolvedSymbols.push(cls);
+      const resolvedSymbol = this.resolveSymbol(classname, namespaceTree);
+      if (resolvedSymbol) {
+        invocations.resolvedSymbols.push(resolvedSymbol);
       } else {
         // If class not found, mark as unresolved
         invocations.unresolved.push(classname);
@@ -147,22 +180,37 @@ export class CSharpInvocationResolver {
     return invocations;
   }
 
-  // Gets the classes used in a file.
   getInvocationsFromFile(filepath: string): Invocations {
+    const file: File | undefined = this.nsMapper.getFile(filepath);
+    if (!file) {
+      return {
+        resolvedSymbols: [],
+        unresolved: [],
+      };
+    }
+    return this.getInvocationsFromNode(file.rootNode, filepath);
+  }
+
+  /**
+   * Gets the classes used in a file.
+   * @param node - The syntax node to analyze.
+   * @param filepath - The path of the file being analyzed.
+   * @returns An object containing resolved and unresolved symbols.
+   */
+  getInvocationsFromNode(
+    node: Parser.SyntaxNode,
+    filepath: string,
+  ): Invocations {
     this.resolvedImports = this.usingResolver.resolveUsingDirectives(filepath);
-    const file = this.nsMapper.getFile(filepath) as File;
     const invocations: Invocations = {
       resolvedSymbols: [],
       unresolved: [],
     };
     // Get classes called in variable declarations and object creations
-    const calledClasses = this.#getCalledClasses(
-      file.rootNode,
-      this.nsMapper.nsTree,
-    );
+    const calledClasses = this.#getCalledClasses(node, this.nsMapper.nsTree);
     // Resolve invocation expressions
     const invocationExpressions = this.#resolveInvocationExpressions(
-      file.rootNode,
+      node,
       this.nsMapper.nsTree,
     );
 
@@ -180,5 +228,10 @@ export class CSharpInvocationResolver {
       ]),
     ];
     return invocations;
+  }
+
+  public isUsedInFile(filepath: string, symbol: SymbolNode): boolean {
+    const invocations = this.getInvocationsFromFile(filepath);
+    return invocations.resolvedSymbols.some((inv) => inv.name === symbol.name);
   }
 }

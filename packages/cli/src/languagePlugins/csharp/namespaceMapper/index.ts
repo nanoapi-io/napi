@@ -1,19 +1,30 @@
 import Parser from "tree-sitter";
 import { CSharpNamespaceResolver, SymbolType } from "../namespaceResolver";
 
-// Interface representing a namespace node in the namespace tree
+/**
+ * Interface representing a namespace node in the namespace tree.
+ */
 export interface NamespaceNode {
-  name: string; // The name of the namespace
-  exports: SymbolNode[]; // List of classes and types exported by the namespace
-  childrenNamespaces: NamespaceNode[]; // List of child namespaces
+  /** The name of the namespace */
+  name: string;
+  /** List of classes and types exported by the namespace */
+  exports: SymbolNode[];
+  /** List of child namespaces */
+  childrenNamespaces: NamespaceNode[];
 }
 
-// Interface representing a symbol node in the namespace tree
+/**
+ * Interface representing a symbol node in the namespace tree.
+ */
 export interface SymbolNode {
-  name: string; // The name of the symbol
-  type: SymbolType; // The type of the symbol (class, interface, etc.)
-  namespace: string; // Kept for ambiguity resolution
-  filepath: string; // The file path where the symbol is defined
+  /** The name of the symbol */
+  name: string;
+  /** The type of the symbol (class, interface, etc.) */
+  type: SymbolType;
+  /** Kept for ambiguity resolution */
+  namespace: string;
+  /** The file path where the symbol is defined */
+  filepath: string;
 }
 
 export class CSharpNamespaceMapper {
@@ -33,7 +44,11 @@ export class CSharpNamespaceMapper {
     return this.#files.get(key);
   }
 
-  // Adds a namespace to the final tree.
+  /**
+   * Adds a namespace to the final tree.
+   * @param namespace - The namespace node to add.
+   * @param tree - The root of the namespace tree.
+   */
   #addNamespaceToTree(namespace: NamespaceNode, tree: NamespaceNode) {
     // Deconstruct the namespace's name, so that A.B
     // becomes B, child of A.
@@ -44,8 +59,7 @@ export class CSharpNamespaceMapper {
     // already in the tree. If it is, we go to the next
     // part. If it isn't, we add it to the tree.
     if (namespace.name !== "") {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      parts.forEach((part, _) => {
+      parts.forEach((part) => {
         let child = current.childrenNamespaces.find((ns) => ns.name === part);
         if (!child) {
           child = {
@@ -65,8 +79,11 @@ export class CSharpNamespaceMapper {
     current.childrenNamespaces.push(...namespace.childrenNamespaces);
   }
 
-  // Assigns namespaces to classes, used for ambiguity resolution.
-  // check 2Namespaces1File.cs for an example.
+  /**
+   * Assigns namespaces to classes, used for ambiguity resolution.
+   * @param tree - The root of the namespace tree.
+   * @param parentNamespace - The parent namespace name.
+   */
   #assignNamespacesToClasses(tree: NamespaceNode, parentNamespace = "") {
     const fullNamespace = parentNamespace
       ? `${parentNamespace}.${tree.name}`
@@ -81,7 +98,10 @@ export class CSharpNamespaceMapper {
     });
   }
 
-  // Builds a tree of namespaces from the parsed files.
+  /**
+   * Builds a tree of namespaces from the parsed files.
+   * @returns The root of the namespace tree.
+   */
   buildNamespaceTree(): NamespaceNode {
     const namespaceTree: NamespaceNode = {
       name: "",
@@ -107,6 +127,12 @@ export class CSharpNamespaceMapper {
     return namespaceTree;
   }
 
+  /**
+   * Finds a namespace in the namespace tree.
+   * @param tree - The root of the namespace tree.
+   * @param namespaceName - The name of the namespace to find.
+   * @returns The namespace node if found, otherwise null.
+   */
   findNamespaceInTree(
     tree: NamespaceNode,
     namespaceName: string,
@@ -129,6 +155,12 @@ export class CSharpNamespaceMapper {
     );
   }
 
+  /**
+   * Finds a class in the namespace tree.
+   * @param tree - The root of the namespace tree.
+   * @param className - The name of the class to find.
+   * @returns The symbol node if found, otherwise null.
+   */
   findClassInTree(tree: NamespaceNode, className: string): SymbolNode | null {
     // Management of qualified names
     if (className.includes(".")) {
