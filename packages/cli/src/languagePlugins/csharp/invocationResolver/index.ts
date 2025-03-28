@@ -156,9 +156,13 @@ export class CSharpInvocationResolver {
     const catches = new Parser.Query(
       this.parser.getLanguage(),
       `
-      (expression_statement
-        (invocation_expression) @func
-      )
+      (invocation_expression
+      (member_access_expression
+        expression: [
+          (member_access_expression)
+          (identifier)
+        ] @cls
+      ))
       `,
     ).captures(node);
     // Process each captured function invocation
