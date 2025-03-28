@@ -25,20 +25,7 @@ describe("Dependency formatting", () => {
         Freeman: {
           id: "Freeman",
           type: "class",
-          dependents: {
-            "Program.cs": {
-              id: "Program.cs",
-              symbols: {
-                Program: "Program",
-              },
-            },
-            "SemiNamespaced.cs": {
-              id: "SemiNamespaced.cs",
-              symbols: {
-                HeadCrab: "HeadCrab",
-              },
-            },
-          },
+          dependents: {},
         },
         HeadCrab: {
           id: "HeadCrab",
@@ -48,14 +35,7 @@ describe("Dependency formatting", () => {
         "HalfNamespace.Gordon": {
           id: "Gordon",
           type: "class",
-          dependents: {
-            "Program.cs": {
-              id: "Program.cs",
-              symbols: {
-                Program: "Program",
-              },
-            },
-          },
+          dependents: {},
         },
       },
     });

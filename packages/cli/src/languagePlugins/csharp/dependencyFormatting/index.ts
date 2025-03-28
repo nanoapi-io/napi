@@ -46,7 +46,6 @@ export interface CSharpFile {
 export class CSharpDependencyFormatter {
   private invResolver: CSharpInvocationResolver;
   private nsMapper: CSharpNamespaceMapper;
-  private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
 
   /**
    * Constructs a new CSharpDependencyFormatter.
@@ -57,33 +56,6 @@ export class CSharpDependencyFormatter {
   ) {
     this.nsMapper = new CSharpNamespaceMapper(files);
     this.invResolver = new CSharpInvocationResolver(this.nsMapper);
-    this.files = files;
-  }
-
-  /**
-   * Finds all dependent symbols for a given symbol.
-   * @param symbol - The symbol node to find dependents for.
-   * @returns A record of file paths to their corresponding dependents.
-   */
-  private findDependentSymbols(
-    symbol: SymbolNode,
-  ): Record<string, CSharpDependent> {
-    const dependents: Record<string, CSharpDependent> = {};
-    for (const filepath of this.files.keys()) {
-      for (const sbl of this.invResolver.getDependentsForSymbol(
-        filepath,
-        symbol,
-      )) {
-        if (!dependents[filepath]) {
-          dependents[filepath] = {
-            id: filepath,
-            symbols: {},
-          };
-        }
-        dependents[filepath].symbols[sbl] = sbl;
-      }
-    }
-    return dependents;
   }
 
   /**
@@ -103,7 +75,7 @@ export class CSharpDependencyFormatter {
         type: symbol.type,
         lineCount: symbol.node.endPosition.row - symbol.node.startPosition.row,
         characterCount: symbol.node.endIndex - symbol.node.startIndex,
-        dependents: this.findDependentSymbols(symbol),
+        dependents: {},
       };
     }
     return symbols;

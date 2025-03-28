@@ -23,6 +23,18 @@ export function generateCSharpDependencyManifesto(
       symbols: fm.symbols as unknown as Record<string, Symbol>,
     };
   }
+  // Populate dependents
+  for (const [, { path }] of files) {
+    const fm = manifesto[path];
+    for (const symbol of Object.values(fm.symbols)) {
+      for (const [, dep] of Object.entries(symbol.dependents)) {
+        const depManifesto = manifesto[dep.id];
+        if (depManifesto) {
+          depManifesto.symbols[dep.symbols[symbol.id]] = symbol;
+        }
+      }
+    }
+  }
   console.timeEnd("generateCSharpDependencyManifesto");
   return manifesto;
 }
