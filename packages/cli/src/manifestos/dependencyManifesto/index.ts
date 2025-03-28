@@ -1,5 +1,6 @@
 import Parser from "tree-sitter";
 import { generatePythonDependencyManifesto } from "./python";
+import { generateCSharpDependencyManifesto } from "./csharp";
 
 /** Identifies the "class" instance type. */
 export const classSymbolType = "class";
@@ -116,6 +117,7 @@ const handlerMap: Record<
   ) => DependencyManifesto
 > = {
   python: generatePythonDependencyManifesto,
+  "c-sharp": generateCSharpDependencyManifesto,
 };
 
 export class UnsupportedLanguageError extends Error {

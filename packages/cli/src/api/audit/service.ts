@@ -5,7 +5,7 @@ import { generateDependencyManifesto } from "../../manifestos/dependencyManifest
 import { readFileSync } from "fs";
 import { join } from "path";
 import Parser from "tree-sitter";
-import { pythonParser } from "../../helpers/treeSitter/parsers";
+import { pythonParser, csharpParser } from "../../helpers/treeSitter/parsers";
 import { generateAuditManifesto } from "../../manifestos/auditManifesto";
 
 export function generateAuditResponse(
@@ -16,6 +16,10 @@ export function generateAuditResponse(
     ["python" as string]: {
       parser: pythonParser,
       validExtensions: [".py"],
+    },
+    ["c-sharp" as string]: {
+      parser: csharpParser,
+      validExtensions: [".cs"],
     },
   };
 
