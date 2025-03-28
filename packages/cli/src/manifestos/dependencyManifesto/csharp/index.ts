@@ -16,7 +16,7 @@ export function generateCSharpDependencyManifesto(
     manifesto[path] = {
       id: fm.id,
       filePath: fm.filepath,
-      language: "csharp",
+      language: "c-sharp",
       characterCount: fm.characterCount,
       lineCount: fm.lineCount,
       dependencies: fm.dependencies,
