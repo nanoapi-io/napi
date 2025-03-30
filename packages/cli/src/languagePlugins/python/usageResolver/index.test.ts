@@ -1,532 +1,352 @@
-import { describe, test, expect, beforeAll } from "vitest";
+import { describe, test, expect, beforeEach } from "vitest";
 import Parser from "tree-sitter";
-import {
-  PythonUsageResolver,
-  InternalUsageResult,
-  ExternalUsageResult,
-} from "./index";
-import { PYTHON_MODULE_TYPE, PythonModule } from "../moduleResolver";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
+import { PythonExportExtractor } from "../exportExtractor";
+import { PythonImportExtractor } from "../importExtractor";
+import { PythonModuleResolver } from "../moduleResolver";
+import { PythonItemResolver } from "../itemResolver";
+import { PythonUsageResolver } from "../usageResolver";
+
+let resolver: PythonUsageResolver;
+let moduleMapper: PythonModuleResolver;
+let exportExtractor: PythonExportExtractor;
+let importExtractor: PythonImportExtractor;
+let itemResolver: PythonItemResolver;
+let files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+
+beforeEach(() => {
+  // Initial basic files
+  files = new Map([
+    [
+      "moduleA.py",
+      {
+        path: "moduleA.py",
+        rootNode: pythonParser.parse(`
+          def foo(): pass
+          def bar(): pass
+        `).rootNode,
+      },
+    ],
+    [
+      "moduleB.py",
+      {
+        path: "moduleB.py",
+        rootNode: pythonParser.parse(`from moduleA import foo as f, bar`)
+          .rootNode,
+      },
+    ],
+    [
+      "testModule.py",
+      {
+        path: "testModule.py",
+        rootNode: pythonParser.parse(`
+          from moduleA import foo
+          import moduleB
+          foo()
+          moduleB.bar()
+          import external_module
+          external_module.some_function()
+        `).rootNode,
+      },
+    ],
+  ]);
+
+  // Initialize the basic resolvers
+  exportExtractor = new PythonExportExtractor(pythonParser, files);
+  importExtractor = new PythonImportExtractor(pythonParser, files);
+  moduleMapper = new PythonModuleResolver(files);
+  itemResolver = new PythonItemResolver(
+    exportExtractor,
+    importExtractor,
+    moduleMapper,
+  );
+
+  resolver = new PythonUsageResolver(
+    pythonParser,
+    importExtractor,
+    moduleMapper,
+    itemResolver,
+    exportExtractor,
+  );
+});
 
 describe("PythonUsageResolver", () => {
-  let parser: Parser;
-  let usageResolver: PythonUsageResolver;
+  test("correctly resolves internal usage", () => {
+    const rootNode = files.get("testModule.py")?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("testModule.py", rootNode);
+    const internal = combined.internal;
 
-  beforeAll(() => {
-    parser = pythonParser;
-    usageResolver = new PythonUsageResolver(parser);
+    // Expect 2 internal modules to be recorded.
+    expect(internal.size).toBe(2);
+
+    const moduleAResult = internal.get("moduleA.py");
+    expect(moduleAResult).toBeDefined();
+    expect(moduleAResult?.symbols?.map((s) => s.id)).toContain("foo");
+
+    const moduleBResult = internal.get("moduleB.py");
+    expect(moduleBResult).toBeDefined();
+    // moduleB is used via attribute access (moduleB.bar()) so no specific symbols recorded.
+    expect(moduleBResult?.symbols).toBeUndefined();
   });
 
-  /**
-   * Helper function to get nodes to exclude (e.g., import statements)
-   */
-  function getNodesToExclude(root: Parser.SyntaxNode): Parser.SyntaxNode[] {
-    const query = new Parser.Query(
-      parser.getLanguage(),
-      `[
-        (import_from_statement) @imp
-        (import_statement) @imp
-      ]`,
-    );
-    const captures = query.captures(root);
-    return captures.map((cap) => cap.node);
-  }
+  test("correctly resolves external usage", () => {
+    const rootNode = files.get("testModule.py")?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("testModule.py", rootNode);
+    const external = combined.external;
 
-  test("should detect explicit symbol usage in base module", () => {
-    const code = `
-      from module import helper_func
-
-      def foo():
-          module.helper_func()
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
-
-    // Dummy PythonModule for base module.
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      {
-        identifier: "module",
-        alias: undefined,
-        pythonModule: baseModule,
-        explicitSymbols: [{ identifier: "helper_func", alias: undefined }],
-      },
-      nodesToExclude,
-    );
-    // We expect one result for the base module.
-    expect(results.size).toBe(1);
-    const baseResult = results.get("module.py") as InternalUsageResult;
-    expect(baseResult).toBeDefined();
-    expect(baseResult.moduleNode.fullName).toBe("module");
-    expect(baseResult.symbols).toEqual(["helper_func"]);
+    expect(external.length).toBe(1);
+    expect(external[0].moduleName).toBe("external_module");
+    expect(external[0].symbolNames).toBeUndefined();
   });
 
-  test("should detect usage of a submodule", () => {
-    const code = `
-      import module
+  test("handles no usage gracefully", () => {
+    files.set("unusedImport.py", {
+      path: "unusedImport.py",
+      rootNode: pythonParser.parse(`
+        from moduleA import bar
+        import moduleB
+        import external_unused
+      `).rootNode,
+    });
 
-      def foo():
-          print(module.submodule.bar)
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
+    const rootNode = files.get("unusedImport.py")
+      ?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("unusedImport.py", rootNode);
 
-    // Dummy PythonModule for base module.
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-    // Child PythonModule representing submodule.
-    const submodule: PythonModule = {
-      name: "submodule",
-      fullName: "module.submodule",
-      path: "module/submodule.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: baseModule,
-    };
-    baseModule.children.set("submodule", submodule);
-
-    // Module info with no explicit symbols.
-    const moduleInfo = {
-      identifier: "module",
-      alias: undefined,
-      pythonModule: baseModule,
-      explicitSymbols: [],
-    };
-
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    );
-    // Expect one result for the submodule.
-    expect(results.size).toBe(1);
-    const subResult = results.get("module/submodule.py") as InternalUsageResult;
-    expect(subResult).toBeDefined();
-    expect(subResult.moduleNode.fullName).toBe("module.submodule");
-    // The leftover part of the chain should be "bar"
-    expect(subResult.symbols).toEqual(["bar"]);
+    expect(combined.internal.size).toBe(0);
+    expect(combined.external.length).toBe(0);
   });
+});
 
-  test("should detect usage of a deeper submodule and symbol", () => {
-    const code = `
-      import module
+describe("PythonUsageResolver - Complex Cases", () => {
+  beforeEach(() => {
+    // Extend the files map with additional test cases
 
-      def foo():
-          module.submodule.deep.symbol_func()
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
+    // Wildcard import: import all symbols from moduleA and use them
+    files.set("wildcardImport.py", {
+      path: "wildcardImport.py",
+      rootNode: pythonParser.parse(`
+        from moduleA import *
+        foo()
+        bar()
+      `).rootNode,
+    });
 
-    // Build a deeper module tree.
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-    const submodule: PythonModule = {
-      name: "submodule",
-      fullName: "module.submodule",
-      path: "module/submodule.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: baseModule,
-    };
-    baseModule.children.set("submodule", submodule);
-    const deepModule: PythonModule = {
-      name: "deep",
-      fullName: "module.submodule.deep",
-      path: "module/submodule/deep.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: submodule,
-    };
-    submodule.children.set("deep", deepModule);
+    // Alias import: import foo with an alias and then use the alias
+    files.set("aliasTest.py", {
+      path: "aliasTest.py",
+      rootNode: pythonParser.parse(`
+        from moduleA import foo as aliasFoo
+        aliasFoo()
+      `).rootNode,
+    });
 
-    // Module info with no explicit symbols.
-    const moduleInfo = {
-      identifier: "module",
-      alias: undefined,
-      pythonModule: baseModule,
-      explicitSymbols: [],
-    };
+    // Complex multi-import: explicit multiple symbols and module-level import with aliasing
+    files.set("complexTest.py", {
+      path: "complexTest.py",
+      rootNode: pythonParser.parse(`
+        from moduleA import foo, bar
+        import moduleB as modB
+        foo()
+        bar()
+        modB.bar()
+      `).rootNode,
+    });
 
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    );
-    // Expect one result for the deepest module.
-    expect(results.size).toBe(1);
-    const deepResult = results.get(
-      "module/submodule/deep.py",
-    ) as InternalUsageResult;
-    expect(deepResult).toBeDefined();
-    expect(deepResult.moduleNode.fullName).toBe("module.submodule.deep");
-    // The leftover part of the chain should be "symbol_func"
-    expect(deepResult.symbols).toEqual(["symbol_func"]);
-  });
+    // External module usage with alias: import an external module with alias and use it
+    files.set("externalAliasTest.py", {
+      path: "externalAliasTest.py",
+      rootNode: pythonParser.parse(`
+        import external_module as extMod
+        extMod.some_function()
+      `).rootNode,
+    });
 
-  test("should detect multiple symbol usages in the same submodule", () => {
-    const code = `
-      import module
+    // --- New Complicated Cases ---
 
-      def foo():
-          print(module.submodule.bar)
-          print(module.submodule.baz)
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
+    // Deep module defining nested symbols.
+    files.set("moduleDeep.py", {
+      path: "moduleDeep.py",
+      rootNode: pythonParser.parse(`
+        def deep_func(): pass
+        def deep_helper(): pass
+      `).rootNode,
+    });
 
-    // Create module tree.
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-    const submodule: PythonModule = {
-      name: "submodule",
-      fullName: "module.submodule",
-      path: "module/submodule.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: baseModule,
-    };
-    baseModule.children.set("submodule", submodule);
+    // Reexport module: reexports symbols from moduleDeep with an alias.
+    files.set("moduleReexport.py", {
+      path: "moduleReexport.py",
+      rootNode: pythonParser.parse(`
+        from moduleDeep import deep_func as reexported_func, deep_helper
+      `).rootNode,
+    });
 
-    const moduleInfo = {
-      identifier: "module",
-      alias: undefined,
-      pythonModule: baseModule,
-      explicitSymbols: [],
-    };
+    // Alias module: reexports a symbol from moduleReexport under a different alias.
+    files.set("moduleAlias.py", {
+      path: "moduleAlias.py",
+      rootNode: pythonParser.parse(`
+        from moduleReexport import reexported_func as alias_func
+      `).rootNode,
+    });
 
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    );
-    // Expect one result for the submodule.
-    expect(results.size).toBe(1);
-    const subResult = results.get("module/submodule.py") as InternalUsageResult;
-    expect(subResult).toBeDefined();
-    expect(subResult.moduleNode.fullName).toBe("module.submodule");
-    // Both "bar" and "baz" should be detected (order may vary).
-    expect(new Set(subResult.symbols)).toEqual(new Set(["bar", "baz"]));
-  });
+    // Complex nested file: uses nested reexports from moduleAlias and moduleReexport.
+    files.set("complexNested.py", {
+      path: "complexNested.py",
+      rootNode: pythonParser.parse(`
+        from moduleAlias import alias_func
+        from moduleReexport import deep_helper as helper_alias
+        alias_func()
+        helper_alias()
+      `).rootNode,
+    });
 
-  test("should return an empty result if the module is imported but not used", () => {
-    const code = `
-      import module
+    // Wildcard nested file: wildcard import directly from moduleDeep.
+    files.set("wildcardNested.py", {
+      path: "wildcardNested.py",
+      rootNode: pythonParser.parse(`
+        from moduleDeep import *
+        deep_func()
+        deep_helper()
+      `).rootNode,
+    });
 
-      def foo():
-          print("No module usage here")
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
+    // Nested package: packageX reexports a symbol from its submodule.
+    files.set("packageX/__init__.py", {
+      path: "packageX/__init__.py",
+      rootNode: pythonParser.parse(`
+        from .submodule import some_func
+      `).rootNode,
+    });
+    files.set("packageX/submodule.py", {
+      path: "packageX/submodule.py",
+      rootNode: pythonParser.parse(`
+        def some_func(): pass
+      `).rootNode,
+    });
+    // File that uses wildcard import from packageX.
+    files.set("usePackageX.py", {
+      path: "usePackageX.py",
+      rootNode: pythonParser.parse(`
+        from packageX import *
+        some_func()
+      `).rootNode,
+    });
 
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-
-    const moduleInfo = {
-      identifier: "module",
-      alias: undefined,
-      pythonModule: baseModule,
-      explicitSymbols: [],
-    };
-
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    );
-    expect(results.size).toBe(0);
-  });
-
-  test("should detect usage when module is imported with alias", () => {
-    const code = `
-      import module as mod
-
-      def foo():
-          print(mod.submodule.bar)
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
-
-    // Create a dummy PythonModule for the base module "module".
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-
-    // Create a child PythonModule representing a submodule.
-    const submodule: PythonModule = {
-      name: "submodule",
-      fullName: "module.submodule",
-      path: "module/submodule.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: baseModule,
-    };
-    baseModule.children.set("submodule", submodule);
-
-    // Provide module info with an alias "mod".
-    const moduleInfo = {
-      identifier: "module",
-      alias: "mod",
-      pythonModule: baseModule,
-      explicitSymbols: [] as { identifier: string; alias?: string }[],
-    };
-
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    );
-    // We expect one result for the submodule.
-    expect(results.size).toBe(1);
-    const subResult = results.get("module/submodule.py") as InternalUsageResult;
-    expect(subResult).toBeDefined();
-    expect(subResult.moduleNode.fullName).toBe("module.submodule");
-    // The remaining part of the chain should be "bar"
-    expect(subResult.symbols).toEqual(["bar"]);
-  });
-
-  test("should detect explicit symbol usage with alias", () => {
-    const code = `
-      from module import helper_func as hf
-
-      def foo():
-          module.hf()
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
-
-    // Create a dummy PythonModule for the base module.
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-
-    // Provide module info with an explicit symbol that has an alias.
-    // Here, the original identifier is "helper_func", but it is imported as "hf".
-    const moduleInfo = {
-      identifier: "module",
-      alias: undefined,
-      pythonModule: baseModule,
-      explicitSymbols: [{ identifier: "helper_func", alias: "hf" }],
-    };
-
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    );
-    // We expect one result for the base module.
-    expect(results.size).toBe(1);
-    const baseResult = results.get("module.py") as InternalUsageResult;
-    expect(baseResult).toBeDefined();
-    expect(baseResult.moduleNode.fullName).toBe("module");
-    // The explicit symbol should be detected by its alias "hf"
-    expect(baseResult.symbols).toEqual(["hf"]);
-  });
-
-  test("should detect usage of symbol from submodule which is used as a symbol itself", () => {
-    const code = `
-      from module import submodule
-
-      def foo():
-          submodule.bar()
-    `;
-
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-
-    const nodesToExclude = getNodesToExclude(root);
-
-    const baseModule: PythonModule = {
-      name: "module",
-      fullName: "module",
-      path: "module.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: undefined,
-    };
-
-    const submodule: PythonModule = {
-      name: "submodule",
-      fullName: "module.submodule",
-      path: "module/submodule.py",
-      type: PYTHON_MODULE_TYPE,
-      children: new Map(),
-      parent: baseModule,
-    };
-    baseModule.children.set("submodule", submodule);
-
-    const moduleInfo = {
-      identifier: "module",
-      alias: undefined,
-      pythonModule: baseModule,
-      explicitSymbols: [{ identifier: "submodule", alias: undefined }],
-    };
-
-    const results = usageResolver.resolveUsageForInternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
+    // Reinitialize the resolvers so that they include the new files.
+    exportExtractor = new PythonExportExtractor(pythonParser, files);
+    importExtractor = new PythonImportExtractor(pythonParser, files);
+    moduleMapper = new PythonModuleResolver(files);
+    itemResolver = new PythonItemResolver(
+      exportExtractor,
+      importExtractor,
+      moduleMapper,
     );
 
-    expect(results.size).toBe(1);
-    const subResult = results.get("module/submodule.py") as InternalUsageResult;
-    expect(subResult).toBeDefined();
-    expect(subResult.moduleNode.fullName).toBe("module.submodule");
-    expect(subResult.symbols).toEqual(["bar"]);
-  });
-
-  test("should detect explicit external symbol usage", () => {
-    const code = `
-      from external_module import external_func as ef
-
-      def foo():
-          external_module.ef()
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
-
-    const moduleInfo = {
-      identifier: "external_module",
-      alias: undefined,
-      explicitSymbols: [{ identifier: "external_func", alias: "ef" }],
-    };
-
-    const result = usageResolver.resolveUsageForExternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    ) as ExternalUsageResult;
-    expect(result).toBeDefined();
-    expect(result.moduleName).toBe("external_module");
-    expect(result.symbols).toEqual(["ef"]);
-  });
-
-  test("should detect external module usage (atomic) when no explicit symbols", () => {
-    const code = `
-      import external_module
-
-      def foo():
-          print(external_module)
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
-
-    const moduleInfo = {
-      identifier: "external_module",
-      alias: undefined,
-      explicitSymbols: [],
-    };
-
-    const result = usageResolver.resolveUsageForExternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    ) as ExternalUsageResult;
-    expect(result).toBeDefined();
-    expect(result.moduleName).toBe("external_module");
-    expect(result.symbols).toEqual([]);
-  });
-
-  test("should return undefined for external module if not used", () => {
-    const code = `
-      import external_module
-
-      def foo():
-          print("No usage of external_module")
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
-
-    const moduleInfo = {
-      identifier: "external_module",
-      alias: undefined,
-      explicitSymbols: [],
-    };
-
-    const result = usageResolver.resolveUsageForExternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
+    resolver = new PythonUsageResolver(
+      pythonParser,
+      importExtractor,
+      moduleMapper,
+      itemResolver,
+      exportExtractor,
     );
-    expect(result).toBeUndefined();
   });
 
-  test("should detect external module usage with alias", () => {
-    const code = `
-      import external_module as em
+  test("resolves wildcard imports correctly", () => {
+    const rootNode = files.get("wildcardImport.py")
+      ?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("wildcardImport.py", rootNode);
+    const internal = combined.internal;
 
-      def foo():
-          print(em)
-    `;
-    const tree = parser.parse(code);
-    const root = tree.rootNode;
-    const nodesToExclude = getNodesToExclude(root);
+    const moduleAResult = internal.get("moduleA.py");
+    expect(moduleAResult).toBeDefined();
 
-    const moduleInfo = {
-      identifier: "external_module",
-      alias: "em",
-      explicitSymbols: [],
-    };
+    // Expect that both 'foo' and 'bar' are detected from the wildcard import.
+    const symbolIds = moduleAResult?.symbols?.map((s) => s.id) || [];
+    expect(symbolIds).toContain("foo");
+    expect(symbolIds).toContain("bar");
+  });
 
-    const result = usageResolver.resolveUsageForExternalModule(
-      root,
-      moduleInfo,
-      nodesToExclude,
-    ) as ExternalUsageResult;
-    expect(result).toBeDefined();
-    expect(result.moduleName).toBe("external_module");
-    expect(result.symbols).toEqual([]);
+  test("resolves alias imports correctly", () => {
+    const rootNode = files.get("aliasTest.py")?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("aliasTest.py", rootNode);
+    const internal = combined.internal;
+
+    const moduleAResult = internal.get("moduleA.py");
+    expect(moduleAResult).toBeDefined();
+    const symbolIds = moduleAResult?.symbols?.map((s) => s.id) || [];
+    // Even though an alias is used, the underlying symbol is still 'foo'
+    expect(symbolIds).toContain("foo");
+  });
+
+  test("resolves complex multi-import usage correctly", () => {
+    const rootNode = files.get("complexTest.py")?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("complexTest.py", rootNode);
+    const internal = combined.internal;
+
+    // For moduleA, expect both 'foo' and 'bar' to be used.
+    const moduleAResult = internal.get("moduleA.py");
+    expect(moduleAResult).toBeDefined();
+    const moduleASymbols = moduleAResult?.symbols?.map((s) => s.id) || [];
+    expect(moduleASymbols).toContain("foo");
+    expect(moduleASymbols).toContain("bar");
+
+    // For moduleB, since it's used as a whole (via alias 'modB' and attribute access),
+    // no specific symbols are recorded.
+    const moduleBResult = internal.get("moduleB.py");
+    expect(moduleBResult).toBeDefined();
+    expect(moduleBResult?.symbols).toBeUndefined();
+  });
+
+  test("resolves external module usage with alias correctly", () => {
+    const rootNode = files.get("externalAliasTest.py")
+      ?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("externalAliasTest.py", rootNode);
+    const external = combined.external;
+
+    // External module should be recorded.
+    expect(external.length).toBe(1);
+    expect(external[0].moduleName).toBe("external_module");
+    expect(external[0].symbolNames).toBeUndefined();
+  });
+
+  test("resolves nested reexports with aliases correctly", () => {
+    const rootNode = files.get("complexNested.py")
+      ?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("complexNested.py", rootNode);
+    const internal = combined.internal;
+
+    // The reexport chain should resolve to the underlying moduleDeep.py.
+    const moduleDeepResult = internal.get("moduleDeep.py");
+    expect(moduleDeepResult).toBeDefined();
+    const symbols = moduleDeepResult?.symbols?.map((s) => s.id) || [];
+    // Expect that the symbol originally defined as deep_func and deep_helper are used.
+    expect(symbols).toContain("deep_func");
+    expect(symbols).toContain("deep_helper");
+  });
+
+  test("resolves wildcard nested imports correctly", () => {
+    const rootNode = files.get("wildcardNested.py")
+      ?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("wildcardNested.py", rootNode);
+    const internal = combined.internal;
+
+    const moduleDeepResult = internal.get("moduleDeep.py");
+    expect(moduleDeepResult).toBeDefined();
+    const symbols = moduleDeepResult?.symbols?.map((s) => s.id) || [];
+    expect(symbols).toContain("deep_func");
+    expect(symbols).toContain("deep_helper");
+  });
+
+  test("resolves nested package wildcard imports correctly", () => {
+    const rootNode = files.get("usePackageX.py")?.rootNode as Parser.SyntaxNode;
+    const combined = resolver.resolveUsage("usePackageX.py", rootNode);
+    const internal = combined.internal;
+
+    // packageX reexports some_func from its submodule.
+    // We expect the underlying module to be packageX/submodule.py.
+    const packageXResult = internal.get("packageX/submodule.py");
+    expect(packageXResult).toBeDefined();
+    const symbols = packageXResult?.symbols?.map((s) => s.id) || [];
+    expect(symbols).toContain("some_func");
   });
 });

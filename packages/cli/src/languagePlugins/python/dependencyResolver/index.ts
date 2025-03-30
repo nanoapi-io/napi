@@ -1,6 +1,5 @@
 import Parser from "tree-sitter";
-import { PythonExportResolver } from "../exportResolver";
-import { ImportStatement, PythonImportResolver } from "../importResolver";
+import { PythonExportExtractor } from "../exportExtractor";
 import { PythonUsageResolver } from "../usageResolver";
 
 /**
@@ -11,6 +10,14 @@ export interface ModuleDependency {
   isExternal: boolean;
   // A map of used symbol names (key and value are both the symbol name).
   symbols: Map<string, string>;
+}
+
+export interface SymbolDependency {
+  id: string;
+  characterCount: number;
+  lineCount: number;
+  type: string;
+  dependencies: Map<string, ModuleDependency>;
 }
 
 /**
@@ -27,177 +34,38 @@ export interface FileDependencies {
   // Map of module dependencies detected at the file level.
   dependencies: Map<string, ModuleDependency>;
   // Array of dependencies specific to each exported symbol.
-  symbols: {
-    id: string;
-    characterCount: number;
-    lineCount: number;
-    type: string;
-    // Dependencies detected within the exported symbol's AST subtree.
-    dependencies: Map<string, ModuleDependency>;
-  }[];
+  symbols: SymbolDependency[];
 }
 
 /**
  * PythonDependencyResolver analyzes a Python file's AST to build a dependency manifesto.
- * It uses the ExportResolver to determine exported symbols, the ImportResolver to extract import statements,
- * and the UsageResolver to determine which parts of an import are actually used.
+ * It uses the PythonExportExtractor to determine exported symbols and the PythonUsageResolver
+ * to determine which imports are used and how they are used within the file.
  *
  * Dependencies are computed at two levels:
  *
  * 1. File-level: Based on the file's root AST node.
  * 2. Symbol-level: For each exported symbol, by analyzing its AST subtree.
  *
+ * The resolver distinguishes between internal (project) and external dependencies,
+ * and tracks which symbols from each module are actually used.
+ *
  * Results are cached to avoid re-computation.
  */
 export class PythonDependencyResolver {
-  private parser: Parser;
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
-  private exportResolver: PythonExportResolver;
-  private importResolver: PythonImportResolver;
+  private exportExtractor: PythonExportExtractor;
   private usageResolver: PythonUsageResolver;
   private cache = new Map<string, FileDependencies>();
 
   constructor(
-    parser: Parser,
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-    exportResolver: PythonExportResolver,
-    importResolver: PythonImportResolver,
+    exportExtractor: PythonExportExtractor,
     usageResolver: PythonUsageResolver,
   ) {
-    this.parser = parser;
     this.files = files;
-    this.exportResolver = exportResolver;
-    this.importResolver = importResolver;
+    this.exportExtractor = exportExtractor;
     this.usageResolver = usageResolver;
-  }
-
-  /**
-   * Returns AST nodes to exclude when checking for usage (e.g. the nodes corresponding to import statements).
-   *
-   * @param targetNode The AST node to analyze.
-   * @returns An array of nodes to exclude from usage queries.
-   */
-  private getNodeToExcludeFromUsage(
-    targetNode: Parser.SyntaxNode,
-  ): Parser.SyntaxNode[] {
-    const query = new Parser.Query(
-      this.parser.getLanguage(),
-      `
-      ([
-        (import_from_statement) @imp
-        (import_statement) @imp
-      ])
-      `,
-    );
-    const captures = query.captures(targetNode);
-    return captures.map(({ node }) => node);
-  }
-
-  /**
-   * Analyzes a target AST node (either the file root or an exported symbol's node) to determine module dependencies.
-   *
-   * For each resolved import statement module, this function:
-   * - Gets nodes to exclude from usage queries (e.g. import statement nodes).
-   * - For internal modules (with a filePath), builds a module info object (including explicit symbols)
-   *   and calls resolveUsageForInternalModule.
-   * - For external modules, calls resolveUsageForExternalModule.
-   *
-   * The usage resolver returns a map where each key is the module's filePath or fullName and
-   * each value contains an array of used symbols. This function then merges these results into a
-   * map of ModuleDependency objects.
-   *
-   * @param targetNode The AST node to analyze.
-   * @param importStatements An array of resolved import statements for the file.
-   * @returns A map of module dependency information keyed by module id.
-   */
-  private getTargetNodeDependencies(
-    targetNode: Parser.SyntaxNode,
-    importStatements: ImportStatement[],
-  ): Map<string, ModuleDependency> {
-    const fileDependencies = new Map<string, ModuleDependency>();
-
-    // Process each import statement.
-    importStatements.forEach((importStmt) => {
-      // Process each resolved module from the statement.
-      importStmt.modules.forEach((importModule) => {
-        // Exclude the nodes (e.g. import statements) from the usage query.
-        const nodesToExclude = this.getNodeToExcludeFromUsage(targetNode);
-
-        if (importModule.module) {
-          // Internal module: build a module info object including explicit symbols.
-          const moduleInfo = {
-            identifier: importModule.source,
-            alias: importModule.alias,
-            moduleNode: importModule.module,
-            explicitSymbols: importModule.symbols.map((s) => ({
-              identifier: s.id,
-              alias: s.alias,
-            })),
-          };
-
-          // Resolve usage for the internal module within the target AST.
-          const usage = this.usageResolver.resolveUsageForInternalModule(
-            targetNode,
-            moduleInfo,
-            nodesToExclude,
-          );
-
-          if (usage.size > 0) {
-            // For each usage result, merge the used symbols into the dependency map.
-            usage.forEach((usageResult) => {
-              const key =
-                usageResult.moduleNode.filePath ||
-                usageResult.moduleNode.fullName;
-              let fileDep = fileDependencies.get(key);
-              if (!fileDep) {
-                fileDep = {
-                  id: key,
-                  isExternal: false,
-                  symbols: new Map(),
-                };
-              }
-              // For each symbol used, add it to the dependency's symbol map.
-              usageResult.symbols.forEach((sym) => {
-                fileDep.symbols.set(sym, sym);
-              });
-              fileDependencies.set(key, fileDep);
-            });
-          }
-        } else {
-          // External module: build a module info object (without a moduleNode).
-          const moduleInfo = {
-            identifier: importModule.source,
-            alias: importModule.alias,
-            explicitSymbols: importModule.symbols.map((s) => ({
-              identifier: s.id,
-              alias: s.alias,
-            })),
-          };
-          // Resolve usage for the external module.
-          const extUsage = this.usageResolver.resolveUsageForExternalModule(
-            targetNode,
-            moduleInfo,
-            nodesToExclude,
-          );
-          if (extUsage) {
-            let fileDep = fileDependencies.get(extUsage.moduleName);
-            if (!fileDep) {
-              fileDep = {
-                id: extUsage.moduleName,
-                isExternal: true,
-                symbols: new Map(),
-              };
-            }
-            extUsage.symbols.forEach((sym) => {
-              fileDep.symbols.set(sym, sym);
-            });
-            fileDependencies.set(fileDep.id, fileDep);
-          }
-        }
-      });
-    });
-
-    return fileDependencies;
   }
 
   /**
@@ -226,18 +94,6 @@ export class PythonDependencyResolver {
       throw new Error(`File not found: ${filePath}`);
     }
 
-    // Retrieve exported symbols from the file.
-    const exportedSymbols = this.exportResolver.getSymbols(filePath);
-    // Retrieve all import statements from the file.
-    const importedStatements =
-      this.importResolver.getImportStatements(filePath);
-
-    // Compute file-level dependencies using the file's root AST node.
-    const dependencies = this.getTargetNodeDependencies(
-      file.rootNode,
-      importedStatements,
-    );
-
     const characterCount = file.rootNode.endIndex - file.rootNode.startIndex;
     const lineCount =
       file.rootNode.endPosition.row - file.rootNode.startPosition.row + 1;
@@ -246,63 +102,89 @@ export class PythonDependencyResolver {
       filePath,
       characterCount,
       lineCount,
-      dependencies,
+      dependencies: new Map<string, ModuleDependency>(),
       symbols: [],
     };
 
-    // For each exported symbol, compute its dependencies using the symbol's AST subtree.
-    exportedSymbols.forEach((symbol) => {
-      // Get the symbol's dependencies from the import statements.
-      const symDependencies = this.getTargetNodeDependencies(
-        symbol.node,
-        importedStatements,
+    const fileUsage = this.usageResolver.resolveUsage(file.path, file.rootNode);
+
+    fileUsage.internal.forEach((internal) => {
+      const dependency: ModuleDependency = {
+        id: internal.moduleNode.path,
+        isExternal: false,
+        symbols: new Map(),
+      };
+      if (internal.symbols) {
+        internal.symbols.forEach((symbol) => {
+          dependency.symbols.set(symbol.id, symbol.id);
+        });
+      }
+      fileDependencyManifesto.dependencies.set(dependency.id, dependency);
+    });
+
+    fileUsage.external.forEach((external) => {
+      const dependency: ModuleDependency = {
+        id: external.moduleName,
+        isExternal: true,
+        symbols: new Map(),
+      };
+      if (external.symbolNames) {
+        external.symbolNames.forEach((symbol) => {
+          dependency.symbols.set(symbol, symbol);
+        });
+      }
+      fileDependencyManifesto.dependencies.set(dependency.id, dependency);
+    });
+
+    const fileSymbols = this.exportExtractor.getSymbols(filePath);
+
+    fileSymbols.symbols.forEach((fileSymbol) => {
+      const characterCount =
+        fileSymbol.node.endIndex - fileSymbol.node.startIndex;
+      const lineCount =
+        fileSymbol.node.endPosition.row - fileSymbol.node.startPosition.row + 1;
+
+      const SymbolDependency: SymbolDependency = {
+        id: fileSymbol.id,
+        characterCount,
+        lineCount,
+        type: fileSymbol.type,
+        dependencies: new Map<string, ModuleDependency>(),
+      };
+
+      const symbolUsage = this.usageResolver.resolveUsage(
+        file.path,
+        fileSymbol.node,
       );
 
-      // Check if other symbols are used in the symbol's
-      exportedSymbols.forEach((otherSymbol) => {
-        if (otherSymbol.id === symbol.id) {
-          return;
+      symbolUsage.internal.forEach((internal) => {
+        const dependency: ModuleDependency = {
+          id: internal.moduleNode.path,
+          isExternal: false,
+          symbols: new Map(),
+        };
+        if (internal.symbols) {
+          internal.symbols.forEach((symbol) => {
+            dependency.symbols.set(symbol.id, symbol.id);
+          });
         }
-
-        const nodesToExclude = this.getNodeToExcludeFromUsage(symbol.node);
-
-        const isUsed = this.usageResolver.isRefUsed(
-          symbol.node,
-          nodesToExclude,
-          otherSymbol.identifierNode.text,
-        );
-
-        if (isUsed) {
-          // get/add current file to dependency
-          let fileDep = symDependencies.get(filePath);
-          if (!fileDep) {
-            fileDep = {
-              id: filePath,
-              isExternal: false,
-              symbols: new Map(),
-            };
-          }
-          // get/add other symbol to dependency
-          let otherSymbolDep = fileDep.symbols.get(otherSymbol.id);
-          if (!otherSymbolDep) {
-            otherSymbolDep = otherSymbol.id;
-          }
-          fileDep.symbols.set(otherSymbol.id, otherSymbolDep);
-          symDependencies.set(fileDep.id, fileDep);
-        }
+        SymbolDependency.dependencies.set(dependency.id, dependency);
       });
 
-      const symbolCharacterCount =
-        symbol.node.endIndex - symbol.node.startIndex;
-      const symbolLineCount =
-        symbol.node.endPosition.row - symbol.node.startPosition.row + 1;
-      fileDependencyManifesto.symbols.push({
-        id: symbol.id,
-        characterCount: symbolCharacterCount,
-        lineCount: symbolLineCount,
-        type: symbol.type,
-        dependencies: symDependencies,
+      symbolUsage.external.forEach((external) => {
+        const dependency: ModuleDependency = {
+          id: external.moduleName,
+          isExternal: true,
+          symbols: new Map(),
+        };
+        if (external.symbolNames) {
+          external.symbolNames.forEach((symbol) => {
+            dependency.symbols.set(symbol, symbol);
+          });
+        }
+        SymbolDependency.dependencies.set(dependency.id, dependency);
       });
+      fileDependencyManifesto.symbols.push(SymbolDependency);
     });
 
     this.cache.set(cacheKey, fileDependencyManifesto);

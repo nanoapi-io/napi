@@ -1,11 +1,12 @@
 import Parser from "tree-sitter";
 import { DependencyManifesto, FileManifesto, SymbolType } from "..";
-import { PythonExportResolver } from "../../../languagePlugins/python/exportResolver";
+import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver";
-import { PythonImportResolver } from "../../../languagePlugins/python/importResolver";
 import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolver";
 import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver";
+import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver";
+import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor";
 
 function generateDependentsForManifesto(
   manifesto: DependencyManifesto,
@@ -58,24 +59,28 @@ export function generatePythonDependencyManifesto(
 
   console.time("generatePythonDependencyManifesto:initialization");
   console.info("Initializing Python export resolver...");
-  const exportResolver = new PythonExportResolver(parser, files);
-  console.info("Initializing Python module mapper...");
-  const moduleMapper = new PythonModuleResolver(files, exportResolver);
+  const exportExtractor = new PythonExportExtractor(parser, files);
   console.info("Initializing Python import resolver...");
-  const importResolver = new PythonImportResolver(
-    parser,
-    files,
-    moduleMapper,
-    exportResolver,
+  const importExtractor = new PythonImportExtractor(parser, files);
+  console.info("Initializing Python module resolver...");
+  const moduleResolver = new PythonModuleResolver(files);
+  console.info("Initializing Python item resolver...");
+  const itemResolver = new PythonItemResolver(
+    exportExtractor,
+    importExtractor,
+    moduleResolver,
   );
   console.info("Initializing Python usage resolver...");
-  const usageResolver = new PythonUsageResolver(parser);
+  const usageResolver = new PythonUsageResolver(
+    parser,
+    importExtractor,
+    moduleResolver,
+    itemResolver,
+  );
   console.info("Initializing Python dependency resolver...");
   const dependencyResolver = new PythonDependencyResolver(
-    parser,
     files,
-    exportResolver,
-    importResolver,
+    exportExtractor,
     usageResolver,
   );
 
