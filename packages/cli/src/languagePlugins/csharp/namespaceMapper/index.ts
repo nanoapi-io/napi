@@ -11,6 +11,8 @@ export interface NamespaceNode {
   exports: SymbolNode[];
   /** List of child namespaces */
   childrenNamespaces: NamespaceNode[];
+  /** Parent namespace */
+  parentNamespace?: NamespaceNode;
 }
 
 /**
@@ -69,6 +71,7 @@ export class CSharpNamespaceMapper {
             name: part,
             exports: [],
             childrenNamespaces: [],
+            parentNamespace: current,
           };
           current.childrenNamespaces.push(child);
         }
@@ -80,6 +83,10 @@ export class CSharpNamespaceMapper {
     // and children namespaces to the current namespace.
     current.exports.push(...namespace.exports);
     current.childrenNamespaces.push(...namespace.childrenNamespaces);
+    // We also set the parent namespace for each child namespace.
+    current.childrenNamespaces.forEach((ns) => {
+      ns.parentNamespace = current;
+    });
   }
 
   /**
@@ -156,6 +163,16 @@ export class CSharpNamespaceMapper {
     return (
       tree.childrenNamespaces.find((ns) => ns.name === namespaceName) ?? null
     );
+  }
+
+  getFullNSName(namespace: NamespaceNode): string {
+    if (namespace.name === "") {
+      return "";
+    }
+    if (!namespace.parentNamespace || namespace.parentNamespace.name === "") {
+      return namespace.name;
+    }
+    return `${this.getFullNSName(namespace.parentNamespace)}.${namespace.name}`;
   }
 
   /**

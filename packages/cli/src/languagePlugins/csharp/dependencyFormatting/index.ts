@@ -107,13 +107,17 @@ export class CSharpDependencyFormatter {
         symbols: {},
       };
     }
-    for (const unresolvedSymbol of invocations.unresolved) {
-      dependencies[unresolvedSymbol] = {
-        id: unresolvedSymbol,
-        isExternal: true,
-        symbols: {},
-      };
-    }
+    // Add unresolved symbols as external dependencies
+    // Commented because redundant : if a symbol is unresolved,
+    // then the external dependency is imported through a namespace.
+    // Not removed in case my analysis is inaccurate.
+    // for (const unresolvedSymbol of invocations.unresolved) {
+    //   dependencies[unresolvedSymbol] = {
+    //     id: unresolvedSymbol,
+    //     isExternal: true,
+    //     symbols: {},
+    //   };
+    // }
     return dependencies;
   }
 
@@ -125,7 +129,7 @@ export class CSharpDependencyFormatter {
       const id = resolvedSymbol.symbol
         ? resolvedSymbol.symbol.name
         : resolvedSymbol.namespace
-          ? resolvedSymbol.namespace.name
+          ? this.nsMapper.getFullNSName(resolvedSymbol.namespace)
           : "";
       dependencies[id] = {
         id,
@@ -148,10 +152,10 @@ export class CSharpDependencyFormatter {
    * @param filepath - The path of the file to format.
    * @returns The formatted CSharpFile object.
    */
-  public formatFile(filepath: string) {
+  public formatFile(filepath: string): CSharpFile | undefined {
     const file = this.invResolver.nsMapper.getFile(filepath);
     if (!file) {
-      return;
+      return undefined;
     }
     const fileSymbols = this.nsMapper.getExportsForFile(filepath);
     const fileDependencies = this.invResolver.getInvocationsFromFile(filepath);
@@ -181,6 +185,25 @@ export class CSharpDependencyFormatter {
         formattedFile.dependencies[key] = localUsings[key];
       }
     }
+    // If an internal dependency is a symbol of an imported namespace,
+    // then add said symbol to the symbol list of that namespace
+    for (const key in formattedFile.dependencies) {
+      const dep = formattedFile.dependencies[key];
+      if (!dep.isExternal) {
+        const namespaceParts = dep.id.split(".");
+        if (namespaceParts.length > 1) {
+          const parentNamespace = namespaceParts.slice(0, -1).join(".");
+          const parentDep = formattedFile.dependencies[parentNamespace];
+          if (parentDep && !parentDep.isExternal) {
+            parentDep.symbols[dep.id] = dep.id;
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete formattedFile.dependencies[key];
+          }
+        }
+      }
+    }
+    // Remove "" from the dependencies
+    delete formattedFile.dependencies[""];
     return formattedFile;
   }
 }

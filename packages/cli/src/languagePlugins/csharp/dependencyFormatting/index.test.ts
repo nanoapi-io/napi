@@ -16,10 +16,11 @@ describe("Dependency formatting", () => {
           id: "Freeman",
           isExternal: false,
         },
-        Console: {
-          id: "Console",
-          isExternal: true,
-        },
+        // Commented, check comments at line 110 of index.ts.
+        // Console: {
+        //   id: "Console",
+        //   isExternal: true,
+        // },
       },
       symbols: {
         Freeman: {
