@@ -39,7 +39,7 @@ export class PythonItemResolver {
   constructor(
     private exportExtractor: PythonExportExtractor,
     private importExtractor: PythonImportExtractor,
-    private moduleMapper: PythonModuleResolver,
+    private moduleResolver: PythonModuleResolver,
   ) {}
 
   /**
@@ -140,7 +140,7 @@ export class PythonItemResolver {
           const sourceModuleName = importStmt.members[0].identifierNode.text;
           if (!sourceModuleName) continue;
 
-          const sourceModule = this.moduleMapper.resolveModule(
+          const sourceModule = this.moduleResolver.resolveModule(
             module.path,
             sourceModuleName,
           );
@@ -184,7 +184,7 @@ export class PythonItemResolver {
           for (const member of importStmt.members) {
             const alias = member.aliasNode?.text || member.identifierNode.text;
             if (alias === symbolName) {
-              const sourceModule = this.moduleMapper.resolveModule(
+              const sourceModule = this.moduleResolver.resolveModule(
                 module.path,
                 member.identifierNode.text,
               );
@@ -288,7 +288,7 @@ export class PythonItemResolver {
         const sourceModuleName = importStmt.members[0].identifierNode.text;
         if (!sourceModuleName) continue;
 
-        const sourceModule = this.moduleMapper.resolveModule(
+        const sourceModule = this.moduleResolver.resolveModule(
           module.path,
           sourceModuleName,
         );
@@ -334,7 +334,7 @@ export class PythonItemResolver {
         // Handle standard imports
         for (const member of importStmt.members) {
           const alias = member.aliasNode?.text || member.identifierNode.text;
-          const sourceModule = this.moduleMapper.resolveModule(
+          const sourceModule = this.moduleResolver.resolveModule(
             module.path,
             member.identifierNode.text,
           );
