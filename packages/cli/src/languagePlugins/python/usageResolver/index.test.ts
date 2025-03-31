@@ -66,7 +66,6 @@ beforeEach(() => {
     importExtractor,
     moduleMapper,
     itemResolver,
-    exportExtractor,
   );
 });
 
@@ -247,7 +246,6 @@ describe("PythonUsageResolver - Complex Cases", () => {
       importExtractor,
       moduleMapper,
       itemResolver,
-      exportExtractor,
     );
   });
 
