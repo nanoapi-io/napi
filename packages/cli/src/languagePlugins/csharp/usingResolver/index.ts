@@ -76,6 +76,11 @@ export class CSharpUsingResolver {
   private nsMapper: CSharpNamespaceMapper;
   /** List of parsed 'using' directives */
   private usingDirectives: UsingDirective[] = [];
+  private cachedImports: Map<string, ResolvedImports> = new Map<
+    string,
+    ResolvedImports
+  >();
+  private globalUsings: ResolvedImports = { internal: [], external: [] };
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
@@ -159,17 +164,32 @@ export class CSharpUsingResolver {
    * @returns A ResolvedImports object containing internal and external symbols.
    */
   public resolveUsingDirectives(filepath: string): ResolvedImports {
+    if (this.cachedImports.has(filepath)) {
+      return this.cachedImports.get(filepath) as ResolvedImports;
+    }
     const internal: InternalSymbol[] = [];
     const external: ExternalSymbol[] = [];
     this.parseUsingDirectives(filepath).forEach((directive) => {
       const resolved = this.resolveUsingDirective(directive);
       if ("symbol" in resolved || "namespace" in resolved) {
         internal.push(resolved);
+        if (directive.type === GLOBAL_USING) {
+          this.globalUsings.internal.push(resolved);
+        }
       } else {
         external.push(resolved as ExternalSymbol);
+        if (directive.type === GLOBAL_USING) {
+          this.globalUsings.external.push(resolved as ExternalSymbol);
+        }
       }
     });
-    return { internal, external };
+    const resolvedimports = { internal, external };
+    this.cachedImports.set(filepath, resolvedimports);
+    return resolvedimports;
+  }
+
+  public getGlobalUsings(): ResolvedImports {
+    return this.globalUsings;
   }
 
   /**
@@ -205,6 +225,18 @@ export class CSharpUsingResolver {
     }
     // Check if the class is imported through a namespace
     for (const symbol of imports.internal) {
+      if ("namespace" in symbol && symbol.namespace) {
+        const nsFound = this.nsMapper.findClassInTree(
+          symbol.namespace,
+          reconstructedClassName,
+        );
+        if (nsFound) {
+          return nsFound;
+        }
+      }
+    }
+    // Also check in global usings
+    for (const symbol of this.globalUsings.internal) {
       if ("namespace" in symbol && symbol.namespace) {
         const nsFound = this.nsMapper.findClassInTree(
           symbol.namespace,

@@ -23,6 +23,7 @@ export class CSharpInvocationResolver {
   public nsMapper: CSharpNamespaceMapper;
   private usingResolver: CSharpUsingResolver;
   private resolvedImports: ResolvedImports;
+  private cache: Map<string, Invocations> = new Map<string, Invocations>();
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
@@ -153,9 +154,13 @@ export class CSharpInvocationResolver {
     const catches = new Parser.Query(
       this.parser.getLanguage(),
       `
-      (expression_statement
-        (invocation_expression) @func
-      )
+      (invocation_expression
+      (member_access_expression
+        expression: [
+          (member_access_expression)
+          (identifier)
+        ] @cls
+      ))
       `,
     ).captures(node);
     // Process each captured function invocation
@@ -181,6 +186,9 @@ export class CSharpInvocationResolver {
   }
 
   getInvocationsFromFile(filepath: string): Invocations {
+    if (this.cache.has(filepath)) {
+      return this.cache.get(filepath) as Invocations;
+    }
     const file: File | undefined = this.nsMapper.getFile(filepath);
     if (!file) {
       return {
@@ -188,7 +196,9 @@ export class CSharpInvocationResolver {
         unresolved: [],
       };
     }
-    return this.getInvocationsFromNode(file.rootNode, filepath);
+    const invocations = this.getInvocationsFromNode(file.rootNode, filepath);
+    this.cache.set(filepath, invocations);
+    return invocations;
   }
 
   /**

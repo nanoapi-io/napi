@@ -25,12 +25,15 @@ export interface SymbolNode {
   namespace: string;
   /** The file path where the symbol is defined */
   filepath: string;
+  /** The syntax node corresponding to the symbol */
+  node: Parser.SyntaxNode;
 }
 
 export class CSharpNamespaceMapper {
   #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   #nsResolver: CSharpNamespaceResolver;
   nsTree: NamespaceNode;
+  #exportsCache: Map<string, SymbolNode[]> = new Map<string, SymbolNode[]>();
 
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
@@ -193,5 +196,33 @@ export class CSharpNamespaceMapper {
     }
 
     return null;
+  }
+
+  /**
+   * Gets all the exports for a file from the namespace tree.
+   * @param filepath - The path of the file to get exports for.
+   * @returns An array of exported symbols.
+   */
+  getExportsForFile(filepath: string): SymbolNode[] {
+    if (this.#exportsCache.has(filepath)) {
+      return this.#exportsCache.get(filepath) ?? [];
+    }
+    const exports: SymbolNode[] = [];
+
+    const searchClassesInNamespace = (namespace: NamespaceNode) => {
+      namespace.exports.forEach((symbol) => {
+        if (symbol.filepath === filepath) {
+          exports.push(symbol);
+        }
+      });
+
+      namespace.childrenNamespaces.forEach((childNamespace) => {
+        searchClassesInNamespace(childNamespace);
+      });
+    };
+
+    searchClassesInNamespace(this.nsTree);
+    this.#exportsCache.set(filepath, exports);
+    return exports;
   }
 }
