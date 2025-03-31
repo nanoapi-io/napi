@@ -235,6 +235,18 @@ export class CSharpUsingResolver {
         }
       }
     }
+    // Also check in global usings
+    for (const symbol of this.globalUsings.internal) {
+      if ("namespace" in symbol && symbol.namespace) {
+        const nsFound = this.nsMapper.findClassInTree(
+          symbol.namespace,
+          reconstructedClassName,
+        );
+        if (nsFound) {
+          return nsFound;
+        }
+      }
+    }
 
     return null;
   }
