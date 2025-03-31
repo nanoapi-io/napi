@@ -21,6 +21,7 @@ export const localConfigSchema = z.object({
     targetMaxCharPerInstance: z.number().optional(),
     targetMaxLinePerInstance: z.number().optional(),
     targetMaxDepPerInstance: z.number().optional(),
+    manifestoJsonOutputPath: z.string().optional(),
   }),
 });
 
