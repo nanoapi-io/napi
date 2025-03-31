@@ -2,6 +2,7 @@ import { SymbolType } from "../namespaceResolver";
 import { CSharpInvocationResolver, Invocations } from "../invocationResolver";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
 import Parser from "tree-sitter";
+import { ResolvedImports, CSharpUsingResolver } from "../usingResolver";
 
 /**
  * Represents a dependency in a C# file.
@@ -45,6 +46,7 @@ export interface CSharpFile {
 
 export class CSharpDependencyFormatter {
   private invResolver: CSharpInvocationResolver;
+  private usingResolver: CSharpUsingResolver;
   private nsMapper: CSharpNamespaceMapper;
 
   /**
@@ -56,6 +58,10 @@ export class CSharpDependencyFormatter {
   ) {
     this.nsMapper = new CSharpNamespaceMapper(files);
     this.invResolver = new CSharpInvocationResolver(this.nsMapper);
+    this.usingResolver = new CSharpUsingResolver(this.nsMapper);
+    for (const [fp] of files) {
+      this.usingResolver.resolveUsingDirectives(fp);
+    }
   }
 
   /**
@@ -111,6 +117,32 @@ export class CSharpDependencyFormatter {
     return dependencies;
   }
 
+  private formatUsings(
+    resolvedimports: ResolvedImports,
+  ): Record<string, CSharpDependency> {
+    const dependencies: Record<string, CSharpDependency> = {};
+    for (const resolvedSymbol of resolvedimports.internal) {
+      const id = resolvedSymbol.symbol
+        ? resolvedSymbol.symbol.name
+        : resolvedSymbol.namespace
+          ? resolvedSymbol.namespace.name
+          : "";
+      dependencies[id] = {
+        id,
+        isExternal: false,
+        symbols: {},
+      };
+    }
+    for (const unresolvedSymbol of resolvedimports.external) {
+      dependencies[unresolvedSymbol.name] = {
+        id: unresolvedSymbol.name,
+        isExternal: true,
+        symbols: {},
+      };
+    }
+    return dependencies;
+  }
+
   /**
    * Formats a file into a CSharpFile object.
    * @param filepath - The path of the file to format.
@@ -131,6 +163,24 @@ export class CSharpDependencyFormatter {
       dependencies: this.formatDependencies(fileDependencies),
       symbols: this.formatSymbols(fileSymbols),
     };
+    // Add global usings to dependencies
+    const globalUsings = this.formatUsings(
+      this.usingResolver.getGlobalUsings(),
+    );
+    for (const key in globalUsings) {
+      if (!formattedFile.dependencies[key]) {
+        formattedFile.dependencies[key] = globalUsings[key];
+      }
+    }
+    // Add local usings to dependencies
+    const localUsings = this.formatUsings(
+      this.usingResolver.resolveUsingDirectives(filepath),
+    );
+    for (const key in localUsings) {
+      if (!formattedFile.dependencies[key]) {
+        formattedFile.dependencies[key] = localUsings[key];
+      }
+    }
     return formattedFile;
   }
 }

@@ -20,14 +20,16 @@ describe("generateCSharpDependencyManifesto", () => {
     expect(Object.keys(manifesto["Usage.cs"].symbols).length).toBe(1);
   });
   test("Resolves dependencies", () => {
-    expect(manifesto["2Namespaces1File.cs"].dependencies).toStrictEqual({});
-    expect(manifesto["Models.cs"].dependencies).toStrictEqual({});
-    expect(Object.keys(manifesto["Namespaced.cs"].dependencies).length).toBe(1);
-    expect(Object.keys(manifesto["Nested.cs"].dependencies).length).toBe(1);
-    expect(Object.keys(manifesto["Program.cs"].dependencies).length).toBe(9);
+    expect(
+      Object.keys(manifesto["2Namespaces1File.cs"].dependencies).length,
+    ).toBe(1);
+    expect(Object.keys(manifesto["Models.cs"].dependencies).length).toBe(1);
+    expect(Object.keys(manifesto["Namespaced.cs"].dependencies).length).toBe(2);
+    expect(Object.keys(manifesto["Nested.cs"].dependencies).length).toBe(2);
+    expect(Object.keys(manifesto["Program.cs"].dependencies).length).toBe(16);
     expect(
       Object.keys(manifesto["SemiNamespaced.cs"].dependencies).length,
-    ).toBe(2);
-    expect(Object.keys(manifesto["Usage.cs"].dependencies).length).toBe(2);
+    ).toBe(3);
+    expect(Object.keys(manifesto["Usage.cs"].dependencies).length).toBe(8);
   });
 });

@@ -80,6 +80,7 @@ export class CSharpUsingResolver {
     string,
     ResolvedImports
   >();
+  private globalUsings: ResolvedImports = { internal: [], external: [] };
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
@@ -172,13 +173,23 @@ export class CSharpUsingResolver {
       const resolved = this.resolveUsingDirective(directive);
       if ("symbol" in resolved || "namespace" in resolved) {
         internal.push(resolved);
+        if (directive.type === GLOBAL_USING) {
+          this.globalUsings.internal.push(resolved);
+        }
       } else {
         external.push(resolved as ExternalSymbol);
+        if (directive.type === GLOBAL_USING) {
+          this.globalUsings.external.push(resolved as ExternalSymbol);
+        }
       }
     });
     const resolvedimports = { internal, external };
     this.cachedImports.set(filepath, resolvedimports);
     return resolvedimports;
+  }
+
+  public getGlobalUsings(): ResolvedImports {
+    return this.globalUsings;
   }
 
   /**
