@@ -3,6 +3,7 @@ import { PythonModule, PythonModuleResolver } from "../moduleResolver";
 import { Symbol } from "../exportExtractor";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
+  ImportStatement,
   NORMAL_IMPORT_STATEMENT_TYPE,
   PythonImportExtractor,
 } from "../importExtractor";
@@ -99,9 +100,9 @@ export class PythonUsageResolver {
     const externalResults: ExternalUsageResult[] = [];
 
     for (const stmt of importStmts) {
-      if (stmt.type === FROM_IMPORT_STATEMENT_TYPE && stmt.sourceNode) {
+      if (stmt.type === FROM_IMPORT_STATEMENT_TYPE) {
         // For from-import statements, resolve the module once.
-        const moduleName = stmt.sourceNode.text;
+        const moduleName = stmt.members[0].identifierNode.text;
         const resolvedModule = this.moduleResolver.resolveModule(
           filePath,
           moduleName,
@@ -164,7 +165,7 @@ export class PythonUsageResolver {
    * @param resolvedModule The resolved internal module.
    */
   private processInternalUsageForFromImport(
-    stmt: ReturnType<PythonImportExtractor["getImportStatements"]>[number],
+    stmt: ImportStatement,
     rootNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
     internalResults: Map<string, InternalUsageResult>,

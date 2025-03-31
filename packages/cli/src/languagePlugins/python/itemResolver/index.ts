@@ -121,7 +121,7 @@ export class PythonItemResolver {
 
       // If the module has an explicit public interface (__all__), ensure the item is public.
       if (
-        exports.publicSymbols.length &&
+        exports.publicSymbols &&
         !exports.publicSymbols.includes(symbolName)
       ) {
         this.recursiveResolveCache.set(key, undefined);
@@ -130,69 +130,73 @@ export class PythonItemResolver {
     }
 
     // Item not found directly; inspect imports for potential re-exports.
-    const importStmts = this.importExtractor.getImportStatements(module.path);
+    // Check if the module is a namespace module. These are not files so have no imports.
+    // So we skip checking imports in these cases.
+    if (module.type !== PYTHON_NAMESPACE_MODULE_TYPE) {
+      const importStmts = this.importExtractor.getImportStatements(module.path);
 
-    for (const importStmt of importStmts) {
-      if (importStmt.type === FROM_IMPORT_STATEMENT_TYPE) {
-        const sourceModuleName = importStmt.sourceNode?.text;
-        if (!sourceModuleName) continue;
+      for (const importStmt of importStmts) {
+        if (importStmt.type === FROM_IMPORT_STATEMENT_TYPE) {
+          const sourceModuleName = importStmt.members[0].identifierNode.text;
+          if (!sourceModuleName) continue;
 
-        const sourceModule = this.moduleMapper.resolveModule(
-          module.path,
-          sourceModuleName,
-        );
-        if (!sourceModule) continue;
+          const sourceModule = this.moduleMapper.resolveModule(
+            module.path,
+            sourceModuleName,
+          );
+          if (!sourceModule) continue;
 
-        for (const importedMember of importStmt.members) {
-          // Handle wildcard imports (e.g., from module import *).
-          if (importedMember.isWildcardImport) {
-            const result = this.recursiveResolve(
-              sourceModule,
-              symbolName,
-              visited,
-            );
-            if (result) {
-              this.recursiveResolveCache.set(key, result);
-              return result;
+          for (const importedMember of importStmt.members) {
+            // Handle wildcard imports (e.g., from module import *).
+            if (importedMember.isWildcardImport) {
+              const result = this.recursiveResolve(
+                sourceModule,
+                symbolName,
+                visited,
+              );
+              if (result) {
+                this.recursiveResolveCache.set(key, result);
+                return result;
+              }
             }
-          }
 
-          // Handle explicitly imported items (e.g., from module import item as alias).
-          if (importedMember.items) {
-            for (const item of importedMember.items) {
-              const alias = item.aliasNode?.text || item.identifierNode.text;
-              if (alias === symbolName) {
-                const originalSymbolName = item.identifierNode.text;
-                const result = this.recursiveResolve(
-                  sourceModule,
-                  originalSymbolName,
-                  visited,
-                );
-                if (result) {
-                  this.recursiveResolveCache.set(key, result);
-                  return result;
+            // Handle explicitly imported items (e.g., from module import item as alias).
+            if (importedMember.items) {
+              for (const item of importedMember.items) {
+                const alias = item.aliasNode?.text || item.identifierNode.text;
+                if (alias === symbolName) {
+                  const originalSymbolName = item.identifierNode.text;
+                  const result = this.recursiveResolve(
+                    sourceModule,
+                    originalSymbolName,
+                    visited,
+                  );
+                  if (result) {
+                    this.recursiveResolveCache.set(key, result);
+                    return result;
+                  }
                 }
               }
             }
           }
-        }
-      } else if (importStmt.type === NORMAL_IMPORT_STATEMENT_TYPE) {
-        // Handle standard imports (e.g., import moduleX as alias).
-        for (const member of importStmt.members) {
-          const alias = member.aliasNode?.text || member.identifierNode.text;
-          if (alias === symbolName) {
-            const sourceModule = this.moduleMapper.resolveModule(
-              module.path,
-              member.identifierNode.text,
-            );
-            if (!sourceModule) continue;
+        } else if (importStmt.type === NORMAL_IMPORT_STATEMENT_TYPE) {
+          // Handle standard imports (e.g., import moduleX as alias).
+          for (const member of importStmt.members) {
+            const alias = member.aliasNode?.text || member.identifierNode.text;
+            if (alias === symbolName) {
+              const sourceModule = this.moduleMapper.resolveModule(
+                module.path,
+                member.identifierNode.text,
+              );
+              if (!sourceModule) continue;
 
-            const result = {
-              module: sourceModule,
-              symbol: undefined,
-            };
-            this.recursiveResolveCache.set(key, result);
-            return result;
+              const result = {
+                module: sourceModule,
+                symbol: undefined,
+              };
+              this.recursiveResolveCache.set(key, result);
+              return result;
+            }
           }
         }
       }
@@ -281,7 +285,7 @@ export class PythonItemResolver {
 
     for (const importStmt of importStmts) {
       if (importStmt.type === FROM_IMPORT_STATEMENT_TYPE) {
-        const sourceModuleName = importStmt.sourceNode?.text;
+        const sourceModuleName = importStmt.members[0].identifierNode.text;
         if (!sourceModuleName) continue;
 
         const sourceModule = this.moduleMapper.resolveModule(
@@ -297,13 +301,11 @@ export class PythonItemResolver {
             const sourceExports = this.exportExtractor.getSymbols(
               sourceModule.path,
             );
-            const hasExplicitPublicSymbols =
-              sourceExports.publicSymbols.length > 0;
 
             // Filter and add symbols based on visibility rules
             for (const [name, item] of sourceSymbols.entries()) {
               if (
-                hasExplicitPublicSymbols
+                sourceExports.publicSymbols
                   ? sourceExports.publicSymbols.includes(name)
                   : !name.startsWith("_") // If no __all__, only include public symbols
               ) {

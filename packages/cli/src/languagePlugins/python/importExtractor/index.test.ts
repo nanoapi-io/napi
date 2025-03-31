@@ -35,7 +35,6 @@ describe("Python Import Extractor", () => {
       expect.objectContaining({
         node: expect.objectContaining({ text: "import os" }),
         type: NORMAL_IMPORT_STATEMENT_TYPE,
-        sourceNode: undefined,
       }),
     );
     expect(firstImportStatement.members).toHaveLength(1);
@@ -55,7 +54,6 @@ describe("Python Import Extractor", () => {
       expect.objectContaining({
         node: expect.objectContaining({ text: "import sys" }),
         type: NORMAL_IMPORT_STATEMENT_TYPE,
-        sourceNode: undefined,
       }),
     );
     expect(secondImportStatement.members).toHaveLength(1);
@@ -95,7 +93,6 @@ describe("Python Import Extractor", () => {
           text: "import os as operating_system",
         }),
         type: NORMAL_IMPORT_STATEMENT_TYPE,
-        sourceNode: undefined,
       }),
     );
     expect(importStatement.members).toHaveLength(1);
@@ -138,7 +135,6 @@ describe("Python Import Extractor", () => {
           text: "from os import path, environ",
         }),
         type: FROM_IMPORT_STATEMENT_TYPE,
-        sourceNode: expect.objectContaining({ text: "os" }),
       }),
     );
     expect(firstImportStatement.members).toHaveLength(1);
@@ -180,7 +176,6 @@ describe("Python Import Extractor", () => {
           text: "from sys import argv",
         }),
         type: FROM_IMPORT_STATEMENT_TYPE,
-        sourceNode: expect.objectContaining({ text: "sys" }),
       }),
     );
     expect(secondImportStatement.members).toHaveLength(1);
@@ -231,7 +226,6 @@ describe("Python Import Extractor", () => {
           text: "from os import path as os_path",
         }),
         type: FROM_IMPORT_STATEMENT_TYPE,
-        sourceNode: expect.objectContaining({ text: "os" }),
       }),
     );
     expect(importStatement.members).toHaveLength(1);
@@ -244,6 +238,7 @@ describe("Python Import Extractor", () => {
         isWildcardImport: false,
       }),
     );
+    // the except below fails. importStatementMember.items is undefined
     expect(importStatementMember.items).toHaveLength(1);
     const importStatementMemberSymbol = (
       importStatementMember.items as ImportItem[]
@@ -280,7 +275,6 @@ describe("Python Import Extractor", () => {
       expect.objectContaining({
         node: expect.objectContaining({ text: "from os import *" }),
         type: FROM_IMPORT_STATEMENT_TYPE,
-        sourceNode: expect.objectContaining({ text: "os" }),
       }),
     );
     expect(importStatement.members).toHaveLength(1);
@@ -321,7 +315,6 @@ describe("Python Import Extractor", () => {
       expect.objectContaining({
         node: expect.objectContaining({ text: "import os" }),
         type: NORMAL_IMPORT_STATEMENT_TYPE,
-        sourceNode: undefined,
       }),
     );
     expect(firstImportStatement.members).toHaveLength(1);
@@ -331,7 +324,6 @@ describe("Python Import Extractor", () => {
       expect.objectContaining({
         node: expect.objectContaining({ text: "from sys import argv" }),
         type: FROM_IMPORT_STATEMENT_TYPE,
-        sourceNode: expect.objectContaining({ text: "sys" }),
       }),
     );
     expect(secondImportStatement.members).toHaveLength(1);

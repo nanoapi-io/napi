@@ -24,10 +24,10 @@ export interface ImportMember {
   /** The syntax node corresponding to the imported member (module or item). */
   node: Parser.SyntaxNode;
 
-  /** The syntax node corresponding to the member’s identifier. */
+  /** The syntax node corresponding to the member's identifier. */
   identifierNode: Parser.SyntaxNode;
 
-  /** The syntax node for the member’s alias, if provided (e.g., "alias" in "import module as alias"). */
+  /** The syntax node for the member's alias, if provided (e.g., "alias" in "import module as alias"). */
   aliasNode: Parser.SyntaxNode | undefined;
 
   /** Indicates if this is a wildcard import (`from module import *`). */
@@ -85,8 +85,7 @@ export interface ImportStatement {
 export class PythonImportExtractor {
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   private parser: Parser;
-  private normalImportQuery: Parser.Query;
-  private fromImportQuery: Parser.Query;
+  private importQuery: Parser.Query;
   private cache = new Map<string, ImportStatement[]>();
 
   /**
@@ -101,174 +100,15 @@ export class PythonImportExtractor {
   ) {
     this.parser = parser;
     this.files = files;
-    this.normalImportQuery = new Parser.Query(
+
+    // Single query to capture all import statements
+    this.importQuery = new Parser.Query(
       this.parser.getLanguage(),
-      `(import_statement) @importStmt`,
+      `[
+        (import_statement) @import
+        (import_from_statement) @import
+      ]`,
     );
-    this.fromImportQuery = new Parser.Query(
-      this.parser.getLanguage(),
-      `(import_from_statement) @importStmt`,
-    );
-
-    // TODO for later, we need to optimize this by using a simple "bulk query"
-    // Something like below:
-    // [
-    //   (import_statement
-    //     name: [
-    //       (dotted_name) @module
-    //       (aliased_import
-    //         name: (dotted_name) @module_alias_name
-    //         alias: (identifier) @module_alias
-    //       )
-    //     ] @member
-    //   ) @normal_import
-
-    //   (import_from_statement
-    //     module_name: [
-    //       (dotted_name) @from_module
-    //       (relative_import) @relative_import
-    //     ]
-    //     name: [
-    //       (aliased_import
-    //         name: (dotted_name) @imported_symbol
-    //         alias: (identifier)? @imported_alias
-    //       )
-    //       (dotted_name) @imported_symbol
-    //     ]? @member
-    //     (wildcard_import)? @wildcard_import
-    //   ) @from_import
-    // ]
-  }
-
-  /**
-   * Extracts standard import statements (`import module`, `import module as alias`) from the given file.
-   *
-   * @param filePath - Path to the Python file to analyze.
-   * @returns An array of resolved ImportStatement objects representing normal imports.
-   */
-  private getNormalImportStatements(filePath: string): ImportStatement[] {
-    const file = this.files.get(filePath);
-    if (!file) {
-      console.error(`File ${filePath} not found in files map`);
-      return [];
-    }
-
-    const importStatements: ImportStatement[] = [];
-
-    // Process each matched import statement
-    this.normalImportQuery.captures(file.rootNode).forEach(({ node }) => {
-      const importStatement: ImportStatement = {
-        node,
-        type: NORMAL_IMPORT_STATEMENT_TYPE,
-        sourceNode: undefined,
-        members: [],
-      };
-
-      // Retrieve imported modules and optional aliases
-      const memberNodes = node.childrenForFieldName("name");
-      memberNodes.forEach((memberNode) => {
-        let identifierNode: Parser.SyntaxNode;
-        let aliasNode: Parser.SyntaxNode | undefined;
-
-        if (memberNode.type === "aliased_import") {
-          const nameNode = memberNode.childForFieldName("name");
-          if (!nameNode) {
-            throw new Error("Malformed aliased import: missing name");
-          }
-          identifierNode = nameNode;
-          aliasNode = memberNode.childForFieldName("alias") || undefined;
-        } else {
-          identifierNode = memberNode;
-          aliasNode = undefined;
-        }
-
-        importStatement.members.push({
-          node: memberNode,
-          identifierNode,
-          aliasNode,
-          isWildcardImport: false,
-          items: undefined,
-        });
-      });
-
-      importStatements.push(importStatement);
-    });
-
-    return importStatements;
-  }
-
-  /**
-   * Extracts from-import statements (`from module import X`, `from module import *`) from the given file.
-   *
-   * @param filePath - Path to the Python file to analyze.
-   * @returns An array of resolved ImportStatement objects representing from-import statements.
-   */
-  private getFromImportStatements(filePath: string): ImportStatement[] {
-    const file = this.files.get(filePath);
-    if (!file) {
-      console.error(`File ${filePath} not found in files map`);
-      return [];
-    }
-
-    const importStatements: ImportStatement[] = [];
-
-    // Process each matched from-import statement
-    this.fromImportQuery.captures(file.rootNode).forEach(({ node }) => {
-      const sourceNode = node.childForFieldName("module_name");
-      if (!sourceNode) {
-        throw new Error("Malformed from-import: missing module name");
-      }
-
-      const importStatement: ImportStatement = {
-        node,
-        type: FROM_IMPORT_STATEMENT_TYPE,
-        sourceNode,
-        members: [],
-      };
-
-      const importMember: ImportMember = {
-        node: sourceNode,
-        identifierNode: sourceNode,
-        aliasNode: undefined,
-        isWildcardImport: false,
-        items: undefined,
-      };
-
-      const wildcardNode = node.descendantsOfType("wildcard_import")[0];
-
-      if (wildcardNode) {
-        importMember.isWildcardImport = true;
-      } else {
-        const itemNodes = node.childrenForFieldName("name");
-        importMember.items = itemNodes.map((itemNode) => {
-          let identifierNode: Parser.SyntaxNode;
-          let aliasNode: Parser.SyntaxNode | undefined;
-
-          if (itemNode.type === "aliased_import") {
-            const nameNode = itemNode.childForFieldName("name");
-            if (!nameNode) {
-              throw new Error("Malformed aliased import item: missing name");
-            }
-            identifierNode = nameNode;
-            aliasNode = itemNode.childForFieldName("alias") || undefined;
-          } else {
-            identifierNode = itemNode;
-            aliasNode = undefined;
-          }
-
-          return {
-            node: itemNode,
-            identifierNode,
-            aliasNode,
-          };
-        });
-      }
-
-      importStatement.members.push(importMember);
-      importStatements.push(importStatement);
-    });
-
-    return importStatements;
   }
 
   /**
@@ -284,12 +124,131 @@ export class PythonImportExtractor {
       return cachedValue;
     }
 
-    const importStatements = [
-      ...this.getNormalImportStatements(filePath),
-      ...this.getFromImportStatements(filePath),
-    ];
+    const file = this.files.get(filePath);
+    if (!file) {
+      console.error(`File ${filePath} not found in files map`);
+      return [];
+    }
+
+    const importStatements: ImportStatement[] = [];
+
+    // Process all matched import statements
+    this.importQuery.captures(file.rootNode).forEach(({ node }) => {
+      if (node.type === "import_statement") {
+        importStatements.push(this.processNormalImport(node));
+      } else if (node.type === "import_from_statement") {
+        importStatements.push(this.processFromImport(node));
+      }
+    });
 
     this.cache.set(filePath, importStatements);
     return importStatements;
+  }
+
+  /**
+   * Processes a normal import statement (`import module`) by manually extracting
+   * its components from the AST.
+   *
+   * @param node - The import_statement syntax node
+   * @returns A resolved ImportStatement object
+   */
+  private processNormalImport(node: Parser.SyntaxNode): ImportStatement {
+    const importStatement: ImportStatement = {
+      node,
+      type: NORMAL_IMPORT_STATEMENT_TYPE,
+      sourceNode: undefined,
+      members: [],
+    };
+
+    // Retrieve imported modules and optional aliases
+    const memberNodes = node.childrenForFieldName("name");
+    memberNodes.forEach((memberNode) => {
+      let identifierNode: Parser.SyntaxNode;
+      let aliasNode: Parser.SyntaxNode | undefined;
+
+      if (memberNode.type === "aliased_import") {
+        const nameNode = memberNode.childForFieldName("name");
+        if (!nameNode) {
+          throw new Error("Malformed aliased import: missing name");
+        }
+        identifierNode = nameNode;
+        aliasNode = memberNode.childForFieldName("alias") || undefined;
+      } else {
+        identifierNode = memberNode;
+        aliasNode = undefined;
+      }
+
+      importStatement.members.push({
+        node: memberNode,
+        identifierNode,
+        aliasNode,
+        isWildcardImport: false,
+        items: undefined,
+      });
+    });
+
+    return importStatement;
+  }
+
+  /**
+   * Processes a from-import statement (`from module import X`) by manually extracting
+   * its components from the AST.
+   *
+   * @param node - The import_from_statement syntax node
+   * @returns A resolved ImportStatement object
+   */
+  private processFromImport(node: Parser.SyntaxNode): ImportStatement {
+    const sourceNode = node.childForFieldName("module_name");
+    if (!sourceNode) {
+      throw new Error("Malformed from-import: missing module name");
+    }
+
+    const importStatement: ImportStatement = {
+      node,
+      type: FROM_IMPORT_STATEMENT_TYPE,
+      sourceNode,
+      members: [],
+    };
+
+    const importMember: ImportMember = {
+      node: sourceNode,
+      identifierNode: sourceNode,
+      aliasNode: undefined,
+      isWildcardImport: false,
+      items: undefined,
+    };
+
+    const wildcardNode = node.descendantsOfType("wildcard_import")[0];
+
+    if (wildcardNode) {
+      importMember.isWildcardImport = true;
+    } else {
+      const itemNodes = node.childrenForFieldName("name");
+      importMember.items = itemNodes.map((itemNode) => {
+        let identifierNode: Parser.SyntaxNode;
+        let aliasNode: Parser.SyntaxNode | undefined;
+
+        if (itemNode.type === "aliased_import") {
+          const nameNode = itemNode.childForFieldName("name");
+          if (!nameNode) {
+            throw new Error("Malformed aliased import item: missing name");
+          }
+          identifierNode = nameNode;
+          aliasNode = itemNode.childForFieldName("alias") || undefined;
+        } else {
+          identifierNode = itemNode;
+          aliasNode = undefined;
+        }
+
+        return {
+          node: itemNode,
+          identifierNode,
+          aliasNode,
+        };
+      });
+    }
+
+    importStatement.members.push(importMember);
+    return importStatement;
   }
 }
