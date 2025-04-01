@@ -108,7 +108,9 @@ export class CSharpUsingResolver {
           (child.type === "identifier" || child.type === "qualified_name") &&
           child !== node.childForFieldName("name"),
       );
-      const id = importNode ? importNode.text : "";
+      let id = importNode ? importNode.text : "";
+      // Remove the :: prefix from the id if it exists
+      id = id.includes("::") ? (id.split("::").pop() as string) : id;
       const aliasNode = node.childForFieldName("name");
       const alias = aliasNode ? aliasNode.text : undefined;
       return { node, type, id, alias };
