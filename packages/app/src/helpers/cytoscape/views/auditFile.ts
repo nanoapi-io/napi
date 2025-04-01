@@ -1,6 +1,7 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
 import { AuditResponse } from "../../../service/api/auditApi/types";
 import tailwindConfig from "../../../../tailwind.config";
+import { FcoseLayoutOptions } from "cytoscape-fcose";
 
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
@@ -485,16 +486,16 @@ export function getCyStyle(theme: "light" | "dark") {
   ] as StylesheetJson;
 }
 
-export function getCyLayout(animate = true) {
-  return {
-    name: "cose-bilkent",
-    quality: "proof",
-    animate: animate ? "end" : false,
-    idealEdgeLength: 75,
-    tilingPaddingVertical: 100,
-    tilingPaddingHorizontal: 100,
-  };
-}
+export const layout = {
+  name: "fcose",
+  quality: "proof",
+  nodeRepulsion: 1000,
+  idealEdgeLength: 200,
+  gravity: 0.1,
+  gravityCompound: 1000,
+  packComponents: true,
+  nodeDimensionsIncludeLabels: true,
+} as FcoseLayoutOptions;
 
 const errorChar = "❗";
 const warningChar = "⚠️";

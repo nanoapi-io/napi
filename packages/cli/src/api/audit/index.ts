@@ -3,6 +3,15 @@ import { TelemetryEvents, trackEvent } from "../../telemetry";
 import z from "zod";
 import { localConfigSchema } from "../../config/localConfig";
 import { generateAuditResponse } from "./service";
+import { DependencyManifesto } from "../../manifestos/dependencyManifesto";
+import { AuditManifesto } from "../../manifestos/auditManifesto";
+
+let cachedAuditResponse:
+  | {
+      auditManifesto: AuditManifesto;
+      dependencyManifesto: DependencyManifesto;
+    }
+  | undefined = undefined;
 
 export function getAuditApi(
   workDir: string,
@@ -17,8 +26,13 @@ export function getAuditApi(
     });
 
     try {
-      const response = generateAuditResponse(workDir, napiConfig);
-      res.status(200).json(response);
+      if (cachedAuditResponse) {
+        res.status(200).json(cachedAuditResponse);
+      } else {
+        const response = generateAuditResponse(workDir, napiConfig);
+        cachedAuditResponse = response;
+        res.status(200).json(response);
+      }
 
       trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
         message: "API request audit project success",

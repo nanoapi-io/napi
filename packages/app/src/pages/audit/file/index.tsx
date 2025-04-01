@@ -2,12 +2,11 @@ import { useContext, useEffect, useRef, useState } from "react";
 import cytoscape, { Core, EventObjectNode } from "cytoscape";
 import Controls from "../../../components/Cytoscape/Controls";
 import { useOutletContext, useParams, useNavigate } from "react-router";
-import coseBilkent from "cytoscape-cose-bilkent";
+import fcose from "cytoscape-fcose";
 import { ThemeContext } from "../../../contexts/ThemeContext";
-import { resizeNodeFromLabel } from "../../../helpers/cytoscape/sizeAndPosition";
 import {
   getCyElements,
-  getCyLayout,
+  layout,
   getCyStyle,
   NodeElementDefinition,
   getNodeLabel,
@@ -41,7 +40,7 @@ export default function AuditFilePage() {
       return;
     }
 
-    cytoscape.use(coseBilkent);
+    cytoscape.use(fcose);
     const cy = cytoscape();
 
     cy.mount(containerRef.current as Element);
@@ -51,11 +50,7 @@ export default function AuditFilePage() {
 
     const elements = getCyElements(context.auditResponse, params.file);
     cy.add(elements);
-    cy.nodes().forEach((node) => {
-      resizeNodeFromLabel(node, node.data("label"));
-    });
 
-    const layout = getCyLayout(false);
     cy.layout(layout).run();
 
     createCyListeners(cy);
@@ -93,7 +88,6 @@ export default function AuditFilePage() {
       });
 
       node.data({ label, isExpanded });
-      resizeNodeFromLabel(node, label);
     });
 
     // On double tap we redirect to file or instance view
@@ -122,7 +116,6 @@ export default function AuditFilePage() {
 
   function onLayout() {
     if (cyInstance) {
-      const layout = getCyLayout();
       cyInstance.makeLayout(layout).run();
     }
   }

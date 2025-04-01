@@ -7,6 +7,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/cytoscape-fcose": "^2.2.4",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
@@ -20,7 +21,9 @@
     "@radix-ui/themes": "^3.1.6",
     "@xyflow/react": "^12.3.6",
     "cytoscape": "^3.31.1",
-    "cytoscape-cose-bilkent": "^4.1.0",
+    "cytoscape-fcose": "^2.2.0",
+    "cytoscape-layout-utilities": "^1.1.1",
+    "npm": "^10.9.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.1.1",

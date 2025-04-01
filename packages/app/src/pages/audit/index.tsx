@@ -3,14 +3,13 @@ import Controls from "../../components/Cytoscape/Controls";
 import { useNavigate, useOutletContext } from "react-router";
 import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton";
 import { Core, EventObjectNode } from "cytoscape";
-import { resizeNodeFromLabel } from "../../helpers/cytoscape/sizeAndPosition";
 import cytoscape from "cytoscape";
-import coseBilkent from "cytoscape-cose-bilkent";
+import fcose from "cytoscape-fcose";
+import layoutUtilities from "cytoscape-layout-utilities";
 import {
   getCyElements,
-  getCyLayout,
+  layout,
   getCyStyle,
-  getNodeLabel,
   NodeElementDefinition,
 } from "../../helpers/cytoscape/views/audit";
 import { ThemeContext } from "../../contexts/ThemeContext";
@@ -40,7 +39,8 @@ export default function AuditPage() {
       return;
     }
 
-    cytoscape.use(coseBilkent);
+    cytoscape.use(fcose);
+    cytoscape.use(layoutUtilities);
     const cy = cytoscape();
 
     cy.mount(containerRef.current as Element);
@@ -50,11 +50,7 @@ export default function AuditPage() {
 
     const elements = getCyElements(context.auditResponse);
     cy.add(elements);
-    cy.nodes().forEach((node) => {
-      resizeNodeFromLabel(node, node.data("label"));
-    });
 
-    const layout = getCyLayout(cy, cy.nodes());
     cy.layout(layout).run();
 
     createCyListeners(cy);
@@ -76,75 +72,49 @@ export default function AuditPage() {
 
   function createCyListeners(cy: Core) {
     // On tap to a node, display details of the node if relevant
-    cy.on("tap", "node", (evt: EventObjectNode) => {
+    cy.on("onetap", "node", (evt: EventObjectNode) => {
       const node = evt.target;
 
-      const data = node.data() as NodeElementDefinition["data"];
-
-      const isExpanded = !data.isExpanded;
-
       const allElements = cy.elements();
-      const closedNeighborhood = node.closedNeighborhood();
-      const outsideOfNeighborhood = cy
+      const connectedNodes = node.closedNeighborhood().nodes().difference(node);
+      const dependencyEdges = node
+        .connectedEdges()
+        .filter((edge) => edge.source().id() === node.id());
+      const dependentEdges = node
+        .connectedEdges()
+        .filter((edge) => edge.target().id() === node.id());
+      const backgroundElements = cy
         .elements()
-        .difference(closedNeighborhood);
+        .difference(node.closedNeighborhood());
 
-      const expandedNodes = allElements.nodes(`[isExpanded]`);
-      // Need to recompute label for these, we collapse them all
-      expandedNodes.forEach((node) => {
-        const data = node.data() as NodeElementDefinition["data"];
-        const label = getNodeLabel({
-          isExpanded: false,
-          fileName: data.customData.fileName,
-          errorMessages: data.customData.errorMessages,
-          warningMessages: data.customData.warningMessages,
-        });
-        node.data({ label, isExpanded: false });
-        resizeNodeFromLabel(node, label);
-      });
-
-      // expand or collapse  clicked node
-      const label = getNodeLabel({
-        isExpanded,
-        fileName: data.customData.fileName,
-        errorMessages: data.customData.errorMessages,
-        warningMessages: data.customData.warningMessages,
-      });
-      node.data({ label, isExpanded });
-      resizeNodeFromLabel(node, label);
+      const isAlreadySelected = node.hasClass("selected");
 
       // remove all, clean state
       allElements.removeClass([
         "background",
-        "focus",
+        "selected",
+        "connected",
         "dependency",
         "dependent",
       ]);
 
-      if (isExpanded) {
-        // set background to all outside elements
-        outsideOfNeighborhood.addClass(["background"]);
-        // set focus to all connected nodes, and remove other classes
-        closedNeighborhood.addClass(["focus"]);
-
-        const dependencyEdges = node
-          .connectedEdges()
-          .filter((edge) => edge.source() === node);
-        dependencyEdges.addClass("dependency");
-        const dependentEdges = node
-          .connectedEdges()
-          .filter((edge) => edge.target() === node);
-        dependentEdges.addClass("dependent");
+      if (isAlreadySelected) {
+        return;
       }
 
-      if (isExpanded) {
-        // layout closed neighborhood
-        const layout = getCyLayout(cy, closedNeighborhood, {
-          animate: true,
-          keepBoundingBox: true,
-        });
-        closedNeighborhood.makeLayout(layout).run();
-      }
+      // add background class to background elements
+      backgroundElements.addClass("background");
+      // add connected class to connected nodes
+      connectedNodes.addClass("connected");
+      // add dependency class to dependency edges
+      dependencyEdges.addClass("dependency");
+      // add dependent class to dependent edges
+      dependentEdges.addClass("dependent");
+      // add selected class to selected node
+      node.addClass("selected");
+
+      // layout the closed neighborhood
+      node.closedNeighborhood().layout(layout).run();
     });
 
     // On double tap we redirect to file or instance view
@@ -164,7 +134,6 @@ export default function AuditPage() {
 
   function onLayout() {
     if (cyInstance) {
-      const layout = getCyLayout(cyInstance, cyInstance.nodes());
       cyInstance.makeLayout(layout).run();
     }
   }
