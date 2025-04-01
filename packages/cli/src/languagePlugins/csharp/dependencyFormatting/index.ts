@@ -127,7 +127,9 @@ export class CSharpDependencyFormatter {
     const dependencies: Record<string, CSharpDependency> = {};
     for (const resolvedSymbol of resolvedimports.internal) {
       const id = resolvedSymbol.symbol
-        ? resolvedSymbol.symbol.name
+        ? (resolvedSymbol.symbol.namespace !== ""
+            ? resolvedSymbol.symbol.namespace + "."
+            : "") + resolvedSymbol.symbol.name
         : resolvedSymbol.namespace
           ? this.nsMapper.getFullNSName(resolvedSymbol.namespace)
           : "";
@@ -202,8 +204,6 @@ export class CSharpDependencyFormatter {
         }
       }
     }
-    // Remove "" from the dependencies
-    delete formattedFile.dependencies[""];
     return formattedFile;
   }
 }

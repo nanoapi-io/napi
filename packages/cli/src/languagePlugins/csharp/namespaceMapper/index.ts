@@ -108,6 +108,13 @@ export class CSharpNamespaceMapper {
     });
   }
 
+  #assignParentNamespaces(tree: NamespaceNode) {
+    tree.childrenNamespaces.forEach((ns) => {
+      ns.parentNamespace = tree;
+      this.#assignParentNamespaces(ns);
+    });
+  }
+
   /**
    * Builds a tree of namespaces from the parsed files.
    * @returns The root of the namespace tree.
@@ -126,6 +133,7 @@ export class CSharpNamespaceMapper {
         .map((ns) => ns as NamespaceNode);
 
       namespaces.forEach((namespace) => {
+        this.#assignParentNamespaces(namespace);
         this.#addNamespaceToTree(namespace, namespaceTree);
       });
     });
