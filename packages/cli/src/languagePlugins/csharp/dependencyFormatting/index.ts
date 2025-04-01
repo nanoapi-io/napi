@@ -11,6 +11,7 @@ export interface CSharpDependency {
   id: string;
   isExternal: boolean;
   symbols: Record<string, string>;
+  isNamespace: boolean;
 }
 
 /**
@@ -97,15 +98,20 @@ export class CSharpDependencyFormatter {
   ): Record<string, CSharpDependency> {
     const dependencies: Record<string, CSharpDependency> = {};
     for (const resolvedSymbol of invocations.resolvedSymbols) {
+      const namespace = resolvedSymbol.namespace;
       const id =
-        (resolvedSymbol.namespace !== ""
-          ? resolvedSymbol.namespace + "."
-          : "") + resolvedSymbol.name;
-      dependencies[id] = {
-        id,
-        isExternal: false,
-        symbols: {},
-      };
+        namespace !== ""
+          ? namespace + "." + resolvedSymbol.name
+          : resolvedSymbol.name;
+      if (!dependencies[namespace]) {
+        dependencies[namespace] = {
+          id: namespace,
+          isExternal: false,
+          symbols: {},
+          isNamespace: true,
+        };
+      }
+      dependencies[namespace].symbols[id] = id;
     }
     // Add unresolved symbols as external dependencies
     // Commented because redundant : if a symbol is unresolved,
@@ -137,6 +143,7 @@ export class CSharpDependencyFormatter {
         id,
         isExternal: false,
         symbols: {},
+        isNamespace: resolvedSymbol.namespace !== undefined,
       };
     }
     for (const unresolvedSymbol of resolvedimports.external) {
@@ -144,6 +151,7 @@ export class CSharpDependencyFormatter {
         id: unresolvedSymbol.name,
         isExternal: true,
         symbols: {},
+        isNamespace: true,
       };
     }
     return dependencies;
@@ -191,7 +199,7 @@ export class CSharpDependencyFormatter {
     // then add said symbol to the symbol list of that namespace
     for (const key in formattedFile.dependencies) {
       const dep = formattedFile.dependencies[key];
-      if (!dep.isExternal) {
+      if (!dep.isExternal && !dep.isNamespace) {
         const namespaceParts = dep.id.split(".");
         if (namespaceParts.length > 1) {
           const parentNamespace = namespaceParts.slice(0, -1).join(".");

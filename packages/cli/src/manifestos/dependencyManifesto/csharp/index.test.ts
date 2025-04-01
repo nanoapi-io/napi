@@ -27,10 +27,7 @@ describe("generateCSharpDependencyManifesto", () => {
     expect(Object.keys(manifesto["Namespaced.cs"].dependencies).length).toBe(1);
     expect(Object.keys(manifesto["Nested.cs"].dependencies).length).toBe(1);
     console.log(manifesto["Program.cs"].dependencies);
-    expect(Object.keys(manifesto["Program.cs"].dependencies).length).toBe(10); // Partly accurate
-    // Program.cs should be 10, but "ChickenBurger.Bun" should be under "ChickenBurger"
-    // "OuterNamespace.OuterInnerClass" under "OuterNamespace"
-    // and "Freeman" under "".
+    expect(Object.keys(manifesto["Program.cs"].dependencies).length).toBe(9);
     expect(
       Object.keys(manifesto["SemiNamespaced.cs"].dependencies).length,
     ).toBe(2);
