@@ -18,8 +18,8 @@ export default function BaseAuditPage() {
 
   const [paths, setPaths] = useState<string[]>([]);
   const [auditResponse, setAuditResponse] = useState<AuditResponse>({
-    dependencyManifesto: {},
-    auditManifesto: {},
+    dependencyManifest: {},
+    auditManifest: {},
   });
 
   useEffect(() => {
@@ -34,8 +34,8 @@ export default function BaseAuditPage() {
         });
 
         const auditResponse = await auditResponsePromise;
-        const paths = Object.values(auditResponse.dependencyManifesto).map(
-          (fileManifesto) => fileManifesto.filePath,
+        const paths = Object.values(auditResponse.dependencyManifest).map(
+          (fileManifest) => fileManifest.filePath,
         );
         setPaths(paths);
         setAuditResponse(auditResponse);

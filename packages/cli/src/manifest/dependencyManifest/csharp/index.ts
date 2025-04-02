@@ -1,19 +1,19 @@
-import { DependencyManifesto, Symbol } from "..";
+import { DependencyManifest, Symbol } from "..";
 import {
   CSharpDependencyFormatter,
   CSharpFile,
 } from "../../../languagePlugins/csharp/dependencyFormatting";
 import Parser from "tree-sitter";
 
-export function generateCSharpDependencyManifesto(
+export function generateCSharpDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-): DependencyManifesto {
-  console.time("generateCSharpDependencyManifesto");
+): DependencyManifest {
+  console.time("generateCSharpDependencyManifest");
   const formatter = new CSharpDependencyFormatter(files);
-  const manifesto: DependencyManifesto = {};
+  const manifest: DependencyManifest = {};
   for (const [, { path }] of files) {
     const fm = formatter.formatFile(path) as CSharpFile;
-    manifesto[path] = {
+    manifest[path] = {
       id: fm.id,
       filePath: fm.filepath,
       language: "c-sharp",
@@ -25,16 +25,16 @@ export function generateCSharpDependencyManifesto(
   }
   // Populate dependents
   for (const [, { path }] of files) {
-    const fm = manifesto[path];
+    const fm = manifest[path];
     for (const symbol of Object.values(fm.symbols)) {
       for (const [, dep] of Object.entries(symbol.dependents)) {
-        const depManifesto = manifesto[dep.id];
-        if (depManifesto) {
-          depManifesto.symbols[dep.symbols[symbol.id]] = symbol;
+        const depManifest = manifest[dep.id];
+        if (depManifest) {
+          depManifest.symbols[dep.symbols[symbol.id]] = symbol;
         }
       }
     }
   }
-  console.timeEnd("generateCSharpDependencyManifesto");
-  return manifesto;
+  console.timeEnd("generateCSharpDependencyManifest");
+  return manifest;
 }

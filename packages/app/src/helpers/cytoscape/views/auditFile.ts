@@ -39,7 +39,7 @@ export function getCyElements(
 ) {
   const joinChar = "|";
 
-  const currentFile = auditResponse.dependencyManifesto[currentFilePath];
+  const currentFile = auditResponse.dependencyManifest[currentFilePath];
   if (!currentFile) {
     throw new Error(`File not found in audit map: ${currentFilePath}`);
   }
@@ -64,12 +64,12 @@ export function getCyElements(
   const errorMessages: string[] = [];
   const warningMessages: string[] = [];
 
-  const fileAuditManifesto = auditResponse.auditManifesto[currentFile.id];
-  if (fileAuditManifesto) {
-    Object.values(fileAuditManifesto.errors).forEach((auditMessage) => {
+  const fileAuditManifest = auditResponse.auditManifest[currentFile.id];
+  if (fileAuditManifest) {
+    Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
       errorMessages.push(auditMessage.shortMessage);
     });
-    Object.values(fileAuditManifesto.warnings).forEach((auditMessage) => {
+    Object.values(fileAuditManifest.warnings).forEach((auditMessage) => {
       warningMessages.push(auditMessage.shortMessage);
     });
   }
@@ -108,13 +108,13 @@ export function getCyElements(
     const errorMessages: string[] = [];
     const warningMessages: string[] = [];
 
-    if (fileAuditManifesto) {
-      const symbolAuditManifesto = fileAuditManifesto.symbols[currentSymbol.id];
-      if (symbolAuditManifesto) {
-        Object.values(symbolAuditManifesto.errors).forEach((auditMessage) => {
+    if (fileAuditManifest) {
+      const SymbolAuditManifest = fileAuditManifest.symbols[currentSymbol.id];
+      if (SymbolAuditManifest) {
+        Object.values(SymbolAuditManifest.errors).forEach((auditMessage) => {
           errorMessages.push(auditMessage.shortMessage);
         });
-        Object.values(symbolAuditManifesto.warnings).forEach((auditMessage) => {
+        Object.values(SymbolAuditManifest.warnings).forEach((auditMessage) => {
           warningMessages.push(auditMessage.shortMessage);
         });
       }
@@ -200,7 +200,7 @@ export function getCyElements(
       Object.values(dependencyFile.symbols).forEach((dependencySymbolId) => {
         const id = `${dependencyFileId}${joinChar}${dependencySymbolId}`;
         const instanceType =
-          auditResponse.dependencyManifesto[dependencyFileId]?.symbols[
+          auditResponse.dependencyManifest[dependencyFileId]?.symbols[
             dependencySymbolId
           ]?.type;
 
@@ -314,7 +314,7 @@ export function getCyElements(
         dependentFileSymbolIds.forEach((dependentFileSymbolId) => {
           const id = `${dependentFileId}${joinChar}${dependentFileSymbolId}`;
           const instanceType =
-            auditResponse.dependencyManifesto[dependentFileId]?.symbols[
+            auditResponse.dependencyManifest[dependentFileId]?.symbols[
               dependentFileSymbolId
             ]?.type;
 

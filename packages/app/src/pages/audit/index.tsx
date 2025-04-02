@@ -35,7 +35,7 @@ export default function AuditPage() {
       setCyInstance(undefined);
     }
 
-    if (Object.values(context.auditResponse.dependencyManifesto).length === 0) {
+    if (Object.values(context.auditResponse.dependencyManifest).length === 0) {
       return;
     }
 

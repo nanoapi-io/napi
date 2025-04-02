@@ -40,23 +40,23 @@ export function getCyElements(auditResponse: AuditResponse) {
   const x = 0;
   const y = 0;
 
-  Object.values(auditResponse.dependencyManifesto).forEach((fileManifesto) => {
+  Object.values(auditResponse.dependencyManifest).forEach((fileManifest) => {
     const errorMessages: string[] = [];
     const warningMessages: string[] = [];
 
-    const fileAuditManifesto = auditResponse.auditManifesto[fileManifesto.id];
-    if (fileAuditManifesto) {
-      Object.values(fileAuditManifesto.errors).forEach((auditMessage) => {
+    const fileAuditManifest = auditResponse.auditManifest[fileManifest.id];
+    if (fileAuditManifest) {
+      Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
         errorMessages.push(auditMessage.shortMessage);
       });
-      Object.values(fileAuditManifesto.warnings).forEach((auditMessage) => {
+      Object.values(fileAuditManifest.warnings).forEach((auditMessage) => {
         warningMessages.push(auditMessage.shortMessage);
       });
     }
 
     const expandedLabel = getNodeLabel({
       isExpanded: true,
-      fileName: fileManifesto.id,
+      fileName: fileManifest.id,
       errorMessages,
       warningMessages,
     });
@@ -64,7 +64,7 @@ export function getCyElements(auditResponse: AuditResponse) {
       getNodeWidthAndHeightFromLabel(expandedLabel);
     const collapsedLabel = getNodeLabel({
       isExpanded: false,
-      fileName: fileManifesto.id,
+      fileName: fileManifest.id,
       errorMessages,
       warningMessages,
     });
@@ -73,10 +73,10 @@ export function getCyElements(auditResponse: AuditResponse) {
 
     const nodeElement: NodeElementDefinition = {
       data: {
-        id: fileManifesto.id,
+        id: fileManifest.id,
         position: { x, y },
         customData: {
-          fileName: fileManifesto.id,
+          fileName: fileManifest.id,
           expanded: {
             label: expandedLabel,
             width: expandedWitdh,
@@ -94,14 +94,14 @@ export function getCyElements(auditResponse: AuditResponse) {
     nodes.push(nodeElement);
 
     const edgeElements: EdgeElementDefinition[] = [];
-    Object.values(fileManifesto.dependencies).forEach((dependency) => {
+    Object.values(fileManifest.dependencies).forEach((dependency) => {
       if (dependency.isExternal) {
         return;
       }
       const edgeElement: EdgeElementDefinition = {
         data: {
           source: dependency.id,
-          target: fileManifesto.id,
+          target: fileManifest.id,
         },
       };
       edgeElements.push(edgeElement);

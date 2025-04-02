@@ -1,12 +1,12 @@
 import z from "zod";
 import { localConfigSchema } from "../../config/localConfig";
 import { globSync } from "glob";
-import { generateDependencyManifesto } from "../../manifestos/dependencyManifesto";
+import { generateDependencyManifest } from "../../manifest/dependencyManifest";
 import { readFileSync } from "fs";
 import { join } from "path";
 import Parser from "tree-sitter";
 import { pythonParser, csharpParser } from "../../helpers/treeSitter/parsers";
-import { generateAuditManifesto } from "../../manifestos/auditManifesto";
+import { generateAuditManifest } from "../../manifest/auditManifest";
 
 export function generateAuditResponse(
   workDir: string,
@@ -74,12 +74,12 @@ export function generateAuditResponse(
 
   console.info(`Parsed ${files.size} files`);
 
-  const dependencyManifesto = generateDependencyManifesto(files, parser);
+  const dependencyManifest = generateDependencyManifest(files, parser);
 
-  const auditManifesto = generateAuditManifesto(dependencyManifesto);
+  const auditManifest = generateAuditManifest(dependencyManifest);
 
   return {
-    dependencyManifesto,
-    auditManifesto,
+    dependencyManifest,
+    auditManifest,
   };
 }

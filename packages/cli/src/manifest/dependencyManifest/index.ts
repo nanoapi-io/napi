@@ -1,6 +1,6 @@
 import Parser from "tree-sitter";
-import { generatePythonDependencyManifesto } from "./python";
-import { generateCSharpDependencyManifesto } from "./csharp";
+import { generatePythonDependencyManifest } from "./python";
+import { generateCSharpDependencyManifest } from "./csharp";
 
 /** Identifies the "class" instance type. */
 export const classSymbolType = "class";
@@ -86,7 +86,7 @@ export interface Symbol {
  * - file-level dependencies
  * - file-level dependents
  * - symbols declared in the file */
-export interface FileManifesto {
+export interface FileManifest {
   /** A unique identifier for the file, often the file path. */
   id: string;
   /** The path or name of the file (e.g. "src/app/main.py"). */
@@ -106,18 +106,18 @@ export interface FileManifesto {
 }
 
 /** A global structure mapping each file's unique ID (often its file path)
- * to its `FileManifesto`. This collectively represents the project's
- * dependency graph or manifesto. */
-export type DependencyManifesto = Record<string, FileManifesto>;
+ * to its `FileManifest`. This collectively represents the project's
+ * dependency graph or manifest. */
+export type DependencyManifest = Record<string, FileManifest>;
 
 const handlerMap: Record<
   string,
   (
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-  ) => DependencyManifesto
+  ) => DependencyManifest
 > = {
-  python: generatePythonDependencyManifesto,
-  "c-sharp": generateCSharpDependencyManifesto,
+  python: generatePythonDependencyManifest,
+  "c-sharp": generateCSharpDependencyManifest,
 };
 
 export class UnsupportedLanguageError extends Error {
@@ -129,10 +129,10 @@ export class UnsupportedLanguageError extends Error {
   }
 }
 
-export function generateDependencyManifesto(
+export function generateDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   parser: Parser,
-): DependencyManifesto {
+): DependencyManifest {
   const languageName = parser.getLanguage().name;
   const handler = handlerMap[languageName];
   if (!handler) {

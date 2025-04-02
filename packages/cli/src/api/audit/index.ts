@@ -3,8 +3,8 @@ import { TelemetryEvents, trackEvent } from "../../telemetry";
 import z from "zod";
 import { localConfigSchema } from "../../config/localConfig";
 import { generateAuditResponse } from "./service";
-import { DependencyManifesto } from "../../manifestos/dependencyManifesto";
-import { AuditManifesto } from "../../manifestos/auditManifesto";
+import { DependencyManifest } from "../../manifest/dependencyManifest";
+import { AuditManifest } from "../../manifest/auditManifest";
 
 export function getAuditApi(
   workDir: string,
@@ -13,8 +13,8 @@ export function getAuditApi(
   const auditApi = Router();
 
   let auditResponse: {
-    auditManifesto: AuditManifesto;
-    dependencyManifesto: DependencyManifesto;
+    auditManifest: AuditManifest;
+    dependencyManifest: DependencyManifest;
   };
   try {
     auditResponse = generateAuditResponse(workDir, napiConfig);

@@ -72,7 +72,7 @@ export interface Symbol {
  * - file-level dependencies
  * - file-level dependents
  * - symbols declared in the file */
-export interface FileManifesto {
+export interface FileManifest {
   /** A unique identifier for the file, often the file path. */
   id: string;
   /** The path or name of the file (e.g. "src/app/main.py"). */
@@ -92,9 +92,9 @@ export interface FileManifesto {
 }
 
 /** A global structure mapping each file's unique ID (often its file path)
- * to its `FileManifesto`. This collectively represents the project's
- * dependency graph or manifesto. */
-export type DependencyManifesto = Record<string, FileManifesto>;
+ * to its `FileManifest`. This collectively represents the project's
+ * dependency graph or manifest. */
+export type DependencyManifest = Record<string, FileManifest>;
 
 export interface AuditMessage {
   shortMessage: string;
@@ -105,23 +105,23 @@ export interface AuditMessage {
   severity: number;
 }
 
-export interface SymbolAuditManifesto {
+export interface SymbolAuditManifest {
   id: string;
   warnings: AuditMessage[];
   errors: AuditMessage[];
 }
 
-export interface FileAuditManifesto {
+export interface FileAuditManifest {
   id: string;
   filePath: string;
   warnings: AuditMessage[];
   errors: AuditMessage[];
-  symbols: Record<string, SymbolAuditManifesto>;
+  symbols: Record<string, SymbolAuditManifest>;
 }
 
-export type AuditManifesto = Record<string, FileAuditManifesto>;
+export type AuditManifest = Record<string, FileAuditManifest>;
 
 export interface AuditResponse {
-  dependencyManifesto: DependencyManifesto;
-  auditManifesto: AuditManifesto;
+  dependencyManifest: DependencyManifest;
+  auditManifest: AuditManifest;
 }

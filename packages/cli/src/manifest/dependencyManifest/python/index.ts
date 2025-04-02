@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { DependencyManifesto, FileManifesto, SymbolType } from "..";
+import { DependencyManifest, FileManifest, SymbolType } from "..";
 import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver";
@@ -8,20 +8,20 @@ import { PythonDependencyResolver } from "../../../languagePlugins/python/depend
 import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver";
 import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor";
 
-function generateDependentsForManifesto(
-  manifesto: DependencyManifesto,
-): DependencyManifesto {
-  // Go through each file in the manifesto
-  for (const [fileId, fileManifest] of Object.entries(manifesto)) {
+function generateDependentsForManifest(
+  manifest: DependencyManifest,
+): DependencyManifest {
+  // Go through each file in the manifest
+  for (const [fileId, fileManifest] of Object.entries(manifest)) {
     // For each symbol in the file
     for (const [symbolId, symbolData] of Object.entries(fileManifest.symbols)) {
       // For each dependency that this symbol uses
       for (const [depFileId, depInfo] of Object.entries(
         symbolData.dependencies,
       )) {
-        // Only proceed if it's an internal dependency and the target file actually exists in our manifesto
-        if (!depInfo.isExternal && manifesto[depFileId]) {
-          const depFile = manifesto[depFileId];
+        // Only proceed if it's an internal dependency and the target file actually exists in our manifest
+        if (!depInfo.isExternal && manifest[depFileId]) {
+          const depFile = manifest[depFileId];
 
           // For each symbol name that we reference from the dependency
           for (const usedSymbolName of Object.keys(depInfo.symbols)) {
@@ -47,17 +47,17 @@ function generateDependentsForManifesto(
     }
   }
 
-  return manifesto;
+  return manifest;
 }
 
-export function generatePythonDependencyManifesto(
+export function generatePythonDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-): DependencyManifesto {
-  console.time("generatePythonDependencyManifesto");
+): DependencyManifest {
+  console.time("generatePythonDependencyManifest");
 
   const parser = pythonParser;
 
-  console.time("generatePythonDependencyManifesto:initialization");
+  console.time("generatePythonDependencyManifest:initialization");
   console.info("Initializing Python export resolver...");
   const exportExtractor = new PythonExportExtractor(parser, files);
   console.info("Initializing Python import resolver...");
@@ -84,17 +84,17 @@ export function generatePythonDependencyManifesto(
     usageResolver,
   );
 
-  console.timeEnd("generatePythonDependencyManifesto:initialization");
+  console.timeEnd("generatePythonDependencyManifest:initialization");
 
-  console.time("generatePythonDependencyManifesto:processing");
-  console.info("Generating Python dependency manifesto...");
-  let manifesto: DependencyManifesto = {};
+  console.time("generatePythonDependencyManifest:processing");
+  console.info("Generating Python dependency manifest...");
+  let manifest: DependencyManifest = {};
 
   let i = 0;
   for (const [, { path }] of files) {
     console.info(`Processing file ${i++}/${files.size}: ${path}`);
     const fileDependencies = dependencyResolver.getFileDependencies(path);
-    const fileManifesto: FileManifesto = {
+    const fileManifest: FileManifest = {
       id: path,
       filePath: path,
       characterCount: fileDependencies.characterCount,
@@ -105,7 +105,7 @@ export function generatePythonDependencyManifesto(
     };
 
     for (const [depId, dep] of fileDependencies.dependencies) {
-      fileManifesto.dependencies[depId] = {
+      fileManifest.dependencies[depId] = {
         id: dep.id,
         isExternal: dep.isExternal,
         symbols: Object.fromEntries(dep.symbols),
@@ -113,7 +113,7 @@ export function generatePythonDependencyManifesto(
     }
 
     for (const symbol of fileDependencies.symbols) {
-      fileManifesto.symbols[symbol.id] = {
+      fileManifest.symbols[symbol.id] = {
         id: symbol.id,
         characterCount: symbol.characterCount,
         lineCount: symbol.lineCount,
@@ -123,7 +123,7 @@ export function generatePythonDependencyManifesto(
       };
 
       for (const [depId, dep] of symbol.dependencies) {
-        fileManifesto.symbols[symbol.id].dependencies[depId] = {
+        fileManifest.symbols[symbol.id].dependencies[depId] = {
           id: dep.id,
           isExternal: dep.isExternal,
           symbols: Object.fromEntries(dep.symbols),
@@ -131,22 +131,22 @@ export function generatePythonDependencyManifesto(
       }
     }
 
-    manifesto[path] = fileManifesto;
+    manifest[path] = fileManifest;
   }
 
-  console.info(`Generated Python dependency manifesto for ${files.size} files`);
+  console.info(`Generated Python dependency manifest for ${files.size} files`);
 
-  console.timeEnd("generatePythonDependencyManifesto:processing");
+  console.timeEnd("generatePythonDependencyManifest:processing");
 
-  console.time("generatePythonDependencyManifesto:dependents");
+  console.time("generatePythonDependencyManifest:dependents");
   console.info("Generating Python dependents...");
-  manifesto = generateDependentsForManifesto(manifesto);
+  manifest = generateDependentsForManifest(manifest);
   console.info("Generated Python dependents");
-  console.timeEnd("generatePythonDependencyManifesto:dependents");
+  console.timeEnd("generatePythonDependencyManifest:dependents");
 
-  console.info("Python dependency manifesto generated");
+  console.info("Python dependency manifest generated");
 
-  console.timeEnd("generatePythonDependencyManifesto");
+  console.timeEnd("generatePythonDependencyManifest");
 
-  return manifesto;
+  return manifest;
 }

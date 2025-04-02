@@ -38,7 +38,7 @@ export interface FileDependencies {
 }
 
 /**
- * PythonDependencyResolver analyzes a Python file's AST to build a dependency manifesto.
+ * PythonDependencyResolver analyzes a Python file's AST to build a dependency manifest.
  * It uses the PythonExportExtractor to determine exported symbols and the PythonUsageResolver
  * to determine which imports are used and how they are used within the file.
  *
@@ -69,9 +69,9 @@ export class PythonDependencyResolver {
   }
 
   /**
-   * Constructs the complete dependency manifesto for a given file.
+   * Constructs the complete dependency manifest for a given file.
    *
-   * The dependency manifesto includes:
+   * The dependency manifest includes:
    * - filePath: the path of the analyzed file.
    * - fileDependencies: module-level dependencies detected in the file.
    * - symbols: an array of objects representing each exported symbol and its own dependencies,
@@ -98,7 +98,7 @@ export class PythonDependencyResolver {
     const lineCount =
       file.rootNode.endPosition.row - file.rootNode.startPosition.row + 1;
 
-    const fileDependencyManifesto: FileDependencies = {
+    const fileDependencyManifest: FileDependencies = {
       filePath,
       characterCount,
       lineCount,
@@ -119,7 +119,7 @@ export class PythonDependencyResolver {
           dependency.symbols.set(symbol.id, symbol.id);
         });
       }
-      fileDependencyManifesto.dependencies.set(dependency.id, dependency);
+      fileDependencyManifest.dependencies.set(dependency.id, dependency);
     });
 
     fileUsage.external.forEach((external) => {
@@ -133,7 +133,7 @@ export class PythonDependencyResolver {
           dependency.symbols.set(symbol, symbol);
         });
       }
-      fileDependencyManifesto.dependencies.set(dependency.id, dependency);
+      fileDependencyManifest.dependencies.set(dependency.id, dependency);
     });
 
     const fileSymbols = this.exportExtractor.getSymbols(filePath);
@@ -184,11 +184,11 @@ export class PythonDependencyResolver {
         }
         SymbolDependency.dependencies.set(dependency.id, dependency);
       });
-      fileDependencyManifesto.symbols.push(SymbolDependency);
+      fileDependencyManifest.symbols.push(SymbolDependency);
     });
 
-    this.cache.set(cacheKey, fileDependencyManifesto);
+    this.cache.set(cacheKey, fileDependencyManifest);
 
-    return fileDependencyManifesto;
+    return fileDependencyManifest;
   }
 }
