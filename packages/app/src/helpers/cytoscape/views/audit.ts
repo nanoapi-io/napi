@@ -1,6 +1,6 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config";
-import { AuditResponse } from "../../../service/api/auditApi/types";
+import { AuditResponse } from "../../../service/auditApi/types";
 import { FcoseLayoutOptions } from "cytoscape-fcose";
 import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition";
 

@@ -21,7 +21,7 @@ export function getAuditApi(
 
   auditApi.get("/", (_req, res) => {
     const startTime = Date.now();
-    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
+    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
       message: "API request audit project started",
     });
 
@@ -34,12 +34,12 @@ export function getAuditApi(
         res.status(200).json(response);
       }
 
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
+      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
         message: "API request audit project success",
         duration: Date.now() - startTime,
       });
     } catch (error) {
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
+      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
         message: "API request audit project failed",
         duration: Date.now() - startTime,
         error: error,

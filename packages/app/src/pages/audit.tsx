@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { getAudit } from "../service/api/auditApi";
+import { getAudit } from "../service/auditApi";
 import { toast } from "react-toastify";
 import GraphLayout from "../layout/GraphLayout";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
-import { AuditResponse } from "../service/api/auditApi/types";
+import { AuditResponse } from "../service/auditApi/types";
 import { Outlet } from "react-router";
 
 export interface AuditContext {
