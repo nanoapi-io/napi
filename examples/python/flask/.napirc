@@ -1,13 +1,7 @@
 {
-  "entrypoint": "app.py",
-  "out": "napi_dist",
-  "openaiApiKeyFilePath": "../../.OPENAIKEY",
   "audit": {
     "language": "python",
     "include": ["app.py", "api/**"],
-    "exclude": [],
-    "targetMaxCharInFile": 5000,
-    "targetMaxLineInFile": 500,
-    "targetMaxDepPerFile": 4
+    "exclude": []
   }
 }
