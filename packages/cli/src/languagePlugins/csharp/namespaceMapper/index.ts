@@ -76,6 +76,7 @@ export class CSharpNamespaceMapper {
     // becomes B, child of A.
     const parts = namespace.name.split(".");
     let current = tree;
+    let previous = tree;
 
     // For each part of the namespace, we check if it's
     // already in the tree. If it is, we go to the next
@@ -92,6 +93,7 @@ export class CSharpNamespaceMapper {
           };
           current.childrenNamespaces.push(child);
         }
+        previous = current;
         current = child;
       });
     }
@@ -99,11 +101,11 @@ export class CSharpNamespaceMapper {
     // Once we're done with the parts, we add the classes
     // and children namespaces to the current namespace.
     current.exports.push(...namespace.exports);
-    current.childrenNamespaces.push(...namespace.childrenNamespaces);
-    // We also set the parent namespace for each child namespace.
-    current.childrenNamespaces.forEach((ns) => {
-      ns.parentNamespace = current;
+    namespace.childrenNamespaces.forEach((ns) => {
+      this.#addNamespaceToTree(ns, current);
     });
+    // We also set the parent namespace for each child namespace.
+    current.parentNamespace = previous;
   }
 
   /**
