@@ -3,7 +3,7 @@ using HalfNamespace;
 using static OuterNamespace.OuterClass;
 using OuterNamespace.InnerNamespace;
 using MyApp.Models;
-using BeefBurger;
+using MyApp.BeefBurger;
 
 namespace Tests
 {

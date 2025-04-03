@@ -6,7 +6,7 @@ describe("generateCSharpDependencymanifest", () => {
   const files = getCSharpFilesMap();
   const manifest = generateCSharpDependencyManifest(files);
   test("Correctly identifies files", () => {
-    expect(Object.keys(manifest).length).toBe(7);
+    expect(Object.keys(manifest).length).toBe(8);
   });
   test("Resolves exports", () => {
     expect(Object.keys(manifest["2Namespaces1File.cs"].symbols).length).toBe(6);

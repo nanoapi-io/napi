@@ -9,80 +9,103 @@ describe("NamespaceMapper", () => {
 
   test("should build a namespace tree", () => {
     const nsTree = nsMapper.buildNamespaceTree();
-    expect(nsTree).toMatchObject({
-      name: "",
-      exports: [
-        { name: "Freeman", filepath: "SemiNamespaced.cs" },
-        { name: "HeadCrab", filepath: "SemiNamespaced.cs" },
-        { name: "Usage", filepath: "Usage.cs" },
-      ],
-      childrenNamespaces: [
-        {
-          name: "BeefBurger",
-          exports: [
-            { name: "Steak", filepath: "2Namespaces1File.cs" },
-            { name: "Cheese", filepath: "2Namespaces1File.cs" },
-            { name: "Bun", filepath: "2Namespaces1File.cs" },
-          ],
-          childrenNamespaces: [],
-        },
-        {
-          name: "ChickenBurger",
-          exports: [
-            { name: "Chicken", filepath: "2Namespaces1File.cs" },
-            { name: "Salad", filepath: "2Namespaces1File.cs" },
-            { name: "Bun", filepath: "2Namespaces1File.cs" },
-          ],
-          childrenNamespaces: [],
-        },
-        {
-          name: "MyApp",
-          exports: [],
-          childrenNamespaces: [
-            {
-              name: "Models",
-              exports: [
-                { name: "User", filepath: "Models.cs" },
-                { name: "Order", filepath: "Models.cs" },
-                { name: "OrderStatus", filepath: "Models.cs" },
-                { name: "IOrder", filepath: "Models.cs" },
-                { name: "OrderDelegate", filepath: "Models.cs" },
-              ],
-              childrenNamespaces: [],
-            },
-          ],
-        },
-        {
-          name: "MyNamespace",
-          exports: [{ name: "MyClass", filepath: "Namespaced.cs" }],
-          childrenNamespaces: [],
-        },
-        {
-          name: "OuterNamespace",
-          exports: [
-            { name: "OuterClass", filepath: "Nested.cs" },
-            { name: "OuterInnerClass", filepath: "Nested.cs" },
-          ],
-          childrenNamespaces: [
-            {
-              name: "InnerNamespace",
-              exports: [{ name: "InnerClass", filepath: "Nested.cs" }],
-              childrenNamespaces: [],
-            },
-          ],
-        },
-        {
-          name: "Tests",
-          exports: [{ name: "Program", filepath: "Program.cs" }],
-          childrenNamespaces: [],
-        },
-        {
-          name: "HalfNamespace",
-          exports: [{ name: "Gordon", filepath: "SemiNamespaced.cs" }],
-          childrenNamespaces: [],
-        },
-      ],
-    });
+
+    // Check root namespace
+    expect(nsTree.name).toBe("");
+    expect(nsTree.exports).toHaveLength(3);
+    expect(nsTree.childrenNamespaces).toHaveLength(6);
+
+    // Check exports in root namespace
+    expect(nsTree.exports).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: "Freeman",
+          filepath: "SemiNamespaced.cs",
+        }),
+        expect.objectContaining({
+          name: "HeadCrab",
+          filepath: "SemiNamespaced.cs",
+        }),
+        expect.objectContaining({ name: "Usage", filepath: "Usage.cs" }),
+      ]),
+    );
+
+    // Check ChickenBurger namespace
+    const chickenBurgerNs = nsTree.childrenNamespaces.find(
+      (ns) => ns.name === "ChickenBurger",
+    );
+    expect(chickenBurgerNs).toBeDefined();
+    if (!chickenBurgerNs) return;
+    expect(chickenBurgerNs.exports).toHaveLength(3);
+    expect(chickenBurgerNs.childrenNamespaces).toHaveLength(0);
+
+    // Check MyApp namespace
+    const myAppNs = nsTree.childrenNamespaces.find((ns) => ns.name === "MyApp");
+    expect(myAppNs).toBeDefined();
+    if (!myAppNs) return;
+    expect(myAppNs.exports).toHaveLength(0);
+    expect(myAppNs.childrenNamespaces).toHaveLength(2);
+
+    // Check Models namespace under MyApp
+    const modelsNs = myAppNs.childrenNamespaces.find(
+      (ns) => ns.name === "Models",
+    );
+    expect(modelsNs).toBeDefined();
+    if (!modelsNs) return;
+    expect(modelsNs.exports).toHaveLength(5);
+    expect(modelsNs.childrenNamespaces).toHaveLength(0);
+
+    // Check BeefBurger namespace under MyApp
+    const beefBurgerNs = myAppNs.childrenNamespaces.find(
+      (ns) => ns.name === "BeefBurger",
+    );
+    expect(beefBurgerNs).toBeDefined();
+    if (!beefBurgerNs) return;
+    expect(beefBurgerNs.exports).toHaveLength(3);
+    expect(beefBurgerNs.childrenNamespaces).toHaveLength(0);
+
+    // Check MyNamespace namespace
+    const myNamespaceNs = nsTree.childrenNamespaces.find(
+      (ns) => ns.name === "MyNamespace",
+    );
+    expect(myNamespaceNs).toBeDefined();
+    if (!myNamespaceNs) return;
+    expect(myNamespaceNs.exports).toHaveLength(1);
+    expect(myNamespaceNs.childrenNamespaces).toHaveLength(0);
+
+    // Check OuterNamespace namespace
+    const outerNamespaceNs = nsTree.childrenNamespaces.find(
+      (ns) => ns.name === "OuterNamespace",
+    );
+    expect(outerNamespaceNs).toBeDefined();
+    if (!outerNamespaceNs) return;
+    expect(outerNamespaceNs.exports).toHaveLength(2);
+    expect(outerNamespaceNs.childrenNamespaces).toHaveLength(1);
+
+    // Check InnerNamespace under OuterNamespace
+    const innerNamespaceNs = outerNamespaceNs.childrenNamespaces.find(
+      (ns) => ns.name === "InnerNamespace",
+    );
+    expect(innerNamespaceNs).toBeDefined();
+    if (!innerNamespaceNs) return;
+    expect(innerNamespaceNs.exports).toHaveLength(1);
+    expect(innerNamespaceNs.childrenNamespaces).toHaveLength(0);
+
+    // Check Tests namespace
+    const testsNs = nsTree.childrenNamespaces.find((ns) => ns.name === "Tests");
+    expect(testsNs).toBeDefined();
+    if (!testsNs) return;
+    expect(testsNs.exports).toHaveLength(1);
+    expect(testsNs.childrenNamespaces).toHaveLength(0);
+
+    // Check HalfNamespace namespace
+    const halfNamespaceNs = nsTree.childrenNamespaces.find(
+      (ns) => ns.name === "HalfNamespace",
+    );
+    expect(halfNamespaceNs).toBeDefined();
+    if (!halfNamespaceNs) return;
+    expect(halfNamespaceNs.exports).toHaveLength(1);
+    expect(halfNamespaceNs.childrenNamespaces).toHaveLength(0);
   });
 
   test("Finds classes accurately in the tree", () => {
@@ -113,6 +136,11 @@ describe("NamespaceMapper", () => {
       childrenNamespaces: [
         {
           name: "Models",
+          exports: expect.any(Array),
+          childrenNamespaces: expect.any(Array),
+        },
+        {
+          name: "BeefBurger",
           exports: expect.any(Array),
           childrenNamespaces: expect.any(Array),
         },

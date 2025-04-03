@@ -15,7 +15,7 @@ describe("NamespaceResolver", () => {
         exports: [],
         childrenNamespaces: [
           {
-            name: "BeefBurger",
+            name: "MyApp.BeefBurger",
             exports: [
               { name: "Steak", filepath: "2Namespaces1File.cs" },
               { name: "Cheese", filepath: "2Namespaces1File.cs" },

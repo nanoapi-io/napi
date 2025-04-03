@@ -63,6 +63,7 @@ export class CSharpDependencyFormatter {
     for (const [fp] of files) {
       this.usingResolver.resolveUsingDirectives(fp);
     }
+    this.nsMapper.saveDebugTree("/home/boufty/Bureau/GitHub/debugTree.json");
   }
 
   /**
