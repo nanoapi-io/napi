@@ -3,8 +3,11 @@ import { TelemetryEvents, trackEvent } from "../../telemetry";
 import z from "zod";
 import { localConfigSchema } from "../../config/localConfig";
 import { generateAuditResponse } from "./service";
+<<<<<<< HEAD
 import path from "path";
 import fs from "fs";
+import { DependencyManifest } from "../../manifest/dependencyManifest";
+import { AuditManifest } from "../../manifest/auditManifest";
 
 export function getAuditApi(
   workDir: string,
@@ -12,12 +15,27 @@ export function getAuditApi(
 ) {
   const auditApi = Router();
 
+  let auditResponse: {
+    auditManifest: AuditManifest;
+    dependencyManifest: DependencyManifest;
+  };
+  try {
+    auditResponse = generateAuditResponse(workDir, napiConfig);
+  } catch (error) {
+    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
+      message: "Failed to generate audit response",
+      error: error,
+    });
+    throw error;
+  }
+
   auditApi.get("/", (_req, res) => {
     const startTime = Date.now();
-    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
+    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
       message: "API request audit project started",
     });
 
+<<<<<<< HEAD
     try {
       const response = generateAuditResponse(workDir, napiConfig);
       res.status(200).json(response);
@@ -30,6 +48,9 @@ export function getAuditApi(
         console.log(outputPath);
         fs.writeFileSync(outputPath, JSON.stringify(response, null, 2));
       }
+=======
+    res.status(200).json(auditResponse);
+>>>>>>> feature/refactoring-audit
 
       trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
         message: "API request audit project success",

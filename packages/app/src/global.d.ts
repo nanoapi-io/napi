@@ -1,1 +1,1 @@
-declare module "cytoscape-cose-bilkent";
+declare module "cytoscape-layout-utilities";

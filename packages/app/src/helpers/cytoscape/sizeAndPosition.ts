@@ -1,7 +1,4 @@
-import { NodeSingular } from "cytoscape";
-
-export function resizeNodeFromLabel(
-  node: NodeSingular,
+export function getNodeWidthAndHeightFromLabel(
   label: string,
   options = {
     fontSize: 10,
@@ -11,22 +8,19 @@ export function resizeNodeFromLabel(
     minWidth: 60,
   },
 ) {
-  if (!label) return;
-
-  const { fontSize, lineHeight, padding } = options;
-
   const lines = label.split("\n");
 
   const height = Math.max(
-    lines.length * fontSize * lineHeight + 2 * padding,
+    lines.length * options.fontSize * options.lineHeight + 2 * options.padding,
     options.minHeight,
   );
 
   const width = Math.max(
-    ...lines.map((line) => line.length * fontSize + 2 * padding),
+    ...lines.map(
+      (line) => line.length * options.fontSize + 2 * options.padding,
+    ),
     options.minWidth,
   );
 
-  node.style("width", width);
-  node.style("height", height);
+  return { width, height };
 }

@@ -1,23 +1,25 @@
-import {
-  Core,
-  ElementDefinition,
-  LayoutOptions,
-  NodeCollection,
-  StylesheetJson,
-} from "cytoscape";
+import { ElementDefinition, StylesheetJson } from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config";
-import { AuditResponse } from "../../../service/api/auditApi/types";
+import { AuditResponse } from "../../../service/auditApi/types";
+import { FcoseLayoutOptions } from "cytoscape-fcose";
+import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition";
 
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
     id: string;
-    label: string;
     position: { x: number; y: number };
-    isExpanded: boolean;
     customData: {
       fileName: string;
-      errorMessages: string[];
-      warningMessages: string[];
+      expanded: {
+        label: string;
+        width: number;
+        height: number;
+      };
+      collapsed: {
+        label: string;
+        width: number;
+        height: number;
+      };
     } & object;
   };
 }
@@ -38,37 +40,53 @@ export function getCyElements(auditResponse: AuditResponse) {
   const x = 0;
   const y = 0;
 
-  Object.values(auditResponse.dependencyManifesto).forEach((fileManifesto) => {
+  Object.values(auditResponse.dependencyManifest).forEach((fileManifest) => {
     const errorMessages: string[] = [];
     const warningMessages: string[] = [];
 
-    const fileAuditManifesto = auditResponse.auditManifesto[fileManifesto.id];
-    if (fileAuditManifesto) {
-      Object.values(fileAuditManifesto.errors).forEach((auditMessage) => {
+    const fileAuditManifest = auditResponse.auditManifest[fileManifest.id];
+    if (fileAuditManifest) {
+      Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
         errorMessages.push(auditMessage.shortMessage);
       });
-      Object.values(fileAuditManifesto.warnings).forEach((auditMessage) => {
+      Object.values(fileAuditManifest.warnings).forEach((auditMessage) => {
         warningMessages.push(auditMessage.shortMessage);
       });
     }
 
-    const label = getNodeLabel({
-      isExpanded: false,
-      fileName: fileManifesto.id,
+    const expandedLabel = getNodeLabel({
+      isExpanded: true,
+      fileName: fileManifest.id,
       errorMessages,
       warningMessages,
     });
+    const { width: expandedWitdh, height: expandedHeight } =
+      getNodeWidthAndHeightFromLabel(expandedLabel);
+    const collapsedLabel = getNodeLabel({
+      isExpanded: false,
+      fileName: fileManifest.id,
+      errorMessages,
+      warningMessages,
+    });
+    const { width: collapsedWidth, height: collapsedHeight } =
+      getNodeWidthAndHeightFromLabel(collapsedLabel);
 
     const nodeElement: NodeElementDefinition = {
       data: {
-        id: fileManifesto.id,
-        label,
+        id: fileManifest.id,
         position: { x, y },
-        isExpanded: false,
         customData: {
-          fileName: fileManifesto.id,
-          errorMessages,
-          warningMessages,
+          fileName: fileManifest.id,
+          expanded: {
+            label: expandedLabel,
+            width: expandedWitdh,
+            height: expandedHeight,
+          },
+          collapsed: {
+            label: collapsedLabel,
+            width: collapsedWidth,
+            height: collapsedHeight,
+          },
         },
       },
     };
@@ -76,14 +94,14 @@ export function getCyElements(auditResponse: AuditResponse) {
     nodes.push(nodeElement);
 
     const edgeElements: EdgeElementDefinition[] = [];
-    Object.values(fileManifesto.dependencies).forEach((dependency) => {
+    Object.values(fileManifest.dependencies).forEach((dependency) => {
       if (dependency.isExternal) {
         return;
       }
       const edgeElement: EdgeElementDefinition = {
         data: {
-          source: fileManifesto.id,
-          target: dependency.id,
+          source: dependency.id,
+          target: fileManifest.id,
         },
       };
       edgeElements.push(edgeElement);
@@ -102,61 +120,72 @@ export function getCyStyle(theme: "light" | "dark") {
     {
       selector: "node",
       style: {
-        label: "data(label)",
         "text-wrap": "wrap",
         color: tailwindConfig.theme.extend.colors.text[theme],
-        "background-color":
-          tailwindConfig.theme.extend.colors.background[theme],
+        "background-color": tailwindConfig.theme.extend.colors.primary[theme],
         "border-width": 1,
         "border-color": tailwindConfig.theme.extend.colors.border[theme],
         "text-valign": "center",
         "text-halign": "center",
-        shape: "roundrectangle",
-      },
-    },
-    {
-      selector: "node.focus",
-      style: {
-        "border-width": 3,
-        "border-color": tailwindConfig.theme.extend.colors.secondary[theme],
-        "z-index": 1000,
+        shape: "round-rectangle",
+        width: 20,
+        height: 20,
       },
     },
     {
       selector: "node.background",
       style: {
-        opacity: 0.3,
+        opacity: 0.2,
+      },
+    },
+    {
+      selector: "node.selected",
+      style: {
+        label: "data(customData.expanded.label)",
+        "background-color":
+          tailwindConfig.theme.extend.colors.background[theme],
+        "border-width": 3,
+        "z-index": 2000,
+        width: "data(customData.expanded.width)",
+        height: "data(customData.expanded.height)",
+      },
+    },
+    {
+      selector: "node.connected",
+      style: {
+        label: "data(customData.collapsed.label)",
+        "background-color":
+          tailwindConfig.theme.extend.colors.background[theme],
+        "border-width": 3,
+        "z-index": 1000,
+        width: "data(customData.collapsed.width)",
+        height: "data(customData.collapsed.height)",
       },
     },
     {
       selector: "edge",
       style: {
-        width: 2,
+        width: 1,
         "line-color": tailwindConfig.theme.extend.colors.text[theme],
-        "line-opacity": 1,
+        "line-opacity": 0.5,
         "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
         "target-arrow-shape": "triangle",
-        "curve-style": "bezier",
+        "curve-style": "unbundled-bezier",
+        "arrow-scale": 1,
       },
     },
     {
       selector: "edge.background",
       style: {
         "line-opacity": 0.1,
-        width: 5,
       },
     },
     {
-      selector: "edge.focus",
+      selector: "edge.dependency",
       style: {
+        width: 2,
         "line-opacity": 1,
-        width: 5,
         "z-index": 1000,
-      },
-    },
-    {
-      selector: "edge.dependency", // class focus and class dependency
-      style: {
         "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
         "target-arrow-color":
           tailwindConfig.theme.extend.colors.secondary[theme],
@@ -165,6 +194,9 @@ export function getCyStyle(theme: "light" | "dark") {
     {
       selector: "edge.dependent",
       style: {
+        width: 2,
+        "line-opacity": 1,
+        "z-index": 1000,
         "line-color": tailwindConfig.theme.extend.colors.primary[theme],
         "target-arrow-color": tailwindConfig.theme.extend.colors.primary[theme],
       },
@@ -172,61 +204,15 @@ export function getCyStyle(theme: "light" | "dark") {
   ] as StylesheetJson;
 }
 
-export function getCyLayout(
-  cyInstance: Core,
-  selectedNodes: NodeCollection,
-  options?: {
-    animate?: boolean;
-    keepBoundingBox?: boolean;
-  },
-) {
-  let idealEdgeLength = 0;
-  if (selectedNodes.length < 10) {
-    idealEdgeLength = 25;
-  } else if (selectedNodes.length < 50) {
-    idealEdgeLength = 40;
-  } else if (selectedNodes.length < 100) {
-    idealEdgeLength = 60;
-  } else if (selectedNodes.length < 200) {
-    idealEdgeLength = 100;
-  } else if (selectedNodes.length < 500) {
-    idealEdgeLength = 150;
-  } else if (selectedNodes.length < 1000) {
-    idealEdgeLength = 200;
-  } else {
-    idealEdgeLength = 300;
-  }
-
-  const boundingBox =
-    options?.keepBoundingBox && cyInstance.elements().renderedBoundingBox();
-
-  let numIter = 0;
-  if (selectedNodes.length < 50) {
-    numIter = 1000;
-  } else if (selectedNodes.length < 100) {
-    numIter = 500;
-  } else if (selectedNodes.length < 200) {
-    numIter = 300;
-  } else if (selectedNodes.length < 500) {
-    numIter = 200;
-  } else if (selectedNodes.length < 1000) {
-    numIter = 100;
-  } else {
-    numIter = 50;
-  }
-
-  return {
-    name: "cose",
-    quality: "default",
-    animate: options?.animate ? "end" : false,
-    idealEdgeLength,
-    fit: boundingBox ? true : true,
-    // boundingBox,
-    nodeDimensionsIncludeLabels: true,
-    randomize: true,
-    numIter,
-  } as LayoutOptions;
-}
+export const layout = {
+  name: "fcose",
+  quality: "proof",
+  nodeRepulsion: 1000000, // the repulsion force between nodes connected by an edge
+  idealEdgeLength: 200,
+  gravity: 0.1, // the gravity force of the graph. Lower value means looser graph in the center
+  packComponents: true,
+  nodeDimensionsIncludeLabels: true,
+} as FcoseLayoutOptions;
 
 const errorChar = "❗";
 const warningChar = "⚠️";
@@ -239,6 +225,17 @@ export function getNodeLabel(data: {
   warningMessages: string[];
 }) {
   let label = "";
+
+  const fileNameMaxLength = 25;
+  // display only last 10 characters of file name
+  // if file name is longer than 10 characters, add ellipsis
+  // to the end of the file name
+  // if file name is shorter than 10 characters, display the whole file name
+  const fileName =
+    data.fileName.length > fileNameMaxLength
+      ? `...${data.fileName.slice(-fileNameMaxLength)}`
+      : data.fileName;
+
   if (data.isExpanded) {
     label = data.fileName;
 
@@ -256,7 +253,7 @@ export function getNodeLabel(data: {
     return label;
   }
 
-  label = data.fileName;
+  label = fileName;
 
   if (data.errorMessages.length > 0) {
     label += `\n${errorChar}(${data.errorMessages.length})`;

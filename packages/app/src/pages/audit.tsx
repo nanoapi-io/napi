@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { getAudit } from "../service/api/auditApi";
+import { getAudit } from "../service/auditApi";
 import { toast } from "react-toastify";
 import GraphLayout from "../layout/GraphLayout";
 import FileExplorer from "../components/FileExplorer/FileExplorer";
-import { AuditResponse } from "../service/api/auditApi/types";
+import { AuditResponse } from "../service/auditApi/types";
 import { Outlet } from "react-router";
 
 export interface AuditContext {
@@ -18,8 +18,8 @@ export default function BaseAuditPage() {
 
   const [paths, setPaths] = useState<string[]>([]);
   const [auditResponse, setAuditResponse] = useState<AuditResponse>({
-    dependencyManifesto: {},
-    auditManifesto: {},
+    dependencyManifest: {},
+    auditManifest: {},
   });
 
   useEffect(() => {
@@ -34,8 +34,8 @@ export default function BaseAuditPage() {
         });
 
         const auditResponse = await auditResponsePromise;
-        const paths = Object.values(auditResponse.dependencyManifesto).map(
-          (fileManifesto) => fileManifesto.filePath,
+        const paths = Object.values(auditResponse.dependencyManifest).map(
+          (fileManifest) => fileManifest.filePath,
         );
         setPaths(paths);
         setAuditResponse(auditResponse);

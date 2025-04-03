@@ -3,7 +3,6 @@ import { hideBin } from "yargs/helpers";
 import { checkVersionMiddleware } from "./helpers/checkNpmVersion";
 import { globalOptions } from "./helpers/options";
 import initCommand from "./handlers/init";
-import splitCommand from "./handlers/split/index";
 import auditCommand from "./handlers/audit/index";
 import { TelemetryEvents, trackEvent } from "../telemetry";
 
@@ -19,7 +18,6 @@ export function initCli() {
     })
     .options(globalOptions)
     .command(initCommand)
-    .command(splitCommand)
     .command(auditCommand)
     .parse();
 }

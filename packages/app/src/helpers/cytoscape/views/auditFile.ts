@@ -1,6 +1,7 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
-import { AuditResponse } from "../../../service/api/auditApi/types";
+import { AuditResponse } from "../../../service/auditApi/types";
 import tailwindConfig from "../../../../tailwind.config";
+import { FcoseLayoutOptions } from "cytoscape-fcose";
 
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
@@ -38,7 +39,7 @@ export function getCyElements(
 ) {
   const joinChar = "|";
 
-  const currentFile = auditResponse.dependencyManifesto[currentFilePath];
+  const currentFile = auditResponse.dependencyManifest[currentFilePath];
   if (!currentFile) {
     throw new Error(`File not found in audit map: ${currentFilePath}`);
   }
@@ -63,12 +64,12 @@ export function getCyElements(
   const errorMessages: string[] = [];
   const warningMessages: string[] = [];
 
-  const fileAuditManifesto = auditResponse.auditManifesto[currentFile.id];
-  if (fileAuditManifesto) {
-    Object.values(fileAuditManifesto.errors).forEach((auditMessage) => {
+  const fileAuditManifest = auditResponse.auditManifest[currentFile.id];
+  if (fileAuditManifest) {
+    Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
       errorMessages.push(auditMessage.shortMessage);
     });
-    Object.values(fileAuditManifesto.warnings).forEach((auditMessage) => {
+    Object.values(fileAuditManifest.warnings).forEach((auditMessage) => {
       warningMessages.push(auditMessage.shortMessage);
     });
   }
@@ -107,13 +108,13 @@ export function getCyElements(
     const errorMessages: string[] = [];
     const warningMessages: string[] = [];
 
-    if (fileAuditManifesto) {
-      const symbolAuditManifesto = fileAuditManifesto.symbols[currentSymbol.id];
-      if (symbolAuditManifesto) {
-        Object.values(symbolAuditManifesto.errors).forEach((auditMessage) => {
+    if (fileAuditManifest) {
+      const SymbolAuditManifest = fileAuditManifest.symbols[currentSymbol.id];
+      if (SymbolAuditManifest) {
+        Object.values(SymbolAuditManifest.errors).forEach((auditMessage) => {
           errorMessages.push(auditMessage.shortMessage);
         });
-        Object.values(symbolAuditManifesto.warnings).forEach((auditMessage) => {
+        Object.values(SymbolAuditManifest.warnings).forEach((auditMessage) => {
           warningMessages.push(auditMessage.shortMessage);
         });
       }
@@ -199,7 +200,7 @@ export function getCyElements(
       Object.values(dependencyFile.symbols).forEach((dependencySymbolId) => {
         const id = `${dependencyFileId}${joinChar}${dependencySymbolId}`;
         const instanceType =
-          auditResponse.dependencyManifesto[dependencyFileId]?.symbols[
+          auditResponse.dependencyManifest[dependencyFileId]?.symbols[
             dependencySymbolId
           ]?.type;
 
@@ -313,7 +314,7 @@ export function getCyElements(
         dependentFileSymbolIds.forEach((dependentFileSymbolId) => {
           const id = `${dependentFileId}${joinChar}${dependentFileSymbolId}`;
           const instanceType =
-            auditResponse.dependencyManifesto[dependentFileId]?.symbols[
+            auditResponse.dependencyManifest[dependentFileId]?.symbols[
               dependentFileSymbolId
             ]?.type;
 
@@ -485,16 +486,16 @@ export function getCyStyle(theme: "light" | "dark") {
   ] as StylesheetJson;
 }
 
-export function getCyLayout(animate = true) {
-  return {
-    name: "cose-bilkent",
-    quality: "proof",
-    animate: animate ? "end" : false,
-    idealEdgeLength: 75,
-    tilingPaddingVertical: 100,
-    tilingPaddingHorizontal: 100,
-  };
-}
+export const layout = {
+  name: "fcose",
+  quality: "proof",
+  nodeRepulsion: 1000,
+  idealEdgeLength: 200,
+  gravity: 0.1,
+  gravityCompound: 1000,
+  packComponents: true,
+  nodeDimensionsIncludeLabels: true,
+} as FcoseLayoutOptions;
 
 const errorChar = "❗";
 const warningChar = "⚠️";

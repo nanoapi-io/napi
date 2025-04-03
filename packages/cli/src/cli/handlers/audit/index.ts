@@ -1,5 +1,4 @@
 import viewHandler from "./view";
-import view2Handler from "./view2";
 import yargs from "yargs";
 import { globalOptions } from "../../helpers/options";
 
@@ -11,7 +10,6 @@ function builder(
 ) {
   return yargs
     .command(viewHandler)
-    .command(view2Handler)
     .demandCommand(1, "You need to specify a valid command");
 }
 
