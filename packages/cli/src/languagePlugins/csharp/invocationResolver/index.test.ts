@@ -9,7 +9,6 @@ import Parser from "tree-sitter";
 describe("InvocationResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
   const nsMapper = new CSharpNamespaceMapper(files);
-  nsMapper.saveDebugTree("/home/boufty/Bureau/GitHub/debugTree.json");
   const nsResolver = new CSharpNamespaceResolver();
   const invResolver: CSharpInvocationResolver = new CSharpInvocationResolver(
     nsMapper,
