@@ -3,11 +3,10 @@ import { TelemetryEvents, trackEvent } from "../../telemetry";
 import z from "zod";
 import { localConfigSchema } from "../../config/localConfig";
 import { generateAuditResponse } from "./service";
-<<<<<<< HEAD
-import path from "path";
-import fs from "fs";
 import { DependencyManifest } from "../../manifest/dependencyManifest";
 import { AuditManifest } from "../../manifest/auditManifest";
+import path from "path";
+import fs from "fs";
 
 export function getAuditApi(
   workDir: string,
@@ -21,6 +20,15 @@ export function getAuditApi(
   };
   try {
     auditResponse = generateAuditResponse(workDir, napiConfig);
+    if (napiConfig.audit.manifestoJsonOutputPath) {
+      const outputPath = path.resolve(
+        workDir,
+        napiConfig.audit.manifestoJsonOutputPath,
+        "auditResponse.json",
+      );
+      console.log(outputPath);
+      fs.writeFileSync(outputPath, JSON.stringify(auditResponse, null, 2));
+    }
   } catch (error) {
     trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
       message: "Failed to generate audit response",
@@ -35,35 +43,12 @@ export function getAuditApi(
       message: "API request audit project started",
     });
 
-<<<<<<< HEAD
-    try {
-      const response = generateAuditResponse(workDir, napiConfig);
-      res.status(200).json(response);
-      if (napiConfig.audit.manifestoJsonOutputPath) {
-        const outputPath = path.resolve(
-          workDir,
-          napiConfig.audit.manifestoJsonOutputPath,
-          "auditResponse.json",
-        );
-        console.log(outputPath);
-        fs.writeFileSync(outputPath, JSON.stringify(response, null, 2));
-      }
-=======
     res.status(200).json(auditResponse);
->>>>>>> feature/refactoring-audit
 
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
-        message: "API request audit project success",
-        duration: Date.now() - startTime,
-      });
-    } catch (error) {
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
-        message: "API request audit project failed",
-        duration: Date.now() - startTime,
-        error: error,
-      });
-      throw error;
-    }
+    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
+      message: "API request audit project success",
+      duration: Date.now() - startTime,
+    });
   });
 
   return auditApi;
