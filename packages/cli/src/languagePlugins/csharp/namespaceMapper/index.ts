@@ -1,5 +1,6 @@
 import Parser from "tree-sitter";
 import { CSharpNamespaceResolver, SymbolType } from "../namespaceResolver";
+import fs from "fs";
 
 /**
  * Interface representing a namespace node in the namespace tree.
@@ -29,6 +30,22 @@ export interface SymbolNode {
   filepath: string;
   /** The syntax node corresponding to the symbol */
   node: Parser.SyntaxNode;
+}
+
+const DEBUG_NAMESPACE = "namespace";
+const DEBUG_SYMBOL = "symbol";
+type DebugType = typeof DEBUG_NAMESPACE | typeof DEBUG_SYMBOL;
+
+/**
+ * Interface representing a debug node in the namespace tree.
+ */
+export interface DebugNode {
+  /** The name of the debug node */
+  name: string;
+  /** The type of the debug node */
+  type: DebugType;
+  /** The children of the debug node */
+  children: DebugNode[];
 }
 
 export class CSharpNamespaceMapper {
@@ -143,6 +160,35 @@ export class CSharpNamespaceMapper {
 
     // I don't understand why, but the root element is always empty
     return namespaceTree;
+  }
+
+  #convertNodeToDebug(node: NamespaceNode | SymbolNode): DebugNode {
+    if ("childrenNamespaces" in node) {
+      return {
+        name: node.name,
+        type: DEBUG_NAMESPACE,
+        children: [
+          ...node.childrenNamespaces.map((child: NamespaceNode) =>
+            this.#convertNodeToDebug(child),
+          ),
+          ...node.exports.map((symbol: SymbolNode) =>
+            this.#convertNodeToDebug(symbol),
+          ),
+        ],
+      };
+    } else {
+      return {
+        name: node.name,
+        type: DEBUG_SYMBOL,
+        children: [],
+      };
+    }
+  }
+
+  saveDebugTree(filepath: string): DebugNode {
+    const debugTree: DebugNode = this.#convertNodeToDebug(this.nsTree);
+    fs.writeFileSync(filepath, JSON.stringify(debugTree, null, 2));
+    return debugTree;
   }
 
   /**
