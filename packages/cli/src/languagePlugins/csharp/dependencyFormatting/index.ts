@@ -11,7 +11,7 @@ export interface CSharpDependency {
   id: string;
   isExternal: boolean;
   symbols: Record<string, string>;
-  isNamespace: boolean;
+  isNamespace?: boolean;
 }
 
 /**
