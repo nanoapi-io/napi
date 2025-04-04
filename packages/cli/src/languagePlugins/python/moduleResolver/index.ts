@@ -140,7 +140,7 @@ export class PythonModuleResolver {
    * @param filePath - The file system path to resolve.
    * @returns The matching PythonModule if found, or undefined otherwise.
    */
-  private getModuleFromFilePath(filePath: string): PythonModule | undefined {
+  public getModuleFromFilePath(filePath: string): PythonModule | undefined {
     // Treat __init__.py as indicating the package's directory.
     if (filePath.endsWith(`${sep}__init__.py`)) {
       filePath = filePath.slice(0, -"__init__.py".length);

@@ -350,3 +350,69 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
     expect(resolved).toBeUndefined();
   });
 });
+
+describe("PythonModuleResolver, getModuleFromFilePath method", () => {
+  let mapper: PythonModuleResolver;
+
+  beforeAll(() => {
+    // Use the same complex project structure from the previous test suite
+    const paths = [
+      `project${sep}pkg${sep}__init__.py`,
+      `project${sep}pkg${sep}module.py`,
+      `project${sep}pkg${sep}helper.py`,
+      `project${sep}pkg${sep}subpkg${sep}__init__.py`,
+      `project${sep}pkg${sep}subpkg${sep}submodule.py`,
+      `project${sep}main.py`,
+      `project${sep}util.py`,
+    ];
+    const files = createFiles(paths);
+    mapper = new PythonModuleResolver(files);
+  });
+
+  test("should get a module from a regular .py file path", () => {
+    const module = mapper.getModuleFromFilePath(`project${sep}main.py`);
+    expect(module).toBeDefined();
+    expect(module?.name).toBe("main");
+    expect(module?.fullName).toBe("project.main");
+    expect(module?.type).toBe(PYTHON_MODULE_TYPE);
+  });
+
+  test("should get a module from an __init__.py file path (package)", () => {
+    const module = mapper.getModuleFromFilePath(
+      `project${sep}pkg${sep}__init__.py`,
+    );
+    expect(module).toBeDefined();
+    expect(module?.name).toBe("pkg");
+    expect(module?.fullName).toBe("project.pkg");
+    expect(module?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+  });
+
+  test("should get a module from a nested file path", () => {
+    const module = mapper.getModuleFromFilePath(
+      `project${sep}pkg${sep}subpkg${sep}submodule.py`,
+    );
+    expect(module).toBeDefined();
+    expect(module?.name).toBe("submodule");
+    expect(module?.fullName).toBe("project.pkg.subpkg.submodule");
+    expect(module?.type).toBe(PYTHON_MODULE_TYPE);
+  });
+
+  test("should handle paths that don't correspond to a module", () => {
+    const module = mapper.getModuleFromFilePath(`project${sep}nonexistent.py`);
+    expect(module).toBeUndefined();
+  });
+
+  test("should handle directory path with trailing separator for __init__.py", () => {
+    const module = mapper.getModuleFromFilePath(`project${sep}pkg${sep}`);
+    expect(module).toBeDefined();
+    expect(module?.name).toBe("pkg");
+    expect(module?.fullName).toBe("project.pkg");
+  });
+
+  test("should handle file path without .py extension", () => {
+    const module = mapper.getModuleFromFilePath(`project${sep}main`);
+    expect(module).toBeDefined();
+    expect(module?.name).toBe("main");
+    expect(module?.fullName).toBe("project.main");
+  });
+});
