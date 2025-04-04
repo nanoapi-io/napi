@@ -154,23 +154,32 @@ export class CSharpInvocationResolver {
     const catches = new Parser.Query(
       this.parser.getLanguage(),
       `
-      (invocation_expression
-      (member_access_expression
-        expression: [
-          (member_access_expression)
-          (identifier)
-        ] @cls
-      ))
+      (_
+        (member_access_expression
+      ))@cls
       `,
     ).captures(node);
-    // Process each captured function invocation
+    // Process each captured access expression
     catches.forEach((ctc) => {
-      const func = ctc.node.text;
-      // The query gives us a full function invocation,
+      // Remove intermediate members (e.g., System.Mario in System.Mario.Bros)
+      if (ctc.node.type === "member_access_expression") return;
+      // Get the root member access expression
+      const mae = ctc.node.children.find(
+        (child) => child.type === "member_access_expression",
+      );
+      // There should be one according to the query, but safety first.
+      if (!mae) return;
+      const func = mae.text;
+      // Among all the matches, even the functions dont have parentheses
+      // That means that nodes with parentheses in it are intermediate members
+      // They get through the net because their type is invocation_expression.
+      if (func.includes("(")) return;
+      // The query gives us a full invocation,
       // but we only want a class or namespace name.
-      const funcParts = func.split(".").filter((part) => !part.includes("("));
-      const classname = funcParts.join(".");
+      const funcParts = func.split(".");
+      const classname = funcParts.slice(0, -1).join(".");
       // If the function is called from a variable, then we ignore it.
+      // (Because the dependency will already be managed by the variable creation)
       if (variablenames.includes(classname)) {
         return;
       }
