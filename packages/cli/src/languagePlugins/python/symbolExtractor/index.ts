@@ -74,7 +74,7 @@ export class PythonSymbolExtractor {
       }
 
       // Include necessary __init__.py files
-      const module = this.moduleResolver.resolveModule(filePath, "");
+      const module = this.moduleResolver.getModuleFromFilePath(filePath);
       if (module) {
         this.includeInitFiles(module, filesToExtract);
       }

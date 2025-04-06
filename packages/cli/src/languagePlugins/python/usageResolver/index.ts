@@ -103,8 +103,10 @@ export class PythonUsageResolver {
       if (stmt.type === FROM_IMPORT_STATEMENT_TYPE) {
         // For from-import statements, resolve the module once.
         const moduleName = stmt.members[0].identifierNode.text;
+        const pythonModule =
+          this.moduleResolver.getModuleFromFilePath(filePath);
         const resolvedModule = this.moduleResolver.resolveModule(
-          filePath,
+          pythonModule,
           moduleName,
         );
         if (resolvedModule) {
@@ -128,8 +130,10 @@ export class PythonUsageResolver {
         // For normal imports, process each member individually.
         for (const member of stmt.members) {
           const moduleName = member.identifierNode.text;
+          const pythonModule =
+            this.moduleResolver.getModuleFromFilePath(filePath);
           const resolvedModule = this.moduleResolver.resolveModule(
-            filePath,
+            pythonModule,
             moduleName,
           );
           if (resolvedModule) {
@@ -146,7 +150,6 @@ export class PythonUsageResolver {
               rootNode,
               nodesToExclude,
               externalResults,
-              moduleName,
             );
           }
         }
@@ -162,6 +165,7 @@ export class PythonUsageResolver {
    * @param rootNode The AST root.
    * @param nodesToExclude Nodes to ignore (e.g. import statements).
    * @param internalResults Map to accumulate internal usage.
+   * @param moduleName The module name from the statement.
    * @param resolvedModule The resolved internal module.
    */
   private processInternalUsageForFromImport(
@@ -178,7 +182,12 @@ export class PythonUsageResolver {
 
         // Check which symbols are actually used in the code
         for (const [symbolName, resolvedItem] of allSymbols.entries()) {
-          if (this.isSymbolUsed(rootNode, nodesToExclude, symbolName)) {
+          const refUsageNodes = this.getrefUsageNodes(
+            rootNode,
+            nodesToExclude,
+            symbolName,
+          );
+          if (refUsageNodes.length > 0) {
             // Record usage in the module where the symbol is actually defined
             if (resolvedItem.symbol) {
               this.recordInternalUsage(
@@ -195,20 +204,65 @@ export class PythonUsageResolver {
             resolvedModule,
             item.identifierNode.text,
           );
-          if (
-            resolvedItem &&
-            resolvedItem.symbol &&
-            this.isSymbolUsed(
+
+          // if the item is resolved, it is a symbol
+          if (resolvedItem) {
+            if (resolvedItem.symbol) {
+              const refUsageNodes = this.getrefUsageNodes(
+                rootNode,
+                nodesToExclude,
+                item.aliasNode?.text || item.identifierNode.text,
+              );
+              if (refUsageNodes.length > 0) {
+                this.recordInternalUsage(
+                  internalResults,
+                  resolvedItem.module,
+                  resolvedItem.symbol,
+                );
+              }
+            }
+          }
+
+          // if the item is not resolved, it is a submodule
+          // we need to check if the submodule is used
+          // and if so, we need to check if the symbol is used
+
+          const subModule = this.moduleResolver.resolveModule(
+            resolvedModule,
+            item.identifierNode.text,
+          );
+          if (subModule) {
+            const refUsageNodes = this.getrefUsageNodes(
               rootNode,
               nodesToExclude,
               item.aliasNode?.text || item.identifierNode.text,
-            )
-          ) {
-            this.recordInternalUsage(
-              internalResults,
-              resolvedItem.module,
-              resolvedItem.symbol,
             );
+            if (refUsageNodes.length > 0) {
+              const symbols = this.itemResolver.resolveAllSymbols(subModule);
+              symbols.values().forEach((symbol) => {
+                if (symbol.symbol) {
+                  const lookupName =
+                    (item.aliasNode?.text || item.identifierNode.text) +
+                    "." +
+                    symbol.symbol.identifierNode.text;
+                  const refUsageNodes = this.getrefUsageNodes(
+                    rootNode,
+                    nodesToExclude,
+                    lookupName,
+                  );
+                  if (refUsageNodes.length > 0) {
+                    this.recordInternalUsage(
+                      internalResults,
+                      symbol.module,
+                      symbol.symbol,
+                    );
+                  }
+                }
+              });
+              // // record the submodule usage
+              // // this will not override the potential symbols found above
+              // this.recordInternalUsage(internalResults, subModule, undefined);
+            }
           }
         }
       }
@@ -231,18 +285,33 @@ export class PythonUsageResolver {
     moduleName: string,
   ) {
     let foundUsage = false;
-    const usedSymbols: string[] = [];
+    let symbolNames: string[] | undefined;
     for (const member of stmt.members) {
       if (member.isWildcardImport) {
-        if (this.isSymbolUsed(rootNode, nodesToExclude, moduleName)) {
+        const refUsageNodes = this.getrefUsageNodes(
+          rootNode,
+          nodesToExclude,
+          moduleName,
+        );
+        // we have no way to know which symbol is used
+        // so we just record the module usage
+        if (refUsageNodes.length > 0) {
           foundUsage = true;
         }
       } else if (member.items) {
         for (const item of member.items) {
           const symbolRefName =
             item.aliasNode?.text || item.identifierNode.text;
-          if (this.isSymbolUsed(rootNode, nodesToExclude, symbolRefName)) {
-            usedSymbols.push(symbolRefName);
+          const refUsageNodes = this.getrefUsageNodes(
+            rootNode,
+            nodesToExclude,
+            symbolRefName,
+          );
+          if (refUsageNodes.length > 0) {
+            if (symbolNames === undefined) {
+              symbolNames = [];
+            }
+            symbolNames.push(symbolRefName);
             foundUsage = true;
           }
         }
@@ -251,7 +320,7 @@ export class PythonUsageResolver {
     if (foundUsage) {
       externalResults.push({
         moduleName,
-        symbolNames: usedSymbols.length > 0 ? usedSymbols : undefined,
+        symbolNames,
       });
     }
   }
@@ -273,14 +342,37 @@ export class PythonUsageResolver {
     internalResults: Map<string, InternalUsageResult>,
     resolvedModule: PythonModule,
   ) {
-    const moduleName = member.identifierNode.text;
-    if (
-      this.isSymbolUsed(
-        rootNode,
-        nodesToExclude,
-        member.aliasNode?.text || moduleName,
-      )
-    ) {
+    // First check if the module itself is used
+    const refUsageNodes = this.getrefUsageNodes(
+      rootNode,
+      nodesToExclude,
+      member.aliasNode?.text || member.identifierNode.text,
+    );
+    if (refUsageNodes.length > 0) {
+      // Then we check if the symbol of the module is used.
+      const symbols = this.itemResolver.resolveAllSymbols(resolvedModule);
+      symbols.values().forEach((symbol) => {
+        if (symbol.symbol) {
+          const lookupName =
+            (member.aliasNode?.text || member.identifierNode.text) +
+            "." +
+            symbol.symbol.identifierNode.text;
+          const refUsageNodes = this.getrefUsageNodes(
+            rootNode,
+            nodesToExclude,
+            lookupName,
+          );
+          if (refUsageNodes.length > 0) {
+            this.recordInternalUsage(
+              internalResults,
+              symbol.module,
+              symbol.symbol,
+            );
+          }
+        }
+      });
+      // If the module itself is used but no its symvol, we record it.
+      // This will not overide the potential symbols found above.
       this.recordInternalUsage(internalResults, resolvedModule, undefined);
     }
   }
@@ -300,13 +392,36 @@ export class PythonUsageResolver {
     rootNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
     externalResults: ExternalUsageResult[],
-    moduleName: string,
   ) {
-    const refName = member.aliasNode?.text || moduleName;
-    if (this.isSymbolUsed(rootNode, nodesToExclude, refName)) {
+    const refName = member.aliasNode?.text || member.identifierNode.text;
+    const refUsageNodes = this.getrefUsageNodes(
+      rootNode,
+      nodesToExclude,
+      refName,
+    );
+
+    let symbolNames: string[] | undefined;
+
+    // First check if the module itself is used
+    if (refUsageNodes.length > 0) {
+      // Then we check if the symbol of the module is used.
+
+      // check for symbol usage. For this we can guess them from the refUsageNodes
+      refUsageNodes.forEach((node) => {
+        if (node.parent && node.parent.type === "attribute") {
+          const attributeNode = node.parent.childForFieldName("attribute");
+          if (attributeNode) {
+            if (symbolNames === undefined) {
+              symbolNames = [];
+            }
+            symbolNames.push(attributeNode.text);
+          }
+        }
+      });
+
       externalResults.push({
-        moduleName,
-        symbolNames: undefined,
+        moduleName: member.identifierNode.text,
+        symbolNames,
       });
     }
   }
@@ -314,19 +429,22 @@ export class PythonUsageResolver {
   /**
    * Helper function to check if a symbol is used in the AST, excluding given nodes.
    */
-  private isSymbolUsed(
+  private getrefUsageNodes(
     targetNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
     symbolRefName: string,
-  ): boolean {
+  ) {
     const query = new Parser.Query(
       this.parser.getLanguage(),
-      `((identifier) @id (#eq? @id "${symbolRefName}"))`,
+      `
+        ((identifier) @id (#eq? @id "${symbolRefName}"))
+        ((attribute) @attr (#eq? @attr "${symbolRefName}"))
+      `,
     );
     const captures = query.captures(targetNode);
-    return captures.some(
-      ({ node }) => !this.isNodeInsideAnyExclude(node, nodesToExclude),
-    );
+    return captures
+      .filter(({ node }) => !this.isNodeInsideAnyExclude(node, nodesToExclude))
+      .map(({ node }) => node);
   }
 
   /**
@@ -337,7 +455,7 @@ export class PythonUsageResolver {
     module: PythonModule,
     symbol: Symbol | undefined,
   ) {
-    const key = module.path || module.fullName;
+    const key = module.path;
     const existing = results.get(key);
     if (existing) {
       if (

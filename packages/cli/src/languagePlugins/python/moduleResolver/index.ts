@@ -140,7 +140,7 @@ export class PythonModuleResolver {
    * @param filePath - The file system path to resolve.
    * @returns The matching PythonModule if found, or undefined otherwise.
    */
-  public getModuleFromFilePath(filePath: string): PythonModule | undefined {
+  public getModuleFromFilePath(filePath: string): PythonModule {
     // Treat __init__.py as indicating the package's directory.
     if (filePath.endsWith(`${sep}__init__.py`)) {
       filePath = filePath.slice(0, -"__init__.py".length);
@@ -157,7 +157,9 @@ export class PythonModuleResolver {
       if (part === "") continue; // Skip empty segments.
       const candidateNode = currentNode.children.get(part);
       if (!candidateNode) {
-        return undefined;
+        throw new Error(
+          `Module not found for path: ${filePath}. Check if the module is part of the project.`,
+        );
       }
       currentNode = candidateNode;
     }
@@ -177,13 +179,17 @@ export class PythonModuleResolver {
    * @returns The resolved PythonModule if found, or undefined otherwise.
    */
   public resolveModule(
-    currentFile: string,
+    currentModule: PythonModule,
     moduleName: string,
   ): PythonModule | undefined {
-    if (!moduleName) return undefined;
-    return moduleName.startsWith(".")
-      ? this.resolveRelativeModule(currentFile, moduleName)
-      : this.resolveAbsoluteImport(currentFile, moduleName);
+    const pythonModule = moduleName.startsWith(".")
+      ? this.resolveRelativeModule(currentModule, moduleName)
+      : this.resolveAbsoluteImport(currentModule, moduleName);
+
+    if (pythonModule === currentModule) {
+      return undefined;
+    }
+    return pythonModule;
   }
 
   /**
@@ -202,7 +208,7 @@ export class PythonModuleResolver {
    * @returns The corresponding PythonModule if found, or undefined otherwise.
    */
   private resolveRelativeModule(
-    currentFile: string,
+    currentModule: PythonModule,
     moduleName: string,
   ): PythonModule | undefined {
     // Count the number of leading dots to determine the package level.
@@ -211,10 +217,6 @@ export class PythonModuleResolver {
       level++;
     }
     const remainder = moduleName.slice(level);
-
-    // Find the module node corresponding to the current file.
-    const currentModule = this.getModuleFromFilePath(currentFile);
-    if (!currentModule) return undefined;
 
     // If the current module is a regular file (not a package), start from its parent.
     let baseModule = currentModule;
@@ -258,14 +260,11 @@ export class PythonModuleResolver {
    * @returns The resolved PythonModule if it exists, or undefined otherwise.
    */
   private resolveAbsoluteImport(
-    currentFile: string,
+    currentModule: PythonModule,
     moduleName: string,
   ): PythonModule | undefined {
     const parts = moduleName.split(".");
 
-    // Begin from the package context of the current module.
-    let currentModule = this.getModuleFromFilePath(currentFile);
-    if (!currentModule) return undefined;
     if (currentModule.path && !currentModule.path.endsWith("__init__.py")) {
       if (currentModule.parent) {
         currentModule = currentModule.parent;

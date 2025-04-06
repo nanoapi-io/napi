@@ -296,7 +296,9 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
     // From "project/pkg/subpkg/submodule.py", the relative import "..helper"
     // means: go up one level (to pkg/subpkg's parent, which is pkg) and then look for "helper".
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveModule(currentFile, "..helper");
+    const currentModule = mapper.getModuleFromFilePath(currentFile);
+    expect(currentModule).toBeDefined();
+    const resolved = mapper.resolveModule(currentModule, "..helper");
     expect(resolved).toBeDefined();
     // Expect resolved module to have name "helper" and fullName "project.pkg.helper"
     expect(resolved?.name).toBe("helper");
@@ -306,7 +308,9 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
   test("should resolve relative import '..module' from 'project/pkg/subpkg/submodule.py'", () => {
     // Similarly, "..module" should resolve to "project/pkg/module.py"
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveModule(currentFile, "..module");
+    const currentModule = mapper.getModuleFromFilePath(currentFile);
+    expect(currentModule).toBeDefined();
+    const resolved = mapper.resolveModule(currentModule, "..module");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("module");
     expect(resolved?.fullName).toBe("project.pkg.module");
@@ -317,7 +321,9 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
     // From "project/pkg/subpkg/submodule.py", two levels up is "project"
     // Then look for "main" within "project", i.e. "project/main.py".
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveModule(currentFile, "...main");
+    const currentModule = mapper.getModuleFromFilePath(currentFile);
+    expect(currentModule).toBeDefined();
+    const resolved = mapper.resolveModule(currentModule, "...main");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("main");
     expect(resolved?.fullName).toBe("project.main");
@@ -327,7 +333,9 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
     // From a nested module, absolute import "pkg.helper" should be resolved.
     // The algorithm walks upward until it finds the correct candidate.
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveModule(currentFile, "pkg.helper");
+    const currentModule = mapper.getModuleFromFilePath(currentFile);
+    expect(currentModule).toBeDefined();
+    const resolved = mapper.resolveModule(currentModule, "pkg.helper");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("helper");
     expect(resolved?.fullName).toBe("project.pkg.helper");
@@ -336,7 +344,9 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
   test("should resolve absolute import 'util' from 'project/pkg/subpkg/submodule.py'", () => {
     // From "project/pkg/subpkg/submodule.py", absolute import "util" should resolve to "project/util.py"
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const resolved = mapper.resolveModule(currentFile, "util");
+    const currentModule = mapper.getModuleFromFilePath(currentFile);
+    expect(currentModule).toBeDefined();
+    const resolved = mapper.resolveModule(currentModule, "util");
     expect(resolved).toBeDefined();
     expect(resolved?.name).toBe("util");
     expect(resolved?.fullName).toBe("project.util");
@@ -345,8 +355,10 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
   test("should return undefined for a relative import that goes too high", () => {
     // If we try to go up more levels than exist, expect undefined.
     const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
+    const currentModule = mapper.getModuleFromFilePath(currentFile);
+    expect(currentModule).toBeDefined();
     // Here, "....nonexistent" (four dots) would require going up three levels.
-    const resolved = mapper.resolveModule(currentFile, "....nonexistent");
+    const resolved = mapper.resolveModule(currentModule, "....nonexistent");
     expect(resolved).toBeUndefined();
   });
 });
@@ -395,11 +407,6 @@ describe("PythonModuleResolver, getModuleFromFilePath method", () => {
     expect(module?.name).toBe("submodule");
     expect(module?.fullName).toBe("project.pkg.subpkg.submodule");
     expect(module?.type).toBe(PYTHON_MODULE_TYPE);
-  });
-
-  test("should handle paths that don't correspond to a module", () => {
-    const module = mapper.getModuleFromFilePath(`project${sep}nonexistent.py`);
-    expect(module).toBeUndefined();
   });
 
   test("should handle directory path with trailing separator for __init__.py", () => {
