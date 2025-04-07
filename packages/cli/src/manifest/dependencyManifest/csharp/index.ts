@@ -9,9 +9,13 @@ export function generateCSharpDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
 ): DependencyManifest {
   console.time("generateCSharpDependencyManifest");
+  console.log("Resolving using directives...");
   const formatter = new CSharpDependencyFormatter(files);
   const manifest: DependencyManifest = {};
+  const filecount = files.size;
+  let i = 0;
   for (const [, { path }] of files) {
+    console.log(`Processing ${path} (${++i}/${filecount})`);
     const fm = formatter.formatFile(path) as CSharpFile;
     manifest[path] = {
       id: fm.id,
@@ -27,8 +31,11 @@ export function generateCSharpDependencyManifest(
       delete dep.isNamespace;
     }
   }
+  console.log("Populating dependents...");
+  i = 0;
   // Populate dependents
   for (const [, { path }] of files) {
+    console.log(`Populating dependents for ${path} (${++i}/${filecount})`);
     const fm = manifest[path];
     for (const symbol of Object.values(fm.symbols)) {
       for (const [, dep] of Object.entries(symbol.dependents)) {
