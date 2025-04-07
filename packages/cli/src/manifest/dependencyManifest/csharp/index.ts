@@ -48,7 +48,7 @@ export function generateCSharpDependencyManifest(
               symbols: {},
             };
           }
-          otherSymbol.dependents[fm.id].symbols[symbol.id] = depsymbol;
+          otherSymbol.dependents[fm.id].symbols[symbol.id] = symbol.id;
         }
       }
     }
