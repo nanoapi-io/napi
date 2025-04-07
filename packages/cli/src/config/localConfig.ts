@@ -5,6 +5,7 @@ import { z } from "zod";
 export const localConfigSchema = z.object({
   audit: z.object({
     language: z.string(), // python for now, more later
+    pythonVersion: z.string().optional(), // only for python
     include: z.array(z.string()).optional(),
     exclude: z.array(z.string()).optional(),
   }),

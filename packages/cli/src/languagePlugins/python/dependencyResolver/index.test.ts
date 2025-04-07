@@ -79,7 +79,7 @@ def func_c():
     // Initialize dependencies
     exportExtractor = new PythonExportExtractor(pythonParser, files);
     importExtractor = new PythonImportExtractor(pythonParser, files);
-    moduleResolver = new PythonModuleResolver(files);
+    moduleResolver = new PythonModuleResolver(files, "3.13");
     itemResolver = new PythonItemResolver(
       exportExtractor,
       importExtractor,

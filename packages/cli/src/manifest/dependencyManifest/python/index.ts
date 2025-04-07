@@ -7,6 +7,8 @@ import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolv
 import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver";
 import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver";
 import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor";
+import { localConfigSchema } from "../../../config/localConfig";
+import z from "zod";
 
 function generateDependentsForManifest(
   manifest: DependencyManifest,
@@ -52,10 +54,18 @@ function generateDependentsForManifest(
 
 export function generatePythonDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+  napiConfig: z.infer<typeof localConfigSchema>,
 ): DependencyManifest {
   console.time("generatePythonDependencyManifest");
 
   const parser = pythonParser;
+
+  const pythonVersion = napiConfig.audit?.pythonVersion;
+  if (!pythonVersion) {
+    throw new Error(
+      "Python version is required in the .napirc file (audit.pythonVersion).",
+    );
+  }
 
   console.time("generatePythonDependencyManifest:initialization");
   console.info("Initializing Python export resolver...");
@@ -63,7 +73,8 @@ export function generatePythonDependencyManifest(
   console.info("Initializing Python import resolver...");
   const importExtractor = new PythonImportExtractor(parser, files);
   console.info("Initializing Python module resolver...");
-  const moduleResolver = new PythonModuleResolver(files);
+
+  const moduleResolver = new PythonModuleResolver(files, pythonVersion);
   console.info("Initializing Python item resolver...");
   const itemResolver = new PythonItemResolver(
     exportExtractor,

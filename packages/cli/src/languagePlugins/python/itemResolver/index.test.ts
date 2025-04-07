@@ -146,7 +146,7 @@ describe("PythonItemResolver", () => {
     // Initialize resolvers
     exportExtractor = new PythonExportExtractor(pythonParser, files);
     importExtractor = new PythonImportExtractor(pythonParser, files);
-    moduleMapper = new PythonModuleResolver(files);
+    moduleMapper = new PythonModuleResolver(files, "3.13");
     resolver = new PythonItemResolver(
       exportExtractor,
       importExtractor,
@@ -469,7 +469,7 @@ describe("PythonItemResolver", () => {
       // Re-initialize the resolvers with new files
       exportExtractor = new PythonExportExtractor(pythonParser, files);
       importExtractor = new PythonImportExtractor(pythonParser, files);
-      moduleMapper = new PythonModuleResolver(files);
+      moduleMapper = new PythonModuleResolver(files, "3.13");
 
       resolver = new PythonItemResolver(
         exportExtractor,

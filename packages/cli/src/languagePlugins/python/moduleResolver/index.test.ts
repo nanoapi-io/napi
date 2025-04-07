@@ -32,7 +32,7 @@ describe("PythonModuleResolver, map resolution", () => {
     // For a simple file "foo.py" at the root.
     const files = createFiles(["foo.py"]);
 
-    const mapper = new PythonModuleResolver(files);
+    const mapper = new PythonModuleResolver(files, "3.13");
     const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
@@ -56,7 +56,7 @@ describe("PythonModuleResolver, map resolution", () => {
     // For a package with an __init__.py file.
     const files = createFiles(["pkg/__init__.py"]);
 
-    const mapper = new PythonModuleResolver(files);
+    const mapper = new PythonModuleResolver(files, "3.13");
     const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
@@ -82,7 +82,7 @@ describe("PythonModuleResolver, map resolution", () => {
     // For a package with an __init__.py file and a module.
     const files = createFiles(["pkg/__init__.py", "pkg/module.py"]);
 
-    const mapper = new PythonModuleResolver(files);
+    const mapper = new PythonModuleResolver(files, "3.13");
     const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
@@ -118,7 +118,7 @@ describe("PythonModuleResolver, map resolution", () => {
     // For a package with an __init__.py file and a nested package.
     const files = createFiles(["pkg/__init__.py", "pkg/subpkg/__init__.py"]);
 
-    const mapper = new PythonModuleResolver(files);
+    const mapper = new PythonModuleResolver(files, "3.13");
     const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
@@ -158,7 +158,7 @@ describe("PythonModuleResolver, map resolution", () => {
       "pkg/subpkg/__init__.py",
     ]);
 
-    const mapper = new PythonModuleResolver(files);
+    const mapper = new PythonModuleResolver(files, "3.13");
     const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
@@ -209,7 +209,7 @@ describe("PythonModuleResolver, map resolution", () => {
       "pkg/subpkg/submodule.py",
     ]);
 
-    const mapper = new PythonModuleResolver(files);
+    const mapper = new PythonModuleResolver(files, "3.13");
     const root = mapper.pythonModule;
 
     // The root is a namespace with empty name.
@@ -289,7 +289,7 @@ describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
       `project${sep}util.py`,
     ];
     const files = createFiles(paths);
-    mapper = new PythonModuleResolver(files);
+    mapper = new PythonModuleResolver(files, "3.13");
   });
 
   test("should resolve relative import '..helper' from 'project/pkg/subpkg/submodule.py'", () => {
@@ -378,7 +378,7 @@ describe("PythonModuleResolver, getModuleFromFilePath method", () => {
       `project${sep}util.py`,
     ];
     const files = createFiles(paths);
-    mapper = new PythonModuleResolver(files);
+    mapper = new PythonModuleResolver(files, "3.13");
   });
 
   test("should get a module from a regular .py file path", () => {

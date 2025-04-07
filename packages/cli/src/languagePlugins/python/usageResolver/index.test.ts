@@ -65,7 +65,7 @@ beforeEach(() => {
   // Initialize the basic resolvers
   exportExtractor = new PythonExportExtractor(pythonParser, files);
   importExtractor = new PythonImportExtractor(pythonParser, files);
-  moduleMapper = new PythonModuleResolver(files);
+  moduleMapper = new PythonModuleResolver(files, "3.13");
   itemResolver = new PythonItemResolver(
     exportExtractor,
     importExtractor,
@@ -238,7 +238,7 @@ describe("PythonUsageResolver - Complex Cases", () => {
     // Reinitialize the resolvers so that they include the new files.
     exportExtractor = new PythonExportExtractor(pythonParser, files);
     importExtractor = new PythonImportExtractor(pythonParser, files);
-    moduleMapper = new PythonModuleResolver(files);
+    moduleMapper = new PythonModuleResolver(files, "3.13");
     itemResolver = new PythonItemResolver(
       exportExtractor,
       importExtractor,

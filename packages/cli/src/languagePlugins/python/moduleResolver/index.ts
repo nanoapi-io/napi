@@ -1,5 +1,6 @@
 import Parser from "tree-sitter";
 import { sep } from "path";
+import pythonStdLib from "../../../scripts/generate_python_stdlib_list/output.json";
 
 export const PYTHON_MODULE_TYPE = "module";
 export const PYTHON_PACKAGE_MODULE_TYPE = "package";
@@ -42,6 +43,7 @@ export interface PythonModule {
  */
 export class PythonModuleResolver {
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+  private stdModuleList: string[];
   public pythonModule: PythonModule;
 
   /**
@@ -49,12 +51,38 @@ export class PythonModuleResolver {
    *
    * @param files - A mapping where each entry represents a file in the project,
    *                containing its file system path and its parsed syntax tree.
+   * @param pythonVersion - The version of Python being used (only major).
    */
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    pythonVersion: string,
   ) {
     this.files = files;
     this.pythonModule = this.buildModuleMap();
+    this.stdModuleList = this.getPythonStdModules(pythonVersion);
+  }
+
+  private getPythonStdModules(version: string) {
+    let pythonMajorVersion: string;
+    // Extract the major version from the version string.
+    const parts = version.split(".");
+    if (parts.length > 2) {
+      pythonMajorVersion = `${parts[0]}.${parts[1]}`;
+    } else if (parts.length > 1) {
+      pythonMajorVersion = `${parts[0]}.${parts[1]}`;
+    } else if (parts.length === 1) {
+      pythonMajorVersion = `${parts[0]}.0`;
+    } else {
+      throw new Error(
+        `Invalid Python version format: ${version} expected format: X.Y.Z or X.Y. or X`,
+      );
+    }
+
+    const stdModuleList = (pythonStdLib as Record<string, string[]>)[
+      pythonMajorVersion
+    ];
+
+    return stdModuleList;
   }
 
   /**
@@ -263,6 +291,11 @@ export class PythonModuleResolver {
     currentModule: PythonModule,
     moduleName: string,
   ): PythonModule | undefined {
+    // First check if build in module
+    if (this.stdModuleList.includes(moduleName)) {
+      return undefined;
+    }
+
     const parts = moduleName.split(".");
 
     if (currentModule.path && !currentModule.path.endsWith("__init__.py")) {
