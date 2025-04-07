@@ -88,6 +88,7 @@ export class CSharpUsingResolver {
     ResolvedImports
   >();
   public projectmapper: CSharpProjectMapper;
+  private cachedExternalDeps: Set<string> = new Set<string>();
 
   constructor(
     nsMapper: CSharpNamespaceMapper,
@@ -157,6 +158,10 @@ export class CSharpUsingResolver {
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
     const { type, filepath, id, alias } = directive;
+    // Check if the using directive is a known external dependency
+    if (this.cachedExternalDeps.has(id)) {
+      return { usingtype: type, filepath, alias, name: id };
+    }
     const symbol = this.nsMapper.findClassInTree(this.nsMapper.nsTree, id);
     if (symbol) {
       return { usingtype: type, filepath, alias, symbol };
@@ -168,6 +173,9 @@ export class CSharpUsingResolver {
     if (namespace) {
       return { usingtype: type, filepath, alias, namespace };
     }
+    // If the directive is not found in the namespace tree, treat it as an external symbol
+    // and cache it
+    this.cachedExternalDeps.add(id);
     return { usingtype: type, filepath, alias, name: id };
   }
 
