@@ -64,11 +64,13 @@ export class CSharpInvocationResolver {
   private resolveSymbol(
     classname: string,
     namespaceTree: NamespaceNode,
+    filepath: string,
   ): SymbolNode | null {
     // Try to find the class in the resolved imports
     const ucls = this.usingResolver.findClassInImports(
       this.resolvedImports,
       classname,
+      filepath,
     );
     if (ucls) {
       return ucls;
@@ -91,6 +93,7 @@ export class CSharpInvocationResolver {
   #getCalledClasses(
     node: Parser.SyntaxNode,
     namespaceTree: NamespaceNode,
+    filepath: string,
   ): Invocations {
     const invocations: Invocations = {
       resolvedSymbols: [],
@@ -123,7 +126,11 @@ export class CSharpInvocationResolver {
     // Process each captured class name
     catches.forEach((ctc) => {
       const classname = ctc.node.text;
-      const resolvedSymbol = this.resolveSymbol(classname, namespaceTree);
+      const resolvedSymbol = this.resolveSymbol(
+        classname,
+        namespaceTree,
+        filepath,
+      );
       if (resolvedSymbol) {
         invocations.resolvedSymbols.push(resolvedSymbol);
       } else {
@@ -143,6 +150,7 @@ export class CSharpInvocationResolver {
   #resolveInvocationExpressions(
     node: Parser.SyntaxNode,
     namespaceTree: NamespaceNode,
+    filepath: string,
   ): Invocations {
     // Get variable names to filter out variable-based invocations
     const variablenames = this.#getVariables(node);
@@ -183,7 +191,11 @@ export class CSharpInvocationResolver {
       if (variablenames.includes(classname)) {
         return;
       }
-      const resolvedSymbol = this.resolveSymbol(classname, namespaceTree);
+      const resolvedSymbol = this.resolveSymbol(
+        classname,
+        namespaceTree,
+        filepath,
+      );
       if (resolvedSymbol) {
         invocations.resolvedSymbols.push(resolvedSymbol);
       } else {
@@ -226,11 +238,16 @@ export class CSharpInvocationResolver {
       unresolved: [],
     };
     // Get classes called in variable declarations and object creations
-    const calledClasses = this.#getCalledClasses(node, this.nsMapper.nsTree);
+    const calledClasses = this.#getCalledClasses(
+      node,
+      this.nsMapper.nsTree,
+      filepath,
+    );
     // Resolve invocation expressions
     const invocationExpressions = this.#resolveInvocationExpressions(
       node,
       this.nsMapper.nsTree,
+      filepath,
     );
 
     // Combine results from both methods, ensuring uniqueness with Set

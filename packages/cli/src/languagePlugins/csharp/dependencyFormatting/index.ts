@@ -179,7 +179,7 @@ export class CSharpDependencyFormatter {
     };
     // Add global usings to dependencies
     const globalUsings = this.formatUsings(
-      this.usingResolver.getGlobalUsings(),
+      this.usingResolver.getGlobalUsings(filepath),
     );
     for (const key in globalUsings) {
       if (!formattedFile.dependencies[key]) {

@@ -4,6 +4,7 @@ import {
   NamespaceNode,
   SymbolNode,
 } from "../namespaceMapper";
+import { CSharpProjectMapper } from "../projectMapper";
 
 // Constants representing different types of 'using' directives in C#
 export const GLOBAL_USING = "global";
@@ -86,10 +87,11 @@ export class CSharpUsingResolver {
     string,
     ResolvedImports
   >();
-  private globalUsings: ResolvedImports = { internal: [], external: [] };
+  public projectmapper: CSharpProjectMapper;
 
   constructor(nsMapper: CSharpNamespaceMapper) {
     this.nsMapper = nsMapper;
+    this.projectmapper = new CSharpProjectMapper(nsMapper.files);
   }
 
   /**
@@ -172,6 +174,7 @@ export class CSharpUsingResolver {
    * @returns A ResolvedImports object containing internal and external symbols.
    */
   public resolveUsingDirectives(filepath: string): ResolvedImports {
+    const globalUsings: ResolvedImports = { internal: [], external: [] };
     if (this.cachedImports.has(filepath)) {
       return this.cachedImports.get(filepath) as ResolvedImports;
     }
@@ -182,22 +185,27 @@ export class CSharpUsingResolver {
       if ("symbol" in resolved || "namespace" in resolved) {
         internal.push(resolved);
         if (directive.type === GLOBAL_USING) {
-          this.globalUsings.internal.push(resolved);
+          globalUsings.internal.push(resolved);
         }
       } else {
         external.push(resolved as ExternalSymbol);
         if (directive.type === GLOBAL_USING) {
-          this.globalUsings.external.push(resolved as ExternalSymbol);
+          globalUsings.external.push(resolved as ExternalSymbol);
         }
       }
     });
     const resolvedimports = { internal, external };
+    // Update the global usings for the project
+    const subproject = this.projectmapper.findSubprojectForFile(filepath);
+    if (subproject) {
+      this.projectmapper.updateGlobalUsings(globalUsings, subproject);
+    }
     this.cachedImports.set(filepath, resolvedimports);
     return resolvedimports;
   }
 
-  public getGlobalUsings(): ResolvedImports {
-    return this.globalUsings;
+  public getGlobalUsings(filepath: string): ResolvedImports {
+    return this.projectmapper.getGlobalUsings(filepath);
   }
 
   /**
@@ -209,6 +217,7 @@ export class CSharpUsingResolver {
   public findClassInImports(
     imports: ResolvedImports,
     className: string,
+    filepath: string,
   ): SymbolNode | null {
     // Handle qualified class names with aliases
     const parts = className.split(".");
@@ -244,7 +253,7 @@ export class CSharpUsingResolver {
       }
     }
     // Also check in global usings
-    for (const symbol of this.globalUsings.internal) {
+    for (const symbol of this.getGlobalUsings(filepath).internal) {
       if ("namespace" in symbol && symbol.namespace) {
         const nsFound = this.nsMapper.findClassInTree(
           symbol.namespace,
