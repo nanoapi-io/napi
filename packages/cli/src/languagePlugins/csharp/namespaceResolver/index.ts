@@ -16,6 +16,15 @@ export type SymbolType =
   | typeof CSHARP_INTERFACE_TYPE
   | typeof CSHARP_DELEGATE_TYPE;
 
+const fscopednamespacedeclquery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  (file_scoped_namespace_declaration
+    name: (qualified_name) @id
+  )
+  `,
+);
+
 /**
  * Interface representing a file
  */
@@ -126,14 +135,7 @@ export class CSharpNamespaceResolver {
   #getFileScopedNamespaceDeclaration(
     node: Parser.SyntaxNode,
   ): string | undefined {
-    return new Parser.Query(
-      this.parser.getLanguage(),
-      `
-      (file_scoped_namespace_declaration
-        name: (qualified_name) @id
-      )
-      `,
-    )
+    return fscopednamespacedeclquery
       .captures(node)
       .map((capture) => capture.node.text)[0];
   }

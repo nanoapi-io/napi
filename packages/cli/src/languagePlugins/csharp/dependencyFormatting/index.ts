@@ -32,6 +32,7 @@ export interface CSharpSymbol {
   lineCount: number;
   characterCount: number;
   dependents: Record<string, CSharpDependent>;
+  dependencies: Record<string, CSharpDependency>;
 }
 
 /**
@@ -84,13 +85,16 @@ export class CSharpDependencyFormatter {
   ): Record<string, CSharpSymbol> {
     const symbols: Record<string, CSharpSymbol> = {};
     for (const symbol of exportedSymbols) {
-      symbols[
-        (symbol.namespace !== "" ? symbol.namespace + "." : "") + symbol.name
-      ] = {
-        id: symbol.name,
+      const fullname =
+        (symbol.namespace !== "" ? symbol.namespace + "." : "") + symbol.name;
+      symbols[fullname] = {
+        id: fullname,
         type: symbol.type,
         lineCount: symbol.node.endPosition.row - symbol.node.startPosition.row,
         characterCount: symbol.node.endIndex - symbol.node.startIndex,
+        dependencies: this.formatDependencies(
+          this.invResolver.getInvocationsFromNode(symbol.node, symbol.filepath),
+        ),
         dependents: {},
       };
     }

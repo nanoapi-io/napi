@@ -9,6 +9,51 @@ import { csharpParser } from "../../../helpers/treeSitter/parsers";
 import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
 import { CSharpProjectMapper } from "../projectMapper";
 
+const variablesQuery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  (variable_declarator
+    name: (identifier) @varname
+  )
+  (parameter
+    name: (identifier) @varname
+  )
+  `,
+);
+
+const calledClassesQuery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  ((object_creation_expression
+    type: (identifier) @classname
+  ))
+  ((object_creation_expression
+    type: (qualified_name) @classname
+  ))
+  (variable_declaration
+    type: (identifier) @classname
+  )
+  (variable_declaration
+    type: (qualified_name) @classname
+  )
+  (parameter
+    type: (identifier) @classname
+  )
+  (parameter
+    type: (qualified_name) @classname
+  )
+  `,
+);
+
+const invocationQuery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  (_
+    (member_access_expression
+  ))@cls
+  `,
+);
+
 /**
  * Interface representing the invocations in a file
  */
@@ -44,19 +89,7 @@ export class CSharpInvocationResolver {
    * @returns An array of variable names.
    */
   #getVariables(node: Parser.SyntaxNode): string[] {
-    return new Parser.Query(
-      this.parser.getLanguage(),
-      `
-      (variable_declarator
-        name: (identifier) @varname
-      )
-      (parameter
-        name: (identifier) @varname
-      )
-      `,
-    )
-      .captures(node)
-      .map((ctc) => ctc.node.text);
+    return variablesQuery.captures(node).map((ctc) => ctc.node.text);
   }
 
   /**
@@ -104,29 +137,7 @@ export class CSharpInvocationResolver {
       unresolved: [],
     };
     // Query to capture object creation expressions and variable declarations
-    const catches = new Parser.Query(
-      this.parser.getLanguage(),
-      `
-      ((object_creation_expression
-        type: (identifier) @classname
-      ))
-      ((object_creation_expression
-        type: (qualified_name) @classname
-      ))
-      (variable_declaration
-        type: (identifier) @classname
-      )
-      (variable_declaration
-        type: (qualified_name) @classname
-      )
-      (parameter
-        type: (identifier) @classname
-      )
-      (parameter
-        type: (qualified_name) @classname
-      )
-      `,
-    ).captures(node);
+    const catches = calledClassesQuery.captures(node);
     // Process each captured class name
     catches.forEach((ctc) => {
       const classname = ctc.node.text;
@@ -163,14 +174,7 @@ export class CSharpInvocationResolver {
       unresolved: [],
     };
     // Query to capture invocation expressions
-    const catches = new Parser.Query(
-      this.parser.getLanguage(),
-      `
-      (_
-        (member_access_expression
-      ))@cls
-      `,
-    ).captures(node);
+    const catches = invocationQuery.captures(node);
     // Process each captured access expression
     catches.forEach((ctc) => {
       // Remove intermediate members (e.g., System.Mario in System.Mario.Bros)
