@@ -62,11 +62,11 @@ export class CSharpProjectMapper {
       for (let j = 1; j < splitPaths.length; j++) {
         if (splitPaths[j][i] !== commonPath[i]) {
           commonPath.splice(i);
-          return path.sep + path.join(...commonPath);
+          return path.join(...commonPath);
         }
       }
     }
-    return path.sep + path.join(...commonPath);
+    return path.join(...commonPath);
   }
 
   /**
