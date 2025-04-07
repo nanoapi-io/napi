@@ -5,6 +5,8 @@ import { localConfigSchema } from "../../config/localConfig";
 import { generateAuditResponse } from "./service";
 import { DependencyManifest } from "../../manifest/dependencyManifest";
 import { AuditManifest } from "../../manifest/auditManifest";
+import path from "path";
+import fs from "fs";
 
 export function getAuditApi(
   workDir: string,
@@ -18,6 +20,15 @@ export function getAuditApi(
   };
   try {
     auditResponse = generateAuditResponse(workDir, napiConfig);
+    if (napiConfig.audit.manifestoJsonOutputPath) {
+      const outputPath = path.resolve(
+        workDir,
+        napiConfig.audit.manifestoJsonOutputPath,
+        "auditResponse.json",
+      );
+      console.log(outputPath);
+      fs.writeFileSync(outputPath, JSON.stringify(auditResponse, null, 2));
+    }
   } catch (error) {
     trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
       message: "Failed to generate audit response",

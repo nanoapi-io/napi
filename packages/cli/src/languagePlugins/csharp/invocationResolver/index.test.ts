@@ -22,7 +22,7 @@ describe("InvocationResolver", () => {
           name: "Bun",
           type: "class",
           filepath: "2Namespaces1File.cs",
-          namespace: "BeefBurger",
+          namespace: "MyApp.BeefBurger",
         },
         {
           name: "Bun",

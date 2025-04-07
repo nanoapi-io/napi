@@ -1,5 +1,6 @@
 import Parser from "tree-sitter";
 import { CSharpNamespaceResolver, SymbolType } from "../namespaceResolver";
+import fs from "fs";
 
 /**
  * Interface representing a namespace node in the namespace tree.
@@ -11,6 +12,8 @@ export interface NamespaceNode {
   exports: SymbolNode[];
   /** List of child namespaces */
   childrenNamespaces: NamespaceNode[];
+  /** Parent namespace */
+  parentNamespace?: NamespaceNode;
 }
 
 /**
@@ -27,6 +30,22 @@ export interface SymbolNode {
   filepath: string;
   /** The syntax node corresponding to the symbol */
   node: Parser.SyntaxNode;
+}
+
+const DEBUG_NAMESPACE = "namespace";
+const DEBUG_SYMBOL = "symbol";
+type DebugType = typeof DEBUG_NAMESPACE | typeof DEBUG_SYMBOL;
+
+/**
+ * Interface representing a debug node in the namespace tree.
+ */
+export interface DebugNode {
+  /** The name of the debug node */
+  name: string;
+  /** The type of the debug node */
+  type: DebugType;
+  /** The children of the debug node */
+  children: DebugNode[];
 }
 
 export class CSharpNamespaceMapper {
@@ -57,6 +76,7 @@ export class CSharpNamespaceMapper {
     // becomes B, child of A.
     const parts = namespace.name.split(".");
     let current = tree;
+    let previous = tree;
 
     // For each part of the namespace, we check if it's
     // already in the tree. If it is, we go to the next
@@ -69,9 +89,11 @@ export class CSharpNamespaceMapper {
             name: part,
             exports: [],
             childrenNamespaces: [],
+            parentNamespace: current,
           };
           current.childrenNamespaces.push(child);
         }
+        previous = current;
         current = child;
       });
     }
@@ -79,7 +101,11 @@ export class CSharpNamespaceMapper {
     // Once we're done with the parts, we add the classes
     // and children namespaces to the current namespace.
     current.exports.push(...namespace.exports);
-    current.childrenNamespaces.push(...namespace.childrenNamespaces);
+    namespace.childrenNamespaces.forEach((ns) => {
+      this.#addNamespaceToTree(ns, current);
+    });
+    // We also set the parent namespace for each child namespace.
+    current.parentNamespace = previous;
   }
 
   /**
@@ -101,6 +127,13 @@ export class CSharpNamespaceMapper {
     });
   }
 
+  #assignParentNamespaces(tree: NamespaceNode) {
+    tree.childrenNamespaces.forEach((ns) => {
+      ns.parentNamespace = tree;
+      this.#assignParentNamespaces(ns);
+    });
+  }
+
   /**
    * Builds a tree of namespaces from the parsed files.
    * @returns The root of the namespace tree.
@@ -119,6 +152,7 @@ export class CSharpNamespaceMapper {
         .map((ns) => ns as NamespaceNode);
 
       namespaces.forEach((namespace) => {
+        this.#assignParentNamespaces(namespace);
         this.#addNamespaceToTree(namespace, namespaceTree);
       });
     });
@@ -128,6 +162,35 @@ export class CSharpNamespaceMapper {
 
     // I don't understand why, but the root element is always empty
     return namespaceTree;
+  }
+
+  #convertNodeToDebug(node: NamespaceNode | SymbolNode): DebugNode {
+    if ("childrenNamespaces" in node) {
+      return {
+        name: node.name,
+        type: DEBUG_NAMESPACE,
+        children: [
+          ...node.childrenNamespaces.map((child: NamespaceNode) =>
+            this.#convertNodeToDebug(child),
+          ),
+          ...node.exports.map((symbol: SymbolNode) =>
+            this.#convertNodeToDebug(symbol),
+          ),
+        ],
+      };
+    } else {
+      return {
+        name: node.name,
+        type: DEBUG_SYMBOL,
+        children: [],
+      };
+    }
+  }
+
+  saveDebugTree(filepath: string): DebugNode {
+    const debugTree: DebugNode = this.#convertNodeToDebug(this.nsTree);
+    fs.writeFileSync(filepath, JSON.stringify(debugTree, null, 2));
+    return debugTree;
   }
 
   /**
@@ -156,6 +219,16 @@ export class CSharpNamespaceMapper {
     return (
       tree.childrenNamespaces.find((ns) => ns.name === namespaceName) ?? null
     );
+  }
+
+  getFullNSName(namespace: NamespaceNode): string {
+    if (namespace.name === "") {
+      return "";
+    }
+    if (!namespace.parentNamespace || namespace.parentNamespace.name === "") {
+      return namespace.name;
+    }
+    return `${this.getFullNSName(namespace.parentNamespace)}.${namespace.name}`;
   }
 
   /**

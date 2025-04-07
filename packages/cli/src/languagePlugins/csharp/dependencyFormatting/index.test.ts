@@ -12,14 +12,19 @@ describe("Dependency formatting", () => {
       id: "SemiNamespaced.cs",
       filepath: "SemiNamespaced.cs",
       dependencies: {
-        Freeman: {
-          id: "Freeman",
+        "": {
+          id: "",
           isExternal: false,
+          symbols: {
+            Freeman: "Freeman",
+          },
+          isNamespace: true,
         },
-        Console: {
-          id: "Console",
-          isExternal: true,
-        },
+        // Commented, check comments at line 110 of index.ts.
+        // Console: {
+        //   id: "Console",
+        //   isExternal: true,
+        // },
       },
       symbols: {
         Freeman: {

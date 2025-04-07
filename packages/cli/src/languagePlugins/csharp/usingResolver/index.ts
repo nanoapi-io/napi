@@ -26,6 +26,8 @@ export interface UsingDirective {
   node: Parser.SyntaxNode;
   /** The type of 'using' directive */
   type: UsingType;
+  /** The filepath it is imported in */
+  filepath: string;
   /** The identifier or qualified name being imported */
   id: string;
   /** Optional alias for the imported identifier */
@@ -38,6 +40,8 @@ export interface UsingDirective {
 export interface InternalSymbol {
   /** The type of 'using' directive */
   usingtype: UsingType;
+  /** The filepath it is imported in */
+  filepath: string;
   /** Optional alias for the symbol */
   alias?: string;
   /** The symbol node if it is a class or type */
@@ -52,6 +56,8 @@ export interface InternalSymbol {
 export interface ExternalSymbol {
   /** The type of 'using' directive */
   usingtype: UsingType;
+  /** The filepath it is imported in */
+  filepath: string;
   /** Optional alias for the symbol */
   alias?: string;
   /** The name of the external symbol */
@@ -108,10 +114,12 @@ export class CSharpUsingResolver {
           (child.type === "identifier" || child.type === "qualified_name") &&
           child !== node.childForFieldName("name"),
       );
-      const id = importNode ? importNode.text : "";
+      let id = importNode ? importNode.text : "";
+      // Remove the :: prefix from the id if it exists
+      id = id.includes("::") ? (id.split("::").pop() as string) : id;
       const aliasNode = node.childForFieldName("name");
       const alias = aliasNode ? aliasNode.text : undefined;
-      return { node, type, id, alias };
+      return { node, type, filepath, id, alias };
     });
     return this.usingDirectives;
   }
@@ -143,19 +151,19 @@ export class CSharpUsingResolver {
   private resolveUsingDirective(
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
-    const { type, id, alias } = directive;
+    const { type, filepath, id, alias } = directive;
     const symbol = this.nsMapper.findClassInTree(this.nsMapper.nsTree, id);
     if (symbol) {
-      return { usingtype: type, alias, symbol };
+      return { usingtype: type, filepath, alias, symbol };
     }
     const namespace = this.nsMapper.findNamespaceInTree(
       this.nsMapper.nsTree,
       id,
     );
     if (namespace) {
-      return { usingtype: type, alias, namespace };
+      return { usingtype: type, filepath, alias, namespace };
     }
-    return { usingtype: type, alias, name: id };
+    return { usingtype: type, filepath, alias, name: id };
   }
 
   /**

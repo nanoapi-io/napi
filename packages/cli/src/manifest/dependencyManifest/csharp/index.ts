@@ -22,6 +22,10 @@ export function generateCSharpDependencyManifest(
       dependencies: fm.dependencies,
       symbols: fm.symbols as unknown as Record<string, Symbol>,
     };
+    // Delete isNamespace from dependencies
+    for (const dep of Object.values(fm.dependencies)) {
+      delete dep.isNamespace;
+    }
   }
   // Populate dependents
   for (const [, { path }] of files) {

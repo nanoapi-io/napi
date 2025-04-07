@@ -2,11 +2,11 @@ import { describe, test, expect } from "vitest";
 import { generateCSharpDependencyManifest } from ".";
 import { getCSharpFilesMap } from "../../../languagePlugins/csharp/testFiles";
 
-describe("generateCSharpDependencyManifest", () => {
+describe("generateCSharpDependencymanifest", () => {
   const files = getCSharpFilesMap();
   const manifest = generateCSharpDependencyManifest(files);
   test("Correctly identifies files", () => {
-    expect(Object.keys(manifest).length).toBe(7);
+    expect(Object.keys(manifest).length).toBe(8);
   });
   test("Resolves exports", () => {
     expect(Object.keys(manifest["2Namespaces1File.cs"].symbols).length).toBe(6);
@@ -22,12 +22,13 @@ describe("generateCSharpDependencyManifest", () => {
       Object.keys(manifest["2Namespaces1File.cs"].dependencies).length,
     ).toBe(1);
     expect(Object.keys(manifest["Models.cs"].dependencies).length).toBe(1);
-    expect(Object.keys(manifest["Namespaced.cs"].dependencies).length).toBe(2);
-    expect(Object.keys(manifest["Nested.cs"].dependencies).length).toBe(2);
-    expect(Object.keys(manifest["Program.cs"].dependencies).length).toBe(16);
+    expect(Object.keys(manifest["Namespaced.cs"].dependencies).length).toBe(1);
+    expect(Object.keys(manifest["Nested.cs"].dependencies).length).toBe(1);
+    console.log(manifest["Program.cs"].dependencies);
+    expect(Object.keys(manifest["Program.cs"].dependencies).length).toBe(9);
     expect(Object.keys(manifest["SemiNamespaced.cs"].dependencies).length).toBe(
-      3,
+      2,
     );
-    expect(Object.keys(manifest["Usage.cs"].dependencies).length).toBe(8);
+    expect(Object.keys(manifest["Usage.cs"].dependencies).length).toBe(6);
   });
 });

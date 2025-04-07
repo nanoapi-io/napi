@@ -1,4 +1,4 @@
-namespace BeefBurger
+namespace MyApp.BeefBurger
 {
     public class Steak { }
     public class Cheese { }

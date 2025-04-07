@@ -7,6 +7,13 @@ export const localConfigSchema = z.object({
     language: z.string(), // python for now, more later
     include: z.array(z.string()).optional(),
     exclude: z.array(z.string()).optional(),
+    targetMaxCharInFile: z.number().optional(),
+    targetMaxLineInFile: z.number().optional(),
+    targetMaxDepPerFile: z.number().optional(),
+    targetMaxCharPerInstance: z.number().optional(),
+    targetMaxLinePerInstance: z.number().optional(),
+    targetMaxDepPerInstance: z.number().optional(),
+    manifestoJsonOutputPath: z.string().optional(),
   }),
 });
 
