@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { CSharpDependencyFormatter } from ".";
-import { getCSharpFilesMap } from "../testFiles";
+import { getCSharpFilesMap, csharpFilesFolder } from "../testFiles";
+import path from "path";
 import { File } from "../namespaceResolver";
 
 describe("Dependency formatting", () => {
@@ -8,9 +9,10 @@ describe("Dependency formatting", () => {
   const formatter = new CSharpDependencyFormatter(files);
 
   test("SemiNamespaced.cs", () => {
-    expect(formatter.formatFile("SemiNamespaced.cs")).toMatchObject({
-      id: "SemiNamespaced.cs",
-      filepath: "SemiNamespaced.cs",
+    expect(
+      formatter.formatFile(path.join(csharpFilesFolder, "SemiNamespaced.cs")),
+    ).toMatchObject({
+      id: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
       dependencies: {
         "": {
           id: "",

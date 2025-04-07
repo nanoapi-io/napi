@@ -1,13 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { CSharpNamespaceResolver, File } from ".";
-import { getCSharpFilesMap } from "../testFiles";
+import path from "path";
+import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles";
 
 describe("NamespaceResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
   const nsResolver: CSharpNamespaceResolver = new CSharpNamespaceResolver();
 
   test("2Namespaces1File.cs", () => {
-    const file = files.get("2Namespaces1File.cs") as File;
+    const file = files.get(
+      path.join(csharpFilesFolder, "2Namespaces1File.cs"),
+    ) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
@@ -16,20 +19,12 @@ describe("NamespaceResolver", () => {
         childrenNamespaces: [
           {
             name: "MyApp.BeefBurger",
-            exports: [
-              { name: "Steak", filepath: "2Namespaces1File.cs" },
-              { name: "Cheese", filepath: "2Namespaces1File.cs" },
-              { name: "Bun", filepath: "2Namespaces1File.cs" },
-            ],
+            exports: [{ name: "Steak" }, { name: "Cheese" }, { name: "Bun" }],
             childrenNamespaces: [],
           },
           {
             name: "ChickenBurger",
-            exports: [
-              { name: "Chicken", filepath: "2Namespaces1File.cs" },
-              { name: "Salad", filepath: "2Namespaces1File.cs" },
-              { name: "Bun", filepath: "2Namespaces1File.cs" },
-            ],
+            exports: [{ name: "Chicken" }, { name: "Salad" }, { name: "Bun" }],
             childrenNamespaces: [],
           },
         ],
@@ -38,17 +33,17 @@ describe("NamespaceResolver", () => {
   });
 
   test("Models.cs", () => {
-    const file = files.get("Models.cs") as File;
+    const file = files.get(path.join(csharpFilesFolder, "Models.cs")) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
         name: "MyApp.Models",
         exports: [
-          { name: "User", type: "class", filepath: "Models.cs" },
-          { name: "Order", type: "struct", filepath: "Models.cs" },
-          { name: "OrderStatus", type: "enum", filepath: "Models.cs" },
-          { name: "IOrder", type: "interface", filepath: "Models.cs" },
-          { name: "OrderDelegate", type: "delegate", filepath: "Models.cs" },
+          { name: "User", type: "class" },
+          { name: "Order", type: "struct" },
+          { name: "OrderStatus", type: "enum" },
+          { name: "IOrder", type: "interface" },
+          { name: "OrderDelegate", type: "delegate" },
         ],
         childrenNamespaces: [],
       },
@@ -56,7 +51,9 @@ describe("NamespaceResolver", () => {
   });
 
   test("Namespaced.cs", () => {
-    const file = files.get("Namespaced.cs") as File;
+    const file = files.get(
+      path.join(csharpFilesFolder, "Namespaced.cs"),
+    ) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
@@ -65,7 +62,7 @@ describe("NamespaceResolver", () => {
         childrenNamespaces: [
           {
             name: "MyNamespace",
-            exports: [{ name: "MyClass", filepath: "Namespaced.cs" }],
+            exports: [{ name: "MyClass" }],
             childrenNamespaces: [],
           },
         ],
@@ -74,7 +71,7 @@ describe("NamespaceResolver", () => {
   });
 
   test("Nested.cs", () => {
-    const file = files.get("Nested.cs") as File;
+    const file = files.get(path.join(csharpFilesFolder, "Nested.cs")) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
@@ -84,17 +81,16 @@ describe("NamespaceResolver", () => {
           {
             name: "OuterNamespace",
             exports: [
-              { name: "OuterClass", filepath: "Nested.cs" },
+              { name: "OuterClass" },
               {
                 name: "OuterInnerClass",
-                filepath: "Nested.cs",
                 parent: { name: "OuterClass" },
               },
             ],
             childrenNamespaces: [
               {
                 name: "InnerNamespace",
-                exports: [{ name: "InnerClass", filepath: "Nested.cs" }],
+                exports: [{ name: "InnerClass" }],
                 childrenNamespaces: [],
               },
             ],
@@ -105,19 +101,18 @@ describe("NamespaceResolver", () => {
   });
 
   test("SemiNamespaced.cs", () => {
-    const file = files.get("SemiNamespaced.cs") as File;
+    const file = files.get(
+      path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+    ) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
         name: "",
-        exports: [
-          { name: "Freeman", filepath: "SemiNamespaced.cs" },
-          { name: "HeadCrab", filepath: "SemiNamespaced.cs" },
-        ],
+        exports: [{ name: "Freeman" }, { name: "HeadCrab" }],
         childrenNamespaces: [
           {
             name: "HalfNamespace",
-            exports: [{ name: "Gordon", filepath: "SemiNamespaced.cs" }],
+            exports: [{ name: "Gordon" }],
             childrenNamespaces: [],
           },
         ],
