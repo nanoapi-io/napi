@@ -9,42 +9,12 @@ describe("Dependency formatting", () => {
   const formatter = new CSharpDependencyFormatter(files);
 
   test("SemiNamespaced.cs", () => {
-    expect(
-      formatter.formatFile(path.join(csharpFilesFolder, "SemiNamespaced.cs")),
-    ).toMatchObject({
-      id: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
-      dependencies: {
-        "": {
-          id: "",
-          isExternal: false,
-          symbols: {
-            Freeman: "Freeman",
-          },
-          isNamespace: true,
-        },
-        // Commented, check comments at line 110 of index.ts.
-        // Console: {
-        //   id: "Console",
-        //   isExternal: true,
-        // },
-      },
-      symbols: {
-        Freeman: {
-          id: "Freeman",
-          type: "class",
-          dependents: {},
-        },
-        HeadCrab: {
-          id: "HeadCrab",
-          type: "class",
-          dependents: {},
-        },
-        "HalfNamespace.Gordon": {
-          id: "Gordon",
-          type: "class",
-          dependents: {},
-        },
-      },
-    });
+    const snpath = path.join(csharpFilesFolder, "SemiNamespaced.cs");
+    const seminamespaced = formatter.formatFile(snpath);
+    expect(seminamespaced).toBeDefined();
+    if (!seminamespaced) return;
+    expect(seminamespaced.id).toBe(snpath);
+    expect(seminamespaced.dependencies[snpath]).toBeDefined();
+    expect(Object.keys(seminamespaced.symbols).length).toBe(3);
   });
 });

@@ -74,7 +74,7 @@ describe("generateCSharpDependencymanifest", () => {
       Object.keys(
         manifest[path.join(csharpFilesFolder, "Program.cs")].dependencies,
       ).length,
-    ).toBe(9);
+    ).toBe(6);
     expect(
       Object.keys(
         manifest[path.join(csharpFilesFolder, "SemiNamespaced.cs")]
@@ -85,6 +85,6 @@ describe("generateCSharpDependencymanifest", () => {
       Object.keys(
         manifest[path.join(csharpFilesFolder, "Usage.cs")].dependencies,
       ).length,
-    ).toBe(6);
+    ).toBe(4);
   });
 });

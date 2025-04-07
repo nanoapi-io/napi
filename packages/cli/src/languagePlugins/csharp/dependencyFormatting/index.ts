@@ -108,19 +108,20 @@ export class CSharpDependencyFormatter {
     const dependencies: Record<string, CSharpDependency> = {};
     for (const resolvedSymbol of invocations.resolvedSymbols) {
       const namespace = resolvedSymbol.namespace;
+      const filepath = resolvedSymbol.filepath;
       const id =
         namespace !== ""
           ? namespace + "." + resolvedSymbol.name
           : resolvedSymbol.name;
-      if (!dependencies[namespace]) {
-        dependencies[namespace] = {
-          id: namespace,
+      if (!dependencies[filepath]) {
+        dependencies[filepath] = {
+          id: filepath,
           isExternal: false,
           symbols: {},
           isNamespace: true,
         };
       }
-      dependencies[namespace].symbols[id] = id;
+      dependencies[filepath].symbols[id] = id;
     }
     // Add unresolved symbols as external dependencies
     // Commented because redundant : if a symbol is unresolved,
@@ -136,25 +137,10 @@ export class CSharpDependencyFormatter {
     return dependencies;
   }
 
-  private formatUsings(
+  private formatExternalUsings(
     resolvedimports: ResolvedImports,
   ): Record<string, CSharpDependency> {
     const dependencies: Record<string, CSharpDependency> = {};
-    for (const resolvedSymbol of resolvedimports.internal) {
-      const id = resolvedSymbol.symbol
-        ? (resolvedSymbol.symbol.namespace !== ""
-            ? resolvedSymbol.symbol.namespace + "."
-            : "") + resolvedSymbol.symbol.name
-        : resolvedSymbol.namespace
-          ? this.nsMapper.getFullNSName(resolvedSymbol.namespace)
-          : "";
-      dependencies[id] = {
-        id,
-        isExternal: false,
-        symbols: {},
-        isNamespace: resolvedSymbol.namespace !== undefined,
-      };
-    }
     for (const unresolvedSymbol of resolvedimports.external) {
       dependencies[unresolvedSymbol.name] = {
         id: unresolvedSymbol.name,
@@ -187,7 +173,7 @@ export class CSharpDependencyFormatter {
       symbols: this.formatSymbols(fileSymbols),
     };
     // Add global usings to dependencies
-    const globalUsings = this.formatUsings(
+    const globalUsings = this.formatExternalUsings(
       this.usingResolver.getGlobalUsings(filepath),
     );
     for (const key in globalUsings) {
@@ -196,7 +182,7 @@ export class CSharpDependencyFormatter {
       }
     }
     // Add local usings to dependencies
-    const localUsings = this.formatUsings(
+    const localUsings = this.formatExternalUsings(
       this.usingResolver.resolveUsingDirectives(filepath),
     );
     for (const key in localUsings) {
