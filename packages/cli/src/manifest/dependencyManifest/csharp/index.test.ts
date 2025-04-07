@@ -10,7 +10,7 @@ describe("generateCSharpDependencymanifest", () => {
   const files = getCSharpFilesMap();
   const manifest = generateCSharpDependencyManifest(files);
   test("Correctly identifies files", () => {
-    expect(Object.keys(manifest).length).toBe(8);
+    expect(Object.keys(manifest).length).toBe(9);
   });
   test("Resolves exports", () => {
     expect(
