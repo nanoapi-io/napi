@@ -197,62 +197,75 @@ export function getCyElements(
       }
 
       // Dependency instances
-      Object.values(dependencyFile.symbols).forEach((dependencySymbolId) => {
-        const id = `${dependencyFileId}${joinChar}${dependencySymbolId}`;
-        const instanceType =
-          auditResponse.dependencyManifest[dependencyFileId]?.symbols[
-            dependencySymbolId
-          ]?.type;
-
-        const label = getNodeLabel({
-          isExpanded: false,
-          isExternal: dependencyFile.isExternal,
-          type: "instance",
-          fileName: dependencyFileId,
-          instance: {
-            name: dependencySymbolId,
-            type: instanceType,
-          },
-          errorMessages: [],
-          warningMessages: [],
-        });
-
-        const dependencyInstanceElement: NodeElementDefinition = {
-          data: {
-            id,
-            label,
-            position: { x, y },
-            isExpanded: false,
-            type: "instance",
-            isCurrentFile: false,
-            isExternal: dependencyFile.isExternal,
-            parent: dependencyFileId,
-            customData: {
-              fileName: dependencyFileId,
-              instance: {
-                name: dependencySymbolId,
-                type: instanceType,
-              },
-              errorMessages: [],
-              warningMessages: [],
-            },
-          },
-        };
-        nodeMap[dependencyFileId].children[dependencySymbolId] = {
-          element: dependencyInstanceElement,
-          children: {},
-        };
-
-        // Edges
+      const dependencyFileSymbols = Object.values(dependencyFile.symbols);
+      if (dependencyFileSymbols.length === 0) {
+        // create edge to file
         const edgeElement: EdgeElementDefinition = {
           data: {
-            source: id,
-            target: currentSymbolId,
+            source: currentSymbolId,
+            target: dependencyFileId,
             type: "dependency",
           },
         };
         edges.push(edgeElement);
-      });
+      } else {
+        dependencyFileSymbols.forEach((dependencySymbolId) => {
+          const id = `${dependencyFileId}${joinChar}${dependencySymbolId}`;
+          const instanceType =
+            auditResponse.dependencyManifest[dependencyFileId]?.symbols[
+              dependencySymbolId
+            ]?.type;
+
+          const label = getNodeLabel({
+            isExpanded: false,
+            isExternal: dependencyFile.isExternal,
+            type: "instance",
+            fileName: dependencyFileId,
+            instance: {
+              name: dependencySymbolId,
+              type: instanceType,
+            },
+            errorMessages: [],
+            warningMessages: [],
+          });
+
+          const dependencyInstanceElement: NodeElementDefinition = {
+            data: {
+              id,
+              label,
+              position: { x, y },
+              isExpanded: false,
+              type: "instance",
+              isCurrentFile: false,
+              isExternal: dependencyFile.isExternal,
+              parent: dependencyFileId,
+              customData: {
+                fileName: dependencyFileId,
+                instance: {
+                  name: dependencySymbolId,
+                  type: instanceType,
+                },
+                errorMessages: [],
+                warningMessages: [],
+              },
+            },
+          };
+          nodeMap[dependencyFileId].children[dependencySymbolId] = {
+            element: dependencyInstanceElement,
+            children: {},
+          };
+
+          // Edges
+          const edgeElement: EdgeElementDefinition = {
+            data: {
+              source: id,
+              target: currentSymbolId,
+              type: "dependency",
+            },
+          };
+          edges.push(edgeElement);
+        });
+      }
     });
 
     // Dependents

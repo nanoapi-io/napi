@@ -74,24 +74,62 @@ $ npm install
 
 ### Running the Project
 
-When running locally, the UI and CLI must be run separately to avoid having to recreate production builds of the UI on each change.
+When running locally, the UI must be built before the CLI can be run.
 
-To run the UI:
+To build the UI:
 
 ```bash
-$ npm run dev:app
+$ npm run build
 ```
 
 To run the CLI:
 
 ```bash
-$ npm run dev:cli <command>
+$ npm start 
 ```
 
-Running the `ui` command from the CLI will spin up a web server on your localhost. You can access the UI by navigating to `http://localhost:3000`.
+Running the `audit view` command from the CLI will spin up a web server on your localhost. You can access the UI by navigating to `http://localhost:3000`.
 
 > **Note:** In case of port collisions, the UI will automatically switch to the next available port.
 
+### Project Setup
+
+You can use any project (in a supported language) to test the CLI. There are some steps that must be taken to set up the project:
+
+1. Clone or CD to the repo you want to work on/test with. For this example we'll use Apache Airflow.
+```bash
+git clone https://github.com/apache/airflow.git
+cd airflow
+```
+
+2. From the `napi` repo initialize the project using the CLI:
+```bash
+cd /path/to/napi # or just use a different terminal
+npm start -- init -- --workdir=/path/to/airflow
+```
+
+3. This will create a `.napirc` file in root of the project. The file should look like the following. You can copy this content into the file and overwrite it if you are having issues.
+```json
+{
+  "entrypoint": "app.py",
+  "out": "napi_dist",
+  "audit": {
+    "language": "python",
+    "include": ["airflow-core/src/airflow/**/*"],
+    "exclude": [],
+    "targetMaxCharInFile": 5000,
+    "targetMaxLineInFile": 500,
+    "targetMaxDepPerFile": 4
+  }
+}
+```
+
+4. Now the audit view can be run.
+```bash
+npm start -- audit view -- --workdir=/path/to/airflow
+```
+
+5. The audit view will be available at `http://localhost:3000` and should automatically open in your default browser.
 
 ### Testing
 

@@ -49,6 +49,17 @@ beforeEach(() => {
         `).rootNode,
       },
     ],
+    [
+      "unusedImport.py",
+      {
+        path: "unusedImport.py",
+        rootNode: pythonParser.parse(`
+          from moduleA import bar
+          import moduleB
+          import external_unused
+        `).rootNode,
+      },
+    ],
   ]);
 
   // Initialize the basic resolvers
@@ -95,19 +106,12 @@ describe("PythonUsageResolver", () => {
 
     expect(external.length).toBe(1);
     expect(external[0].moduleName).toBe("external_module");
-    expect(external[0].symbolNames).toBeUndefined();
+    expect(external[0].symbolNames).toBeDefined();
+    expect(external[0].symbolNames?.length).toBe(1);
+    expect(external[0].symbolNames?.[0]).toBe("some_function");
   });
 
   test("handles no usage gracefully", () => {
-    files.set("unusedImport.py", {
-      path: "unusedImport.py",
-      rootNode: pythonParser.parse(`
-        from moduleA import bar
-        import moduleB
-        import external_unused
-      `).rootNode,
-    });
-
     const rootNode = files.get("unusedImport.py")
       ?.rootNode as Parser.SyntaxNode;
     const combined = resolver.resolveUsage("unusedImport.py", rootNode);
@@ -288,8 +292,7 @@ describe("PythonUsageResolver - Complex Cases", () => {
     expect(moduleASymbols).toContain("foo");
     expect(moduleASymbols).toContain("bar");
 
-    // For moduleB, since it's used as a whole (via alias 'modB' and attribute access),
-    // no specific symbols are recorded.
+    // For moduleB, it is used, but no symbol as bar is reexported from module A.
     const moduleBResult = internal.get("moduleB.py");
     expect(moduleBResult).toBeDefined();
     expect(moduleBResult?.symbols).toBeUndefined();
@@ -304,7 +307,9 @@ describe("PythonUsageResolver - Complex Cases", () => {
     // External module should be recorded.
     expect(external.length).toBe(1);
     expect(external[0].moduleName).toBe("external_module");
-    expect(external[0].symbolNames).toBeUndefined();
+    expect(external[0].symbolNames).toBeDefined();
+    expect(external[0].symbolNames?.length).toBe(1);
+    expect(external[0].symbolNames?.[0]).toBe("some_function");
   });
 
   test("resolves nested reexports with aliases correctly", () => {
