@@ -49,7 +49,7 @@ export interface DebugNode {
 }
 
 export class CSharpNamespaceMapper {
-  #files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+  files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   #nsResolver: CSharpNamespaceResolver;
   nsTree: NamespaceNode;
   #exportsCache: Map<string, SymbolNode[]> = new Map<string, SymbolNode[]>();
@@ -57,13 +57,13 @@ export class CSharpNamespaceMapper {
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   ) {
-    this.#files = files;
+    this.files = files;
     this.#nsResolver = new CSharpNamespaceResolver();
     this.nsTree = this.buildNamespaceTree();
   }
 
   getFile(key: string) {
-    return this.#files.get(key);
+    return this.files.get(key);
   }
 
   /**
@@ -146,7 +146,7 @@ export class CSharpNamespaceMapper {
     };
 
     // Parse all files.
-    this.#files.forEach((file) => {
+    this.files.forEach((file) => {
       const namespaces = this.#nsResolver
         .getNamespacesFromFile(file)
         .map((ns) => ns as NamespaceNode);
