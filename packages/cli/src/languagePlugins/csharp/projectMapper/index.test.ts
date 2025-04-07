@@ -16,7 +16,7 @@ describe("CSharpProjectMapper", () => {
   });
 
   const nsmapper = new CSharpNamespaceMapper(files);
-  const usingResolver = new CSharpUsingResolver(nsmapper);
+  const usingResolver = new CSharpUsingResolver(nsmapper, projectMapper);
   const usagecsFile = path.join(csharpFilesFolder, "Usage.cs");
   const globalusingcsFile = path.join(
     csharpFilesFolder,

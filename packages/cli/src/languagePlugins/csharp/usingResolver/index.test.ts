@@ -10,11 +10,13 @@ import { CSharpNamespaceMapper } from "../namespaceMapper";
 import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles";
 import path from "path";
 import { File } from "../namespaceResolver";
+import { CSharpProjectMapper } from "../projectMapper";
 
 describe("UsingResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
   const nsmapper = new CSharpNamespaceMapper(files);
-  const resolver = new CSharpUsingResolver(nsmapper);
+  const projectMapper = new CSharpProjectMapper(files);
+  const resolver = new CSharpUsingResolver(nsmapper, projectMapper);
 
   test("Directive simple parsing", () => {
     const usingDirectives = resolver.parseUsingDirectives(

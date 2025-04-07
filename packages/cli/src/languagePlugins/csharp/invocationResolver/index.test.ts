@@ -6,13 +6,16 @@ import { getCSharpFilesMap, csharpFilesFolder } from "../testFiles";
 import path from "path";
 import { CSharpInvocationResolver } from ".";
 import Parser from "tree-sitter";
+import { CSharpProjectMapper } from "../projectMapper";
 
 describe("InvocationResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
   const nsMapper = new CSharpNamespaceMapper(files);
+  const projectMapper = new CSharpProjectMapper(files);
   const nsResolver = new CSharpNamespaceResolver();
   const invResolver: CSharpInvocationResolver = new CSharpInvocationResolver(
     nsMapper,
+    projectMapper,
   );
 
   test("Invocation resolution", () => {

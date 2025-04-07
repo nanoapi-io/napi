@@ -7,6 +7,7 @@ import {
 } from "../namespaceMapper";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
+import { CSharpProjectMapper } from "../projectMapper";
 
 /**
  * Interface representing the invocations in a file
@@ -25,9 +26,12 @@ export class CSharpInvocationResolver {
   private resolvedImports: ResolvedImports;
   private cache: Map<string, Invocations> = new Map<string, Invocations>();
 
-  constructor(nsMapper: CSharpNamespaceMapper) {
+  constructor(
+    nsMapper: CSharpNamespaceMapper,
+    projectmapper: CSharpProjectMapper,
+  ) {
     this.nsMapper = nsMapper;
-    this.usingResolver = new CSharpUsingResolver(nsMapper);
+    this.usingResolver = new CSharpUsingResolver(nsMapper, projectmapper);
     this.resolvedImports = {
       internal: [],
       external: [],

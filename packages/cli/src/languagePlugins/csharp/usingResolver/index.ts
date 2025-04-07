@@ -89,9 +89,12 @@ export class CSharpUsingResolver {
   >();
   public projectmapper: CSharpProjectMapper;
 
-  constructor(nsMapper: CSharpNamespaceMapper) {
+  constructor(
+    nsMapper: CSharpNamespaceMapper,
+    projectmapper: CSharpProjectMapper,
+  ) {
     this.nsMapper = nsMapper;
-    this.projectmapper = new CSharpProjectMapper(nsMapper.files);
+    this.projectmapper = projectmapper;
   }
 
   /**

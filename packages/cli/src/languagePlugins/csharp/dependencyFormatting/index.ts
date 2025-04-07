@@ -3,6 +3,7 @@ import { CSharpInvocationResolver, Invocations } from "../invocationResolver";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
 import Parser from "tree-sitter";
 import { ResolvedImports, CSharpUsingResolver } from "../usingResolver";
+import { CSharpProjectMapper } from "../projectMapper";
 
 /**
  * Represents a dependency in a C# file.
@@ -49,6 +50,7 @@ export class CSharpDependencyFormatter {
   private invResolver: CSharpInvocationResolver;
   private usingResolver: CSharpUsingResolver;
   private nsMapper: CSharpNamespaceMapper;
+  private projectMapper: CSharpProjectMapper;
 
   /**
    * Constructs a new CSharpDependencyFormatter.
@@ -58,8 +60,15 @@ export class CSharpDependencyFormatter {
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   ) {
     this.nsMapper = new CSharpNamespaceMapper(files);
-    this.invResolver = new CSharpInvocationResolver(this.nsMapper);
-    this.usingResolver = new CSharpUsingResolver(this.nsMapper);
+    this.projectMapper = new CSharpProjectMapper(files);
+    this.invResolver = new CSharpInvocationResolver(
+      this.nsMapper,
+      this.projectMapper,
+    );
+    this.usingResolver = new CSharpUsingResolver(
+      this.nsMapper,
+      this.projectMapper,
+    );
     for (const [fp] of files) {
       this.usingResolver.resolveUsingDirectives(fp);
     }
