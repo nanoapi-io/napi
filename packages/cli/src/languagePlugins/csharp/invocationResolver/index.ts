@@ -42,6 +42,10 @@ const calledClassesQuery = new Parser.Query(
   (parameter
     type: (qualified_name) @classname
   )
+  (type_argument_list
+  (identifier) @cls)
+  (type_argument_list
+  (qualified_name) @cls)
   `,
 );
 
