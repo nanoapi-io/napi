@@ -15,16 +15,8 @@ export default function GraphLayout(props: {
           {props.sideBarSlot}
         </div>
       )}
-      <div className="flex w-full flex-col gap-2">
-        <div className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl flex justify-between items-center px-2 py-2 ">
-          <a
-            className="flex items-center gap-1 text-gray-light dark:text-gray-dark no-underline	"
-            href="https://nanoapi.io"
-            target="_blank"
-          >
-            <img src="/logo.png" alt="logo" className="w-8 h-8" />
-            <span className="text-xl font-bold">NanoAPI</span>
-          </a>
+      <div className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out">
+        <div className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl rounded-b-none flex justify-end items-center px-2 py-2 ">
           <div className="flex gap-4 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 py-2 rounded-xl">
             <Button
               variant="ghost"
@@ -68,7 +60,7 @@ export default function GraphLayout(props: {
             </Button>
           </div>
         </div>
-        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl overflow-hidden">
+        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl rounded-t-none border-t border-t-gray-300 dark:border-t-gray-700 overflow-hidden">
           {props.graphSlot}
         </div>
       </div>

@@ -113,7 +113,15 @@ export default function FileExplorer(props: {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        {isOpen && <a
+          className="flex items-center gap-1 pl-3 text-gray-light dark:text-gray-dark no-underline	"
+          href="https://nanoapi.io"
+          target="_blank"
+        >
+          <img src="/logo.png" alt="logo" className="w-8 h-8" />
+          <span className="text-xl font-bold">NanoAPI</span>
+        </a>}
         <Button
           className="text-text-light dark:text-text-dark p-0 mx-2 my-1"
           size="1"
