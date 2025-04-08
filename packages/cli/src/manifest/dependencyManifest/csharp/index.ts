@@ -9,9 +9,13 @@ export function generateCSharpDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
 ): DependencyManifest {
   console.time("generateCSharpDependencyManifest");
+  console.info("Processing project...");
   const formatter = new CSharpDependencyFormatter(files);
   const manifest: DependencyManifest = {};
+  const filecount = files.size;
+  let i = 0;
   for (const [, { path }] of files) {
+    console.info(`Processing ${path} (${++i}/${filecount})`);
     const fm = formatter.formatFile(path) as CSharpFile;
     manifest[path] = {
       id: fm.id,
@@ -27,14 +31,24 @@ export function generateCSharpDependencyManifest(
       delete dep.isNamespace;
     }
   }
+  console.info("Populating dependents...");
+  i = 0;
   // Populate dependents
-  for (const [, { path }] of files) {
-    const fm = manifest[path];
+  for (const fm of Object.values(manifest)) {
+    const path = fm.filePath;
+    console.info(`Populating dependents for ${path} (${++i}/${filecount})`);
     for (const symbol of Object.values(fm.symbols)) {
-      for (const [, dep] of Object.entries(symbol.dependents)) {
-        const depManifest = manifest[dep.id];
-        if (depManifest) {
-          depManifest.symbols[dep.symbols[symbol.id]] = symbol;
+      for (const dpncy of Object.values(symbol.dependencies)) {
+        for (const depsymbol of Object.values(dpncy.symbols)) {
+          const otherFile = manifest[dpncy.id];
+          const otherSymbol = otherFile.symbols[depsymbol];
+          if (!otherSymbol.dependents[fm.id]) {
+            otherSymbol.dependents[fm.id] = {
+              id: fm.id,
+              symbols: {},
+            };
+          }
+          otherSymbol.dependents[fm.id].symbols[symbol.id] = symbol.id;
         }
       }
     }

@@ -3,6 +3,7 @@ import { CSharpInvocationResolver, Invocations } from "../invocationResolver";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
 import Parser from "tree-sitter";
 import { ResolvedImports, CSharpUsingResolver } from "../usingResolver";
+import { CSharpProjectMapper } from "../projectMapper";
 
 /**
  * Represents a dependency in a C# file.
@@ -31,6 +32,7 @@ export interface CSharpSymbol {
   lineCount: number;
   characterCount: number;
   dependents: Record<string, CSharpDependent>;
+  dependencies: Record<string, CSharpDependency>;
 }
 
 /**
@@ -49,6 +51,7 @@ export class CSharpDependencyFormatter {
   private invResolver: CSharpInvocationResolver;
   private usingResolver: CSharpUsingResolver;
   private nsMapper: CSharpNamespaceMapper;
+  private projectMapper: CSharpProjectMapper;
 
   /**
    * Constructs a new CSharpDependencyFormatter.
@@ -58,8 +61,15 @@ export class CSharpDependencyFormatter {
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   ) {
     this.nsMapper = new CSharpNamespaceMapper(files);
-    this.invResolver = new CSharpInvocationResolver(this.nsMapper);
-    this.usingResolver = new CSharpUsingResolver(this.nsMapper);
+    this.projectMapper = new CSharpProjectMapper(files);
+    this.invResolver = new CSharpInvocationResolver(
+      this.nsMapper,
+      this.projectMapper,
+    );
+    this.usingResolver = new CSharpUsingResolver(
+      this.nsMapper,
+      this.projectMapper,
+    );
     for (const [fp] of files) {
       this.usingResolver.resolveUsingDirectives(fp);
     }
@@ -75,13 +85,16 @@ export class CSharpDependencyFormatter {
   ): Record<string, CSharpSymbol> {
     const symbols: Record<string, CSharpSymbol> = {};
     for (const symbol of exportedSymbols) {
-      symbols[
-        (symbol.namespace !== "" ? symbol.namespace + "." : "") + symbol.name
-      ] = {
-        id: symbol.name,
+      const fullname =
+        (symbol.namespace !== "" ? symbol.namespace + "." : "") + symbol.name;
+      symbols[fullname] = {
+        id: fullname,
         type: symbol.type,
         lineCount: symbol.node.endPosition.row - symbol.node.startPosition.row,
         characterCount: symbol.node.endIndex - symbol.node.startIndex,
+        dependencies: this.formatDependencies(
+          this.invResolver.getInvocationsFromNode(symbol.node, symbol.filepath),
+        ),
         dependents: {},
       };
     }
@@ -99,19 +112,20 @@ export class CSharpDependencyFormatter {
     const dependencies: Record<string, CSharpDependency> = {};
     for (const resolvedSymbol of invocations.resolvedSymbols) {
       const namespace = resolvedSymbol.namespace;
+      const filepath = resolvedSymbol.filepath;
       const id =
         namespace !== ""
           ? namespace + "." + resolvedSymbol.name
           : resolvedSymbol.name;
-      if (!dependencies[namespace]) {
-        dependencies[namespace] = {
-          id: namespace,
+      if (!dependencies[filepath]) {
+        dependencies[filepath] = {
+          id: filepath,
           isExternal: false,
           symbols: {},
           isNamespace: true,
         };
       }
-      dependencies[namespace].symbols[id] = id;
+      dependencies[filepath].symbols[id] = id;
     }
     // Add unresolved symbols as external dependencies
     // Commented because redundant : if a symbol is unresolved,
@@ -127,25 +141,10 @@ export class CSharpDependencyFormatter {
     return dependencies;
   }
 
-  private formatUsings(
+  private formatExternalUsings(
     resolvedimports: ResolvedImports,
   ): Record<string, CSharpDependency> {
     const dependencies: Record<string, CSharpDependency> = {};
-    for (const resolvedSymbol of resolvedimports.internal) {
-      const id = resolvedSymbol.symbol
-        ? (resolvedSymbol.symbol.namespace !== ""
-            ? resolvedSymbol.symbol.namespace + "."
-            : "") + resolvedSymbol.symbol.name
-        : resolvedSymbol.namespace
-          ? this.nsMapper.getFullNSName(resolvedSymbol.namespace)
-          : "";
-      dependencies[id] = {
-        id,
-        isExternal: false,
-        symbols: {},
-        isNamespace: resolvedSymbol.namespace !== undefined,
-      };
-    }
     for (const unresolvedSymbol of resolvedimports.external) {
       dependencies[unresolvedSymbol.name] = {
         id: unresolvedSymbol.name,
@@ -178,8 +177,8 @@ export class CSharpDependencyFormatter {
       symbols: this.formatSymbols(fileSymbols),
     };
     // Add global usings to dependencies
-    const globalUsings = this.formatUsings(
-      this.usingResolver.getGlobalUsings(),
+    const globalUsings = this.formatExternalUsings(
+      this.usingResolver.getGlobalUsings(filepath),
     );
     for (const key in globalUsings) {
       if (!formattedFile.dependencies[key]) {
@@ -187,7 +186,7 @@ export class CSharpDependencyFormatter {
       }
     }
     // Add local usings to dependencies
-    const localUsings = this.formatUsings(
+    const localUsings = this.formatExternalUsings(
       this.usingResolver.resolveUsingDirectives(filepath),
     );
     for (const key in localUsings) {

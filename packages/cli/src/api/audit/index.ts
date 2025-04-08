@@ -26,7 +26,6 @@ export function getAuditApi(
         napiConfig.audit.manifestoJsonOutputPath,
         "auditResponse.json",
       );
-      console.log(outputPath);
       fs.writeFileSync(outputPath, JSON.stringify(auditResponse, null, 2));
     }
   } catch (error) {

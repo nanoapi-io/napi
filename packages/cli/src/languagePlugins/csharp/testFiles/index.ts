@@ -3,7 +3,7 @@ import * as path from "path";
 import Parser from "tree-sitter";
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
-const csharpFilesFolder = path.join(__dirname, "csharpFiles");
+export const csharpFilesFolder = path.join(__dirname, "csharpFiles");
 
 const csharpFilesMap = new Map<
   string,
@@ -20,7 +20,7 @@ function findCSharpFiles(dir: string) {
     } else if (path.extname(fullPath) === ".cs") {
       const content = fs.readFileSync(fullPath, "utf8");
       const tree = csharpParser.parse(content);
-      csharpFilesMap.set(file, { path: file, rootNode: tree.rootNode });
+      csharpFilesMap.set(fullPath, { path: fullPath, rootNode: tree.rootNode });
     }
   });
 }

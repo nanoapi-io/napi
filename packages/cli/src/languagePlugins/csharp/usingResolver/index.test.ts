@@ -7,16 +7,21 @@ import {
   USING_STATIC,
 } from ".";
 import { CSharpNamespaceMapper } from "../namespaceMapper";
-import { getCSharpFilesMap } from "../testFiles";
+import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles";
+import path from "path";
 import { File } from "../namespaceResolver";
+import { CSharpProjectMapper } from "../projectMapper";
 
 describe("UsingResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();
   const nsmapper = new CSharpNamespaceMapper(files);
-  const resolver = new CSharpUsingResolver(nsmapper);
+  const projectMapper = new CSharpProjectMapper(files);
+  const resolver = new CSharpUsingResolver(nsmapper, projectMapper);
 
   test("Directive simple parsing", () => {
-    const usingDirectives = resolver.parseUsingDirectives("Usage.cs");
+    const usingDirectives = resolver.parseUsingDirectives(
+      path.join(csharpFilesFolder, "Usage.cs"),
+    );
     expect(usingDirectives).toMatchObject([
       {
         type: GLOBAL_USING,
@@ -47,7 +52,9 @@ describe("UsingResolver", () => {
     ]);
   });
   test("Directive resolving", () => {
-    const resolved = resolver.resolveUsingDirectives("Usage.cs");
+    const resolved = resolver.resolveUsingDirectives(
+      path.join(csharpFilesFolder, "Usage.cs"),
+    );
     expect(resolved).toMatchObject({
       internal: [
         {
@@ -57,7 +64,6 @@ describe("UsingResolver", () => {
             name: "User",
             type: "class",
             namespace: "MyApp.Models",
-            filepath: "Models.cs",
           },
         },
         {
@@ -92,27 +98,25 @@ describe("UsingResolver", () => {
   });
 
   test("Class resolution", () => {
-    const imports = resolver.resolveUsingDirectives("Usage.cs");
-    const user = resolver.findClassInImports(imports, "User");
+    const filepath = path.join(csharpFilesFolder, "Usage.cs");
+    const imports = resolver.resolveUsingDirectives(filepath);
+    const user = resolver.findClassInImports(imports, "User", filepath);
     expect(user).toMatchObject({
       name: "User",
       type: "class",
       namespace: "MyApp.Models",
-      filepath: "Models.cs",
     });
-    const gordon = resolver.findClassInImports(imports, "Gordon");
+    const gordon = resolver.findClassInImports(imports, "Gordon", filepath);
     expect(gordon).toMatchObject({
       name: "Gordon",
       type: "class",
       namespace: "HalfNamespace",
-      filepath: "SemiNamespaced.cs",
     });
-    const guy = resolver.findClassInImports(imports, "Guy");
+    const guy = resolver.findClassInImports(imports, "Guy", filepath);
     expect(guy).toMatchObject({
       name: "User",
       type: "class",
       namespace: "MyApp.Models",
-      filepath: "Models.cs",
     });
   });
 });

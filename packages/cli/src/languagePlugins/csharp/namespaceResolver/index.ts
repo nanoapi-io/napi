@@ -16,6 +16,15 @@ export type SymbolType =
   | typeof CSHARP_INTERFACE_TYPE
   | typeof CSHARP_DELEGATE_TYPE;
 
+const fscopednamespacedeclquery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  (file_scoped_namespace_declaration
+    name: (qualified_name) @id
+  )
+  `,
+);
+
 /**
  * Interface representing a file
  */
@@ -126,14 +135,7 @@ export class CSharpNamespaceResolver {
   #getFileScopedNamespaceDeclaration(
     node: Parser.SyntaxNode,
   ): string | undefined {
-    return new Parser.Query(
-      this.parser.getLanguage(),
-      `
-      (file_scoped_namespace_declaration
-        name: (qualified_name) @id
-      )
-      `,
-    )
+    return fscopednamespacedeclquery
       .captures(node)
       .map((capture) => capture.node.text)[0];
   }
@@ -164,12 +166,13 @@ export class CSharpNamespaceResolver {
    * @returns The declaration list node
    */
   #getDeclarationList(node: Parser.SyntaxNode): Parser.SyntaxNode {
-    return new Parser.Query(
-      this.parser.getLanguage(),
-      `
-        (declaration_list) @body
-      `,
-    ).captures(node)[0].node;
+    const result = node.children.find(
+      (child) => child.type === "declaration_list",
+    );
+    if (!result) {
+      throw new Error("Declaration list node not found");
+    }
+    return result;
   }
 
   /**
@@ -178,13 +181,11 @@ export class CSharpNamespaceResolver {
    * @returns The identifier node
    */
   #getIdentifierNode(node: Parser.SyntaxNode): Parser.SyntaxNode {
-    return new Parser.Query(
-      this.parser.getLanguage(),
-      `
-        (identifier) @name
-        (qualified_name) @name
-      `,
-    ).captures(node)[0].node;
+    const result = node.childForFieldName("name");
+    if (!result) {
+      throw new Error("Identifier node not found");
+    }
+    return result;
   }
 
   /**

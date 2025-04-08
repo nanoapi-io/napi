@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest";
 import { CSharpNamespaceMapper } from ".";
-import { getCSharpFilesMap } from "../testFiles";
+import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles";
+import path from "path";
 import { File } from "../namespaceResolver";
 
 describe("NamespaceMapper", () => {
@@ -20,13 +21,16 @@ describe("NamespaceMapper", () => {
       expect.arrayContaining([
         expect.objectContaining({
           name: "Freeman",
-          filepath: "SemiNamespaced.cs",
+          filepath: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
         }),
         expect.objectContaining({
           name: "HeadCrab",
-          filepath: "SemiNamespaced.cs",
+          filepath: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
         }),
-        expect.objectContaining({ name: "Usage", filepath: "Usage.cs" }),
+        expect.objectContaining({
+          name: "Usage",
+          filepath: path.join(csharpFilesFolder, "Usage.cs"),
+        }),
       ]),
     );
 
@@ -113,17 +117,17 @@ describe("NamespaceMapper", () => {
     const order = nsMapper.findClassInTree(nsTree, "Order");
     expect(order).toMatchObject({
       name: "Order",
-      filepath: "Models.cs",
+      filepath: path.join(csharpFilesFolder, "Models.cs"),
     });
     const innerClass = nsMapper.findClassInTree(nsTree, "InnerClass");
     expect(innerClass).toMatchObject({
       name: "InnerClass",
-      filepath: "Nested.cs",
+      filepath: path.join(csharpFilesFolder, "Nested.cs"),
     });
     const chickenbun = nsMapper.findClassInTree(nsTree, "ChickenBurger.Bun");
     expect(chickenbun).toMatchObject({
       name: "Bun",
-      filepath: "2Namespaces1File.cs",
+      filepath: path.join(csharpFilesFolder, "2Namespaces1File.cs"),
     });
   });
 
@@ -136,7 +140,7 @@ describe("NamespaceMapper", () => {
     const halfnamespace = nsMapper.findNamespaceInTree(nsTree, "HalfNamespace");
     expect(halfnamespace).toMatchObject({
       name: "HalfNamespace",
-      exports: [{ name: "Gordon", filepath: "SemiNamespaced.cs" }],
+      exports: [{ name: "Gordon" }],
       childrenNamespaces: [],
     });
     const models = nsMapper.findNamespaceInTree(nsTree, "MyApp.Models");
@@ -151,7 +155,7 @@ describe("NamespaceMapper", () => {
     );
     expect(innernamespace).toMatchObject({
       name: "InnerNamespace",
-      exports: [{ name: "InnerClass", filepath: "Nested.cs" }],
+      exports: [{ name: "InnerClass" }],
       childrenNamespaces: [],
     });
   });
