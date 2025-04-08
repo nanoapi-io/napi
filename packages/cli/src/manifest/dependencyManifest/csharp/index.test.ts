@@ -67,9 +67,6 @@ describe("generateCSharpDependencymanifest", () => {
         manifest[path.join(csharpFilesFolder, "Nested.cs")].dependencies,
       ).length,
     ).toBe(1);
-    console.log(
-      manifest[path.join(csharpFilesFolder, "Program.cs")].dependencies,
-    );
     expect(
       Object.keys(
         manifest[path.join(csharpFilesFolder, "Program.cs")].dependencies,
