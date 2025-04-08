@@ -3,9 +3,23 @@ import path from "path";
 import { ResolvedImports } from "../usingResolver";
 import Parser from "tree-sitter";
 
+/**
+ * Represents a .NET project.
+ */
 export interface DotNetProject {
+  /**
+   * The root folder of the project.
+   */
   rootFolder: string;
+
+  /**
+   * The path to the .csproj file of the project.
+   */
   csprojPath: string;
+
+  /**
+   * The global usings resolved for the project.
+   */
   globalUsings: ResolvedImports;
 }
 
@@ -52,6 +66,11 @@ export class CSharpProjectMapper {
     return projects;
   }
 
+  /**
+   * Gets the root folder of the project based on the provided file paths.
+   * @param filepaths - An array of file paths.
+   * @returns The root folder path.
+   */
   #getRootFolder(filepaths: string[]): string {
     if (filepaths.length === 0) {
       throw new Error("No file paths provided");

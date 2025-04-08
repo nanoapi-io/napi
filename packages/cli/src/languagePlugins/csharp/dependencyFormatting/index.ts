@@ -9,9 +9,21 @@ import { CSharpProjectMapper } from "../projectMapper";
  * Represents a dependency in a C# file.
  */
 export interface CSharpDependency {
+  /**
+   * The unique identifier of the dependency.
+   */
   id: string;
+  /**
+   * Indicates whether the dependency is external.
+   */
   isExternal: boolean;
+  /**
+   * A record of symbols associated with the dependency.
+   */
   symbols: Record<string, string>;
+  /**
+   * Indicates whether the dependency is a namespace.
+   */
   isNamespace?: boolean;
 }
 
@@ -19,7 +31,13 @@ export interface CSharpDependency {
  * Represents a dependent in a C# file.
  */
 export interface CSharpDependent {
+  /**
+   * The unique identifier of the dependent.
+   */
   id: string;
+  /**
+   * A record of symbols associated with the dependent.
+   */
   symbols: Record<string, string>;
 }
 
@@ -27,11 +45,29 @@ export interface CSharpDependent {
  * Represents a symbol in a C# file.
  */
 export interface CSharpSymbol {
+  /**
+   * The unique identifier of the symbol.
+   */
   id: string;
+  /**
+   * The type of the symbol.
+   */
   type: SymbolType;
+  /**
+   * The number of lines the symbol spans.
+   */
   lineCount: number;
+  /**
+   * The number of characters the symbol spans.
+   */
   characterCount: number;
+  /**
+   * A record of dependents associated with the symbol.
+   */
   dependents: Record<string, CSharpDependent>;
+  /**
+   * A record of dependencies associated with the symbol.
+   */
   dependencies: Record<string, CSharpDependency>;
 }
 
@@ -39,11 +75,29 @@ export interface CSharpSymbol {
  * Represents a C# file with its metadata and dependencies.
  */
 export interface CSharpFile {
+  /**
+   * The unique identifier of the file.
+   */
   id: string;
+  /**
+   * The file path of the C# file.
+   */
   filepath: string;
+  /**
+   * The number of lines in the file.
+   */
   lineCount: number;
+  /**
+   * The number of characters in the file.
+   */
   characterCount: number;
+  /**
+   * A record of dependencies associated with the file.
+   */
   dependencies: Record<string, CSharpDependency>;
+  /**
+   * A record of symbols defined in the file.
+   */
   symbols: Record<string, CSharpSymbol>;
 }
 
@@ -141,6 +195,11 @@ export class CSharpDependencyFormatter {
     return dependencies;
   }
 
+  /**
+   * Formats external usings into a record of CSharpDependency.
+   * @param resolvedimports - The resolved imports to format.
+   * @returns A record of dependency IDs to their corresponding CSharpDependency.
+   */
   private formatExternalUsings(
     resolvedimports: ResolvedImports,
   ): Record<string, CSharpDependency> {

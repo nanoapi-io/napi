@@ -215,6 +215,11 @@ export class CSharpUsingResolver {
     return resolvedimports;
   }
 
+  /**
+   * Gets the global usings for a file.
+   * @param filepath - The path to the file to analyse.
+   * @returns A ResolvedImports object containing internal and external symbols imported through global using directives.
+   */
   public getGlobalUsings(filepath: string): ResolvedImports {
     return this.projectmapper.getGlobalUsings(filepath);
   }
