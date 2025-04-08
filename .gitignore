@@ -5,3 +5,5 @@ napi_dist
 __pycache__
 .ruff_cache
 .OPENAIKEY
+examples/csharp/EndpointExample/obj
+examples/csharp/EndpointExample/bin
