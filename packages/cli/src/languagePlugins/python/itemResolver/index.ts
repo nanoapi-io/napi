@@ -141,7 +141,7 @@ export class PythonItemResolver {
           if (!sourceModuleName) continue;
 
           const sourceModule = this.moduleResolver.resolveModule(
-            module.path,
+            module,
             sourceModuleName,
           );
           if (!sourceModule) continue;
@@ -185,7 +185,7 @@ export class PythonItemResolver {
             const alias = member.aliasNode?.text || member.identifierNode.text;
             if (alias === symbolName) {
               const sourceModule = this.moduleResolver.resolveModule(
-                module.path,
+                module,
                 member.identifierNode.text,
               );
               if (!sourceModule) continue;
@@ -289,7 +289,7 @@ export class PythonItemResolver {
         if (!sourceModuleName) continue;
 
         const sourceModule = this.moduleResolver.resolveModule(
-          module.path,
+          module,
           sourceModuleName,
         );
         if (!sourceModule) continue;
@@ -335,7 +335,7 @@ export class PythonItemResolver {
         for (const member of importStmt.members) {
           const alias = member.aliasNode?.text || member.identifierNode.text;
           const sourceModule = this.moduleResolver.resolveModule(
-            module.path,
+            module,
             member.identifierNode.text,
           );
           if (sourceModule) {
