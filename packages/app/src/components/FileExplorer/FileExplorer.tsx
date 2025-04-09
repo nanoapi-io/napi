@@ -2,63 +2,117 @@ import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
+import {
+  LuChevronRight,
+  LuChevronDown,
+  LuCornerDownRight,
+  LuEye,
+  LuPackageSearch
+} from "react-icons/lu";
+import languageIcon from "./languageIcons";
 
 interface TreeData {
   id: string;
   level: number;
   name: string;
+  matchesSearch: boolean;
   children?: TreeData[]; // Only for non leaf nodes
+  isSymbol?: boolean; // Only for leaf nodes
+}
+
+export interface FileExplorerFile {
+  path: string;
+  symbols: string[];
 }
 
 export default function FileExplorer(props: {
   busy: boolean;
-  paths: string[];
+  files: FileExplorerFile[];
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
-  function buildTreeData(paths: string[]): TreeData[] {
+  function nodeMatchesSearch(name: string, symbols: string[]): boolean {
+    return (
+      !search ||
+      name.toLowerCase().includes(search.toLowerCase()) ||
+      symbols.some((symbol) =>
+        symbol.toLowerCase().includes(search.toLowerCase())
+      )
+    );
+  }
+
+  function addFileToTree(
+    currentLevel: TreeData[],
+    segments: string[],
+    cumulativePath: string,
+    symbols: string[]
+  ): boolean {
+    const [segment, ...remainingSegments] = segments;
+    const nodeId = cumulativePath ? `${cumulativePath}/${segment}` : segment;
+    let existingNode = currentLevel.find((node) => node.name === segment);
+
+    if (!existingNode) {
+      existingNode = {
+        id: nodeId,
+        level: 0,
+        name: segment,
+        matchesSearch: false,
+        children: [],
+      };
+      currentLevel.push(existingNode);
+    }
+
+    let matchesCurrentNode = nodeMatchesSearch(segment, symbols);
+
+    if (remainingSegments.length > 0) {
+      const childMatches = addFileToTree(
+        existingNode.children!,
+        remainingSegments,
+        nodeId,
+        symbols
+      );
+      existingNode.matchesSearch = existingNode.matchesSearch || childMatches;
+    } else {
+      existingNode.matchesSearch =
+        existingNode.matchesSearch || matchesCurrentNode;
+
+      // ADD SYMBOLS AS CHILDREN HERE
+      if (symbols.length > 0) {
+        existingNode.children = symbols.map((symbol) => ({
+          id: `${nodeId}#${symbol}`,
+          level: existingNode!.level + 1,
+          name: symbol,
+          matchesSearch:
+            !search || symbol.toLowerCase().includes(search.toLowerCase()),
+          isSymbol: true,
+        }));
+
+        // Update matchesSearch if symbol matches
+        existingNode.matchesSearch =
+          existingNode.matchesSearch ||
+          existingNode.children.some((child) => child.matchesSearch);
+      }
+    }
+
+    return existingNode.matchesSearch;
+  }
+
+  function buildTreeData(files: FileExplorerFile[]): TreeData[] {
     let rootNodes: TreeData[] = [];
 
-    paths.forEach((path) => {
-      // Filter out files that don't match the search
-      if (!path.toLowerCase().includes(search.toLowerCase())) {
+    files.forEach((file) => {
+      // Filter out elements that don't match the search
+      // on either the filename or the symbols
+      if (!nodeMatchesSearch(file.path, file.symbols)) {
         return;
       }
 
-      // Split path by '/' to get each directory/file name
-      const parts = path.split("/");
+      const segments = file.path.split("/");
 
-      let currentLevel = rootNodes;
-      let cumulativePath = "";
-
-      parts.forEach((segment) => {
-        // Build the "id" from the segments so far
-        cumulativePath = cumulativePath
-          ? `${cumulativePath}/${segment}`
-          : segment;
-
-        // Check if we already have this segment in the current level
-        let existingNode = currentLevel.find((node) => node.name === segment);
-
-        // If not, create a new node
-        if (!existingNode) {
-          existingNode = {
-            id: cumulativePath,
-            level: 0,
-            name: segment,
-            children: [],
-          };
-          currentLevel.push(existingNode);
-        }
-
-        // Descend into children for the next segment
-        if (!existingNode.children) {
-          existingNode.children = [];
-        }
-        currentLevel = existingNode.children;
-      });
+      // Add the file to the tree structure
+      addFileToTree(rootNodes, segments, "", file.symbols);
     });
 
     rootNodes = rootNodes.map(flattenNode);
@@ -75,7 +129,11 @@ export default function FileExplorer(props: {
     }
 
     // As long as the node has exactly one child, merge them
-    while (node.children && node.children.length === 1) {
+    while (
+      node.children &&
+      node.children.length === 1 &&
+      !node.children[0].isSymbol
+    ) {
       const [child] = node.children;
 
       // Merge child's name into parent
@@ -108,20 +166,22 @@ export default function FileExplorer(props: {
   }
 
   useEffect(() => {
-    setTreeData(buildTreeData(props.paths));
-  }, [props.paths, search]);
+    setTreeData(buildTreeData(props.files));
+  }, [props.files, search]);
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between">
-        {isOpen && <a
-          className="flex items-center gap-1 pl-3 text-gray-light dark:text-gray-dark no-underline	"
-          href="https://nanoapi.io"
-          target="_blank"
-        >
-          <img src="/logo.png" alt="logo" className="w-8 h-8" />
-          <span className="text-xl font-bold">NanoAPI</span>
-        </a>}
+        {isOpen && (
+          <a
+            className="flex items-center space-x-1 pl-3 text-gray-light dark:text-gray-dark no-underline	"
+            href="https://nanoapi.io"
+            target="_blank"
+          >
+            <img src="/logo.png" alt="logo" className="w-8 h-8" />
+            <span className="text-xl font-bold">NanoAPI</span>
+          </a>
+        )}
         <Button
           className="text-text-light dark:text-text-dark p-0 mx-2 my-1"
           size="1"
@@ -180,7 +240,7 @@ export default function FileExplorer(props: {
               </TextField.Slot>
             </TextField.Root>
             <ScrollArea scrollbars="vertical">
-              <ListElement nodes={treeData} />
+              <ListElement nodes={treeData} search={search} />
             </ScrollArea>
           </>
         )}
@@ -189,20 +249,26 @@ export default function FileExplorer(props: {
   );
 }
 
-function ListElement(props: { nodes: TreeData[] }) {
+function ListElement(props: { nodes: TreeData[]; search: string }) {
   return (
     <ul>
       {props.nodes.map((node) => {
-        return <NodeElement key={node.id} node={node} />;
+        return <NodeElement key={node.id} node={node} search={props.search} />;
       })}
     </ul>
   );
 }
 
-function NodeElement(props: { node: TreeData }) {
+function NodeElement(props: { node: TreeData; search: string }) {
   const params = useParams<{ file?: string }>();
 
   const [isOpen, setIsOpen] = useState(false);
+
+  const shouldAutoExpand = props.search.length > 0 && props.node.matchesSearch;
+
+  useEffect(() => {
+    setIsOpen(shouldAutoExpand);
+  }, [shouldAutoExpand]);
 
   const handleToggle = () => {
     setIsOpen((value) => !value);
@@ -210,84 +276,93 @@ function NodeElement(props: { node: TreeData }) {
 
   return (
     <li
-      className="pr-1 py-1 w-[300px]"
+      className="pr-1 w-full"
       style={{ paddingLeft: `${props.node.level * 10}px` }}
     >
-      <div className="flex items-center gap-2">
-        {props.node.children && props.node.children.length > 0 ? (
+      <div className="flex items-center space-x-2">
+        {props.node.children &&
+        props.node.children.length > 0 &&
+        !props.node.children[0].isSymbol ? (
           <Button
             variant="ghost"
-            className="w-full text-text-light dark:text-text-dark"
+            className="w-full py-2 text-text-light dark:text-text-dark cursor-pointer"
             onClick={handleToggle}
           >
-            <div className="w-full flex items-center gap-2">
+            <div className="w-full flex items-center space-x-2">
               {isOpen ? (
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <path d="M18 10L13 10" />
-                  <path d="M22 11.7979C22 9.16554 22 7.84935 21.2305 6.99383C21.1598 6.91514 21.0849 6.84024 21.0062 6.76946C20.1506 6 18.8345 6 16.2021 6H15.8284C14.6747 6 14.0979 6 13.5604 5.84678C13.2651 5.7626 12.9804 5.64471 12.7121 5.49543C12.2237 5.22367 11.8158 4.81578 11 4L10.4497 3.44975C10.1763 3.17633 10.0396 3.03961 9.89594 2.92051C9.27652 2.40704 8.51665 2.09229 7.71557 2.01738C7.52976 2 7.33642 2 6.94975 2C6.06722 2 5.62595 2 5.25839 2.06935C3.64031 2.37464 2.37464 3.64031 2.06935 5.25839C2 5.62595 2 6.06722 2 6.94975M21.9913 16C21.9554 18.4796 21.7715 19.8853 20.8284 20.8284C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.8284C2 19.6569 2 17.7712 2 14V11" />
-                </svg>
+                <LuChevronDown className="text-lg text-gray-light dark:text-gray-dark" />
               ) : (
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <path d="M4 11.5V9M20 11.5V9.34843C20 7.37415 20 6.38701 19.3844 5.74537C19.3278 5.68635 19.2679 5.63018 19.2049 5.5771C18.5205 5 17.4676 5 15.3617 5H15.0627C14.1398 5 13.6783 5 13.2483 4.88508C13.012 4.82195 12.7844 4.73353 12.5697 4.62157C12.1789 4.41775 11.8526 4.11183 11.2 3.5L10.7598 3.08731C10.5411 2.88224 10.4317 2.77971 10.3168 2.69039C9.82122 2.30528 9.21332 2.06921 8.57246 2.01303C8.42381 2 8.26914 2 7.9598 2C7.25377 2 6.90076 2 6.60671 2.05201C5.31225 2.28098 4.29971 3.23023 4.05548 4.44379C4.02473 4.59657 4.01103 4.76633 4.00491 5C4 5.18795 4 5.41725 4 5.71231" />
-                  <path d="M10 17H14" />
-                  <path d="M10 11H8.7053C6.0379 11 4.7042 11 3.87908 11.7634C3.66852 11.9582 3.4866 12.1838 3.33908 12.433C2.761 13.4097 2.99958 14.7678 3.47674 17.4839C3.82024 19.4391 3.99198 20.4167 4.58706 21.0655C4.74145 21.2338 4.9142 21.383 5.10183 21.5101C5.825 22 6.7851 22 8.70531 22H15.2947C17.2149 22 18.175 22 18.8982 21.5101C19.0858 21.383 19.2585 21.2338 19.4129 21.0655C20.008 20.4167 20.1798 19.4391 20.5233 17.4839C21.0004 14.7678 21.239 13.4097 20.6609 12.433C20.5134 12.1838 20.3315 11.9582 20.1209 11.7634C19.2958 11 17.9621 11 15.2947 11H14" />
-                </svg>
+                <LuChevronRight className="text-lg text-gray-light dark:text-gray-dark" />
               )}
               <DisplayedPath node={props.node} />
             </div>
           </Button>
         ) : (
-          <Button
-            className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-surface-light dark:bg-surface-dark"}`}
-            variant="ghost"
-          >
-            <Link
-              to={
-                params.file === props.node.id
-                  ? "/audit"
-                  : encodeURIComponent(props.node.id)
-              }
-              className="w-full"
-            >
-              <div className="w-full flex items-center gap-2">
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  stroke="currentColor"
-                  strokeWidth="1"
-                  strokeLinecap="round"
-                >
-                  <path d="M2.75 10C2.75 9.58579 2.41421 9.25 2 9.25C1.58579 9.25 1.25 9.58579 1.25 10H2.75ZM21.25 14C21.25 14.4142 21.5858 14.75 22 14.75C22.4142 14.75 22.75 14.4142 22.75 14H21.25ZM15.3929 4.05365L14.8912 4.61112L15.3929 4.05365ZM19.3517 7.61654L18.85 8.17402L19.3517 7.61654ZM21.654 10.1541L20.9689 10.4592V10.4592L21.654 10.1541ZM3.17157 20.8284L3.7019 20.2981H3.7019L3.17157 20.8284ZM20.8284 20.8284L20.2981 20.2981L20.2981 20.2981L20.8284 20.8284ZM1.35509 5.92658C1.31455 6.33881 1.61585 6.70585 2.02807 6.7464C2.4403 6.78695 2.80734 6.48564 2.84789 6.07342L1.35509 5.92658ZM22.6449 18.0734C22.6855 17.6612 22.3841 17.2941 21.9719 17.2536C21.5597 17.2131 21.1927 17.5144 21.1521 17.9266L22.6449 18.0734ZM14 21.25H10V22.75H14V21.25ZM2.75 14V10H1.25V14H2.75ZM21.25 13.5629V14H22.75V13.5629H21.25ZM14.8912 4.61112L18.85 8.17402L19.8534 7.05907L15.8947 3.49618L14.8912 4.61112ZM22.75 13.5629C22.75 11.8745 22.7651 10.8055 22.3391 9.84897L20.9689 10.4592C21.2349 11.0565 21.25 11.742 21.25 13.5629H22.75ZM18.85 8.17402C20.2034 9.3921 20.7029 9.86199 20.9689 10.4592L22.3391 9.84897C21.9131 8.89241 21.1084 8.18853 19.8534 7.05907L18.85 8.17402ZM10.0298 2.75C11.6116 2.75 12.2085 2.76158 12.7405 2.96573L13.2779 1.5653C12.4261 1.23842 11.498 1.25 10.0298 1.25V2.75ZM15.8947 3.49618C14.8087 2.51878 14.1297 1.89214 13.2779 1.5653L12.7405 2.96573C13.2727 3.16993 13.7215 3.55836 14.8912 4.61112L15.8947 3.49618ZM10 21.25C8.09318 21.25 6.73851 21.2484 5.71085 21.1102C4.70476 20.975 4.12511 20.7213 3.7019 20.2981L2.64124 21.3588C3.38961 22.1071 4.33855 22.4392 5.51098 22.5969C6.66182 22.7516 8.13558 22.75 10 22.75V21.25ZM1.25 14C1.25 15.8644 1.24841 17.3382 1.40313 18.489C1.56076 19.6614 1.89288 20.6104 2.64124 21.3588L3.7019 20.2981C3.27869 19.8749 3.02502 19.2952 2.88976 18.2892C2.75159 17.2615 2.75 15.9068 2.75 14H1.25ZM14 22.75C15.8644 22.75 17.3382 22.7516 18.489 22.5969C19.6614 22.4392 20.6104 22.1071 21.3588 21.3588L20.2981 20.2981C19.8749 20.7213 19.2952 20.975 18.2892 21.1102C17.2615 21.2484 15.9068 21.25 14 21.25V22.75ZM10.0298 1.25C8.15538 1.25 6.67442 1.24842 5.51887 1.40307C4.34232 1.56054 3.39019 1.8923 2.64124 2.64124L3.7019 3.7019C4.12453 3.27928 4.70596 3.02525 5.71785 2.88982C6.75075 2.75158 8.11311 2.75 10.0298 2.75V1.25ZM2.84789 6.07342C2.96931 4.83905 3.23045 4.17335 3.7019 3.7019L2.64124 2.64124C1.80633 3.47616 1.48944 4.56072 1.35509 5.92658L2.84789 6.07342ZM21.1521 17.9266C21.0307 19.1609 20.7695 19.8266 20.2981 20.2981L21.3588 21.3588C22.1937 20.5238 22.5106 19.4393 22.6449 18.0734L21.1521 17.9266Z" />
-                  <path d="M13 2.5V5C13 7.35702 13 8.53553 13.7322 9.26777C14.4645 10 15.643 10 18 10H22" />
-                </svg>
-                <DisplayedPath node={props.node} />
+          <>
+            {!props.node.isSymbol ? (
+              <div className="flex justify-between w-full items-center">
+                <div className="grow">
+                  <Button
+                    variant="ghost"
+                    className="text-text-light dark:text-text-dark cursor-pointer"
+                    onClick={handleToggle}
+                  >
+                    <div className="flex space-x-2 w-full">
+                      {languageIcon(props.node.name.split(".").pop() || "txt")}
+                      <DisplayedPath node={props.node} />
+                    </div>
+                  </Button>
+                </div>
+                <div className="flex space-x-2 items-center">
+                  <Button
+                    variant="ghost"
+                    className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
+                  >
+                    <Link
+                      to={
+                        params.file === props.node.id
+                          ? "/audit"
+                          : encodeURIComponent(props.node.id)
+                      }
+                      className="w-full"
+                    >
+                      <LuEye className="text-gray-light dark:text-gray-dark" />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
+                  >
+                    <Link
+                      to={
+                        params.file === props.node.id
+                          ? "/audit"
+                          : encodeURIComponent(props.node.id)
+                      }
+                      className="w-full"
+                    >
+                      <LuPackageSearch className="text-gray-light dark:text-gray-dark" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
-            </Link>
-          </Button>
+            ) : (
+              <Button
+                className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-surface-light dark:bg-surface-dark"}`}
+                variant="ghost"
+              >
+                <div className="w-full flex items-center space-x-2">
+                  <LuCornerDownRight className="text-gray-light dark:text-gray-dark" />
+                  <DisplayedPath node={props.node} />
+                </div>
+              </Button>
+            )}
+          </>
         )}
       </div>
-      {isOpen && <ListElement nodes={props.node.children || []} />}
+      {isOpen && props.node.children && (
+        <ListElement nodes={props.node.children || []} search={props.search} />
+      )}
     </li>
   );
 }
@@ -298,7 +373,7 @@ function DisplayedPath({ node }: { node: TreeData }) {
   if (node.name.length > maxPathLength) {
     return (
       <Tooltip content={node.name}>
-        <div>{`...${node.name.slice(-maxPathLength)}`}</div>
+        <div className="overflow-ellipsis">{`...${node.name.slice(-maxPathLength)}`}</div>
       </Tooltip>
     );
   }

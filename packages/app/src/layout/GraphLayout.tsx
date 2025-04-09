@@ -1,22 +1,33 @@
 import { Button } from "@radix-ui/themes";
 import { useContext } from "react";
+import { LuArrowLeftFromLine } from "react-icons/lu";
 import { ThemeContext } from "../contexts/ThemeContext";
+import { Link, useLocation } from "react-router";
 
 export default function GraphLayout(props: {
   sideBarSlot?: React.ReactNode;
   graphSlot: React.ReactNode;
 }) {
   const themeContext = useContext(ThemeContext);
+  const location = useLocation();
+  const isBaseAuditView = location.pathname === "/audit";
+  console.log(location.pathname)
 
   return (
     <div className="h-screen grow flex gap-3 bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark px-4 py-3">
       {props.sideBarSlot && (
-        <div className="flex flex-col gap-2 bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl px-2 py-2">
+        <div className="flex flex-col gap-2 bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl px-2 py-2">
           {props.sideBarSlot}
         </div>
       )}
       <div className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out">
-        <div className="bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl rounded-b-none flex justify-end items-center px-2 py-2 ">
+        <div className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-b-none flex items-center px-2 py-2 ${isBaseAuditView ? 'justify-end' : 'justify-between'}`}>
+          <Link to="/audit" hidden={isBaseAuditView}>
+            <Button radius="large" variant="ghost" size="3" className="flex gap- ml-1">
+              <LuArrowLeftFromLine className="" />
+              <span className="">Back</span>
+            </Button>
+          </Link>
           <div className="flex gap-4 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 py-2 rounded-xl">
             <Button
               variant="ghost"
@@ -60,7 +71,7 @@ export default function GraphLayout(props: {
             </Button>
           </div>
         </div>
-        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-3xl rounded-t-none border-t border-t-gray-300 dark:border-t-gray-700 overflow-hidden">
+        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-t-none border-t border-t-gray-300 dark:border-t-gray-700 overflow-hidden">
           {props.graphSlot}
         </div>
       </div>

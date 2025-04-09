@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { getAudit } from "../service/auditApi";
-import { toast } from "react-toastify";
-import GraphLayout from "../layout/GraphLayout";
-import FileExplorer from "../components/FileExplorer/FileExplorer";
-import { AuditResponse } from "../service/auditApi/types";
 import { Outlet } from "react-router";
+import { toast } from "react-toastify";
+import { getAudit } from "../service/auditApi";
+import GraphLayout from "../layout/GraphLayout";
+import FileExplorer, { FileExplorerFile } from "../components/FileExplorer/FileExplorer";
+import { AuditResponse } from "../service/auditApi/types";
 
 export interface AuditContext {
   busy: boolean;
@@ -16,7 +16,7 @@ export default function BaseAuditPage() {
 
   const [busy, setBusy] = useState<boolean>(false);
 
-  const [paths, setPaths] = useState<string[]>([]);
+  const [files, setFiles] = useState<FileExplorerFile[]>([]);
   const [auditResponse, setAuditResponse] = useState<AuditResponse>({
     dependencyManifest: {},
     auditManifest: {},
@@ -35,9 +35,12 @@ export default function BaseAuditPage() {
 
         const auditResponse = await auditResponsePromise;
         const paths = Object.values(auditResponse.dependencyManifest).map(
-          (fileManifest) => fileManifest.filePath,
+          (fileManifest) => ({
+            path: fileManifest.filePath,
+            symbols: Object.keys(fileManifest.symbols),
+          })
         );
-        setPaths(paths);
+        setFiles(paths);
         setAuditResponse(auditResponse);
       } finally {
         setBusy(false);
@@ -52,7 +55,7 @@ export default function BaseAuditPage() {
 
   return (
     <GraphLayout
-      sideBarSlot={<FileExplorer busy={busy} paths={paths} />}
+      sideBarSlot={<FileExplorer busy={busy} files={files} />}
       graphSlot={
         <Outlet
           context={{
