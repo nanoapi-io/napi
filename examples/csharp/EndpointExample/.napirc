@@ -2,7 +2,7 @@
   "audit": {
     "language": "c-sharp",
     "include": ["**/*"],
-    "exclude": ["bin/**", "obj/**"]
+    "exclude": ["bin/**", "obj/**"],
     "manifestoJsonOutputPath": "./"
   }
 }
