@@ -1,14 +1,7 @@
 {
-  "entrypoint": "Program.cs",
-  "out": "napi_dist",
-  "openaiApiKeyFilePath": "../../.OPENAIKEY",
   "audit": {
     "language": "c-sharp",
     "include": ["**/*"],
-    "exclude": ["obj/**", "bin/**"],
-    "targetMaxCharInFile": 5000,
-    "targetMaxLineInFile": 500,
-    "targetMaxDepPerFile": 4,
     "manifestoJsonOutputPath": "./"
   }
 }
