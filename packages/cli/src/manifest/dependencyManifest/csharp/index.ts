@@ -5,6 +5,11 @@ import {
 } from "../../../languagePlugins/csharp/dependencyFormatting";
 import Parser from "tree-sitter";
 
+/**
+ * Generates a dependency manifest for C# files.
+ * @param files - A map of file paths to their corresponding syntax nodes.
+ * @returns A dependency manifest for the C# files.
+ */
 export function generateCSharpDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
 ): DependencyManifest {

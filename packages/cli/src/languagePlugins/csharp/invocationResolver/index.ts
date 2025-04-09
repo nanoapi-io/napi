@@ -9,6 +9,9 @@ import { csharpParser } from "../../../helpers/treeSitter/parsers";
 import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
 import { CSharpProjectMapper } from "../projectMapper";
 
+/**
+ * Query to identify variable names in the file
+ */
 const variablesQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
@@ -21,6 +24,10 @@ const variablesQuery = new Parser.Query(
   `,
 );
 
+/**
+ * Query to identify classes that are called in the file
+ * for object and variable creation
+ */
 const calledClassesQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
@@ -49,6 +56,10 @@ const calledClassesQuery = new Parser.Query(
   `,
 );
 
+/**
+ * Query to identify invocation expressions in the file
+ * for function or constant calls
+ */
 const invocationQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
@@ -218,6 +229,11 @@ export class CSharpInvocationResolver {
     return invocations;
   }
 
+  /**
+   * Gets the invocations from a file.
+   * @param filepath - The path of the file to analyze.
+   * @returns An object containing resolved and unresolved symbols.
+   */
   getInvocationsFromFile(filepath: string): Invocations {
     if (this.cache.has(filepath)) {
       return this.cache.get(filepath) as Invocations;
@@ -278,6 +294,12 @@ export class CSharpInvocationResolver {
     return invocations;
   }
 
+  /**
+   * Checks if a symbol is used in a file.
+   * @param filepath - The path of the file to check.
+   * @param symbol - The symbol to check for.
+   * @returns True if the symbol is used in the file, false otherwise.
+   */
   public isUsedInFile(filepath: string, symbol: SymbolNode): boolean {
     const invocations = this.getInvocationsFromFile(filepath);
     return invocations.resolvedSymbols.some((inv) => inv.name === symbol.name);

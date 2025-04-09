@@ -10,6 +10,10 @@ const csharpFilesMap = new Map<
   { path: string; rootNode: Parser.SyntaxNode }
 >();
 
+/**
+ * Recursively finds all C# files in the given directory and its subdirectories.
+ * @param dir - The directory to search in.
+ */
 function findCSharpFiles(dir: string) {
   const files = fs.readdirSync(dir);
   files.forEach((file) => {
@@ -25,6 +29,10 @@ function findCSharpFiles(dir: string) {
   });
 }
 
+/**
+ * Retrieves the map of C# files and their corresponding syntax trees.
+ * @returns A map where the keys are file paths and the values are objects containing the file path and its syntax tree.
+ */
 export function getCSharpFilesMap() {
   findCSharpFiles(csharpFilesFolder);
   return csharpFilesMap;

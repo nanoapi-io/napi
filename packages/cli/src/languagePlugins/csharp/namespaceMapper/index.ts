@@ -62,6 +62,11 @@ export class CSharpNamespaceMapper {
     this.nsTree = this.buildNamespaceTree();
   }
 
+  /**
+   * Gets a file object from the files map.
+   * @param key - The key of the file.
+   * @returns The file object.
+   */
   getFile(key: string) {
     return this.files.get(key);
   }
@@ -164,6 +169,12 @@ export class CSharpNamespaceMapper {
     return namespaceTree;
   }
 
+  /**
+   * Converts a namespace or symbol node to a debug node.
+   * Used for serialisation.
+   * @param node - The node to convert.
+   * @returns The converted node.
+   */
   #convertNodeToDebug(node: NamespaceNode | SymbolNode): DebugNode {
     if ("childrenNamespaces" in node) {
       return {
@@ -187,6 +198,11 @@ export class CSharpNamespaceMapper {
     }
   }
 
+  /**
+   * Saves the namespace tree to a file for debugging purposes.
+   * @param filepath - The path to the file where the debug tree will be saved.
+   * @returns The debug tree.
+   */
   saveDebugTree(filepath: string): DebugNode {
     const debugTree: DebugNode = this.#convertNodeToDebug(this.nsTree);
     fs.writeFileSync(filepath, JSON.stringify(debugTree, null, 2));
@@ -221,6 +237,11 @@ export class CSharpNamespaceMapper {
     );
   }
 
+  /**
+   * Gets the full namespace name of a given namespace node.
+   * @param namespace - The namespace node to get the full name for.
+   * @returns The full namespace name.
+   */
   getFullNSName(namespace: NamespaceNode): string {
     if (namespace.name === "") {
       return "";
