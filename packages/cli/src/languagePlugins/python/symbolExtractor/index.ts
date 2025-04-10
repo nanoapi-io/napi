@@ -1,16 +1,14 @@
 import Parser from "tree-sitter";
-import { PythonExportExtractor, Symbol } from "../exportExtractor";
-import {
-  PythonModuleResolver,
-  PythonModule,
-  PYTHON_PACKAGE_MODULE_TYPE,
-} from "../moduleResolver";
-import { FileDependencies } from "../dependencyResolver";
+import { PythonExportExtractor } from "../exportExtractor";
+import { PythonModuleResolver } from "../moduleResolver";
 import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode";
-
-export interface SymbolToKeepMap {
-  files: Map<string, { symbols: string[] }>;
-}
+import { FileDependencies } from "../dependencyResolver/types";
+import {
+  PYTHON_PACKAGE_MODULE_TYPE,
+  PythonModule,
+} from "../moduleResolver/types";
+import { PythonSymbol } from "../exportExtractor/types";
+import { SymbolToKeepMap } from "./types";
 
 export class PythonSymbolExtractor {
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
@@ -141,7 +139,7 @@ export class PythonSymbolExtractor {
 
   private collectDependenciesRecursively(
     filePath: string,
-    symbol: Symbol,
+    symbol: PythonSymbol,
     filesToExtract: Map<string, Set<string>>,
     visited: Set<string>,
   ): void {
@@ -238,7 +236,7 @@ export class PythonSymbolExtractor {
     for (const [filePath, fileInfo] of symbolToKeepMap.files.entries()) {
       const symbols = this.exportExtractor.getSymbols(filePath);
 
-      const symbolsToRemove: Symbol[] = [];
+      const symbolsToRemove: PythonSymbol[] = [];
       symbols.symbols.forEach((symbol) => {
         if (!fileInfo.symbols.includes(symbol.id)) {
           symbolsToRemove.push(symbol);
@@ -271,7 +269,7 @@ export class PythonSymbolExtractor {
    */
   private pruneSymbolsFromFile(
     rootNode: Parser.SyntaxNode,
-    symbolsToRemove: Symbol[],
+    symbolsToRemove: PythonSymbol[],
   ) {
     const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 

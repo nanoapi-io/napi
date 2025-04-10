@@ -1,24 +1,11 @@
 import Parser from "tree-sitter";
-
-export const PYTHON_CLASS_TYPE = "class";
-export const PYTHON_FUNCTION_TYPE = "function";
-export const PYTHON_VARIABLE_TYPE = "variable";
-
-export type PythonSymbolType =
-  | typeof PYTHON_CLASS_TYPE
-  | typeof PYTHON_FUNCTION_TYPE
-  | typeof PYTHON_VARIABLE_TYPE;
-
-/**
- * Represents an exported symbol in a Python module.
- * Exported symbols include top-level classes, functions, and variables.
- */
-export interface Symbol {
-  id: string;
-  node: Parser.SyntaxNode;
-  identifierNode: Parser.SyntaxNode;
-  type: PythonSymbolType;
-}
+import {
+  PYTHON_CLASS_TYPE,
+  PYTHON_FUNCTION_TYPE,
+  PYTHON_VARIABLE_TYPE,
+  PythonSymbol,
+  PythonSymbolType,
+} from "./types";
 
 /**
  * PythonExportExtractor extracts exported symbols from a Python source file using Tree-sitter.
@@ -37,7 +24,7 @@ export class PythonExportExtractor {
   private symbolQuery: Parser.Query;
   private cache = new Map<
     string,
-    { symbols: Symbol[]; publicSymbols: undefined | string[] }
+    { symbols: PythonSymbol[]; publicSymbols: undefined | string[] }
   >(); // Cache results for efficiency
 
   constructor(
@@ -144,7 +131,7 @@ export class PythonExportExtractor {
       throw new Error(`File not found: ${filePath}`);
     }
 
-    const symbols: Symbol[] = [];
+    const symbols: PythonSymbol[] = [];
     let publicSymbols: string[] | undefined = undefined;
 
     // Execute the combined query on the AST
@@ -184,7 +171,7 @@ export class PythonExportExtractor {
 
         // When we have all parts of a symbol, create the symbol object.
         if (symbolType && symbolNode && identifierNode) {
-          const symbol: Symbol = {
+          const symbol: PythonSymbol = {
             id: identifierNode.text,
             type: symbolType,
             node: symbolNode,

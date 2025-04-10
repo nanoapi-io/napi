@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { DependencyManifest, FileManifest, SymbolType } from "..";
+import { DependencyManifest, FileManifest } from "..";
 import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver";
@@ -7,6 +7,8 @@ import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolv
 import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver";
 import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver";
 import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor";
+import { localConfigSchema } from "../../../config/localConfig";
+import z from "zod";
 
 function generateDependentsForManifest(
   manifest: DependencyManifest,
@@ -52,10 +54,18 @@ function generateDependentsForManifest(
 
 export function generatePythonDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+  napiConfig: z.infer<typeof localConfigSchema>,
 ): DependencyManifest {
   console.time("generatePythonDependencyManifest");
 
   const parser = pythonParser;
+
+  const pythonVersion = napiConfig.audit?.pythonVersion;
+  if (!pythonVersion) {
+    throw new Error(
+      "Python version is required in the .napirc file (audit.pythonVersion).",
+    );
+  }
 
   console.time("generatePythonDependencyManifest:initialization");
   console.info("Initializing Python export resolver...");
@@ -63,7 +73,8 @@ export function generatePythonDependencyManifest(
   console.info("Initializing Python import resolver...");
   const importExtractor = new PythonImportExtractor(parser, files);
   console.info("Initializing Python module resolver...");
-  const moduleResolver = new PythonModuleResolver(files);
+
+  const moduleResolver = new PythonModuleResolver(files, pythonVersion);
   console.info("Initializing Python item resolver...");
   const itemResolver = new PythonItemResolver(
     exportExtractor,
@@ -71,17 +82,15 @@ export function generatePythonDependencyManifest(
     moduleResolver,
   );
   console.info("Initializing Python usage resolver...");
-  const usageResolver = new PythonUsageResolver(
-    parser,
-    importExtractor,
-    moduleResolver,
-    itemResolver,
-  );
+  const usageResolver = new PythonUsageResolver(parser, exportExtractor);
   console.info("Initializing Python dependency resolver...");
   const dependencyResolver = new PythonDependencyResolver(
     files,
     exportExtractor,
+    importExtractor,
+    itemResolver,
     usageResolver,
+    moduleResolver,
   );
 
   console.timeEnd("generatePythonDependencyManifest:initialization");
@@ -92,13 +101,20 @@ export function generatePythonDependencyManifest(
 
   let i = 0;
   for (const [, { path }] of files) {
-    console.info(`Processing file ${i++}/${files.size}: ${path}`);
+    i++;
+    console.info(`Processing file ${i}/${files.size}: ${path}`);
+
     const fileDependencies = dependencyResolver.getFileDependencies(path);
+    if (!fileDependencies) {
+      throw new Error(
+        `File dependencies not found for ${path}. This is a bug. Please report it.`,
+      );
+    }
     const fileManifest: FileManifest = {
       id: path,
       filePath: path,
-      characterCount: fileDependencies.characterCount,
-      lineCount: fileDependencies.lineCount,
+      characterCount: fileDependencies.metrics.characterCount,
+      lineCount: fileDependencies.metrics.lineCount,
       language: parser.getLanguage().name,
       dependencies: {},
       symbols: {},
@@ -108,16 +124,19 @@ export function generatePythonDependencyManifest(
       fileManifest.dependencies[depId] = {
         id: dep.id,
         isExternal: dep.isExternal,
-        symbols: Object.fromEntries(dep.symbols),
+        symbols: {},
       };
+      for (const symbol of dep.symbols) {
+        fileManifest.dependencies[depId].symbols[symbol] = symbol;
+      }
     }
 
     for (const symbol of fileDependencies.symbols) {
       fileManifest.symbols[symbol.id] = {
         id: symbol.id,
-        characterCount: symbol.characterCount,
-        lineCount: symbol.lineCount,
-        type: symbol.type as SymbolType, // TODO handle this better
+        characterCount: symbol.metrics.characterCount,
+        lineCount: symbol.metrics.lineCount,
+        type: symbol.type,
         dependencies: {},
         dependents: {},
       };
@@ -126,8 +145,13 @@ export function generatePythonDependencyManifest(
         fileManifest.symbols[symbol.id].dependencies[depId] = {
           id: dep.id,
           isExternal: dep.isExternal,
-          symbols: Object.fromEntries(dep.symbols),
+          symbols: {},
         };
+        for (const depSymbol of dep.symbols) {
+          fileManifest.symbols[symbol.id].dependencies[depId].symbols[
+            depSymbol
+          ] = depSymbol;
+        }
       }
     }
 

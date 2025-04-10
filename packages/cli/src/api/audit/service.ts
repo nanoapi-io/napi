@@ -74,7 +74,11 @@ export function generateAuditResponse(
 
   console.info(`Parsed ${files.size} files`);
 
-  const dependencyManifest = generateDependencyManifest(files, parser);
+  const dependencyManifest = generateDependencyManifest(
+    files,
+    parser,
+    napiConfig,
+  );
 
   const auditManifest = generateAuditManifest(dependencyManifest);
 

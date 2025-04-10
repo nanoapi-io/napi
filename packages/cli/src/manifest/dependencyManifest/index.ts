@@ -1,6 +1,8 @@
 import Parser from "tree-sitter";
 import { generatePythonDependencyManifest } from "./python";
 import { generateCSharpDependencyManifest } from "./csharp";
+import { localConfigSchema } from "../../config/localConfig";
+import z from "zod";
 
 /** Identifies the "class" instance type. */
 export const classSymbolType = "class";
@@ -114,6 +116,7 @@ const handlerMap: Record<
   string,
   (
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    napiConfig: z.infer<typeof localConfigSchema>,
   ) => DependencyManifest
 > = {
   python: generatePythonDependencyManifest,
@@ -132,6 +135,7 @@ export class UnsupportedLanguageError extends Error {
 export function generateDependencyManifest(
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
   parser: Parser,
+  napiConfig: z.infer<typeof localConfigSchema>,
 ): DependencyManifest {
   const languageName = parser.getLanguage().name;
   const handler = handlerMap[languageName];
@@ -139,5 +143,5 @@ export function generateDependencyManifest(
     throw new UnsupportedLanguageError(languageName);
   }
 
-  return handler(files);
+  return handler(files, napiConfig);
 }
