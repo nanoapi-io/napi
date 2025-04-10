@@ -86,7 +86,7 @@ export default function GraphLayout(props: {
             </Button>
           </div>
         </div>
-        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-t-none border-t border-t-gray-300 dark:border-t-gray-700 overflow-hidden">
+        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-t-none border-t border-t-border-light dark:border-t-border-dark overflow-hidden">
           {props.graphSlot}
         </div>
       </div>

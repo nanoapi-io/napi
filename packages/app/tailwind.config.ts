@@ -51,6 +51,10 @@ const config = {
           dark: "#E43F8C",
           light: "#F1729E", // A brighter variant for light mode
         },
+        focus: {
+          dark: "#695AF0",
+          light: "#7B74FF",
+        },
       },
     },
   },

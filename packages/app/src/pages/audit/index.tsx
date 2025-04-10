@@ -74,26 +74,18 @@ export default function AuditPage() {
     if (!cyInstance) return;
 
     const cy = cyInstance;
-
-    if (!context.highlightedNodeId) {
-      // Clear previously applied classes quickly
-      cy.elements(".highlighted").removeClass(["highlighted"]);
-      return;
-    }
-
-    const nodeToHighlight = cy.getElementById(context.highlightedNodeId);
-
-    if (nodeToHighlight.empty()) {
-      console.warn(`Node with ID '${context.highlightedNodeId}' not found.`);
-      return;
-    }
+    const nodeToHighlight = cy.getElementById(
+      context.highlightedNodeId as string,
+    );
 
     cy.batch(() => {
       // Clear previously applied classes quickly
       cy.elements(".highlighted").removeClass(["highlighted"]);
 
-      // Apply classes for highlighting (no layout!)
-      nodeToHighlight.addClass("highlighted");
+      if (!nodeToHighlight.empty()) {
+        // Apply classes for highlighting (no layout!)
+        nodeToHighlight.addClass("highlighted");
+      }
     });
   }, [context.highlightedNodeId, cyInstance]);
 

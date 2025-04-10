@@ -352,7 +352,7 @@ function NodeElement(props: {
                     variant="ghost"
                     className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
                       isHighlighted
-                        ? "bg-gray-400 dark:bg-purple-900 bg-opacity-20"
+                        ? "bg-focus-light dark:bg-focus-dark bg-opacity-20"
                         : ""
                     }`}
                     onClick={() => toggleHighlight(props.node.id)}
