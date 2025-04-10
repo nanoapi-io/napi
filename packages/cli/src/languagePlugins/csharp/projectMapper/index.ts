@@ -51,7 +51,9 @@ export class CSharpProjectMapper {
       const stat = fs.statSync(fullPath);
 
       if (stat.isDirectory()) {
-        projects.push(...this.#findSubprojects(fullPath));
+        if (!fullPath.includes(".extracted")) {
+          projects.push(...this.#findSubprojects(fullPath));
+        }
       } else if (file.endsWith(".csproj")) {
         if (!seenProjects.has(fullPath)) {
           seenProjects.add(fullPath);

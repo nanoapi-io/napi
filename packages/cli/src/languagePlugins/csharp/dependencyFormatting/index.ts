@@ -141,14 +141,19 @@ export class CSharpDependencyFormatter {
     for (const symbol of exportedSymbols) {
       const fullname =
         (symbol.namespace !== "" ? symbol.namespace + "." : "") + symbol.name;
+      const dependencies = this.invResolver.getInvocationsFromNode(
+        symbol.node,
+        symbol.filepath,
+      );
+      dependencies.resolvedSymbols = dependencies.resolvedSymbols.filter(
+        (sm) => sm.name !== symbol.name,
+      );
       symbols[fullname] = {
         id: fullname,
         type: symbol.type,
         lineCount: symbol.node.endPosition.row - symbol.node.startPosition.row,
         characterCount: symbol.node.endIndex - symbol.node.startIndex,
-        dependencies: this.formatDependencies(
-          this.invResolver.getInvocationsFromNode(symbol.node, symbol.filepath),
-        ),
+        dependencies: this.formatDependencies(dependencies),
         dependents: {},
       };
     }

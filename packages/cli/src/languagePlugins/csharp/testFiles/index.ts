@@ -20,7 +20,9 @@ function findCSharpFiles(dir: string) {
     const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
     if (stat.isDirectory()) {
-      findCSharpFiles(fullPath);
+      if (!fullPath.includes(".extracted")) {
+        findCSharpFiles(fullPath);
+      }
     } else if (path.extname(fullPath) === ".cs") {
       const content = fs.readFileSync(fullPath, "utf8");
       const tree = csharpParser.parse(content);

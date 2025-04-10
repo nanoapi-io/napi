@@ -172,10 +172,30 @@ classDiagram
         + rootNode: Parser.SyntaxNode
     }
 
-    class SymbolType
+    enum SymbolType
+    enum UsingType
     class Parser {
         + getLanguage(): any
         + parse(content: string): any
+    }
+
+    class ExtractedFile {
+        + subproject: DotNetProject
+        + namespace: string
+        + symbol: SymbolNode
+        + imports: UsingDirective[]
+        + name: string
+    }
+
+    class CSharpExtractor {
+        - manifest: DependencyManifest
+        - projectMapper: CSharpProjectMapper
+        - nsMapper: CSharpNamespaceMapper
+        - usingResolver: CSharpUsingResolver
+        + extractSymbol(symbol: SymbolNode): ExtractedFile[]
+        + extractAndSaveSymbol(symbol: SymbolNode): void
+        + extractSymbolByName(symbolName: string): ExtractedFile[] | undefined
+        + extractAndSaveSymbolByName(symbolName: string): void
     }
 
     CSharpDependencyFormatter --> CSharpInvocationResolver
@@ -204,4 +224,11 @@ classDiagram
     ResolvedImports --> InternalSymbol
     ResolvedImports --> ExternalSymbol
     File --> Parser
+    CSharpExtractor --> DependencyManifest
+    CSharpExtractor --> CSharpProjectMapper
+    CSharpExtractor --> CSharpNamespaceMapper
+    CSharpExtractor --> CSharpUsingResolver
+    ExtractedFile --> DotNetProject
+    ExtractedFile --> SymbolNode
+    ExtractedFile --> UsingDirective
 ```
