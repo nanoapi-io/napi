@@ -9,6 +9,7 @@ import { AuditResponse } from "../service/auditApi/types";
 export interface AuditContext {
   busy: boolean;
   auditResponse: AuditResponse;
+  highlightedNodeId: string | null;
 }
 
 export default function BaseAuditPage() {
@@ -21,6 +22,8 @@ export default function BaseAuditPage() {
     dependencyManifest: {},
     auditManifest: {},
   });
+
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
 
   useEffect(() => {
     async function handleOnLoad() {
@@ -55,12 +58,17 @@ export default function BaseAuditPage() {
 
   return (
     <GraphLayout
-      sideBarSlot={<FileExplorer busy={busy} files={files} />}
+      sideBarSlot={<FileExplorer 
+        busy={busy} 
+        files={files} 
+        highlightedNodeId={highlightedNodeId}
+        setHighlightedNodeId={setHighlightedNodeId} />}
       graphSlot={
         <Outlet
           context={{
             busy,
             auditResponse,
+            highlightedNodeId
           }}
         />
       }

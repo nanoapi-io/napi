@@ -155,12 +155,19 @@ export function getCyStyle(theme: "light" | "dark") {
       style: {
         label: "data(customData.collapsed.label)",
         "background-color":
-          tailwindConfig.theme.extend.colors.background[theme],
+        tailwindConfig.theme.extend.colors.background[theme],
         "border-width": 3,
         "z-index": 1000,
         width: "data(customData.collapsed.width)",
         height: "data(customData.collapsed.height)",
       },
+    },
+    {
+      selector: "node.highlighted",
+      style: {
+        "background-color": "yellow",
+        "z-index": 1000,
+      }
     },
     {
       selector: "edge",

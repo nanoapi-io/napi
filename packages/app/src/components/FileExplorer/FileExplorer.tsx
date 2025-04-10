@@ -28,6 +28,8 @@ export interface FileExplorerFile {
 export default function FileExplorer(props: {
   busy: boolean;
   files: FileExplorerFile[];
+  highlightedNodeId: string | null;
+  setHighlightedNodeId: (node: string | null) => void;
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
@@ -240,7 +242,11 @@ export default function FileExplorer(props: {
               </TextField.Slot>
             </TextField.Root>
             <ScrollArea scrollbars="vertical">
-              <ListElement nodes={treeData} search={search} />
+              <ListElement 
+                nodes={treeData} 
+                search={search} 
+                hlNodeId={props.highlightedNodeId}
+                setHLNodeId={props.setHighlightedNodeId} />
             </ScrollArea>
           </>
         )}
@@ -249,22 +255,46 @@ export default function FileExplorer(props: {
   );
 }
 
-function ListElement(props: { nodes: TreeData[]; search: string }) {
+function ListElement(props: { 
+  nodes: TreeData[]; 
+  search: string; 
+  hlNodeId: string | null;
+  setHLNodeId: (node: string | null) => void;
+}) {
   return (
     <ul>
       {props.nodes.map((node) => {
-        return <NodeElement key={node.id} node={node} search={props.search} />;
+        return <NodeElement 
+          key={node.id} 
+          node={node} 
+          search={props.search} 
+          hlNodeId={props.hlNodeId}
+          setHLNodeId={props.setHLNodeId} />;
       })}
     </ul>
   );
 }
 
-function NodeElement(props: { node: TreeData; search: string }) {
+function NodeElement(props: { 
+  node: TreeData; 
+  search: string;
+  hlNodeId: string | null;
+  setHLNodeId: (node: string | null) => void; 
+}) {
   const params = useParams<{ file?: string }>();
 
   const [isOpen, setIsOpen] = useState(false);
 
   const shouldAutoExpand = props.search.length > 0 && props.node.matchesSearch;
+  const isHighlighted = props.hlNodeId === props.node.id;
+
+  const toggleHighlight = (id: string) => {
+    if (isHighlighted) {
+      props.setHLNodeId(null);
+    } else {
+      props.setHLNodeId(id);
+    }
+  }
 
   useEffect(() => {
     setIsOpen(shouldAutoExpand);
@@ -285,7 +315,7 @@ function NodeElement(props: { node: TreeData; search: string }) {
         !props.node.children[0].isSymbol ? (
           <Button
             variant="ghost"
-            className="w-full py-2 text-text-light dark:text-text-dark cursor-pointer"
+            className="w-full py-1 my-0.5 text-text-light dark:text-text-dark cursor-pointer"
             onClick={handleToggle}
           >
             <div className="w-full flex items-center space-x-2">
@@ -304,10 +334,10 @@ function NodeElement(props: { node: TreeData; search: string }) {
                 <div className="grow">
                   <Button
                     variant="ghost"
-                    className="text-text-light dark:text-text-dark cursor-pointer"
+                    className="w-full text-text-light dark:text-text-dark cursor-pointer justify-start pr-0"
                     onClick={handleToggle}
                   >
-                    <div className="flex space-x-2 w-full">
+                    <div className="flex space-x-2 items-center overflow-hidden">
                       {languageIcon(props.node.name.split(".").pop() || "txt")}
                       <DisplayedPath node={props.node} />
                     </div>
@@ -316,18 +346,12 @@ function NodeElement(props: { node: TreeData; search: string }) {
                 <div className="flex space-x-2 items-center">
                   <Button
                     variant="ghost"
-                    className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
+                    className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
+                      isHighlighted ? 'bg-gray-400 dark:bg-purple-900 bg-opacity-20' : ''
+                    }`}
+                    onClick={() => toggleHighlight(props.node.id)}
                   >
-                    <Link
-                      to={
-                        params.file === props.node.id
-                          ? "/audit"
-                          : encodeURIComponent(props.node.id)
-                      }
-                      className="w-full"
-                    >
-                      <LuEye className="text-gray-light dark:text-gray-dark" />
-                    </Link>
+                    <LuEye className="text-gray-light dark:text-gray-dark" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -361,7 +385,11 @@ function NodeElement(props: { node: TreeData; search: string }) {
         )}
       </div>
       {isOpen && props.node.children && (
-        <ListElement nodes={props.node.children || []} search={props.search} />
+        <ListElement 
+          nodes={props.node.children || []} 
+          search={props.search} 
+          hlNodeId={props.hlNodeId}
+          setHLNodeId={props.setHLNodeId} />
       )}
     </li>
   );

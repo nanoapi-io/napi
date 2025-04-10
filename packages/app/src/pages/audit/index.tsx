@@ -70,6 +70,35 @@ export default function AuditPage() {
     cyInstance?.style(getCyStyle(themeContext.theme));
   }, [themeContext.changeTheme]);
 
+  useEffect(() => {
+    if (!cyInstance) return;
+
+    const cy = cyInstance;
+
+    if (!context.highlightedNodeId) {
+      // Clear previously applied classes quickly
+      cy.elements('.highlighted')
+        .removeClass(['highlighted',]);
+      return;
+    }
+
+    const nodeToHighlight = cy.getElementById(context.highlightedNodeId);
+  
+    if (nodeToHighlight.empty()) {
+      console.warn(`Node with ID '${context.highlightedNodeId}' not found.`);
+      return;
+    }
+  
+    cy.batch(() => {
+      // Clear previously applied classes quickly
+      cy.elements('.highlighted')
+        .removeClass(['highlighted',]);
+      
+      // Apply classes for highlighting (no layout!)
+      nodeToHighlight.addClass("highlighted");
+    });
+  }, [context.highlightedNodeId, cyInstance]);
+
   function createCyListeners(cy: Core) {
     // On tap to a node, display details of the node if relevant
     cy.on("onetap", "node", (evt: EventObjectNode) => {
