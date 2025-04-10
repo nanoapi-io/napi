@@ -163,6 +163,13 @@ export function getCyStyle(theme: "light" | "dark") {
       },
     },
     {
+      selector: "node.highlighted",
+      style: {
+        "background-color": "yellow",
+        "z-index": 1000,
+      },
+    },
+    {
       selector: "edge",
       style: {
         width: 1,
