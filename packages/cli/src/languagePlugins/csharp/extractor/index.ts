@@ -117,31 +117,34 @@ export class CSharpExtractor {
     if (!subproject) {
       throw new Error(`Subproject not found for file: ${symbol.filepath}`);
     }
-    const extractedFiles: ExtractedFile[] = [
-      {
-        subproject,
-        namespace: symbol.namespace,
-        symbol,
-        imports: this.usingResolver.parseUsingDirectives(symbol.filepath),
-        name: symbol.name,
-      },
-    ];
+    const extractedFiles: ExtractedFile[] = [];
+    const visitedSymbols = new Set<string>();
+
+    const addExtractedFile = (symbol: SymbolNode) => {
+      if (!visitedSymbols.has(symbol.name)) {
+        visitedSymbols.add(symbol.name);
+        const subproject = this.projectMapper.findSubprojectForFile(
+          symbol.filepath,
+        );
+        if (subproject) {
+          const extractedFile: ExtractedFile = {
+            subproject,
+            namespace: symbol.namespace,
+            symbol,
+            imports: this.usingResolver.parseUsingDirectives(symbol.filepath),
+            name: symbol.name,
+          };
+          extractedFiles.push(extractedFile);
+        }
+      }
+    };
+
+    addExtractedFile(symbol);
     const dependencies = this.findAllDependencies(symbol);
     for (const dependency of dependencies) {
-      const filePath = dependency.filepath;
-      const subproject = this.projectMapper.findSubprojectForFile(filePath);
-      if (subproject) {
-        const namespace = dependency.namespace;
-        const extractedFile: ExtractedFile = {
-          subproject,
-          namespace,
-          symbol: dependency,
-          imports: this.usingResolver.parseUsingDirectives(filePath),
-          name: dependency.name,
-        };
-        extractedFiles.push(extractedFile);
-      }
+      addExtractedFile(dependency);
     }
+
     return extractedFiles;
   }
 
@@ -154,6 +157,17 @@ export class CSharpExtractor {
     for (const file of extractedFiles) {
       this.saveFile(file);
     }
+  }
+
+  public extractSymbolByName(symbolName: string): ExtractedFile[] | undefined {
+    const symbol = this.nsMapper.findClassInTree(
+      this.nsMapper.nsTree,
+      symbolName,
+    );
+    if (symbol) {
+      return this.extractSymbol(symbol);
+    }
+    return undefined;
   }
 
   /**
