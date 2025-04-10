@@ -1,425 +1,727 @@
-// PythonModuleResolver.test.ts
-import { beforeAll, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import Parser from "tree-sitter";
+import { PythonModuleResolver } from "./index";
 import {
-  PythonModuleResolver,
   PYTHON_MODULE_TYPE,
   PYTHON_NAMESPACE_MODULE_TYPE,
-  PythonModule,
   PYTHON_PACKAGE_MODULE_TYPE,
-} from "./index"; // adjust the path if necessary
+} from "./types";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 import { sep } from "path";
 
-// Create a real parser using the Python language.
+// Use the real parser for Python
 const parser = pythonParser;
 
-// Helper: Create a dummy file record with a given filePath.
+// Helper function to create a map of files with empty content
 function createFiles(paths: string[]) {
-  // We don't care about the content; use an empty string.
   const fileMap = new Map<
     string,
     { path: string; rootNode: Parser.SyntaxNode }
   >();
+
   paths.forEach((path) => {
-    fileMap.set(path, { path: path, rootNode: parser.parse("").rootNode });
+    fileMap.set(path, {
+      path,
+      rootNode: parser.parse("").rootNode,
+    });
   });
+
   return fileMap;
 }
 
-describe("PythonModuleResolver, map resolution", () => {
-  test("should build module map for a single .py file", () => {
-    // For a simple file "foo.py" at the root.
-    const files = createFiles(["foo.py"]);
+describe("PythonModuleResolver", () => {
+  describe("Module Map Building", () => {
+    test("should build module map for a single file", () => {
+      const files = createFiles(["main.py"]);
+      const resolver = new PythonModuleResolver(files, "3.13");
+      const root = resolver.pythonModule;
 
-    const mapper = new PythonModuleResolver(files, "3.13");
-    const root = mapper.pythonModule;
+      expect(root.name).toBe("");
+      expect(root.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
+      expect(root.children.size).toBe(1);
 
-    // The root is a namespace with empty name.
-    expect(root.name).toBe("");
-    expect(root.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
-    expect(root.path).toBe("");
-    expect(root.fullName).toBe("");
+      const mainModule = root.children.get("main");
+      expect(mainModule).toBeDefined();
+      expect(mainModule?.name).toBe("main");
+      expect(mainModule?.type).toBe(PYTHON_MODULE_TYPE);
+      expect(mainModule?.path).toBe("main.py");
+      expect(mainModule?.fullName).toBe("main");
+      expect(mainModule?.parent).toBe(root);
+    });
 
-    expect(root.children.size).toBe(1);
+    test("should build module map for multiple files at root level", () => {
+      const files = createFiles(["main.py", "utils.py", "config.py"]);
+      const resolver = new PythonModuleResolver(files, "3.13");
+      const root = resolver.pythonModule;
 
-    // Expect a child with key "foo" (derived from "foo.py")
-    const fooModule = root.children.get("foo") as PythonModule;
-    expect(fooModule).toBeDefined();
-    expect(fooModule.name).toBe("foo");
-    expect(fooModule.type).toBe(PYTHON_MODULE_TYPE);
-    expect(fooModule.path).toBe("foo.py");
-    expect(fooModule.fullName).toBe("foo");
+      expect(root.children.size).toBe(3);
+
+      const moduleNames = Array.from(root.children.keys());
+      expect(moduleNames).toContain("main");
+      expect(moduleNames).toContain("utils");
+      expect(moduleNames).toContain("config");
+
+      // Check each module has correct properties
+      for (const name of moduleNames) {
+        const module = root.children.get(name);
+        expect(module?.name).toBe(name);
+        expect(module?.type).toBe(PYTHON_MODULE_TYPE);
+        expect(module?.path).toBe(`${name}.py`);
+        expect(module?.fullName).toBe(name);
+      }
+    });
+
+    test("should build module map for a simple package", () => {
+      const files = createFiles(["pkg/__init__.py", "pkg/module.py"]);
+
+      const resolver = new PythonModuleResolver(files, "3.13");
+      const root = resolver.pythonModule;
+
+      expect(root.children.size).toBe(1);
+
+      const pkgModule = root.children.get("pkg");
+      expect(pkgModule).toBeDefined();
+      expect(pkgModule?.name).toBe("pkg");
+      expect(pkgModule?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+      expect(pkgModule?.path).toBe("pkg/__init__.py");
+      expect(pkgModule?.fullName).toBe("pkg");
+
+      expect(pkgModule?.children.size).toBe(1);
+      const subModule = pkgModule?.children.get("module");
+      expect(subModule?.name).toBe("module");
+      expect(subModule?.type).toBe(PYTHON_MODULE_TYPE);
+      expect(subModule?.path).toBe("pkg/module.py");
+      expect(subModule?.fullName).toBe("pkg.module");
+      expect(subModule?.parent).toBe(pkgModule);
+    });
+
+    test("should build module map for nested packages", () => {
+      const files = createFiles([
+        "pkg/__init__.py",
+        "pkg/module.py",
+        "pkg/subpkg/__init__.py",
+        "pkg/subpkg/submodule.py",
+        "pkg/subpkg/deeper/__init__.py",
+        "pkg/subpkg/deeper/core.py",
+      ]);
+
+      const resolver = new PythonModuleResolver(files, "3.13");
+      const root = resolver.pythonModule;
+
+      // Check first level
+      const pkgModule = root.children.get("pkg");
+      expect(pkgModule).toBeDefined();
+      expect(pkgModule?.name).toBe("pkg");
+      expect(pkgModule?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+
+      // Check second level
+      expect(pkgModule?.children.size).toBe(2); // module.py and subpkg
+      const moduleModule = pkgModule?.children.get("module");
+      expect(moduleModule?.name).toBe("module");
+      expect(moduleModule?.fullName).toBe("pkg.module");
+
+      const subpkgModule = pkgModule?.children.get("subpkg");
+      expect(subpkgModule?.name).toBe("subpkg");
+      expect(subpkgModule?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+      expect(subpkgModule?.fullName).toBe("pkg.subpkg");
+
+      // Check third level
+      expect(subpkgModule?.children.size).toBe(2); // submodule.py and deeper
+      const submoduleModule = subpkgModule?.children.get("submodule");
+      expect(submoduleModule?.name).toBe("submodule");
+      expect(submoduleModule?.fullName).toBe("pkg.subpkg.submodule");
+
+      const deeperModule = subpkgModule?.children.get("deeper");
+      expect(deeperModule?.name).toBe("deeper");
+      expect(deeperModule?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+      expect(deeperModule?.fullName).toBe("pkg.subpkg.deeper");
+
+      // Check fourth level
+      const coreModule = deeperModule?.children.get("core");
+      expect(coreModule?.name).toBe("core");
+      expect(coreModule?.fullName).toBe("pkg.subpkg.deeper.core");
+    });
+
+    test("should handle package namespaces with multiple modules", () => {
+      const files = createFiles([
+        "pkg/__init__.py",
+        "pkg/module1.py",
+        "pkg/module2.py",
+        "pkg/module3.py",
+      ]);
+
+      const resolver = new PythonModuleResolver(files, "3.13");
+      const pkgModule = resolver.pythonModule.children.get("pkg");
+
+      expect(pkgModule?.children.size).toBe(3);
+      const moduleNames = Array.from(pkgModule?.children.keys() || []);
+      expect(moduleNames).toContain("module1");
+      expect(moduleNames).toContain("module2");
+      expect(moduleNames).toContain("module3");
+    });
+
+    test("should handle multiple packages at root level", () => {
+      const files = createFiles([
+        "pkg1/__init__.py",
+        "pkg1/module.py",
+        "pkg2/__init__.py",
+        "pkg2/module.py",
+        "main.py",
+      ]);
+
+      const resolver = new PythonModuleResolver(files, "3.13");
+      const root = resolver.pythonModule;
+
+      expect(root.children.size).toBe(3); // pkg1, pkg2, main
+
+      const pkg1 = root.children.get("pkg1");
+      const pkg2 = root.children.get("pkg2");
+      const main = root.children.get("main");
+
+      expect(pkg1?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+      expect(pkg2?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+      expect(main?.type).toBe(PYTHON_MODULE_TYPE);
+
+      expect(pkg1?.children.size).toBe(1);
+      expect(pkg2?.children.size).toBe(1);
+    });
   });
 
-  test("should build module map for a package with __init__.py", () => {
-    // For a package with an __init__.py file.
-    const files = createFiles(["pkg/__init__.py"]);
+  describe("Module Resolution", () => {
+    let resolver: PythonModuleResolver;
 
-    const mapper = new PythonModuleResolver(files, "3.13");
-    const root = mapper.pythonModule;
+    beforeEach(() => {
+      // Set up a comprehensive project structure for testing all resolution scenarios
+      const files = createFiles([
+        "main.py",
+        "utils.py",
+        "config.py",
+        "pkg/__init__.py",
+        "pkg/module1.py",
+        "pkg/module2.py",
+        "pkg/subpkg/__init__.py",
+        "pkg/subpkg/submodule1.py",
+        "pkg/subpkg/submodule2.py",
+        "pkg/subpkg/deeper/__init__.py",
+        "pkg/subpkg/deeper/core.py",
+        "anotherpkg/__init__.py",
+        "anotherpkg/helper.py",
+      ]);
 
-    // The root is a namespace with empty name.
-    expect(root.name).toBe("");
-    expect(root.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
-    expect(root.path).toBe("");
-    expect(root.fullName).toBe("");
+      resolver = new PythonModuleResolver(files, "3.13");
+    });
 
-    expect(root.children.size).toBe(1);
+    describe("getModuleFromFilePath", () => {
+      test("should resolve module from file path for regular modules", () => {
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        expect(mainModule.name).toBe("main");
+        expect(mainModule.fullName).toBe("main");
 
-    // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonModule;
-    expect(pkgModule).toBeDefined();
-    expect(pkgModule.name).toBe("pkg");
-    expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(pkgModule.path).toBe("pkg/__init__.py");
-    expect(pkgModule.fullName).toBe("pkg");
-    expect(pkgModule.children.size).toBe(0);
-    expect(pkgModule.parent).toBe(root);
-  });
+        const utilsModule = resolver.getModuleFromFilePath("utils.py");
+        expect(utilsModule.name).toBe("utils");
+        expect(utilsModule.fullName).toBe("utils");
+      });
 
-  test("should build module map for a package with a module", () => {
-    // For a package with an __init__.py file and a module.
-    const files = createFiles(["pkg/__init__.py", "pkg/module.py"]);
+      test("should resolve module from file path for packages", () => {
+        const pkgModule = resolver.getModuleFromFilePath("pkg/__init__.py");
+        expect(pkgModule.name).toBe("pkg");
+        expect(pkgModule.fullName).toBe("pkg");
+        expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+      });
 
-    const mapper = new PythonModuleResolver(files, "3.13");
-    const root = mapper.pythonModule;
+      test("should handle package path without __init__.py", () => {
+        const pkgModule = resolver.getModuleFromFilePath("pkg");
+        expect(pkgModule.name).toBe("pkg");
+        expect(pkgModule.fullName).toBe("pkg");
+      });
 
-    // The root is a namespace with empty name.
-    expect(root.name).toBe("");
-    expect(root.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
-    expect(root.path).toBe("");
-    expect(root.fullName).toBe("");
+      test("should handle package path with trailing separator", () => {
+        const pkgModule = resolver.getModuleFromFilePath(`pkg${sep}`);
+        expect(pkgModule.name).toBe("pkg");
+        expect(pkgModule.fullName).toBe("pkg");
+      });
 
-    expect(root.children.size).toBe(1);
+      test("should resolve module from file path for nested packages", () => {
+        const subpkgModule = resolver.getModuleFromFilePath(
+          "pkg/subpkg/__init__.py",
+        );
+        expect(subpkgModule.name).toBe("subpkg");
+        expect(subpkgModule.fullName).toBe("pkg.subpkg");
+        expect(subpkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
 
-    // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonModule;
-    expect(pkgModule).toBeDefined();
-    expect(pkgModule.name).toBe("pkg");
-    expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(pkgModule.path).toBe("pkg/__init__.py");
-    expect(pkgModule.fullName).toBe("pkg");
-    expect(pkgModule.children.size).toBe(1);
-    expect(pkgModule.parent).toBe(root);
+        const deeperModule = resolver.getModuleFromFilePath(
+          "pkg/subpkg/deeper/__init__.py",
+        );
+        expect(deeperModule.name).toBe("deeper");
+        expect(deeperModule.fullName).toBe("pkg.subpkg.deeper");
+      });
 
-    // Expect a child with key "module" (derived from "pkg/module.py")
-    const moduleModule = pkgModule.children.get("module") as PythonModule;
-    expect(moduleModule).toBeDefined();
-    expect(moduleModule.name).toBe("module");
-    expect(moduleModule.type).toBe(PYTHON_MODULE_TYPE);
-    expect(moduleModule.path).toBe("pkg/module.py");
-    expect(moduleModule.fullName).toBe("pkg.module");
-    expect(moduleModule.children.size).toBe(0);
-    expect(moduleModule.parent).toBe(pkgModule);
-  });
+      test("should resolve module from file path for modules in packages", () => {
+        const moduleModule = resolver.getModuleFromFilePath("pkg/module1.py");
+        expect(moduleModule.name).toBe("module1");
+        expect(moduleModule.fullName).toBe("pkg.module1");
 
-  test("should build module map for a package with a nested package", () => {
-    // For a package with an __init__.py file and a nested package.
-    const files = createFiles(["pkg/__init__.py", "pkg/subpkg/__init__.py"]);
+        const submoduleModule = resolver.getModuleFromFilePath(
+          "pkg/subpkg/submodule1.py",
+        );
+        expect(submoduleModule.name).toBe("submodule1");
+        expect(submoduleModule.fullName).toBe("pkg.subpkg.submodule1");
 
-    const mapper = new PythonModuleResolver(files, "3.13");
-    const root = mapper.pythonModule;
+        const coreModule = resolver.getModuleFromFilePath(
+          "pkg/subpkg/deeper/core.py",
+        );
+        expect(coreModule.name).toBe("core");
+        expect(coreModule.fullName).toBe("pkg.subpkg.deeper.core");
+      });
 
-    // The root is a namespace with empty name.
-    expect(root.name).toBe("");
-    expect(root.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
-    expect(root.path).toBe("");
-    expect(root.fullName).toBe("");
+      test("should handle module path without .py extension", () => {
+        const moduleModule = resolver.getModuleFromFilePath("pkg/module1");
+        expect(moduleModule.name).toBe("module1");
+        expect(moduleModule.fullName).toBe("pkg.module1");
+      });
 
-    expect(root.children.size).toBe(1);
+      test("should throw an error for non-existent modules", () => {
+        expect(() => {
+          resolver.getModuleFromFilePath("nonexistent.py");
+        }).toThrow();
 
-    // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonModule;
-    expect(pkgModule).toBeDefined();
-    expect(pkgModule.name).toBe("pkg");
-    expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(pkgModule.path).toBe("pkg/__init__.py");
-    expect(pkgModule.fullName).toBe("pkg");
-    expect(pkgModule.children.size).toBe(1);
-    expect(pkgModule.parent).toBe(root);
+        expect(() => {
+          resolver.getModuleFromFilePath("pkg/nonexistent.py");
+        }).toThrow();
+      });
 
-    // Expect a child with key "subpkg" (derived from "pkg/subpkg/__init__.py")
-    const subpkgModule = pkgModule.children.get("subpkg") as PythonModule;
-    expect(subpkgModule).toBeDefined();
-    expect(subpkgModule.name).toBe("subpkg");
-    expect(subpkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(subpkgModule.path).toBe("pkg/subpkg/__init__.py");
-    expect(subpkgModule.fullName).toBe("pkg.subpkg");
-    expect(subpkgModule.children.size).toBe(0);
-    expect(subpkgModule.parent).toBe(pkgModule);
-  });
+      test("should use cache for repeat lookups", () => {
+        // First lookup should cache the result
+        const moduleFirst = resolver.getModuleFromFilePath("pkg/module1.py");
+        expect(moduleFirst.name).toBe("module1");
 
-  test("should build module map for a package with a module and a nested package", () => {
-    // For a package with an __init__.py file, a module, and a nested package.
-    const files = createFiles([
-      "pkg/__init__.py",
-      "pkg/module.py",
-      "pkg/subpkg/__init__.py",
-    ]);
+        // Spy on the error throwing to ensure cache is used and we don't
+        // go through the resolution logic again
+        const mockThrow = vi.spyOn(global, "Error");
 
-    const mapper = new PythonModuleResolver(files, "3.13");
-    const root = mapper.pythonModule;
+        // Second lookup should use the cache
+        const moduleSecond = resolver.getModuleFromFilePath("pkg/module1.py");
+        expect(moduleSecond).toBe(moduleFirst); // Same instance
+        expect(mockThrow).not.toHaveBeenCalled();
 
-    // The root is a namespace with empty name.
-    expect(root.name).toBe("");
-    expect(root.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
-    expect(root.path).toBe("");
-    expect(root.fullName).toBe("");
+        mockThrow.mockRestore();
+      });
+    });
 
-    expect(root.children.size).toBe(1);
+    describe("Absolute Import Resolution", () => {
+      test("should resolve top-level module imports", () => {
+        // From main.py, import utils
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedUtils = resolver.resolveModule(mainModule, "utils");
 
-    // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonModule;
-    expect(pkgModule).toBeDefined();
-    expect(pkgModule.name).toBe("pkg");
-    expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(pkgModule.path).toBe("pkg/__init__.py");
-    expect(pkgModule.fullName).toBe("pkg");
-    expect(pkgModule.children.size).toBe(2);
-    expect(pkgModule.parent).toBe(root);
+        expect(resolvedUtils).toBeDefined();
+        expect(resolvedUtils?.name).toBe("utils");
+        expect(resolvedUtils?.fullName).toBe("utils");
+      });
 
-    // Expect a child with key "module" (derived from "pkg/module.py")
-    const moduleModule = pkgModule.children.get("module") as PythonModule;
-    expect(moduleModule).toBeDefined();
-    expect(moduleModule.name).toBe("module");
-    expect(moduleModule.type).toBe(PYTHON_MODULE_TYPE);
-    expect(moduleModule.path).toBe("pkg/module.py");
-    expect(moduleModule.fullName).toBe("pkg.module");
-    expect(moduleModule.children.size).toBe(0);
-    expect(moduleModule.parent).toBe(pkgModule);
+      test("should resolve package imports", () => {
+        // From main.py, import pkg
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedPkg = resolver.resolveModule(mainModule, "pkg");
 
-    // Expect a child with key "subpkg" (derived from "pkg/subpkg/__init__.py")
-    const subpkgModule = pkgModule.children.get("subpkg") as PythonModule;
-    expect(subpkgModule).toBeDefined();
-    expect(subpkgModule.name).toBe("subpkg");
-    expect(subpkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(subpkgModule.path).toBe("pkg/subpkg/__init__.py");
-    expect(subpkgModule.fullName).toBe("pkg.subpkg");
-    expect(subpkgModule.children.size).toBe(0);
-    expect(subpkgModule.parent).toBe(pkgModule);
-  });
+        expect(resolvedPkg).toBeDefined();
+        expect(resolvedPkg?.name).toBe("pkg");
+        expect(resolvedPkg?.fullName).toBe("pkg");
+        expect(resolvedPkg?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+      });
 
-  test("should build module map for a package with a module and a nested package with a module", () => {
-    // For a package with an __init__.py file, a module, and a nested package with a module.
-    const files = createFiles([
-      "pkg/__init__.py",
-      "pkg/module.py",
-      "pkg/subpkg/__init__.py",
-      "pkg/subpkg/submodule.py",
-    ]);
+      test("should resolve submodule imports with dotted names", () => {
+        // From main.py, import pkg.module1
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedModule = resolver.resolveModule(
+          mainModule,
+          "pkg.module1",
+        );
 
-    const mapper = new PythonModuleResolver(files, "3.13");
-    const root = mapper.pythonModule;
+        expect(resolvedModule).toBeDefined();
+        expect(resolvedModule?.name).toBe("module1");
+        expect(resolvedModule?.fullName).toBe("pkg.module1");
+      });
 
-    // The root is a namespace with empty name.
-    expect(root.name).toBe("");
-    expect(root.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
-    expect(root.path).toBe("");
-    expect(root.fullName).toBe("");
+      test("should resolve deeply nested imports", () => {
+        // From main.py, import pkg.subpkg.deeper.core
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedCore = resolver.resolveModule(
+          mainModule,
+          "pkg.subpkg.deeper.core",
+        );
 
-    expect(root.children.size).toBe(1);
+        expect(resolvedCore).toBeDefined();
+        expect(resolvedCore?.name).toBe("core");
+        expect(resolvedCore?.fullName).toBe("pkg.subpkg.deeper.core");
+      });
 
-    // Expect a child with key "pkg" (derived from "pkg/__init__.py")
-    const pkgModule = root.children.get("pkg") as PythonModule;
-    expect(pkgModule).toBeDefined();
-    expect(pkgModule.name).toBe("pkg");
-    expect(pkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(pkgModule.path).toBe("pkg/__init__.py");
-    expect(pkgModule.fullName).toBe("pkg");
-    expect(pkgModule.children.size).toBe(2);
-    expect(pkgModule.parent).toBe(root);
+      test("should resolve imports from within packages", () => {
+        // From pkg/module1.py, import anotherpkg.helper
+        const module1 = resolver.getModuleFromFilePath("pkg/module1.py");
+        const resolvedHelper = resolver.resolveModule(
+          module1,
+          "anotherpkg.helper",
+        );
 
-    // Expect a child with key "module" (derived from "pkg/module.py")
-    const moduleModule = pkgModule.children.get("module") as PythonModule;
-    expect(moduleModule).toBeDefined();
-    expect(moduleModule.name).toBe("module");
-    expect(moduleModule.type).toBe(PYTHON_MODULE_TYPE);
-    expect(moduleModule.path).toBe("pkg/module.py");
-    expect(moduleModule.fullName).toBe("pkg.module");
-    expect(moduleModule.children.size).toBe(0);
-    expect(moduleModule.parent).toBe(pkgModule);
+        expect(resolvedHelper).toBeDefined();
+        expect(resolvedHelper?.name).toBe("helper");
+        expect(resolvedHelper?.fullName).toBe("anotherpkg.helper");
+      });
 
-    // Expect a child with key "subpkg" (derived from "pkg/subpkg/__init__.py")
-    const subpkgModule = pkgModule.children.get("subpkg") as PythonModule;
-    expect(subpkgModule).toBeDefined();
-    expect(subpkgModule.name).toBe("subpkg");
-    expect(subpkgModule.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-    // expect(subpkgModule.path).toBe("pkg/subpkg/__init__.py");
-    expect(subpkgModule.fullName).toBe("pkg.subpkg");
-    expect(subpkgModule.children.size).toBe(1);
-    expect(subpkgModule.parent).toBe(pkgModule);
+      test("should handle absolute imports that don't exist", () => {
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedNonExistent = resolver.resolveModule(
+          mainModule,
+          "nonexistent",
+        );
 
-    // Expect a child with key "submodule"
-    const submoduleModule = subpkgModule.children.get(
-      "submodule",
-    ) as PythonModule;
-    expect(submoduleModule).toBeDefined();
-    expect(submoduleModule.name).toBe("submodule");
-    expect(submoduleModule.type).toBe(PYTHON_MODULE_TYPE);
-    expect(submoduleModule.path).toBe("pkg/subpkg/submodule.py");
-    expect(submoduleModule.fullName).toBe("pkg.subpkg.submodule");
-    expect(submoduleModule.children.size).toBe(0);
-    expect(submoduleModule.parent).toBe(subpkgModule);
-  });
-});
+        expect(resolvedNonExistent).toBeUndefined();
 
-describe("PythonModuleResolver, resolveModule method - Complex Cases", () => {
-  let mapper: PythonModuleResolver;
+        const resolvedNestedNonExistent = resolver.resolveModule(
+          mainModule,
+          "pkg.nonexistent",
+        );
+        expect(resolvedNestedNonExistent).toBeUndefined();
+      });
 
-  beforeAll(() => {
-    // Simulate a more complex project structure:
-    // project/
-    //   pkg/
-    //     __init__.py           --> package
-    //     module.py             --> module inside pkg
-    //     helper.py             --> module inside pkg
-    //     subpkg/
-    //       __init__.py         --> nested package
-    //       submodule.py        --> module inside subpkg
-    //   main.py                 --> module at project root
-    //   util.py                 --> module at project root
-    const paths = [
-      `project${sep}pkg${sep}__init__.py`,
-      `project${sep}pkg${sep}module.py`,
-      `project${sep}pkg${sep}helper.py`,
-      `project${sep}pkg${sep}subpkg${sep}__init__.py`,
-      `project${sep}pkg${sep}subpkg${sep}submodule.py`,
-      `project${sep}main.py`,
-      `project${sep}util.py`,
-    ];
-    const files = createFiles(paths);
-    mapper = new PythonModuleResolver(files, "3.13");
-  });
+      test("should not resolve standard library modules", () => {
+        const mainModule = resolver.getModuleFromFilePath("main.py");
 
-  test("should resolve relative import '..helper' from 'project/pkg/subpkg/submodule.py'", () => {
-    // From "project/pkg/subpkg/submodule.py", the relative import "..helper"
-    // means: go up one level (to pkg/subpkg's parent, which is pkg) and then look for "helper".
-    const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const currentModule = mapper.getModuleFromFilePath(currentFile);
-    expect(currentModule).toBeDefined();
-    const resolved = mapper.resolveModule(currentModule, "..helper");
-    expect(resolved).toBeDefined();
-    // Expect resolved module to have name "helper" and fullName "project.pkg.helper"
-    expect(resolved?.name).toBe("helper");
-    expect(resolved?.fullName).toBe("project.pkg.helper");
-  });
+        // Test with common stdlib modules
+        const resolvedOs = resolver.resolveModule(mainModule, "os");
+        expect(resolvedOs).toBeUndefined();
 
-  test("should resolve relative import '..module' from 'project/pkg/subpkg/submodule.py'", () => {
-    // Similarly, "..module" should resolve to "project/pkg/module.py"
-    const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const currentModule = mapper.getModuleFromFilePath(currentFile);
-    expect(currentModule).toBeDefined();
-    const resolved = mapper.resolveModule(currentModule, "..module");
-    expect(resolved).toBeDefined();
-    expect(resolved?.name).toBe("module");
-    expect(resolved?.fullName).toBe("project.pkg.module");
-  });
+        const resolvedSys = resolver.resolveModule(mainModule, "sys");
+        expect(resolvedSys).toBeUndefined();
 
-  test("should resolve relative import '...main' from 'project/pkg/subpkg/submodule.py'", () => {
-    // Three dots means: go up two levels.
-    // From "project/pkg/subpkg/submodule.py", two levels up is "project"
-    // Then look for "main" within "project", i.e. "project/main.py".
-    const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const currentModule = mapper.getModuleFromFilePath(currentFile);
-    expect(currentModule).toBeDefined();
-    const resolved = mapper.resolveModule(currentModule, "...main");
-    expect(resolved).toBeDefined();
-    expect(resolved?.name).toBe("main");
-    expect(resolved?.fullName).toBe("project.main");
-  });
+        const resolvedJson = resolver.resolveModule(mainModule, "json");
+        expect(resolvedJson).toBeUndefined();
+      });
 
-  test("should resolve absolute import 'pkg.helper' from 'project/pkg/subpkg/submodule.py'", () => {
-    // From a nested module, absolute import "pkg.helper" should be resolved.
-    // The algorithm walks upward until it finds the correct candidate.
-    const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const currentModule = mapper.getModuleFromFilePath(currentFile);
-    expect(currentModule).toBeDefined();
-    const resolved = mapper.resolveModule(currentModule, "pkg.helper");
-    expect(resolved).toBeDefined();
-    expect(resolved?.name).toBe("helper");
-    expect(resolved?.fullName).toBe("project.pkg.helper");
-  });
+      test("should handle circular imports", () => {
+        // From main.py, import main (itself)
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedSelf = resolver.resolveModule(mainModule, "main");
 
-  test("should resolve absolute import 'util' from 'project/pkg/subpkg/submodule.py'", () => {
-    // From "project/pkg/subpkg/submodule.py", absolute import "util" should resolve to "project/util.py"
-    const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const currentModule = mapper.getModuleFromFilePath(currentFile);
-    expect(currentModule).toBeDefined();
-    const resolved = mapper.resolveModule(currentModule, "util");
-    expect(resolved).toBeDefined();
-    expect(resolved?.name).toBe("util");
-    expect(resolved?.fullName).toBe("project.util");
-  });
+        // Self-imports should return undefined to avoid circular references
+        expect(resolvedSelf).toBeUndefined();
+      });
 
-  test("should return undefined for a relative import that goes too high", () => {
-    // If we try to go up more levels than exist, expect undefined.
-    const currentFile = `project${sep}pkg${sep}subpkg${sep}submodule.py`;
-    const currentModule = mapper.getModuleFromFilePath(currentFile);
-    expect(currentModule).toBeDefined();
-    // Here, "....nonexistent" (four dots) would require going up three levels.
-    const resolved = mapper.resolveModule(currentModule, "....nonexistent");
-    expect(resolved).toBeUndefined();
-  });
-});
+      test("should use cache for repeated resolution", () => {
+        const mainModule = resolver.getModuleFromFilePath("main.py");
 
-describe("PythonModuleResolver, getModuleFromFilePath method", () => {
-  let mapper: PythonModuleResolver;
+        // First resolution
+        const utils1 = resolver.resolveModule(mainModule, "utils");
+        expect(utils1).toBeDefined();
 
-  beforeAll(() => {
-    // Use the same complex project structure from the previous test suite
-    const paths = [
-      `project${sep}pkg${sep}__init__.py`,
-      `project${sep}pkg${sep}module.py`,
-      `project${sep}pkg${sep}helper.py`,
-      `project${sep}pkg${sep}subpkg${sep}__init__.py`,
-      `project${sep}pkg${sep}subpkg${sep}submodule.py`,
-      `project${sep}main.py`,
-      `project${sep}util.py`,
-    ];
-    const files = createFiles(paths);
-    mapper = new PythonModuleResolver(files, "3.13");
-  });
+        // Create a spy to verify cache usage
+        const spy = vi.spyOn(resolver as never, "resolveAbsoluteImport");
 
-  test("should get a module from a regular .py file path", () => {
-    const module = mapper.getModuleFromFilePath(`project${sep}main.py`);
-    expect(module).toBeDefined();
-    expect(module?.name).toBe("main");
-    expect(module?.fullName).toBe("project.main");
-    expect(module?.type).toBe(PYTHON_MODULE_TYPE);
-  });
+        // Second resolution of the same import should use cache
+        const utils2 = resolver.resolveModule(mainModule, "utils");
+        expect(utils2).toBe(utils1); // Same instance
+        expect(spy).not.toHaveBeenCalled();
 
-  test("should get a module from an __init__.py file path (package)", () => {
-    const module = mapper.getModuleFromFilePath(
-      `project${sep}pkg${sep}__init__.py`,
-    );
-    expect(module).toBeDefined();
-    expect(module?.name).toBe("pkg");
-    expect(module?.fullName).toBe("project.pkg");
-    expect(module?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
-  });
+        spy.mockRestore();
+      });
+    });
 
-  test("should get a module from a nested file path", () => {
-    const module = mapper.getModuleFromFilePath(
-      `project${sep}pkg${sep}subpkg${sep}submodule.py`,
-    );
-    expect(module).toBeDefined();
-    expect(module?.name).toBe("submodule");
-    expect(module?.fullName).toBe("project.pkg.subpkg.submodule");
-    expect(module?.type).toBe(PYTHON_MODULE_TYPE);
-  });
+    describe("Relative Import Resolution", () => {
+      test("should resolve same-level relative imports", () => {
+        // From pkg/module1.py, import .module2
+        const module1 = resolver.getModuleFromFilePath("pkg/module1.py");
+        const resolvedModule2 = resolver.resolveModule(module1, ".module2");
 
-  test("should handle directory path with trailing separator for __init__.py", () => {
-    const module = mapper.getModuleFromFilePath(`project${sep}pkg${sep}`);
-    expect(module).toBeDefined();
-    expect(module?.name).toBe("pkg");
-    expect(module?.fullName).toBe("project.pkg");
-  });
+        expect(resolvedModule2).toBeDefined();
+        expect(resolvedModule2?.name).toBe("module2");
+        expect(resolvedModule2?.fullName).toBe("pkg.module2");
+      });
 
-  test("should handle file path without .py extension", () => {
-    const module = mapper.getModuleFromFilePath(`project${sep}main`);
-    expect(module).toBeDefined();
-    expect(module?.name).toBe("main");
-    expect(module?.fullName).toBe("project.main");
+      test("should resolve parent-level relative imports", () => {
+        // From pkg/subpkg/submodule1.py, import ..module1
+        const submodule1 = resolver.getModuleFromFilePath(
+          "pkg/subpkg/submodule1.py",
+        );
+        const resolvedModule1 = resolver.resolveModule(submodule1, "..module1");
+
+        expect(resolvedModule1).toBeDefined();
+        expect(resolvedModule1?.name).toBe("module1");
+        expect(resolvedModule1?.fullName).toBe("pkg.module1");
+      });
+
+      test("should resolve multiple-level parent relative imports", () => {
+        // From pkg/subpkg/deeper/core.py, import ...module1
+        const core = resolver.getModuleFromFilePath(
+          "pkg/subpkg/deeper/core.py",
+        );
+        const resolvedModule1 = resolver.resolveModule(core, "...module1");
+
+        expect(resolvedModule1).toBeDefined();
+        expect(resolvedModule1?.name).toBe("module1");
+        expect(resolvedModule1?.fullName).toBe("pkg.module1");
+      });
+
+      test("should resolve relative imports to the root level", () => {
+        // From pkg/subpkg/deeper/core.py, import ....utils
+        const core = resolver.getModuleFromFilePath(
+          "pkg/subpkg/deeper/core.py",
+        );
+        const resolvedUtils = resolver.resolveModule(core, "....utils");
+
+        expect(resolvedUtils).toBeDefined();
+        expect(resolvedUtils?.name).toBe("utils");
+        expect(resolvedUtils?.fullName).toBe("utils");
+      });
+
+      test("should resolve relative imports with subpaths", () => {
+        // From pkg/module1.py, import .subpkg.submodule1
+        const module1 = resolver.getModuleFromFilePath("pkg/module1.py");
+        const resolvedSubmodule = resolver.resolveModule(
+          module1,
+          ".subpkg.submodule1",
+        );
+
+        expect(resolvedSubmodule).toBeDefined();
+        expect(resolvedSubmodule?.name).toBe("submodule1");
+        expect(resolvedSubmodule?.fullName).toBe("pkg.subpkg.submodule1");
+      });
+
+      test("should handle relative imports to non-existent modules", () => {
+        const module1 = resolver.getModuleFromFilePath("pkg/module1.py");
+        const resolvedNonExistent = resolver.resolveModule(
+          module1,
+          ".nonexistent",
+        );
+
+        expect(resolvedNonExistent).toBeUndefined();
+      });
+
+      test("should handle too many dots in relative imports", () => {
+        // If we go beyond the root level with too many dots
+        const module1 = resolver.getModuleFromFilePath("pkg/module1.py");
+        const resolvedTooManyDots = resolver.resolveModule(
+          module1,
+          "....toomany",
+        );
+
+        expect(resolvedTooManyDots).toBeUndefined();
+      });
+
+      test("should handle empty remainder in relative imports", () => {
+        // Just dots means import the package itself at that level
+        // From pkg/subpkg/submodule1.py, import ..
+        const submodule1 = resolver.getModuleFromFilePath(
+          "pkg/subpkg/submodule1.py",
+        );
+        const resolvedParentPackage = resolver.resolveModule(submodule1, "..");
+
+        expect(resolvedParentPackage).toBeDefined();
+        expect(resolvedParentPackage?.name).toBe("pkg");
+        expect(resolvedParentPackage?.fullName).toBe("pkg");
+      });
+
+      test("should use cache for repeated relative imports", () => {
+        const submodule1 = resolver.getModuleFromFilePath(
+          "pkg/subpkg/submodule1.py",
+        );
+
+        // First resolution
+        const module1 = resolver.resolveModule(submodule1, "..module1");
+        expect(module1).toBeDefined();
+
+        // Create a spy to verify cache usage
+        const spy = vi.spyOn(resolver as never, "resolveRelativeModule");
+
+        // Second resolution should use cache
+        const module1Again = resolver.resolveModule(submodule1, "..module1");
+        expect(module1Again).toBe(module1); // Same instance
+        expect(spy).not.toHaveBeenCalled();
+
+        spy.mockRestore();
+      });
+    });
+
+    describe("Edge Cases and Special Scenarios", () => {
+      test("should not allow circular references", () => {
+        // Test various patterns that could create circular references
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        expect(resolver.resolveModule(mainModule, "main")).toBeUndefined();
+
+        const pkgInit = resolver.getModuleFromFilePath("pkg/__init__.py");
+        expect(resolver.resolveModule(pkgInit, "pkg")).toBeUndefined();
+
+        const submodule = resolver.getModuleFromFilePath(
+          "pkg/subpkg/submodule1.py",
+        );
+        expect(
+          resolver.resolveModule(submodule, "..subpkg.submodule1"),
+        ).toBeUndefined();
+      });
+
+      test("should handle mixed path separators", () => {
+        // Test with a mix of forward and backward slashes
+        const mixedPath = "pkg/subpkg\\submodule1.py".replace(/\\/g, sep);
+        const module = resolver.getModuleFromFilePath(mixedPath);
+        expect(module.name).toBe("submodule1");
+        expect(module.fullName).toBe("pkg.subpkg.submodule1");
+      });
+
+      test("should resolve imports when importing a package", () => {
+        // From main.py, import pkg.subpkg
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const subpkg = resolver.resolveModule(mainModule, "pkg.subpkg");
+
+        expect(subpkg).toBeDefined();
+        expect(subpkg?.name).toBe("subpkg");
+        expect(subpkg?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+        expect(subpkg?.fullName).toBe("pkg.subpkg");
+      });
+
+      test("should handle namespace packages (PEP 420)", () => {
+        // Python 3.3+ allows namespace packages without __init__.py
+        const files = createFiles([
+          "main.py",
+          "namespace/pkg/module.py",
+          // No __init__.py in namespace/pkg
+        ]);
+
+        const resolver = new PythonModuleResolver(files, "3.13");
+
+        // Should create implicit namespace package
+        const root = resolver.pythonModule;
+        const namespaceModule = root.children.get("namespace");
+        expect(namespaceModule).toBeDefined();
+        expect(namespaceModule?.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
+
+        const pkgModule = namespaceModule?.children.get("pkg");
+        expect(pkgModule).toBeDefined();
+        expect(pkgModule?.type).toBe(PYTHON_NAMESPACE_MODULE_TYPE);
+
+        // Should be able to resolve the module
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedModule = resolver.resolveModule(
+          mainModule,
+          "namespace.pkg.module",
+        );
+        expect(resolvedModule).toBeDefined();
+        expect(resolvedModule?.name).toBe("module");
+        expect(resolvedModule?.fullName).toBe("namespace.pkg.module");
+      });
+
+      test("should handle special file names", () => {
+        // Files with names matching keywords or special patterns
+        const files = createFiles([
+          "main.py",
+          "special/class.py",
+          "special/_private.py",
+          "special/with.py",
+        ]);
+
+        const resolver = new PythonModuleResolver(files, "3.13");
+
+        // These names are valid Python module names despite being keywords
+        const classModule = resolver.getModuleFromFilePath("special/class.py");
+        expect(classModule.name).toBe("class");
+
+        const privateModule = resolver.getModuleFromFilePath(
+          "special/_private.py",
+        );
+        expect(privateModule.name).toBe("_private");
+
+        // Import paths should resolve
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedClass = resolver.resolveModule(
+          mainModule,
+          "special.class",
+        );
+        expect(resolvedClass).toBeDefined();
+        expect(resolvedClass?.name).toBe("class");
+
+        const resolvedPrivate = resolver.resolveModule(
+          mainModule,
+          "special._private",
+        );
+        expect(resolvedPrivate).toBeDefined();
+        expect(resolvedPrivate?.name).toBe("_private");
+      });
+
+      test("should handle importing from deeply nested paths", () => {
+        // Tests the from X.Y.Z import A syntax equivalent
+        const files = createFiles([
+          "main.py",
+          "deep/a/__init__.py",
+          "deep/a/b/__init__.py",
+          "deep/a/b/c/__init__.py",
+          "deep/a/b/c/d.py",
+        ]);
+
+        const resolver = new PythonModuleResolver(files, "3.13");
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+
+        // Test importing d from deep.a.b.c
+        const resolvedD = resolver.resolveModule(mainModule, "deep.a.b.c.d");
+        expect(resolvedD).toBeDefined();
+        expect(resolvedD?.name).toBe("d");
+        expect(resolvedD?.fullName).toBe("deep.a.b.c.d");
+
+        // Test importing the package itself
+        const resolvedC = resolver.resolveModule(mainModule, "deep.a.b.c");
+        expect(resolvedC).toBeDefined();
+        expect(resolvedC?.type).toBe(PYTHON_PACKAGE_MODULE_TYPE);
+        expect(resolvedC?.fullName).toBe("deep.a.b.c");
+      });
+
+      test("should handle imports with ..* patterns", () => {
+        // Create files
+        const files = createFiles([
+          "patterns/a/__init__.py",
+          "patterns/a/b/__init__.py",
+          "patterns/a/b/module.py",
+          "patterns/a/other.py",
+        ]);
+
+        const resolver = new PythonModuleResolver(files, "3.13");
+
+        // Get the module point of view
+        const moduleFile = resolver.getModuleFromFilePath(
+          "patterns/a/b/module.py",
+        );
+
+        // Test relative import with dots followed by wildcard-like name
+        // In Python, 'from .. import *' would import everything from parent
+        // Here we're testing "..other" - the parent's "other" module
+        const resolvedOther = resolver.resolveModule(moduleFile, "..other");
+        expect(resolvedOther).toBeDefined();
+        expect(resolvedOther?.name).toBe("other");
+        expect(resolvedOther?.fullName).toBe("patterns.a.other");
+      });
+
+      test("should handle resolution of _name modules", () => {
+        // Modules starting with underscore are treated as internal/private
+        const files = createFiles([
+          "main.py",
+          "pkg/__init__.py",
+          "pkg/_internal.py",
+          "pkg/public.py",
+        ]);
+
+        const resolver = new PythonModuleResolver(files, "3.13");
+
+        // Get the internal module
+        const internalModule =
+          resolver.getModuleFromFilePath("pkg/_internal.py");
+        expect(internalModule.name).toBe("_internal");
+
+        // Should be able to resolve _name from outside
+        const mainModule = resolver.getModuleFromFilePath("main.py");
+        const resolvedInternal = resolver.resolveModule(
+          mainModule,
+          "pkg._internal",
+        );
+        expect(resolvedInternal).toBeDefined();
+        expect(resolvedInternal?.name).toBe("_internal");
+      });
+    });
   });
 });

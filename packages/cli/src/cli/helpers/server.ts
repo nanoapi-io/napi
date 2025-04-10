@@ -56,7 +56,6 @@ export async function runServer(
       }),
     );
   } else {
-    // TODO find a better way to get dist directory. If we move this file, it will break
     app.use(express.static(path.join(__dirname, "../../../app_dist")));
   }
 

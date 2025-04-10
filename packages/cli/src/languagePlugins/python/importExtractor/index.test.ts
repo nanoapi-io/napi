@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
+import { PythonImportExtractor } from ".";
 import {
   ImportItem,
   FROM_IMPORT_STATEMENT_TYPE,
   NORMAL_IMPORT_STATEMENT_TYPE,
-  PythonImportExtractor,
-} from ".";
+} from "./types";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 
 describe("Python Import Extractor", () => {

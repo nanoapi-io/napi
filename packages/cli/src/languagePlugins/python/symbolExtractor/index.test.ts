@@ -6,11 +6,9 @@ import { PythonImportExtractor } from "../importExtractor";
 import { PythonModuleResolver } from "../moduleResolver";
 import { PythonItemResolver } from "../itemResolver";
 import { PythonUsageResolver } from "../usageResolver";
-import {
-  FileDependencies,
-  PythonDependencyResolver,
-} from "../dependencyResolver";
+import { PythonDependencyResolver } from "../dependencyResolver";
 import { PythonSymbolExtractor } from "./index";
+import { FileDependencies } from "../dependencyResolver/types";
 
 describe("PythonSymbolExtractor", () => {
   let files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
@@ -215,16 +213,14 @@ def independent_function():
       importExtractor,
       moduleResolver,
     );
-    usageResolver = new PythonUsageResolver(
-      pythonParser,
-      importExtractor,
-      moduleResolver,
-      itemResolver,
-    );
+    usageResolver = new PythonUsageResolver(pythonParser, exportExtractor);
     dependencyResolver = new PythonDependencyResolver(
       files,
       exportExtractor,
+      importExtractor,
+      itemResolver,
       usageResolver,
+      moduleResolver,
     );
 
     // Build the dependency map

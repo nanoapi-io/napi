@@ -1,480 +1,108 @@
-import Parser from "tree-sitter";
-import { PythonModule, PythonModuleResolver } from "../moduleResolver";
-import { Symbol } from "../exportExtractor";
+/**
+ * Python Usage Resolver
+ *
+ * This module provides functionality to analyze and track how Python modules and symbols are used
+ * within Python source code. It helps identify which imported modules and their exported symbols
+ * are actually referenced in the code, which is essential for dependency analysis and dead code detection.
+ *
+ * The implementation uses Tree-sitter for parsing Python code into an Abstract Syntax Tree (AST),
+ * then traverses the AST to find references to modules and symbols.
+ */
 import {
-  FROM_IMPORT_STATEMENT_TYPE,
-  ImportStatement,
-  NORMAL_IMPORT_STATEMENT_TYPE,
-  PythonImportExtractor,
-} from "../importExtractor";
-import { PythonItemResolver } from "../itemResolver";
+  PYTHON_NAMESPACE_MODULE_TYPE,
+  PythonModule,
+} from "../moduleResolver/types";
+import { PythonExportExtractor } from "../exportExtractor";
+import Parser from "tree-sitter";
+import { PythonSymbol } from "../exportExtractor/types";
+import { ExternalUsage, InternalUsage } from "./types";
 
 /**
- * Represents the usage of an internal module in the AST (excluding import statements).
- */
-export interface InternalUsageResult {
-  /** The module node corresponding to the used module. */
-  moduleNode: PythonModule;
-  /**
-   * Symbols or submodule names used from the module.
-   * If undefined, the module is referenced but no specific symbols are detected. */
-  symbols: Symbol[] | undefined;
-}
-
-/**
- * Represents the usage of an external module in the AST.
- */
-export interface ExternalUsageResult {
-  /** The name of the external module. */
-  moduleName: string;
-  /**
-   * Symbols used from the module.
-   * If undefined, the module is referenced but no specific symbols are detected. */
-  symbolNames: string[] | undefined;
-}
-
-export interface UsageResult {
-  internal: Map<string, InternalUsageResult>;
-  external: ExternalUsageResult[];
-}
-
-/**
- * PythonUsageResolver analyzes a file's AST to determine which parts of an import are used.
- *
- * It supports two primary strategies:
- *
- * 1. **Internal Module Resolution:**
- *    - When explicit symbols are provided, it checks for each symbol usage.
- *    - If an explicit symbol corresponds to a child module (i.e. a submodule imported as a symbol),
- *      it delegates usage extraction to that submodule. This covers edge cases such as:
- *
- *          from module import submodule
- *          def foo():
- *              submodule.bar()
- *
- *      Here, even though "submodule" is an explicit symbol, its usage ("bar") belongs to the submodule.
- *
- *    - If no explicit symbols are provided, it falls back to checking the usage of the module
- *      (and its attribute chains) as a whole.
- *
- * 2. **External Module Resolution:**
- *    - External modules are treated atomically.
- *    - If explicit symbols are provided, each is checked individually.
- *    - Otherwise, the module itself is checked for any usage.
+ * UsageResolver analyzes Python code to identify module and symbol references.
+ * It tracks which imported modules and symbols are actually used within a file.
  */
 export class PythonUsageResolver {
   private parser: Parser;
-  private importExtractor: PythonImportExtractor;
-  private moduleResolver: PythonModuleResolver;
-  private itemResolver: PythonItemResolver;
+  private exportExtractor: PythonExportExtractor;
+  private query: Parser.Query;
 
   /**
-   * Initialize the resolver with a Tree-sitter parser.
-   *
-   * @param parser The parser instance used for AST queries.
+   * Creates a new UsageResolver instance
+   * @param parser - Tree-sitter parser for Python code analysis
+   * @param exportExtractor - Utility for extracting exported symbols from Python modules
    */
-  constructor(
-    parser: Parser,
-    importExtractor: PythonImportExtractor,
-    moduleResolver: PythonModuleResolver,
-    itemResolver: PythonItemResolver,
-  ) {
+  constructor(parser: Parser, exportExtractor: PythonExportExtractor) {
     this.parser = parser;
-    this.importExtractor = importExtractor;
-    this.moduleResolver = moduleResolver;
-    this.itemResolver = itemResolver;
-  }
-
-  /**
-   * Combines internal and external usage resolution.
-   * Precomputes module resolution for each import statement/member.
-   */
-  public resolveUsage(
-    filePath: string,
-    rootNode: Parser.SyntaxNode,
-  ): UsageResult {
-    const importStmts = this.importExtractor.getImportStatements(filePath);
-    const nodesToExclude = importStmts.map((stmt) => stmt.node);
-
-    const internalResults = new Map<string, InternalUsageResult>();
-    const externalResults: ExternalUsageResult[] = [];
-
-    for (const stmt of importStmts) {
-      if (stmt.type === FROM_IMPORT_STATEMENT_TYPE) {
-        // For from-import statements, resolve the module once.
-        const moduleName = stmt.members[0].identifierNode.text;
-        const pythonModule =
-          this.moduleResolver.getModuleFromFilePath(filePath);
-        const resolvedModule = this.moduleResolver.resolveModule(
-          pythonModule,
-          moduleName,
-        );
-        if (resolvedModule) {
-          this.processInternalUsageForFromImport(
-            stmt,
-            rootNode,
-            nodesToExclude,
-            internalResults,
-            resolvedModule,
-          );
-        } else {
-          this.processExternalUsageForFromImport(
-            stmt,
-            rootNode,
-            nodesToExclude,
-            externalResults,
-            moduleName,
-          );
-        }
-      } else if (stmt.type === NORMAL_IMPORT_STATEMENT_TYPE) {
-        // For normal imports, process each member individually.
-        for (const member of stmt.members) {
-          const moduleName = member.identifierNode.text;
-          const pythonModule =
-            this.moduleResolver.getModuleFromFilePath(filePath);
-          const resolvedModule = this.moduleResolver.resolveModule(
-            pythonModule,
-            moduleName,
-          );
-          if (resolvedModule) {
-            this.processInternalUsageForNormalImportMember(
-              member,
-              rootNode,
-              nodesToExclude,
-              internalResults,
-              resolvedModule,
-            );
-          } else {
-            this.processExternalUsageForNormalImportMember(
-              member,
-              rootNode,
-              nodesToExclude,
-              externalResults,
-            );
-          }
-        }
-      }
-    }
-
-    return { internal: internalResults, external: externalResults };
-  }
-
-  /**
-   * Processes FROM_IMPORT statements for internal usage.
-   * @param stmt The import statement.
-   * @param rootNode The AST root.
-   * @param nodesToExclude Nodes to ignore (e.g. import statements).
-   * @param internalResults Map to accumulate internal usage.
-   * @param moduleName The module name from the statement.
-   * @param resolvedModule The resolved internal module.
-   */
-  private processInternalUsageForFromImport(
-    stmt: ImportStatement,
-    rootNode: Parser.SyntaxNode,
-    nodesToExclude: Parser.SyntaxNode[],
-    internalResults: Map<string, InternalUsageResult>,
-    resolvedModule: PythonModule,
-  ) {
-    for (const member of stmt.members) {
-      if (member.isWildcardImport) {
-        // For wildcard imports, use the itemResolver to get all available symbols
-        const allSymbols = this.itemResolver.resolveAllSymbols(resolvedModule);
-
-        // Check which symbols are actually used in the code
-        for (const [symbolName, resolvedItem] of allSymbols.entries()) {
-          const refUsageNodes = this.getrefUsageNodes(
-            rootNode,
-            nodesToExclude,
-            symbolName,
-          );
-          if (refUsageNodes.length > 0) {
-            // Record usage in the module where the symbol is actually defined
-            if (resolvedItem.symbol) {
-              this.recordInternalUsage(
-                internalResults,
-                resolvedItem.module,
-                resolvedItem.symbol,
-              );
-            }
-          }
-        }
-      } else if (member.items) {
-        for (const item of member.items) {
-          const resolvedItem = this.itemResolver.resolveItem(
-            resolvedModule,
-            item.identifierNode.text,
-          );
-
-          // if the item is resolved, it is a symbol
-          if (resolvedItem) {
-            if (resolvedItem.symbol) {
-              const refUsageNodes = this.getrefUsageNodes(
-                rootNode,
-                nodesToExclude,
-                item.aliasNode?.text || item.identifierNode.text,
-              );
-              if (refUsageNodes.length > 0) {
-                this.recordInternalUsage(
-                  internalResults,
-                  resolvedItem.module,
-                  resolvedItem.symbol,
-                );
-              }
-            }
-          }
-
-          // if the item is not resolved, it is a submodule
-          // we need to check if the submodule is used
-          // and if so, we need to check if the symbol is used
-
-          const subModule = this.moduleResolver.resolveModule(
-            resolvedModule,
-            item.identifierNode.text,
-          );
-          if (subModule) {
-            const refUsageNodes = this.getrefUsageNodes(
-              rootNode,
-              nodesToExclude,
-              item.aliasNode?.text || item.identifierNode.text,
-            );
-            if (refUsageNodes.length > 0) {
-              const symbols = this.itemResolver.resolveAllSymbols(subModule);
-              symbols.values().forEach((symbol) => {
-                if (symbol.symbol) {
-                  const lookupName =
-                    (item.aliasNode?.text || item.identifierNode.text) +
-                    "." +
-                    symbol.symbol.identifierNode.text;
-                  const refUsageNodes = this.getrefUsageNodes(
-                    rootNode,
-                    nodesToExclude,
-                    lookupName,
-                  );
-                  if (refUsageNodes.length > 0) {
-                    this.recordInternalUsage(
-                      internalResults,
-                      symbol.module,
-                      symbol.symbol,
-                    );
-                  }
-                }
-              });
-              // // record the submodule usage
-              // // this will not override the potential symbols found above
-              // this.recordInternalUsage(internalResults, subModule, undefined);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  /**
-   * Processes FROM_IMPORT statements for external usage.
-   * @param stmt The import statement.
-   * @param rootNode The AST root.
-   * @param nodesToExclude Nodes to ignore.
-   * @param externalResults Array to accumulate external usage.
-   * @param moduleName The module name from the statement.
-   */
-  private processExternalUsageForFromImport(
-    stmt: ReturnType<PythonImportExtractor["getImportStatements"]>[number],
-    rootNode: Parser.SyntaxNode,
-    nodesToExclude: Parser.SyntaxNode[],
-    externalResults: ExternalUsageResult[],
-    moduleName: string,
-  ) {
-    let foundUsage = false;
-    let symbolNames: string[] | undefined;
-    for (const member of stmt.members) {
-      if (member.isWildcardImport) {
-        const refUsageNodes = this.getrefUsageNodes(
-          rootNode,
-          nodesToExclude,
-          moduleName,
-        );
-        // we have no way to know which symbol is used
-        // so we just record the module usage
-        if (refUsageNodes.length > 0) {
-          foundUsage = true;
-        }
-      } else if (member.items) {
-        for (const item of member.items) {
-          const symbolRefName =
-            item.aliasNode?.text || item.identifierNode.text;
-          const refUsageNodes = this.getrefUsageNodes(
-            rootNode,
-            nodesToExclude,
-            symbolRefName,
-          );
-          if (refUsageNodes.length > 0) {
-            if (symbolNames === undefined) {
-              symbolNames = [];
-            }
-            symbolNames.push(symbolRefName);
-            foundUsage = true;
-          }
-        }
-      }
-    }
-    if (foundUsage) {
-      externalResults.push({
-        moduleName,
-        symbolNames,
-      });
-    }
-  }
-
-  /**
-   * Processes NORMAL_IMPORT member for internal usage.
-   * @param member The import member.
-   * @param rootNode The AST root.
-   * @param nodesToExclude Nodes to ignore.
-   * @param internalResults Map to accumulate internal usage.
-   * @param resolvedModule The resolved internal module.
-   */
-  private processInternalUsageForNormalImportMember(
-    member: ReturnType<
-      PythonImportExtractor["getImportStatements"]
-    >[number]["members"][number],
-    rootNode: Parser.SyntaxNode,
-    nodesToExclude: Parser.SyntaxNode[],
-    internalResults: Map<string, InternalUsageResult>,
-    resolvedModule: PythonModule,
-  ) {
-    // First check if the module itself is used
-    const refUsageNodes = this.getrefUsageNodes(
-      rootNode,
-      nodesToExclude,
-      member.aliasNode?.text || member.identifierNode.text,
-    );
-    if (refUsageNodes.length > 0) {
-      // Then we check if the symbol of the module is used.
-      const symbols = this.itemResolver.resolveAllSymbols(resolvedModule);
-      symbols.values().forEach((symbol) => {
-        if (symbol.symbol) {
-          const lookupName =
-            (member.aliasNode?.text || member.identifierNode.text) +
-            "." +
-            symbol.symbol.identifierNode.text;
-          const refUsageNodes = this.getrefUsageNodes(
-            rootNode,
-            nodesToExclude,
-            lookupName,
-          );
-          if (refUsageNodes.length > 0) {
-            this.recordInternalUsage(
-              internalResults,
-              symbol.module,
-              symbol.symbol,
-            );
-          }
-        }
-      });
-      // If the module itself is used but no its symvol, we record it.
-      // This will not overide the potential symbols found above.
-      this.recordInternalUsage(internalResults, resolvedModule, undefined);
-    }
-  }
-
-  /**
-   * Processes NORMAL_IMPORT member for external usage.
-   * @param member The import member.
-   * @param rootNode The AST root.
-   * @param nodesToExclude Nodes to ignore.
-   * @param externalResults Array to accumulate external usage.
-   * @param moduleName The module name.
-   */
-  private processExternalUsageForNormalImportMember(
-    member: ReturnType<
-      PythonImportExtractor["getImportStatements"]
-    >[number]["members"][number],
-    rootNode: Parser.SyntaxNode,
-    nodesToExclude: Parser.SyntaxNode[],
-    externalResults: ExternalUsageResult[],
-  ) {
-    const refName = member.aliasNode?.text || member.identifierNode.text;
-    const refUsageNodes = this.getrefUsageNodes(
-      rootNode,
-      nodesToExclude,
-      refName,
-    );
-
-    let symbolNames: string[] | undefined;
-
-    // First check if the module itself is used
-    if (refUsageNodes.length > 0) {
-      // Then we check if the symbol of the module is used.
-
-      // check for symbol usage. For this we can guess them from the refUsageNodes
-      refUsageNodes.forEach((node) => {
-        if (node.parent && node.parent.type === "attribute") {
-          const attributeNode = node.parent.childForFieldName("attribute");
-          if (attributeNode) {
-            if (symbolNames === undefined) {
-              symbolNames = [];
-            }
-            symbolNames.push(attributeNode.text);
-          }
-        }
-      });
-
-      externalResults.push({
-        moduleName: member.identifierNode.text,
-        symbolNames,
-      });
-    }
-  }
-
-  /**
-   * Helper function to check if a symbol is used in the AST, excluding given nodes.
-   */
-  private getrefUsageNodes(
-    targetNode: Parser.SyntaxNode,
-    nodesToExclude: Parser.SyntaxNode[],
-    symbolRefName: string,
-  ) {
-    const query = new Parser.Query(
+    this.exportExtractor = exportExtractor;
+    this.query = new Parser.Query(
       this.parser.getLanguage(),
       `
-        ((identifier) @id (#eq? @id "${symbolRefName}"))
-        ((attribute) @attr (#eq? @attr "${symbolRefName}"))
+        ((identifier) @id)
+        ((attribute) @attr)
       `,
     );
-    const captures = query.captures(targetNode);
-    return captures
-      .filter(({ node }) => !this.isNodeInsideAnyExclude(node, nodesToExclude))
-      .map(({ node }) => node);
   }
 
   /**
-   * Records an internal usage result.
+   * Finds all nodes in the AST that match the specified reference name
+   *
+   * @param targetNode - Root node to search within
+   * @param nodesToExclude - Nodes to ignore during the search (like import statements)
+   * @param refToLookFor - The name/reference to search for in the code
+   * @returns Array of matching syntax nodes
    */
-  private recordInternalUsage(
-    results: Map<string, InternalUsageResult>,
-    module: PythonModule,
-    symbol: Symbol | undefined,
+  private getUsageNode(
+    targetNode: Parser.SyntaxNode,
+    nodesToExclude: Parser.SyntaxNode[],
+    refToLookFor: string,
+    isLeaf: boolean,
   ) {
-    const key = module.path;
-    const existing = results.get(key);
-    if (existing) {
-      if (
-        symbol &&
-        existing.symbols &&
-        !existing.symbols.some((s) => s.id === symbol.id)
-      ) {
-        existing.symbols.push(symbol);
+    let captures = this.query.captures(targetNode);
+
+    // Filter out nodes that are inside excluded nodes
+    captures = captures.filter(({ node }) => {
+      // First filter by text match
+      if (node.text !== refToLookFor) {
+        return false;
       }
-    } else {
-      results.set(key, {
-        moduleNode: module,
-        symbols: symbol ? [symbol] : undefined,
-      });
-    }
+
+      const isNodeInsideAnyExclude = this.isNodeInsideAnyExclude(
+        node,
+        nodesToExclude,
+      );
+
+      if (isNodeInsideAnyExclude) {
+        return false;
+      }
+
+      // if we have a leaf node (a symbol) we can skip this check.
+      // this is because the usage might be a nested class or function.
+      // In such case, we want to include the usage.
+      if (isLeaf) return true;
+
+      // If the node is an identifier, check if it's inside an attribute chain
+      // This avoids counting the parts of expressions like `module.attribute`
+      // as standalone references
+      if (node.type === "identifier") {
+        const parent = node.parent;
+        if (parent && parent.type === "attribute") {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    const nodes = captures.map(({ node }) => node);
+    return nodes;
   }
 
   /**
-   * Checks if a node is inside any of the excluded nodes.
+   * Determines whether a node is contained within any of the excluded nodes
+   *
+   * @param node - Node to check
+   * @param nodesToExclude - List of nodes that should be excluded
+   * @returns True if the node is inside an excluded region, false otherwise
    */
   private isNodeInsideAnyExclude(
     node: Parser.SyntaxNode,
@@ -485,5 +113,280 @@ export class PythonUsageResolver {
         node.startIndex >= excludeNode.startIndex &&
         node.endIndex <= excludeNode.endIndex,
     );
+  }
+
+  /**
+   * Records usage of a specific symbol from a module
+   *
+   * @param targetNode - AST node to search within
+   * @param nodesToExclude - Nodes to exclude from search
+   * @param module - Module containing the symbol
+   * @param symbol - Symbol being checked for usage
+   * @param lookupRef - Reference name to search for (often includes module alias)
+   * @param internalUsageMap - Map to record usage information
+   */
+  public resolveInternalUsageForSymbol(
+    /* The node to search for usage. eg a function or class */
+    targetNode: Parser.SyntaxNode,
+    /* Nodes to exclude from the search. eg import statements */
+    nodesToExclude: Parser.SyntaxNode[],
+    /* Internal python module to resolve usage for */
+    module: PythonModule,
+    /* Internal python symbol to resolve usage for */
+    symbol: PythonSymbol,
+    /* potential alias. Or name of the module */
+    lookupRef: string,
+    /* Map of internal usage results, used for recursions */
+    internalUsageMap: Map<string, InternalUsage>,
+  ) {
+    const usageNodes = this.getUsageNode(
+      targetNode,
+      nodesToExclude,
+      lookupRef,
+      true,
+    );
+
+    if (usageNodes.length > 0) {
+      if (!internalUsageMap.has(module.path)) {
+        internalUsageMap.set(module.path, {
+          module,
+          symbols: new Map(),
+        });
+      }
+      const internalUsage = internalUsageMap.get(module.path) as {
+        module: PythonModule;
+        symbols: Map<string, PythonSymbol>;
+      };
+
+      if (!internalUsage.symbols.has(symbol.id)) {
+        internalUsage.symbols.set(symbol.id, symbol);
+      }
+    }
+  }
+
+  /**
+   * Analyzes code for usage of a module and its symbols
+   *
+   * This method serves as the main entry point for analyzing how modules and their symbols are used in Python code.
+   * It performs several key tasks:
+   *
+   * 1. Checks for direct references to the module itself
+   * 2. Checks for references to symbols (functions, classes, variables) defined within the module
+   * 3. Recursively checks for usage of submodules and their symbols
+   *
+   * This multi-layered analysis ensures complete tracking of module dependencies,
+   * whether they're used directly or through nested references.
+   *
+   * @param targetNode - AST node to search within
+   * @param nodesToExclude - Nodes to exclude from search (e.g. import statements)
+   * @param module - Module to check for usage
+   * @param lookupRef - Reference name to look for (potentially an alias)
+   * @param internalUsageMap - Map to record module and symbol usage
+   */
+  public resolveInternalUsageForModule(
+    /* The node to search for usage. eg a function or class */
+    targetNode: Parser.SyntaxNode,
+    /* Nodes to exclude from the search. eg import statements */
+    nodesToExclude: Parser.SyntaxNode[],
+    /* Internal python module to resolve usage for */
+    module: PythonModule,
+    /* potential alias. Or name of the module */
+    lookupRef: string,
+    /* Map of internal usage results, used for recursions */
+    internalUsageMap: Map<string, InternalUsage>,
+  ) {
+    const symbols: PythonSymbol[] = [];
+
+    const moduleUsageNodes = this.getUsageNode(
+      targetNode,
+      nodesToExclude,
+      lookupRef,
+      false,
+    );
+    if (moduleUsageNodes.length > 0) {
+      // Register module usage even without specific symbols
+      if (!internalUsageMap.has(module.path)) {
+        internalUsageMap.set(module.path, {
+          module,
+          symbols: new Map(),
+        });
+      }
+    }
+
+    // namespace module are not file, so they do not have symbols
+    if (module.type !== PYTHON_NAMESPACE_MODULE_TYPE) {
+      const exports = this.exportExtractor.getSymbols(module.path);
+      symbols.push(...exports.symbols);
+    }
+
+    // check for usage of module.symbol
+    symbols.forEach((symbol) => {
+      const symbolLookupRef = `${lookupRef}.${symbol.identifierNode.text}`;
+
+      this.resolveInternalUsageForSymbol(
+        targetNode,
+        nodesToExclude,
+        module,
+        symbol,
+        symbolLookupRef,
+        internalUsageMap,
+      );
+    });
+
+    // check for usage of submodules
+    module.children.forEach((subModule) => {
+      const subModuleLookupRef = `${lookupRef}.${subModule.name}`;
+
+      this.resolveInternalUsageForModule(
+        targetNode,
+        nodesToExclude,
+        subModule,
+        subModuleLookupRef,
+        internalUsageMap,
+      );
+    });
+  }
+
+  /**
+   * Resolves external usage for a module item, tracking both direct references
+   * and attribute access patterns
+   *
+   * This method analyzes how external Python modules (like standard library or third-party packages)
+   * are used in the code. It performs two key tasks:
+   *
+   * 1. Identifies direct references to the module itself
+   * 2. Tracks attribute access patterns (like numpy.array, requests.get, etc.)
+   *
+   * The method maintains a hierarchical structure of usage, which helps in understanding
+   * not just which modules are imported, but specifically which parts of those modules
+   * are actually being used in the code.
+   *
+   * @param targetNode - AST node to search within
+   * @param nodesToExclude - Nodes to exclude from search
+   * @param itemName - Name of the external module/item to check
+   * @param lookupRef - Reference name to look for (potentially an alias)
+   * @param externalUsageMap - Map to record external usage
+   */
+  public resolveExternalUsageForItem(
+    targetNode: Parser.SyntaxNode,
+    nodesToExclude: Parser.SyntaxNode[],
+    itemName: string,
+    lookupRef: string,
+    externalUsageMap: Map<string, ExternalUsage>,
+  ) {
+    const usageNodes = this.getUsageNode(
+      targetNode,
+      nodesToExclude,
+      lookupRef,
+      false,
+    );
+
+    if (usageNodes.length > 0) {
+      // Initialize entry for base module
+      if (!externalUsageMap.has(itemName)) {
+        externalUsageMap.set(itemName, {
+          moduleName: itemName,
+          itemNames: new Set(),
+        });
+      }
+
+      // Find attribute access patterns (module.attribute)
+      for (const node of usageNodes) {
+        // Start with the node and follow the chain of attribute accesses
+        this.resolveAttributeChain(node, externalUsageMap, itemName, lookupRef);
+      }
+    }
+  }
+
+  /**
+   * Recursively resolves attribute chains to identify symbol usage
+   * This handles patterns like module.submodule.function by tracking
+   * each level of the module hierarchy separately
+   *
+   * @param node - The current node to analyze
+   * @param externalUsageMap - Map to record external usage
+   * @param baseModuleName - The original module name
+   * @param prefix - The current path in the module hierarchy
+   */
+  private resolveAttributeChain(
+    node: Parser.SyntaxNode,
+    externalUsageMap: Map<string, ExternalUsage>,
+    baseModuleName: string,
+    prefix: string,
+  ): void {
+    // If this node is part of an attribute expression (like module.attribute)
+    if (node.parent && node.parent.type === "attribute") {
+      // Check if we're the object part (left side) of the attribute access
+      if (node === node.parent.childForFieldName("object")) {
+        const attributeNode = node.parent.childForFieldName("attribute");
+        if (attributeNode) {
+          const attributeName = attributeNode.text;
+          const fullAttributePath = `${prefix}.${attributeName}`;
+
+          // Extract path components after the initial reference
+          // For example, if prefix="numpy" and attributeName="random",
+          // pathAfterRef becomes "random"
+          const pathAfterRef = fullAttributePath.split(".").slice(1).join(".");
+
+          // Create module path using baseModuleName instead of prefix
+          // For example, if baseModuleName="numpy" and pathAfterRef="random.normal"
+          // modulePath becomes "numpy.random"
+          const modulePath = pathAfterRef.includes(".")
+            ? `${baseModuleName}.${pathAfterRef.substring(0, pathAfterRef.lastIndexOf("."))}`
+            : baseModuleName;
+
+          // Initialize the module entry in our usage map if it doesn't exist
+          if (!externalUsageMap.has(modulePath)) {
+            externalUsageMap.set(modulePath, {
+              moduleName: baseModuleName,
+              itemNames: new Set(),
+            });
+          }
+
+          // If this is a leaf node (not used as an object for another attribute)
+          // For example, in "numpy.random.normal()", "normal" is the leaf node
+          const nodeParent = node.parent;
+          if (
+            !(
+              nodeParent.parent &&
+              nodeParent.parent.type === "attribute" &&
+              nodeParent === nodeParent.parent.childForFieldName("object")
+            )
+          ) {
+            const parentModulePath = modulePath;
+            const leafItem = attributeName;
+            const usage = externalUsageMap.get(parentModulePath);
+            if (usage) {
+              usage.itemNames.add(leafItem);
+            }
+          }
+
+          // Continue up the chain if this attribute is used as an object in another attribute
+          // For example, in "numpy.random.normal()", after processing "numpy.random",
+          // we need to also process "numpy.random.normal"
+          this.resolveAttributeChain(
+            node.parent,
+            externalUsageMap,
+            baseModuleName,
+            fullAttributePath,
+          );
+        }
+      }
+    }
+
+    // Also check if this is the attribute part of an expression
+    if (
+      node.parent &&
+      node.parent.type === "attribute" &&
+      node === node.parent.childForFieldName("attribute")
+    ) {
+      // If this is the right side of an attribute access, we should look at the parent
+      this.resolveAttributeChain(
+        node.parent,
+        externalUsageMap,
+        baseModuleName,
+        prefix,
+      );
+    }
   }
 }
