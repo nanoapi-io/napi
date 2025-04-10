@@ -3,7 +3,9 @@ import { Outlet } from "react-router";
 import { toast } from "react-toastify";
 import { getAudit } from "../service/auditApi";
 import GraphLayout from "../layout/GraphLayout";
-import FileExplorer, { FileExplorerFile } from "../components/FileExplorer/FileExplorer";
+import FileExplorer, {
+  FileExplorerFile,
+} from "../components/FileExplorer/FileExplorer";
 import { AuditResponse } from "../service/auditApi/types";
 
 export interface AuditContext {
@@ -23,7 +25,9 @@ export default function BaseAuditPage() {
     auditManifest: {},
   });
 
-  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(null);
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     async function handleOnLoad() {
@@ -41,7 +45,7 @@ export default function BaseAuditPage() {
           (fileManifest) => ({
             path: fileManifest.filePath,
             symbols: Object.keys(fileManifest.symbols),
-          })
+          }),
         );
         setFiles(paths);
         setAuditResponse(auditResponse);
@@ -58,17 +62,20 @@ export default function BaseAuditPage() {
 
   return (
     <GraphLayout
-      sideBarSlot={<FileExplorer 
-        busy={busy} 
-        files={files} 
-        highlightedNodeId={highlightedNodeId}
-        setHighlightedNodeId={setHighlightedNodeId} />}
+      sideBarSlot={
+        <FileExplorer
+          busy={busy}
+          files={files}
+          highlightedNodeId={highlightedNodeId}
+          setHighlightedNodeId={setHighlightedNodeId}
+        />
+      }
       graphSlot={
         <Outlet
           context={{
             busy,
             auditResponse,
-            highlightedNodeId
+            highlightedNodeId,
           }}
         />
       }

@@ -77,23 +77,21 @@ export default function AuditPage() {
 
     if (!context.highlightedNodeId) {
       // Clear previously applied classes quickly
-      cy.elements('.highlighted')
-        .removeClass(['highlighted',]);
+      cy.elements(".highlighted").removeClass(["highlighted"]);
       return;
     }
 
     const nodeToHighlight = cy.getElementById(context.highlightedNodeId);
-  
+
     if (nodeToHighlight.empty()) {
       console.warn(`Node with ID '${context.highlightedNodeId}' not found.`);
       return;
     }
-  
+
     cy.batch(() => {
       // Clear previously applied classes quickly
-      cy.elements('.highlighted')
-        .removeClass(['highlighted',]);
-      
+      cy.elements(".highlighted").removeClass(["highlighted"]);
+
       // Apply classes for highlighting (no layout!)
       nodeToHighlight.addClass("highlighted");
     });

@@ -146,16 +146,18 @@ export function generateDependencyManifest(
   const depMap = handler(files, napiConfig);
 
   // Sort the keys of the dependency map and consider them all as lowercase
-  const sortedKeys = Object.keys(depMap)
-    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  const sortedKeys = Object.keys(depMap).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
   // Create a new object with sorted keys
   const sortedDepMap: DependencyManifest = {};
   for (const key of sortedKeys) {
     sortedDepMap[key] = depMap[key];
 
     // Sort the symbols within each file manifest and consider them all as lowercase
-    const sortedSymbols = Object.keys(depMap[key].symbols)
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    const sortedSymbols = Object.keys(depMap[key].symbols).sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" }),
+    );
 
     // Then put the symbols in a new object with sorted keys
     // in their original case

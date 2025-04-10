@@ -7,7 +7,7 @@ import {
   LuChevronDown,
   LuCornerDownRight,
   LuEye,
-  LuPackageSearch
+  LuPackageSearch,
 } from "react-icons/lu";
 import languageIcon from "./languageIcons";
 
@@ -40,7 +40,7 @@ export default function FileExplorer(props: {
       !search ||
       name.toLowerCase().includes(search.toLowerCase()) ||
       symbols.some((symbol) =>
-        symbol.toLowerCase().includes(search.toLowerCase())
+        symbol.toLowerCase().includes(search.toLowerCase()),
       )
     );
   }
@@ -49,7 +49,7 @@ export default function FileExplorer(props: {
     currentLevel: TreeData[],
     segments: string[],
     cumulativePath: string,
-    symbols: string[]
+    symbols: string[],
   ): boolean {
     const [segment, ...remainingSegments] = segments;
     const nodeId = cumulativePath ? `${cumulativePath}/${segment}` : segment;
@@ -66,14 +66,14 @@ export default function FileExplorer(props: {
       currentLevel.push(existingNode);
     }
 
-    let matchesCurrentNode = nodeMatchesSearch(segment, symbols);
+    const matchesCurrentNode = nodeMatchesSearch(segment, symbols);
 
     if (remainingSegments.length > 0) {
       const childMatches = addFileToTree(
-        existingNode.children!,
+        existingNode.children as TreeData[],
         remainingSegments,
         nodeId,
-        symbols
+        symbols,
       );
       existingNode.matchesSearch = existingNode.matchesSearch || childMatches;
     } else {
@@ -84,7 +84,7 @@ export default function FileExplorer(props: {
       if (symbols.length > 0) {
         existingNode.children = symbols.map((symbol) => ({
           id: `${nodeId}#${symbol}`,
-          level: existingNode!.level + 1,
+          level: existingNode.level + 1,
           name: symbol,
           matchesSearch:
             !search || symbol.toLowerCase().includes(search.toLowerCase()),
@@ -242,11 +242,12 @@ export default function FileExplorer(props: {
               </TextField.Slot>
             </TextField.Root>
             <ScrollArea scrollbars="vertical">
-              <ListElement 
-                nodes={treeData} 
-                search={search} 
+              <ListElement
+                nodes={treeData}
+                search={search}
                 hlNodeId={props.highlightedNodeId}
-                setHLNodeId={props.setHighlightedNodeId} />
+                setHLNodeId={props.setHighlightedNodeId}
+              />
             </ScrollArea>
           </>
         )}
@@ -255,31 +256,34 @@ export default function FileExplorer(props: {
   );
 }
 
-function ListElement(props: { 
-  nodes: TreeData[]; 
-  search: string; 
+function ListElement(props: {
+  nodes: TreeData[];
+  search: string;
   hlNodeId: string | null;
   setHLNodeId: (node: string | null) => void;
 }) {
   return (
     <ul>
       {props.nodes.map((node) => {
-        return <NodeElement 
-          key={node.id} 
-          node={node} 
-          search={props.search} 
-          hlNodeId={props.hlNodeId}
-          setHLNodeId={props.setHLNodeId} />;
+        return (
+          <NodeElement
+            key={node.id}
+            node={node}
+            search={props.search}
+            hlNodeId={props.hlNodeId}
+            setHLNodeId={props.setHLNodeId}
+          />
+        );
       })}
     </ul>
   );
 }
 
-function NodeElement(props: { 
-  node: TreeData; 
+function NodeElement(props: {
+  node: TreeData;
   search: string;
   hlNodeId: string | null;
-  setHLNodeId: (node: string | null) => void; 
+  setHLNodeId: (node: string | null) => void;
 }) {
   const params = useParams<{ file?: string }>();
 
@@ -294,7 +298,7 @@ function NodeElement(props: {
     } else {
       props.setHLNodeId(id);
     }
-  }
+  };
 
   useEffect(() => {
     setIsOpen(shouldAutoExpand);
@@ -347,7 +351,9 @@ function NodeElement(props: {
                   <Button
                     variant="ghost"
                     className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
-                      isHighlighted ? 'bg-gray-400 dark:bg-purple-900 bg-opacity-20' : ''
+                      isHighlighted
+                        ? "bg-gray-400 dark:bg-purple-900 bg-opacity-20"
+                        : ""
                     }`}
                     onClick={() => toggleHighlight(props.node.id)}
                   >
@@ -385,11 +391,12 @@ function NodeElement(props: {
         )}
       </div>
       {isOpen && props.node.children && (
-        <ListElement 
-          nodes={props.node.children || []} 
-          search={props.search} 
+        <ListElement
+          nodes={props.node.children || []}
+          search={props.search}
           hlNodeId={props.hlNodeId}
-          setHLNodeId={props.setHLNodeId} />
+          setHLNodeId={props.setHLNodeId}
+        />
       )}
     </li>
   );
