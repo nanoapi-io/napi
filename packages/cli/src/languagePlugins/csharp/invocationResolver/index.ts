@@ -120,17 +120,20 @@ export class CSharpInvocationResolver {
     namespaceTree: NamespaceNode,
     filepath: string,
   ): SymbolNode | null {
+    // Remove any generic type information from the classname
+    // Classes in the type argument list are managed on their own.
+    const cleanClassname = classname.split("<")[0];
     // Try to find the class in the resolved imports
     const ucls = this.usingResolver.findClassInImports(
       this.resolvedImports,
-      classname,
+      cleanClassname,
       filepath,
     );
     if (ucls) {
       return ucls;
     }
     // Try to find the class in the namespace tree
-    const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
+    const cls = this.nsMapper.findClassInTree(namespaceTree, cleanClassname);
     if (cls) {
       return cls;
     }
