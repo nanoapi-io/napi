@@ -202,7 +202,7 @@ export default function FileExplorer(props: {
       </div>
 
       <div
-        style={{ width: isOpen ? "300px" : "0px" }}
+        style={{ width: isOpen ? "325px" : "0px" }}
         className="grow flex flex-col gap-4 overflow-hidden transition-all duration-300 my-2"
       >
         {props.busy ? (
