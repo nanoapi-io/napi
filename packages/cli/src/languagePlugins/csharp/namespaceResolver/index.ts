@@ -6,6 +6,7 @@ export const CSHARP_CLASS_TYPE = "class";
 export const CSHARP_STRUCT_TYPE = "struct";
 export const CSHARP_ENUM_TYPE = "enum";
 export const CSHARP_INTERFACE_TYPE = "interface";
+export const CSHARP_RECORD_TYPE = "record";
 export const CSHARP_DELEGATE_TYPE = "delegate";
 
 /**  Type alias for the different symbol types */
@@ -14,6 +15,7 @@ export type SymbolType =
   | typeof CSHARP_STRUCT_TYPE
   | typeof CSHARP_ENUM_TYPE
   | typeof CSHARP_INTERFACE_TYPE
+  | typeof CSHARP_RECORD_TYPE
   | typeof CSHARP_DELEGATE_TYPE;
 
 const fscopednamespacedeclquery = new Parser.Query(
@@ -205,6 +207,7 @@ export class CSharpNamespaceResolver {
         child.type === "struct_declaration" ||
         child.type === "enum_declaration" ||
         child.type === "interface_declaration" ||
+        child.type === "record_declaration" ||
         child.type === "delegate_declaration"
       ) {
         const symbol: ExportedSymbol = {
