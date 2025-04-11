@@ -247,21 +247,19 @@ export class PythonDependencyResolver {
                   internalUsageMap,
                 );
               }
-            } else {
-              const externalResolvedModule =
-                resolvedItem as ResolvedExternalModule;
-              if (externalResolvedModule.symbol) {
-                const externalResolvedSymbol =
-                  externalResolvedModule as ResolvedExternalSymbol;
-                this.usageResolver.resolveExternalUsageForItem(
-                  node,
-                  nodesToExclude,
-                  `${externalResolvedSymbol.moduleName}.${externalResolvedSymbol.symbolName}`,
-                  item.aliasNode?.text || item.identifierNode.text,
-                  externalUsageMap,
-                );
-              }
             }
+          } else {
+            // external module
+            this.usageResolver.resolveExternalUsageForItem(
+              node,
+              nodesToExclude,
+              {
+                moduleName: member.identifierNode.text,
+                itemName: item.identifierNode.text,
+              },
+              item.aliasNode?.text || item.identifierNode.text,
+              externalUsageMap,
+            );
           }
         }
       }
@@ -288,10 +286,14 @@ export class PythonDependencyResolver {
               internalUsageMap,
             );
           } else {
+            const externalResolvedModule =
+              resolvedItem as ResolvedExternalModule;
             this.usageResolver.resolveExternalUsageForItem(
               node,
               nodesToExclude,
-              member.identifierNode.text,
+              {
+                moduleName: externalResolvedModule.moduleName,
+              },
               member.aliasNode?.text || member.identifierNode.text,
               externalUsageMap,
             );
@@ -355,7 +357,10 @@ export class PythonDependencyResolver {
             this.usageResolver.resolveExternalUsageForItem(
               node,
               nodesToExclude,
-              `${externalResolvedSymbol.moduleName}.${externalResolvedSymbol.symbolName}`,
+              {
+                moduleName: externalResolvedSymbol.moduleName,
+                itemName: externalResolvedSymbol.symbolName,
+              },
               externalResolvedSymbol.symbolName,
               externalUsageMap,
             );
