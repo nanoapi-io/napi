@@ -270,7 +270,10 @@ export class PythonUsageResolver {
   public resolveExternalUsageForItem(
     targetNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
-    itemName: string,
+    item: {
+      moduleName: string;
+      itemName?: string;
+    },
     lookupRef: string,
     externalUsageMap: Map<string, ExternalUsage>,
   ) {
@@ -278,115 +281,39 @@ export class PythonUsageResolver {
       targetNode,
       nodesToExclude,
       lookupRef,
-      false,
+      true,
     );
 
     if (usageNodes.length > 0) {
       // Initialize entry for base module
-      if (!externalUsageMap.has(itemName)) {
-        externalUsageMap.set(itemName, {
-          moduleName: itemName,
+      if (!externalUsageMap.has(item.moduleName)) {
+        externalUsageMap.set(item.moduleName, {
+          moduleName: item.moduleName,
           itemNames: new Set(),
         });
       }
 
-      // Find attribute access patterns (module.attribute)
-      for (const node of usageNodes) {
-        // Start with the node and follow the chain of attribute accesses
-        this.resolveAttributeChain(node, externalUsageMap, itemName, lookupRef);
+      // Add the item name to the usage map
+      if (item.itemName) {
+        externalUsageMap.get(item.moduleName)?.itemNames.add(item.itemName);
+      } else {
+        // try resolving symbols fromt the usage node
+        usageNodes.forEach((usageNode) => {
+          const symbol = this.resolveExternalUsageSymbolFromUsage(usageNode);
+          if (symbol) {
+            externalUsageMap.get(item.moduleName)?.itemNames.add(symbol);
+          }
+        });
       }
     }
   }
 
-  /**
-   * Recursively resolves attribute chains to identify symbol usage
-   * This handles patterns like module.submodule.function by tracking
-   * each level of the module hierarchy separately
-   *
-   * @param node - The current node to analyze
-   * @param externalUsageMap - Map to record external usage
-   * @param baseModuleName - The original module name
-   * @param prefix - The current path in the module hierarchy
-   */
-  private resolveAttributeChain(
-    node: Parser.SyntaxNode,
-    externalUsageMap: Map<string, ExternalUsage>,
-    baseModuleName: string,
-    prefix: string,
-  ): void {
-    // If this node is part of an attribute expression (like module.attribute)
-    if (node.parent && node.parent.type === "attribute") {
-      // Check if we're the object part (left side) of the attribute access
-      if (node === node.parent.childForFieldName("object")) {
-        const attributeNode = node.parent.childForFieldName("attribute");
-        if (attributeNode) {
-          const attributeName = attributeNode.text;
-          const fullAttributePath = `${prefix}.${attributeName}`;
-
-          // Extract path components after the initial reference
-          // For example, if prefix="numpy" and attributeName="random",
-          // pathAfterRef becomes "random"
-          const pathAfterRef = fullAttributePath.split(".").slice(1).join(".");
-
-          // Create module path using baseModuleName instead of prefix
-          // For example, if baseModuleName="numpy" and pathAfterRef="random.normal"
-          // modulePath becomes "numpy.random"
-          const modulePath = pathAfterRef.includes(".")
-            ? `${baseModuleName}.${pathAfterRef.substring(0, pathAfterRef.lastIndexOf("."))}`
-            : baseModuleName;
-
-          // Initialize the module entry in our usage map if it doesn't exist
-          if (!externalUsageMap.has(modulePath)) {
-            externalUsageMap.set(modulePath, {
-              moduleName: baseModuleName,
-              itemNames: new Set(),
-            });
-          }
-
-          // If this is a leaf node (not used as an object for another attribute)
-          // For example, in "numpy.random.normal()", "normal" is the leaf node
-          const nodeParent = node.parent;
-          if (
-            !(
-              nodeParent.parent &&
-              nodeParent.parent.type === "attribute" &&
-              nodeParent === nodeParent.parent.childForFieldName("object")
-            )
-          ) {
-            const parentModulePath = modulePath;
-            const leafItem = attributeName;
-            const usage = externalUsageMap.get(parentModulePath);
-            if (usage) {
-              usage.itemNames.add(leafItem);
-            }
-          }
-
-          // Continue up the chain if this attribute is used as an object in another attribute
-          // For example, in "numpy.random.normal()", after processing "numpy.random",
-          // we need to also process "numpy.random.normal"
-          this.resolveAttributeChain(
-            node.parent,
-            externalUsageMap,
-            baseModuleName,
-            fullAttributePath,
-          );
-        }
+  private resolveExternalUsageSymbolFromUsage(usageNode: Parser.SyntaxNode) {
+    if (usageNode.parent && usageNode.parent.type === "attribute") {
+      const attributeName = usageNode.parent.childForFieldName("attribute");
+      if (attributeName) {
+        return attributeName.text;
       }
-    }
-
-    // Also check if this is the attribute part of an expression
-    if (
-      node.parent &&
-      node.parent.type === "attribute" &&
-      node === node.parent.childForFieldName("attribute")
-    ) {
-      // If this is the right side of an attribute access, we should look at the parent
-      this.resolveAttributeChain(
-        node.parent,
-        externalUsageMap,
-        baseModuleName,
-        prefix,
-      );
     }
   }
 }
