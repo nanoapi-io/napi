@@ -59,6 +59,8 @@ const calledClassesQuery = new Parser.Query(
   type: (identifier) @cls)
   (generic_name) @cls
   `,
+  // Might have to change the "(generic_name) @cls" line
+  // to be smarter, it may or may not add 1s of runtime.
 );
 
 /**
