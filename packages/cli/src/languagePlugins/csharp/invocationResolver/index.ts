@@ -57,6 +57,7 @@ const calledClassesQuery = new Parser.Query(
   (qualified_name) @cls)
   (property_declaration
   type: (identifier) @cls)
+  (generic_name) @cls
   `,
 );
 
