@@ -32,17 +32,17 @@ const calledClassesQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
   ((object_creation_expression
-  type: (identifier) @classname))
+  type: (identifier) @cls))
   ((object_creation_expression
-  type: (qualified_name) @classname))
+  type: (qualified_name) @cls))
   (variable_declaration
-  type: (identifier) @classname)
+  type: (identifier) @cls)
   (variable_declaration
-  type: (qualified_name) @classname)
+  type: (qualified_name) @cls)
   (parameter
-  type: (identifier) @classname)
+  type: (identifier) @cls)
   (parameter
-  type: (qualified_name) @classname)
+  type: (qualified_name) @cls)
   (type_argument_list
   (identifier) @cls)
   (type_argument_list
