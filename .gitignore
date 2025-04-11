@@ -7,5 +7,8 @@ __pycache__
 .OPENAIKEY
 examples/csharp/EndpointExample/obj
 examples/csharp/EndpointExample/bin
+packages/cli/src/languagePlugins/csharp/testFiles/csharpFiles/**/obj
+napi.sln
+examples/csharp/EndpointExample/bin
 auditResponse.json
 .extracted/
