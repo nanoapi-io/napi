@@ -20,7 +20,11 @@ function findCSharpFiles(dir: string) {
     const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
     if (stat.isDirectory()) {
-      if (!fullPath.includes(".extracted")) {
+      if (
+        !fullPath.includes(".extracted") &&
+        !fullPath.includes("bin") &&
+        !fullPath.includes("obj")
+      ) {
         findCSharpFiles(fullPath);
       }
     } else if (path.extname(fullPath) === ".cs") {
