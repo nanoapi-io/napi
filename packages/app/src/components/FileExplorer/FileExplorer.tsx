@@ -2,14 +2,16 @@ import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
-import {
-  LuChevronRight,
-  LuChevronDown,
-  LuCornerDownRight,
-  LuEye,
-  LuPackageSearch,
-} from "react-icons/lu";
+import { LuPackageSearch } from "react-icons/lu";
 import languageIcon from "./languageIcons";
+import {
+  MdSearch,
+  MdOutlineRemoveRedEye,
+  MdOutlineKeyboardArrowLeft,
+  MdOutlineKeyboardArrowRight,
+  MdOutlineKeyboardArrowDown,
+  MdSubdirectoryArrowRight,
+} from "react-icons/md";
 
 interface TreeData {
   id: string;
@@ -191,23 +193,11 @@ export default function FileExplorer(props: {
           variant="ghost"
           radius="full"
         >
-          <svg
-            width="40"
-            height="40"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {isOpen ? (
-              <path d="M15 6L9 12L15 18" />
-            ) : (
-              <path d="M9 6L15 12L9 18" />
-            )}
-          </svg>
+          {isOpen ? (
+            <MdOutlineKeyboardArrowLeft className="h-8 w-8" />
+          ) : (
+            <MdOutlineKeyboardArrowRight className="h-8 w-8" />
+          )}
         </Button>
       </div>
 
@@ -226,19 +216,7 @@ export default function FileExplorer(props: {
               className={`transition-all duration-300 overflow-hidden ${!isOpen && "w-0"}`}
             >
               <TextField.Slot>
-                <svg
-                  width="20px"
-                  height="20px"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M15.7955 15.8111L21 21M18 10.5C18 14.6421 14.6421 18 10.5 18C6.35786 18 3 14.6421 3 10.5C3 6.35786 6.35786 3 10.5 3C14.6421 3 18 6.35786 18 10.5Z" />
-                </svg>
+                <MdSearch className="h-8 w-8" />
               </TextField.Slot>
             </TextField.Root>
             <ScrollArea scrollbars="vertical">
@@ -324,9 +302,9 @@ function NodeElement(props: {
           >
             <div className="w-full flex items-center space-x-2">
               {isOpen ? (
-                <LuChevronDown className="text-lg text-gray-light dark:text-gray-dark" />
+                <MdOutlineKeyboardArrowDown className="text-lg text-gray-light dark:text-gray-dark" />
               ) : (
-                <LuChevronRight className="text-lg text-gray-light dark:text-gray-dark" />
+                <MdOutlineKeyboardArrowRight className="text-lg text-gray-light dark:text-gray-dark" />
               )}
               <DisplayedPath node={props.node} />
             </div>
@@ -357,7 +335,7 @@ function NodeElement(props: {
                     }`}
                     onClick={() => toggleHighlight(props.node.id)}
                   >
-                    <LuEye className="text-gray-light dark:text-gray-dark" />
+                    <MdOutlineRemoveRedEye className="text-gray-light dark:text-gray-dark" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -382,7 +360,7 @@ function NodeElement(props: {
                 variant="ghost"
               >
                 <div className="w-full flex items-center space-x-2">
-                  <LuCornerDownRight className="text-gray-light dark:text-gray-dark" />
+                  <MdSubdirectoryArrowRight className="text-gray-light dark:text-gray-dark" />
                   <DisplayedPath node={props.node} />
                 </div>
               </Button>
