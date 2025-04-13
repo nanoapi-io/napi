@@ -12,8 +12,8 @@ export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
-  nodeView: string;
-  changeNodeView: (viewType: string) => void;
+  nodeView?: string;
+  changeNodeView?: (viewType: string) => void;
 }) {
   function handleFit() {
     const elements = props.cy.elements();
@@ -31,6 +31,52 @@ export default function Controls(props: {
       level,
       renderedPosition,
     });
+  }
+
+  function showNodeViewControls() {
+    if (props.nodeView && props.changeNodeView) {
+      const nodeView = props.nodeView;
+      const changeNodeView = props.changeNodeView;
+
+      return (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Button
+              size="1"
+              variant="ghost"
+              highContrast
+              disabled={props.busy}
+              className="py-1.5"
+            >
+              {nodeView === "linesOfCode"
+                ? "LoC"
+                : nodeView === "characters"
+                  ? "Chars"
+                  : nodeView === "dependencies"
+                    ? "Deps"
+                    : "default"}
+              <LuChevronUp />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            <DropdownMenu.Item onClick={() => changeNodeView("default")}>
+              Default
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeNodeView("linesOfCode")}>
+              Lines of Code
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeNodeView("characters")}>
+              File Characters
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeNodeView("dependencies")}>
+              Dependencies
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      );
+    } else {
+      return <></>;
+    }
   }
 
   return (
@@ -73,48 +119,7 @@ export default function Controls(props: {
           >
             <MdOutlineZoomIn className="text-2xl h-5 w-5" />
           </Button>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <Button
-                size="1"
-                variant="ghost"
-                highContrast
-                disabled={props.busy}
-                className="py-1.5"
-              >
-                {props.nodeView === "linesOfCode"
-                  ? "LoC"
-                  : props.nodeView === "characters"
-                    ? "Chars"
-                    : props.nodeView === "dependencies"
-                      ? "Deps"
-                      : "default"}
-                <LuChevronUp />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("default")}
-              >
-                Default
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("linesOfCode")}
-              >
-                Lines of Code
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("characters")}
-              >
-                File Characters
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("dependencies")}
-              >
-                Dependencies
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          {showNodeViewControls()}
         </div>
       </div>
     </div>
