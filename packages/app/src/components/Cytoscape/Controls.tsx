@@ -6,8 +6,8 @@ export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
-  nodeView: string;
-  changeNodeView: (viewType: string) => void;
+  nodeView?: string;
+  changeNodeView?: (viewType: string) => void;
 }) {
   function handleFit() {
     const elements = props.cy.elements();
@@ -25,6 +25,52 @@ export default function Controls(props: {
       level,
       renderedPosition,
     });
+  }
+
+  function showNodeViewControls() {
+    if (props.nodeView && props.changeNodeView) {
+      const nodeView = props.nodeView;
+      const changeNodeView = props.changeNodeView;
+
+      return (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Button
+              size="1"
+              variant="ghost"
+              highContrast
+              disabled={props.busy}
+              className="py-1.5"
+            >
+              {nodeView === "linesOfCode"
+                ? "LoC"
+                : nodeView === "characters"
+                  ? "Chars"
+                  : nodeView === "dependencies"
+                    ? "Deps"
+                    : "default"}
+              <LuChevronUp />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            <DropdownMenu.Item onClick={() => changeNodeView("default")}>
+              Default
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeNodeView("linesOfCode")}>
+              Lines of Code
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeNodeView("characters")}>
+              File Characters
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeNodeView("dependencies")}>
+              Dependencies
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      );
+    } else {
+      return <></>;
+    }
   }
 
   return (
@@ -108,48 +154,7 @@ export default function Controls(props: {
               <path d="M10.8333 7.5H9.16667V5.83333C9.16667 5.61232 9.07887 5.40036 8.92259 5.24408C8.76631 5.0878 8.55435 5 8.33333 5C8.11232 5 7.90036 5.0878 7.74408 5.24408C7.5878 5.40036 7.5 5.61232 7.5 5.83333V7.5H5.83333C5.61232 7.5 5.40036 7.5878 5.24408 7.74408C5.0878 7.90036 5 8.11232 5 8.33333C5 8.55435 5.0878 8.76631 5.24408 8.92259C5.40036 9.07887 5.61232 9.16667 5.83333 9.16667H7.5V10.8333C7.5 11.0543 7.5878 11.2663 7.74408 11.4226C7.90036 11.5789 8.11232 11.6667 8.33333 11.6667C8.55435 11.6667 8.76631 11.5789 8.92259 11.4226C9.07887 11.2663 9.16667 11.0543 9.16667 10.8333V9.16667H10.8333C11.0543 9.16667 11.2663 9.07887 11.4226 8.92259C11.5789 8.76631 11.6667 8.55435 11.6667 8.33333C11.6667 8.11232 11.5789 7.90036 11.4226 7.74408C11.2663 7.5878 11.0543 7.5 10.8333 7.5Z" />
             </svg>
           </Button>
-          <DropdownMenu.Root>
-            <DropdownMenu.Trigger>
-              <Button
-                size="1"
-                variant="ghost"
-                highContrast
-                disabled={props.busy}
-                className="py-1.5"
-              >
-                {props.nodeView === "linesOfCode"
-                  ? "LoC"
-                  : props.nodeView === "characters"
-                    ? "Chars"
-                    : props.nodeView === "dependencies"
-                      ? "Deps"
-                      : "default"}
-                <LuChevronUp />
-              </Button>
-            </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("default")}
-              >
-                Default
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("linesOfCode")}
-              >
-                Lines of Code
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("characters")}
-              >
-                File Characters
-              </DropdownMenu.Item>
-              <DropdownMenu.Item
-                onClick={() => props.changeNodeView("dependencies")}
-              >
-                Dependencies
-              </DropdownMenu.Item>
-            </DropdownMenu.Content>
-          </DropdownMenu.Root>
+          {showNodeViewControls()}
         </div>
       </div>
     </div>
