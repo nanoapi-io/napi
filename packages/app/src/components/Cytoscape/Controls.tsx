@@ -1,4 +1,5 @@
-import { Button } from "@radix-ui/themes";
+import { Button, DropdownMenu } from "@radix-ui/themes";
+import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
 import {
   MdFilterCenterFocus,
@@ -11,6 +12,8 @@ export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
+  nodeView: string;
+  changeNodeView: (viewType: string) => void;
 }) {
   function handleFit() {
     const elements = props.cy.elements();
@@ -70,6 +73,48 @@ export default function Controls(props: {
           >
             <MdOutlineZoomIn className="text-2xl h-5 w-5" />
           </Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <Button
+                size="1"
+                variant="ghost"
+                highContrast
+                disabled={props.busy}
+                className="py-1.5"
+              >
+                {props.nodeView === "linesOfCode"
+                  ? "LoC"
+                  : props.nodeView === "characters"
+                    ? "Chars"
+                    : props.nodeView === "dependencies"
+                      ? "Deps"
+                      : "default"}
+                <LuChevronUp />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              <DropdownMenu.Item
+                onClick={() => props.changeNodeView("default")}
+              >
+                Default
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onClick={() => props.changeNodeView("linesOfCode")}
+              >
+                Lines of Code
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onClick={() => props.changeNodeView("characters")}
+              >
+                File Characters
+              </DropdownMenu.Item>
+              <DropdownMenu.Item
+                onClick={() => props.changeNodeView("dependencies")}
+              >
+                Dependencies
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
       </div>
     </div>

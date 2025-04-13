@@ -12,6 +12,10 @@ export interface AuditContext {
   busy: boolean;
   auditResponse: AuditResponse;
   highlightedNodeId: string | null;
+  actions: {
+    setHighlightedNodeId: (nodeId: string | null) => void;
+    getAuditManifest: () => Promise<AuditResponse>;
+  };
 }
 
 export default function BaseAuditPage() {
@@ -28,6 +32,30 @@ export default function BaseAuditPage() {
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null,
   );
+
+  async function getAuditManifest(): Promise<AuditResponse> {
+    if (Object.keys(auditResponse.auditManifest).length > 0) {
+      // Already loaded
+      console.log(auditResponse.auditManifest);
+      console.log("HERE ===========");
+      return auditResponse;
+    }
+    setBusy(true);
+
+    const response = await getAudit();
+
+    if (!response) {
+      setBusy(false);
+      return {
+        dependencyManifest: {},
+        auditManifest: {},
+      };
+    }
+
+    setAuditResponse(response);
+    setBusy(false);
+    return response;
+  }
 
   useEffect(() => {
     async function handleOnLoad() {
@@ -66,8 +94,12 @@ export default function BaseAuditPage() {
         <FileExplorer
           busy={busy}
           files={files}
-          highlightedNodeId={highlightedNodeId}
-          setHighlightedNodeId={setHighlightedNodeId}
+          context={{
+            highlightedNodeId,
+            actions: {
+              setHighlightedNodeId,
+            },
+          }}
         />
       }
       graphSlot={
@@ -76,6 +108,10 @@ export default function BaseAuditPage() {
             busy,
             auditResponse,
             highlightedNodeId,
+            actions: {
+              setHighlightedNodeId,
+              getAuditManifest,
+            },
           }}
         />
       }
