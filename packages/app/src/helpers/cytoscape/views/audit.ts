@@ -8,6 +8,7 @@ export interface NodeElementDefinition extends ElementDefinition {
   data: {
     id: string;
     position: { x: number; y: number };
+    "x-audit-color"?: string;
     customData: {
       fileName: string;
       expanded: {
@@ -168,6 +169,18 @@ export function getCyStyle(theme: "light" | "dark") {
         "background-color": "yellow",
         "z-index": 1000,
       },
+    },
+    {
+      selector: "node.linesOfCode",
+      style: {},
+    },
+    {
+      selector: "node.characters",
+      style: {},
+    },
+    {
+      selector: "node.dependencies",
+      style: {},
     },
     {
       selector: "edge",

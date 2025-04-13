@@ -28,8 +28,12 @@ export interface FileExplorerFile {
 export default function FileExplorer(props: {
   busy: boolean;
   files: FileExplorerFile[];
-  highlightedNodeId: string | null;
-  setHighlightedNodeId: (node: string | null) => void;
+  context: {
+    highlightedNodeId: string | null;
+    actions: {
+      setHighlightedNodeId: (node: string | null) => void;
+    };
+  };
 }) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
@@ -245,8 +249,8 @@ export default function FileExplorer(props: {
               <ListElement
                 nodes={treeData}
                 search={search}
-                hlNodeId={props.highlightedNodeId}
-                setHLNodeId={props.setHighlightedNodeId}
+                hlNodeId={props.context.highlightedNodeId}
+                setHLNodeId={props.context.actions.setHighlightedNodeId}
               />
             </ScrollArea>
           </>

@@ -14,6 +14,81 @@ import {
 } from "../../helpers/cytoscape/views/audit";
 import { ThemeContext } from "../../contexts/ThemeContext";
 import { AuditContext } from "../audit";
+import { AuditMessage, AuditResponse } from "../../service/auditApi/types";
+import tailwindConfig from "../../../tailwind.config";
+
+type NodeViewType = "default" | "linesOfCode" | "characters" | "dependencies";
+
+// Converts a hex color to RGB array
+function hexToRgb(hex: string) {
+  hex = hex.replace("#", "");
+  return [
+    parseInt(hex.substring(0, 2), 16),
+    parseInt(hex.substring(2, 4), 16),
+    parseInt(hex.substring(4, 6), 16),
+  ];
+}
+
+// Interpolates between two colors
+function interpolateColor(color1: number[], color2: number[], factor: number) {
+  const result = color1.slice();
+  for (let i = 0; i < 3; i++) {
+    result[i] = Math.round(color1[i] + factor * (color2[i] - color1[i]));
+  }
+  return result;
+}
+
+// Converts RGB array to hex color string
+function rgbToHex(rgb: number[]) {
+  return "#" + rgb.map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+
+// Severity-color mapping based on your specification
+const severityColors: Record<number, string> = {
+  0: "#ADFF2F", // green-yellow
+  1: "#FFDD00", // yellow
+  2: "#FF8C00", // orange
+  3: "#DC1414", // red
+};
+
+function getSeverity(ratio: number): number {
+  if (ratio <= 1.1) return 0;
+  if (ratio <= 1.5) return 1;
+  if (ratio <= 2.0) return 2;
+  return 3;
+}
+
+function getInterpolatedSeverityColor(
+  valueStr: string,
+  targetStr: string,
+): string {
+  const value = parseFloat(valueStr);
+  const target = parseFloat(targetStr);
+  const ratio = value / target;
+  const severity = getSeverity(ratio);
+
+  let lowerBound: number, upperBound: number;
+  switch (severity) {
+    case 0:
+      [lowerBound, upperBound] = [1, 1.1];
+      break;
+    case 1:
+      [lowerBound, upperBound] = [1.1, 1.5];
+      break;
+    case 2:
+      [lowerBound, upperBound] = [1.5, 2.0];
+      break;
+    default:
+      return severityColors[3]; // severity 3 (red) no interpolation needed
+  }
+
+  const factor = (ratio - lowerBound) / (upperBound - lowerBound);
+  const startColor = hexToRgb(severityColors[severity]);
+  const endColor = hexToRgb(severityColors[severity + 1]);
+  const interpolatedRgb = interpolateColor(startColor, endColor, factor);
+
+  return rgbToHex(interpolatedRgb);
+}
 
 export default function AuditPage() {
   const navigate = useNavigate();
@@ -24,6 +99,9 @@ export default function AuditPage() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState<boolean>(true);
   const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
+  const [viewType, setViewType] = useState<NodeViewType>("default");
+  const viewTypeRef = useRef<NodeViewType>(viewType);
+  viewTypeRef.current = viewType;
 
   useEffect(() => {
     setBusy(true);
@@ -70,6 +148,7 @@ export default function AuditPage() {
     cyInstance?.style(getCyStyle(themeContext.theme));
   }, [themeContext.changeTheme]);
 
+  // Highlight the node when the user selects it in the sidebar
   useEffect(() => {
     if (!cyInstance) return;
 
@@ -88,6 +167,122 @@ export default function AuditPage() {
       }
     });
   }, [context.highlightedNodeId, cyInstance]);
+
+  // Change the node view type, which will place colors on nodes based on
+  // the selected view type
+  useEffect(() => {
+    if (!cyInstance) return;
+
+    context.actions
+      .getAuditManifest()
+      .then((auditResponse: AuditResponse) => {
+        const cy = cyInstance;
+        cy.batch(() => {
+          // Clear previously applied classes quickly
+          cy.elements().removeClass([
+            "highlighted",
+            "background",
+            "selected",
+            "connected",
+            "dependency",
+            "dependent",
+            "linesOfCode",
+            "characters",
+            "dependencies",
+          ]);
+          context.actions.setHighlightedNodeId(null);
+
+          // If the view type is default, we don't need to do anything else
+          if (viewType === "default") {
+            // Clear the audit colors and reset the background color
+            cy.nodes().forEach((node) => {
+              node.data("x-audit-color", "");
+              node.style({
+                "background-color":
+                  tailwindConfig.theme.extend.colors.primary[
+                    themeContext.theme
+                  ],
+              });
+            });
+            return;
+          }
+
+          // Otherwise, apply classes for highlighting (no layout!)
+          cy.nodes().addClass(viewType);
+
+          // Apply colors for that type
+          cy.nodes().forEach((node) => {
+            const data = node.data() as NodeElementDefinition["data"];
+            const nodeAuditManifest = auditResponse.auditManifest[data.id];
+            if (!nodeAuditManifest) {
+              node.data("x-audit-color", "green");
+              node.style({
+                "background-color": "green",
+              });
+              return;
+            }
+
+            let value: string;
+            let target: string;
+            let auditError: AuditMessage | undefined;
+            switch (viewType) {
+              case "linesOfCode":
+                auditError = nodeAuditManifest.lookup.targetMaxLineInFile[0];
+                if (!auditError) {
+                  node.data("x-audit-color", "green");
+                  node.style({
+                    "background-color": "green",
+                  });
+                  return;
+                }
+
+                value = nodeAuditManifest.lookup.targetMaxLineInFile[0].value;
+                target = nodeAuditManifest.lookup.targetMaxLineInFile[0].target;
+                break;
+              case "characters":
+                auditError = nodeAuditManifest.lookup.targetMaxCharInFile[0];
+                if (!auditError) {
+                  node.data("x-audit-color", "green");
+                  node.style({
+                    "background-color": "green",
+                  });
+                  return;
+                }
+
+                value = nodeAuditManifest.lookup.targetMaxCharInFile[0].value;
+                target = nodeAuditManifest.lookup.targetMaxCharInFile[0].target;
+                break;
+              case "dependencies":
+                auditError = nodeAuditManifest.lookup.targetMaxDepPerFile[0];
+                if (!auditError) {
+                  node.data("x-audit-color", "green");
+                  node.style({
+                    "background-color": "green",
+                  });
+                  return;
+                }
+
+                value = nodeAuditManifest.lookup.targetMaxDepPerFile[0].value;
+                target = nodeAuditManifest.lookup.targetMaxDepPerFile[0].target;
+                break;
+              default:
+                console.error("Unknown view type: ", viewType);
+                return;
+            }
+
+            const color = getInterpolatedSeverityColor(value, target);
+            console.log("Color: ", color);
+            node.data("x-audit-color", color);
+            node.style({
+              "background-color": color,
+            });
+          });
+        });
+      })
+      .catch((error) => {
+        console.error("Error getting audit manifest:", error);
+      });
+  }, [viewType, cyInstance]);
 
   function createCyListeners(cy: Core) {
     // On tap to a node, display details of the node if relevant
@@ -117,7 +312,19 @@ export default function AuditPage() {
         "dependent",
       ]);
 
+      const focusElements = [node, ...connectedNodes];
+
       if (isAlreadySelected) {
+        console.log(viewType);
+        if (viewTypeRef.current !== "default") {
+          cy.nodes().forEach((node) => {
+            node.style({
+              "border-color":
+                tailwindConfig.theme.extend.colors.border[themeContext.theme],
+              "background-color": node.data("x-audit-color"),
+            });
+          });
+        }
         return;
       }
 
@@ -131,6 +338,18 @@ export default function AuditPage() {
       dependentEdges.addClass("dependent");
       // add selected class to selected node
       node.addClass("selected");
+
+      if (viewTypeRef.current !== "default") {
+        // change background color to border color if one of the views
+        // is selected
+        focusElements.forEach((element) => {
+          element.style({
+            "border-color": element.data("x-audit-color"),
+            "background-color":
+              tailwindConfig.theme.extend.colors.background[themeContext.theme],
+          });
+        });
+      }
 
       // layout the closed neighborhood
       node.closedNeighborhood().layout(layout).run();
@@ -166,6 +385,9 @@ export default function AuditPage() {
           busy={context.busy || busy}
           cy={cyInstance}
           onLayout={onLayout}
+          // TODO
+          nodeView={viewType}
+          changeNodeView={setViewType as (viewType: string) => void}
         />
       )}
 
