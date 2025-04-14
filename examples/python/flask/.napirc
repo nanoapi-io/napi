@@ -2,6 +2,7 @@
   "audit": {
     "language": "python",
     "include": ["app.py", "api/**"],
-    "exclude": []
+    "exclude": [],
+    "pythonVersion": "3.12"
   }
 }
