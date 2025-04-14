@@ -22,24 +22,21 @@ export function generateCSharpDependencyManifest(
   >();
   const csprojFiles = new Map<string, { path: string; content: string }>();
 
-  // Filter out csproj files
+  // Filter out csproj files and parse C# files
   for (const [filePath, { content: fileContent }] of files) {
     if (filePath.endsWith(".csproj")) {
       csprojFiles.set(filePath, { path: filePath, content: fileContent });
       files.delete(filePath);
-    }
-  }
-
-  // Parse C# files
-  for (const [filePath, { content: fileContent }] of files) {
-    try {
-      const rootNode = csharpParser.parse(fileContent, undefined, {
-        bufferSize: fileContent.length + 10,
-      }).rootNode;
-      parsedFiles.set(filePath, { path: filePath, rootNode });
-    } catch (e) {
-      console.error(`Failed to parse ${filePath}, skipping`);
-      console.error(e);
+    } else {
+      try {
+        const rootNode = csharpParser.parse(fileContent, undefined, {
+          bufferSize: fileContent.length + 10,
+        }).rootNode;
+        parsedFiles.set(filePath, { path: filePath, rootNode });
+      } catch (e) {
+        console.error(`Failed to parse ${filePath}, skipping`);
+        console.error(e);
+      }
     }
   }
 
