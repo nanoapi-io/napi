@@ -112,10 +112,11 @@ export class CSharpDependencyFormatter {
    * @param files - A map of file paths to their corresponding syntax nodes.
    */
   constructor(
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    parsedFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    csprojFiles: Map<string, string>,
   ) {
-    this.nsMapper = new CSharpNamespaceMapper(files);
-    this.projectMapper = new CSharpProjectMapper(files);
+    this.nsMapper = new CSharpNamespaceMapper(parsedFiles);
+    this.projectMapper = new CSharpProjectMapper(csprojFiles);
     this.invResolver = new CSharpInvocationResolver(
       this.nsMapper,
       this.projectMapper,
@@ -124,7 +125,7 @@ export class CSharpDependencyFormatter {
       this.nsMapper,
       this.projectMapper,
     );
-    for (const [fp] of files) {
+    for (const [fp] of parsedFiles) {
       this.usingResolver.resolveUsingDirectives(fp);
     }
   }

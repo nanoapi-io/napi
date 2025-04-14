@@ -115,7 +115,7 @@ export type DependencyManifest = Record<string, FileManifest>;
 const handlerMap: Record<
   string,
   (
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    files: Map<string, { path: string; content: string }>,
     napiConfig: z.infer<typeof localConfigSchema>,
   ) => DependencyManifest
 > = {
@@ -133,7 +133,7 @@ export class UnsupportedLanguageError extends Error {
 }
 
 export function generateDependencyManifest(
-  files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+  files: Map<string, { path: string; content: string }>,
   parser: Parser,
   napiConfig: z.infer<typeof localConfigSchema>,
 ): DependencyManifest {

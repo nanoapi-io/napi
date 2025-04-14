@@ -2,16 +2,21 @@ import { describe, expect, test } from "vitest";
 import { File } from "../namespaceResolver";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
 import { CSharpNamespaceResolver } from "../namespaceResolver";
-import { getCSharpFilesMap, csharpFilesFolder } from "../testFiles";
+import {
+  getCSharpFilesMap,
+  csharpFilesFolder,
+  getCsprojFilesMap,
+} from "../testFiles";
 import path from "path";
 import { CSharpInvocationResolver } from ".";
 import Parser from "tree-sitter";
 import { CSharpProjectMapper } from "../projectMapper";
 
 describe("InvocationResolver", () => {
-  const files: Map<string, File> = getCSharpFilesMap();
-  const nsMapper = new CSharpNamespaceMapper(files);
-  const projectMapper = new CSharpProjectMapper(files);
+  const parsedfiles: Map<string, File> = getCSharpFilesMap();
+  const csprojfiles = getCsprojFilesMap();
+  const nsMapper = new CSharpNamespaceMapper(parsedfiles);
+  const projectMapper = new CSharpProjectMapper(csprojfiles);
   const nsResolver = new CSharpNamespaceResolver();
   const invResolver: CSharpInvocationResolver = new CSharpInvocationResolver(
     nsMapper,
@@ -100,7 +105,9 @@ describe("InvocationResolver", () => {
 
   test("Same-file dependencies", () => {
     const seminamespaced = nsResolver.getNamespacesFromFile(
-      files.get(path.join(csharpFilesFolder, "SemiNamespaced.cs")) as File,
+      parsedfiles.get(
+        path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+      ) as File,
     );
     const headcrabnode = seminamespaced[0].exports.find(
       (exp) => exp.name === "HeadCrab",

@@ -4,10 +4,19 @@ import path from "path";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
+  getCsprojFilesMap,
 } from "../../../languagePlugins/csharp/testFiles";
 
 describe("generateCSharpDependencymanifest", () => {
-  const files = getCSharpFilesMap();
+  const parsedfiles = getCSharpFilesMap();
+  const csprojFiles = getCsprojFilesMap();
+  const files = new Map<string, { path: string; content: string }>();
+  for (const [filePath, { path, rootNode }] of parsedfiles) {
+    files.set(filePath, { path, content: rootNode.text });
+  }
+  for (const [filePath, content] of csprojFiles) {
+    files.set(filePath, { path: filePath, content });
+  }
   const manifest = generateCSharpDependencyManifest(files);
   const burgers = path.join(csharpFilesFolder, "2Namespaces1File.cs");
   const models = path.join(csharpFilesFolder, "Models.cs");
@@ -18,6 +27,7 @@ describe("generateCSharpDependencymanifest", () => {
   const usage = path.join(csharpFilesFolder, "Usage.cs");
 
   test("Correctly identifies files", () => {
+    console.log(Object.keys(manifest));
     expect(Object.keys(manifest).length).toBe(9);
   });
 

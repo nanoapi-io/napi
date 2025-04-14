@@ -4,6 +4,7 @@ import {
   CSharpFile,
 } from "../../../languagePlugins/csharp/dependencyFormatting";
 import Parser from "tree-sitter";
+import { csharpParser } from "../../../helpers/treeSitter/parsers";
 
 /**
  * Generates a dependency manifest for C# files.
@@ -11,15 +12,42 @@ import Parser from "tree-sitter";
  * @returns A dependency manifest for the C# files.
  */
 export function generateCSharpDependencyManifest(
-  files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+  files: Map<string, { path: string; content: string }>,
 ): DependencyManifest {
   console.time("generateCSharpDependencyManifest");
   console.info("Processing project...");
-  const formatter = new CSharpDependencyFormatter(files);
+  const parsedFiles = new Map<
+    string,
+    { path: string; rootNode: Parser.SyntaxNode }
+  >();
+  const csprojFiles = new Map<string, string>();
+
+  // Filter out csproj files
+  for (const [filePath, { content: fileContent }] of files) {
+    if (filePath.endsWith(".csproj")) {
+      csprojFiles.set(filePath, fileContent);
+      files.delete(filePath);
+    }
+  }
+
+  // Parse C# files
+  for (const [filePath, { content: fileContent }] of files) {
+    try {
+      const rootNode = csharpParser.parse(fileContent, undefined, {
+        bufferSize: fileContent.length + 10,
+      }).rootNode;
+      parsedFiles.set(filePath, { path: filePath, rootNode });
+    } catch (e) {
+      console.error(`Failed to parse ${filePath}, skipping`);
+      console.error(e);
+    }
+  }
+
+  const formatter = new CSharpDependencyFormatter(parsedFiles, csprojFiles);
   const manifest: DependencyManifest = {};
   const filecount = files.size;
   let i = 0;
-  for (const [, { path }] of files) {
+  for (const [, { path }] of parsedFiles) {
     console.info(`Processing ${path} (${++i}/${filecount})`);
     const fm = formatter.formatFile(path) as CSharpFile;
     manifest[path] = {

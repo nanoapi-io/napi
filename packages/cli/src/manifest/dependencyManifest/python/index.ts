@@ -53,9 +53,26 @@ function generateDependentsForManifest(
 }
 
 export function generatePythonDependencyManifest(
-  files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+  files: Map<string, { path: string; content: string }>,
   napiConfig: z.infer<typeof localConfigSchema>,
 ): DependencyManifest {
+  const parsedFiles = new Map<
+    string,
+    { path: string; rootNode: Parser.SyntaxNode }
+  >();
+
+  for (const [filePath, { content: fileContent }] of files) {
+    try {
+      const rootNode = pythonParser.parse(fileContent, undefined, {
+        bufferSize: fileContent.length + 10,
+      }).rootNode;
+      parsedFiles.set(filePath, { path: filePath, rootNode });
+    } catch (e) {
+      console.error(`Failed to parse ${filePath}, skipping`);
+      console.error(e);
+    }
+  }
+
   console.time("generatePythonDependencyManifest");
 
   const parser = pythonParser;
@@ -69,12 +86,12 @@ export function generatePythonDependencyManifest(
 
   console.time("generatePythonDependencyManifest:initialization");
   console.info("Initializing Python export resolver...");
-  const exportExtractor = new PythonExportExtractor(parser, files);
+  const exportExtractor = new PythonExportExtractor(parser, parsedFiles);
   console.info("Initializing Python import resolver...");
-  const importExtractor = new PythonImportExtractor(parser, files);
+  const importExtractor = new PythonImportExtractor(parser, parsedFiles);
   console.info("Initializing Python module resolver...");
 
-  const moduleResolver = new PythonModuleResolver(files, pythonVersion);
+  const moduleResolver = new PythonModuleResolver(parsedFiles, pythonVersion);
   console.info("Initializing Python item resolver...");
   const itemResolver = new PythonItemResolver(
     exportExtractor,
@@ -85,7 +102,7 @@ export function generatePythonDependencyManifest(
   const usageResolver = new PythonUsageResolver(parser, exportExtractor);
   console.info("Initializing Python dependency resolver...");
   const dependencyResolver = new PythonDependencyResolver(
-    files,
+    parsedFiles,
     exportExtractor,
     importExtractor,
     itemResolver,
@@ -158,7 +175,9 @@ export function generatePythonDependencyManifest(
     manifest[path] = fileManifest;
   }
 
-  console.info(`Generated Python dependency manifest for ${files.size} files`);
+  console.info(
+    `Generated Python dependency manifest for ${parsedFiles.size} files`,
+  );
 
   console.timeEnd("generatePythonDependencyManifest:processing");
 

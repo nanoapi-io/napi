@@ -29,12 +29,13 @@ export class CSharpExtractor {
   private usingResolver: CSharpUsingResolver;
 
   constructor(
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    parsedFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    csprojFiles: Map<string, string>,
     manifest: DependencyManifest,
   ) {
     this.manifest = manifest;
-    this.projectMapper = new CSharpProjectMapper(files);
-    this.nsMapper = new CSharpNamespaceMapper(files);
+    this.projectMapper = new CSharpProjectMapper(csprojFiles);
+    this.nsMapper = new CSharpNamespaceMapper(parsedFiles);
     this.usingResolver = new CSharpUsingResolver(
       this.nsMapper,
       this.projectMapper,
