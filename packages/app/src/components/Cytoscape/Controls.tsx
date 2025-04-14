@@ -33,10 +33,34 @@ export default function Controls(props: {
     });
   }
 
+  function updateUrlQueryParams(
+    key: string,
+    value: string | number | boolean | null
+  ) {
+    const fullHash = window.location.hash; // e.g., "#/audit/file/blahId?oldParam=123"
+    const [path, queryString = ''] = fullHash.slice(1).split('?');
+
+    const searchParams = new URLSearchParams(queryString);
+    if (value === null) {
+      searchParams.delete(key);
+    } else {
+      searchParams.set(key, String(value));
+    }
+
+    const newHash = `#${path}?${searchParams.toString()}`;
+    window.history.replaceState(null, '', newHash);
+  }
+
+  function changeViewType(viewType: string) {
+    if (props.changeNodeView) {
+      props.changeNodeView(viewType);
+      updateUrlQueryParams("viewType", viewType);
+    }
+  }
+
   function showNodeViewControls() {
     if (props.nodeView && props.changeNodeView) {
       const nodeView = props.nodeView;
-      const changeNodeView = props.changeNodeView;
 
       return (
         <DropdownMenu.Root>
@@ -59,16 +83,16 @@ export default function Controls(props: {
             </Button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content>
-            <DropdownMenu.Item onClick={() => changeNodeView("default")}>
+            <DropdownMenu.Item onClick={() => changeViewType("default")}>
               Default
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeNodeView("linesOfCode")}>
+            <DropdownMenu.Item onClick={() => changeViewType("linesOfCode")}>
               Lines of Code
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeNodeView("characters")}>
+            <DropdownMenu.Item onClick={() => changeViewType("characters")}>
               File Characters
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeNodeView("dependencies")}>
+            <DropdownMenu.Item onClick={() => changeViewType("dependencies")}>
               Dependencies
             </DropdownMenu.Item>
           </DropdownMenu.Content>
