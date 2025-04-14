@@ -32,23 +32,17 @@ const calledClassesQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
   ((object_creation_expression
-    type: (identifier) @classname
-  ))
+  type: (identifier) @cls))
   ((object_creation_expression
-    type: (qualified_name) @classname
-  ))
+  type: (qualified_name) @cls))
   (variable_declaration
-    type: (identifier) @classname
-  )
+  type: (identifier) @cls)
   (variable_declaration
-    type: (qualified_name) @classname
-  )
+  type: (qualified_name) @cls)
   (parameter
-    type: (identifier) @classname
-  )
+  type: (identifier) @cls)
   (parameter
-    type: (qualified_name) @classname
-  )
+  type: (qualified_name) @cls)
   (type_argument_list
   (identifier) @cls)
   (type_argument_list
@@ -57,7 +51,16 @@ const calledClassesQuery = new Parser.Query(
   (identifier) @cls)
   (attribute
   (qualified_name) @cls)
+  (base_list
+  (identifier) @cls)
+  (base_list
+  (qualified_name) @cls)
+  (property_declaration
+  type: (identifier) @cls)
+  (generic_name) @cls
   `,
+  // Might have to change the "(generic_name) @cls" line
+  // to be smarter, it may or may not add 1s of runtime.
 );
 
 /**
@@ -122,17 +125,20 @@ export class CSharpInvocationResolver {
     namespaceTree: NamespaceNode,
     filepath: string,
   ): SymbolNode | null {
+    // Remove any generic type information from the classname
+    // Classes in the type argument list are managed on their own.
+    const cleanClassname = classname.split("<")[0];
     // Try to find the class in the resolved imports
     const ucls = this.usingResolver.findClassInImports(
       this.resolvedImports,
-      classname,
+      cleanClassname,
       filepath,
     );
     if (ucls) {
       return ucls;
     }
     // Try to find the class in the namespace tree
-    const cls = this.nsMapper.findClassInTree(namespaceTree, classname);
+    const cls = this.nsMapper.findClassInTree(namespaceTree, cleanClassname);
     if (cls) {
       return cls;
     }

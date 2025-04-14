@@ -277,7 +277,8 @@ export function getNodeLabel(data: {
 
   if (data.errorMessages.length > 0) {
     label += `\n${errorChar}(${data.errorMessages.length})`;
-  } else if (data.warningMessages.length > 0) {
+  }
+  if (data.warningMessages.length > 0) {
     label += `\n${warningChar}(${data.warningMessages.length})`;
   }
 
