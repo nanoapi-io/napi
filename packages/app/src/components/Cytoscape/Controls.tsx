@@ -35,10 +35,10 @@ export default function Controls(props: {
 
   function updateUrlQueryParams(
     key: string,
-    value: string | number | boolean | null
+    value: string | number | boolean | null,
   ) {
     const fullHash = window.location.hash; // e.g., "#/audit/file/blahId?oldParam=123"
-    const [path, queryString = ''] = fullHash.slice(1).split('?');
+    const [path, queryString = ""] = fullHash.slice(1).split("?");
 
     const searchParams = new URLSearchParams(queryString);
     if (value === null) {
@@ -48,7 +48,7 @@ export default function Controls(props: {
     }
 
     const newHash = `#${path}?${searchParams.toString()}`;
-    window.history.replaceState(null, '', newHash);
+    window.history.replaceState(null, "", newHash);
   }
 
   function changeViewType(viewType: string) {
