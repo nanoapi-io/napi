@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+New version of napi
+
+- dependency visualizer (supports python and csharp)
+
 ## [0.0.31] - 2025-02-11
 
 Improve audit to support more use cases
