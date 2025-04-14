@@ -36,7 +36,6 @@ export function getAuditApi(
     throw error;
   }
 
-  // Why???? We can just return the auditResponse directly or the express function
   auditApi.get("/", (_req, res) => {
     const startTime = Date.now();
     trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
