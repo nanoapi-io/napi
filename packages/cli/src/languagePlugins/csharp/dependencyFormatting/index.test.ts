@@ -1,12 +1,17 @@
 import { describe, test, expect } from "vitest";
 import { CSharpDependencyFormatter } from ".";
-import { getCSharpFilesMap, csharpFilesFolder } from "../testFiles";
+import {
+  getCSharpFilesMap,
+  csharpFilesFolder,
+  getCsprojFilesMap,
+} from "../testFiles";
 import path from "path";
 import { File } from "../namespaceResolver";
 
 describe("Dependency formatting", () => {
-  const files: Map<string, File> = getCSharpFilesMap();
-  const formatter = new CSharpDependencyFormatter(files);
+  const parsedfiles: Map<string, File> = getCSharpFilesMap();
+  const csprojfiles = getCsprojFilesMap();
+  const formatter = new CSharpDependencyFormatter(parsedfiles, csprojfiles);
 
   test("SemiNamespaced.cs", () => {
     const snpath = path.join(csharpFilesFolder, "SemiNamespaced.cs");

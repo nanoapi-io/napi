@@ -7,15 +7,20 @@ import {
   USING_STATIC,
 } from ".";
 import { CSharpNamespaceMapper } from "../namespaceMapper";
-import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles";
+import {
+  csharpFilesFolder,
+  getCSharpFilesMap,
+  getCsprojFilesMap,
+} from "../testFiles";
 import path from "path";
 import { File } from "../namespaceResolver";
 import { CSharpProjectMapper } from "../projectMapper";
 
 describe("UsingResolver", () => {
-  const files: Map<string, File> = getCSharpFilesMap();
-  const nsmapper = new CSharpNamespaceMapper(files);
-  const projectMapper = new CSharpProjectMapper(files);
+  const parsedfiles: Map<string, File> = getCSharpFilesMap();
+  const csprojfiles = getCsprojFilesMap();
+  const nsmapper = new CSharpNamespaceMapper(parsedfiles);
+  const projectMapper = new CSharpProjectMapper(csprojfiles);
   const resolver = new CSharpUsingResolver(nsmapper, projectMapper);
 
   test("Directive simple parsing", () => {

@@ -4,7 +4,6 @@ import { globSync } from "glob";
 import { generateDependencyManifest } from "../../manifest/dependencyManifest";
 import { readFileSync } from "fs";
 import { join } from "path";
-import Parser from "tree-sitter";
 import { pythonParser, csharpParser } from "../../helpers/treeSitter/parsers";
 import { generateAuditManifest } from "../../manifest/auditManifest";
 
@@ -19,7 +18,7 @@ export function generateAuditResponse(
     },
     ["c-sharp" as string]: {
       parser: csharpParser,
-      validExtensions: [".cs"],
+      validExtensions: [".cs", ".csproj"],
     },
   };
 
@@ -43,10 +42,7 @@ export function generateAuditResponse(
     ignore: napiConfig.audit?.exclude || [],
   });
 
-  const files = new Map<
-    string,
-    { path: string; rootNode: Parser.SyntaxNode }
-  >();
+  const files = new Map<string, { path: string; content: string }>();
   filePaths.forEach((filePath) => {
     const extension = filePath.split(".").pop();
     if (!extension || !validExtensions.includes(`.${extension}`)) {
@@ -56,23 +52,18 @@ export function generateAuditResponse(
     try {
       const fullPath = join(workDir, filePath);
       fileContent = readFileSync(fullPath, "utf-8");
+      files.set(filePath, {
+        path: filePath,
+        content: fileContent,
+      });
     } catch (e) {
       console.error(`Error reading ${filePath}, skipping`);
       console.error(e);
       return;
     }
-    try {
-      const rootNode = parser.parse(fileContent, undefined, {
-        bufferSize: fileContent.length + 10,
-      }).rootNode;
-      files.set(filePath, { path: filePath, rootNode });
-    } catch (e) {
-      console.error(`Error parsing ${filePath}, skipping`);
-      console.error(e);
-    }
   });
 
-  console.info(`Parsed ${files.size} files`);
+  console.info(`Resolved ${files.size} files`);
 
   const dependencyManifest = generateDependencyManifest(
     files,

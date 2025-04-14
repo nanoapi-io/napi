@@ -1,13 +1,18 @@
 import { describe, expect, test } from "vitest";
 import { CSharpProjectMapper } from ".";
-import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles";
+import {
+  csharpFilesFolder,
+  getCSharpFilesMap,
+  getCsprojFilesMap,
+} from "../testFiles";
 import { CSharpUsingResolver } from "../usingResolver";
 import { CSharpNamespaceMapper } from "../namespaceMapper";
 import path from "path";
 
 describe("CSharpProjectMapper", () => {
-  const files = getCSharpFilesMap();
-  const projectMapper = new CSharpProjectMapper(files);
+  const csprojfiles = getCsprojFilesMap();
+  const parsedfiles = getCSharpFilesMap();
+  const projectMapper = new CSharpProjectMapper(csprojfiles);
 
   test("Project mapper definition", () => {
     expect(projectMapper.rootFolder).toBeDefined();
@@ -15,13 +20,14 @@ describe("CSharpProjectMapper", () => {
     expect(projectMapper.subprojects.length).toBe(2);
   });
 
-  const nsmapper = new CSharpNamespaceMapper(files);
+  const nsmapper = new CSharpNamespaceMapper(parsedfiles);
   const usingResolver = new CSharpUsingResolver(nsmapper, projectMapper);
   const usagecsFile = path.join(csharpFilesFolder, "Usage.cs");
   const globalusingcsFile = path.join(
     csharpFilesFolder,
     "Subfolder/GlobalUsings.cs",
   );
+  console.log(projectMapper.subprojects);
   test("Global using resolution", () => {
     usingResolver.resolveUsingDirectives(usagecsFile);
     usingResolver.resolveUsingDirectives(globalusingcsFile);

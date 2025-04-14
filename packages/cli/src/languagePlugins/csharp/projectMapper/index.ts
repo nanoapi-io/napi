@@ -1,7 +1,5 @@
-import fs from "fs";
 import path from "path";
 import { ResolvedImports } from "../usingResolver";
-import Parser from "tree-sitter";
 
 /**
  * Represents a .NET project.
@@ -18,6 +16,11 @@ export interface DotNetProject {
   csprojPath: string;
 
   /**
+   * The content of the .csproj file of the project
+   */
+  csprojContent: string;
+
+  /**
    * The global usings resolved for the project.
    */
   globalUsings: ResolvedImports;
@@ -27,13 +30,11 @@ export class CSharpProjectMapper {
   rootFolder: string;
   subprojects: DotNetProject[];
 
-  constructor(
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-  ) {
+  constructor(csprojFiles: Map<string, { path: string; content: string }>) {
     this.rootFolder = this.#getRootFolder(
-      Array.from(files.values().map((file) => file.path)),
+      Array.from(csprojFiles.values()).map((csproj) => csproj.path),
     );
-    this.subprojects = this.#findSubprojects(this.rootFolder);
+    this.subprojects = this.#makeSubprojects(csprojFiles);
   }
 
   /**
@@ -41,31 +42,20 @@ export class CSharpProjectMapper {
    * @param dir - The directory to search in.
    * @returns An array of dotnet projects (path to project and csproj file).
    */
-  #findSubprojects(dir: string): DotNetProject[] {
-    const projects: DotNetProject[] = [];
-    const files = fs.readdirSync(dir);
-    const seenProjects = new Set<string>();
-
-    for (const file of files) {
-      const fullPath = path.join(dir, file);
-      const stat = fs.statSync(fullPath);
-
-      if (stat.isDirectory()) {
-        if (!fullPath.includes(".extracted")) {
-          projects.push(...this.#findSubprojects(fullPath));
-        }
-      } else if (file.endsWith(".csproj")) {
-        if (!seenProjects.has(fullPath)) {
-          seenProjects.add(fullPath);
-          projects.push({
-            rootFolder: dir,
-            csprojPath: fullPath,
-            globalUsings: { internal: [], external: [] },
-          });
-        }
-      }
+  #makeSubprojects(
+    csprojFiles: Map<string, { path: string; content: string }>,
+  ): DotNetProject[] {
+    const subprojects: DotNetProject[] = [];
+    for (const [csprojPath, csprojContent] of csprojFiles) {
+      const subproject: DotNetProject = {
+        rootFolder: path.dirname(csprojPath),
+        csprojPath,
+        csprojContent: csprojContent.content,
+        globalUsings: { internal: [], external: [] },
+      };
+      subprojects.push(subproject);
     }
-    return projects;
+    return subprojects;
   }
 
   /**
