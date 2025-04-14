@@ -19,16 +19,6 @@ import tailwindConfig from "../../../tailwind.config";
 
 type NodeViewType = "default" | "linesOfCode" | "characters" | "dependencies";
 
-// Converts a hex color to RGB array
-function hexToRgb(hex: string) {
-  hex = hex.replace("#", "");
-  return [
-    parseInt(hex.substring(0, 2), 16),
-    parseInt(hex.substring(2, 4), 16),
-    parseInt(hex.substring(4, 6), 16),
-  ];
-}
-
 // Interpolates between two colors
 function interpolateColor(color1: number[], color2: number[], factor: number) {
   const result = color1.slice();
@@ -44,11 +34,11 @@ function rgbToHex(rgb: number[]) {
 }
 
 // Severity-color mapping based on your specification
-const severityColors: Record<number, string> = {
-  0: "#ADFF2F", // green-yellow
-  1: "#FFDD00", // yellow
-  2: "#FF8C00", // orange
-  3: "#DC1414", // red
+const severityColors: Record<number, number[]> = {
+  0: [173, 255, 47], // green-yellow
+  1: [255, 221, 0], // yellow
+  2: [255, 140, 0], // orange
+  3: [220, 20, 20], // red
 };
 
 function getSeverity(ratio: number): number {
@@ -79,12 +69,12 @@ function getInterpolatedSeverityColor(
       [lowerBound, upperBound] = [1.5, 2.0];
       break;
     default:
-      return severityColors[3]; // severity 3 (red) no interpolation needed
+      return rgbToHex(severityColors[3]); // severity 3 (red) no interpolation needed
   }
 
   const factor = (ratio - lowerBound) / (upperBound - lowerBound);
-  const startColor = hexToRgb(severityColors[severity]);
-  const endColor = hexToRgb(severityColors[severity + 1]);
+  const startColor = severityColors[severity];
+  const endColor = severityColors[severity + 1];
   const interpolatedRgb = interpolateColor(startColor, endColor, factor);
 
   return rgbToHex(interpolatedRgb);
@@ -276,7 +266,6 @@ export default function AuditPage() {
             }
 
             const color = getInterpolatedSeverityColor(value, target);
-            console.log("Color: ", color);
             node.data("x-audit-color", color);
             node.style({
               "background-color": color,
@@ -398,7 +387,6 @@ export default function AuditPage() {
           busy={context.busy || busy}
           cy={cyInstance}
           onLayout={onLayout}
-          // TODO
           nodeView={viewType}
           changeNodeView={setViewType as (viewType: string) => void}
         />

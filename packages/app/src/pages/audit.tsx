@@ -36,8 +36,6 @@ export default function BaseAuditPage() {
   async function getAuditManifest(): Promise<AuditResponse> {
     if (Object.keys(auditResponse.auditManifest).length > 0) {
       // Already loaded
-      console.log(auditResponse.auditManifest);
-      console.log("HERE ===========");
       return auditResponse;
     }
     setBusy(true);

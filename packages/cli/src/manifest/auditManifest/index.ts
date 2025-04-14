@@ -29,12 +29,12 @@ export interface FileAuditManifest {
 export type AuditManifest = Record<string, FileAuditManifest>;
 
 export function getNumberSeverityLevel(value: number, targetValue = 0): number {
-  if (value > targetValue * 1.1) {
-    return 1;
+  if (value > targetValue * 2) {
+    return 3;
   } else if (value > targetValue * 1.5) {
     return 2;
-  } else if (value > targetValue * 2) {
-    return 3;
+  } else if (value > targetValue * 1.1) {
+    return 1;
   } else {
     return 0;
   }
