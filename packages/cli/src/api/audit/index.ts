@@ -1,9 +1,12 @@
 import { Router } from "express";
 import { TelemetryEvents, trackEvent } from "../../telemetry";
 import z from "zod";
-import { getFileOverview } from "./file";
-import { getProjectOverview } from "./project";
 import { localConfigSchema } from "../../config/localConfig";
+import { generateAuditResponse } from "./service";
+import { DependencyManifest } from "../../manifest/dependencyManifest";
+import { AuditManifest } from "../../manifest/auditManifest";
+import path from "path";
+import fs from "fs";
 
 export function getAuditApi(
   workDir: string,
@@ -11,67 +14,40 @@ export function getAuditApi(
 ) {
   const auditApi = Router();
 
-  auditApi.get("/project", (_req, res) => {
+  let auditResponse: {
+    auditManifest: AuditManifest;
+    dependencyManifest: DependencyManifest;
+  };
+  try {
+    auditResponse = generateAuditResponse(workDir, napiConfig);
+    if (napiConfig.audit.manifestoJsonOutputPath) {
+      const outputPath = path.resolve(
+        workDir,
+        napiConfig.audit.manifestoJsonOutputPath,
+        "auditResponse.json",
+      );
+      fs.writeFileSync(outputPath, JSON.stringify(auditResponse, null, 2));
+    }
+  } catch (error) {
+    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
+      message: "Failed to generate audit response",
+      error: error,
+    });
+    throw error;
+  }
+
+  auditApi.get("/", (_req, res) => {
     const startTime = Date.now();
-    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
+    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
       message: "API request audit project started",
     });
 
-    try {
-      const projectOverviewResponse = getProjectOverview(workDir, napiConfig);
-      res.status(200).json(projectOverviewResponse);
+    res.status(200).json(auditResponse);
 
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
-        message: "API request audit project success",
-        duration: Date.now() - startTime,
-      });
-    } catch (error) {
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_PROJECT, {
-        message: "API request audit project failed",
-        duration: Date.now() - startTime,
-        error: error,
-      });
-      throw error;
-    }
-  });
-
-  auditApi.get("/file/:file", (req, res) => {
-    const startTime = Date.now();
-    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_FILE, {
-      message: "API request audit file started",
+    trackEvent(TelemetryEvents.API_REQUEST_AUDIT_VIEW, {
+      message: "API request audit project success",
+      duration: Date.now() - startTime,
     });
-
-    const schema = z.object({
-      file: z.string().nonempty("File name is required"),
-    });
-
-    const result = schema.safeParse(req.params);
-
-    if (!result.success) {
-      res.status(400).json(result.error.issues);
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_FILE, {
-        message: "API request audit file failed",
-        duration: Date.now() - startTime,
-      });
-      return;
-    }
-
-    try {
-      const scanResponse = getFileOverview(napiConfig, result.data.file);
-      res.status(200).json(scanResponse);
-
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_FILE, {
-        message: "API request audit file success",
-        duration: Date.now() - startTime,
-      });
-    } catch (error) {
-      trackEvent(TelemetryEvents.API_REQUEST_AUDIT_FILE, {
-        message: "API request audit file failed",
-        duration: Date.now() - startTime,
-        error: error,
-      });
-      throw error;
-    }
   });
 
   return auditApi;

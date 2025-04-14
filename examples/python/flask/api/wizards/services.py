@@ -1,5 +1,5 @@
+from api.data.hobbits import Hobbit, hobbits
 from api.wizards.data import Wizard, wizards
-
 
 class WizardService:
     def get_wizards(self):

@@ -1,5 +1,5 @@
 from flask import Flask
-from .api.wizards.views import wizards_bp
+from .api.wizards.views import get_wizzards_bp
 from api.views.elves import elves_bp
 from api.views.hobbits import hobbits_bp
 
@@ -21,7 +21,7 @@ def readiness():
     return {"status": "ok"}
 
 # @nanoapi path:/api/wizards
-app.register_blueprint(wizards_bp, url_prefix="/api/wizards")
+app.register_blueprint(get_wizzards_bp(), url_prefix="/api/wizards")
 
 # @nanoapi path:/api/elves
 app.register_blueprint(elves_bp, url_prefix="/api/elves")

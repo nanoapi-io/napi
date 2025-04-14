@@ -1,214 +1,175 @@
+import { useContext, useEffect, useRef, useState } from "react";
+import Controls from "../../components/Cytoscape/Controls";
+import { useNavigate, useOutletContext } from "react-router";
+import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton";
+import { Core, EventObjectNode } from "cytoscape";
+import cytoscape from "cytoscape";
+import fcose from "cytoscape-fcose";
+import layoutUtilities from "cytoscape-layout-utilities";
 import {
-  ReactFlow,
-  useNodesState,
-  useEdgesState,
-  Node,
-  Edge,
-  Background,
-  BackgroundVariant,
-  useReactFlow,
-  MarkerType,
-} from "@xyflow/react";
-import { AuditFile } from "../../service/api/types";
-import { useEffect, useState } from "react";
-import FileNode from "../../components/ReactFlow/AuditTree/FileNode";
-import { layoutNodesAndEdges } from "../../service/dagree";
-import Controls from "../../components/ReactFlow/Controls";
-import { useOutletContext } from "react-router";
-import { ReactFlowSkeleton } from "../../components/ReactFlow/Skeleton";
+  getCyElements,
+  layout,
+  getCyStyle,
+  NodeElementDefinition,
+} from "../../helpers/cytoscape/views/audit";
+import { ThemeContext } from "../../contexts/ThemeContext";
+import { AuditContext } from "../audit";
 
-export default function Audit() {
-  const context = useOutletContext<{
-    busy: boolean;
-    files: AuditFile[];
-    focusedPath: string | undefined;
-    onNodeFocus: (path: string) => void;
-    onNodeUnfocus: () => void;
-  }>();
+export default function AuditPage() {
+  const navigate = useNavigate();
+  const context = useOutletContext<AuditContext>();
 
-  const nodeTypes = {
-    fileNode: FileNode,
-  };
+  const themeContext = useContext(ThemeContext);
 
-  const reactFlow = useReactFlow();
-
-  const [nodes, setNodes, onNodesChange] = useNodesState<
-    Node<
-      AuditFile & {
-        isBeingDragged: boolean;
-        isFocused: boolean;
-      } & Record<string, unknown>
-    >
-  >([]);
-  const [edges, setEdges] = useEdgesState<Edge>([]);
-
-  const [direction, setDirection] = useState<"TB" | "LR">("TB");
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [busy, setBusy] = useState<boolean>(true);
+  const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
 
   useEffect(() => {
-    if (!context.busy) {
-      const element = document.querySelector(
-        ".react-flow__panel",
-      ) as HTMLElement;
-      if (element) {
-        element.style.display = "none";
-      }
+    setBusy(true);
+    // If we already have an instance, reinstantiate it
+    // This prevents some bugs with data not being updated
+    // when new file is selected
+    if (cyInstance) {
+      cyInstance.destroy();
+      setCyInstance(undefined);
     }
-  }, [context.busy]);
+
+    if (Object.values(context.auditResponse.dependencyManifest).length === 0) {
+      return;
+    }
+
+    cytoscape.use(fcose);
+    cytoscape.use(layoutUtilities);
+    const cy = cytoscape();
+
+    cy.mount(containerRef.current as Element);
+
+    const style = getCyStyle(themeContext.theme);
+    cy.style(style);
+
+    const elements = getCyElements(context.auditResponse);
+    cy.add(elements);
+
+    cy.layout(layout).run();
+
+    createCyListeners(cy);
+
+    setCyInstance(cy);
+
+    setBusy(false);
+
+    // Cleanup on unmount
+    return () => {
+      cy.destroy();
+      setCyInstance(undefined);
+    };
+  }, [context.auditResponse]);
 
   useEffect(() => {
-    computeNodesAndEdgesFromFiles(context.files);
-  }, [context.files]);
+    cyInstance?.style(getCyStyle(themeContext.theme));
+  }, [themeContext.changeTheme]);
 
   useEffect(() => {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === context.focusedPath
-          ? { ...n, data: { ...n.data, isFocused: true } }
-          : { ...n, data: { ...n.data, isFocused: false } },
-      ),
+    if (!cyInstance) return;
+
+    const cy = cyInstance;
+    const nodeToHighlight = cy.getElementById(
+      context.highlightedNodeId as string,
     );
-  }, [context.focusedPath]);
 
-  function computeNodesAndEdgesFromFiles(files: AuditFile[]) {
-    const newNodes: Node<
-      AuditFile & {
-        isBeingDragged: boolean;
-        isFocused: boolean;
-      } & Record<string, unknown>
-    >[] = [];
-    const newEdges: Edge[] = [];
+    cy.batch(() => {
+      // Clear previously applied classes quickly
+      cy.elements(".highlighted").removeClass(["highlighted"]);
 
-    files.forEach((file) => {
-      const node: Node<
-        AuditFile & {
-          isBeingDragged: boolean;
-          isFocused: boolean;
-        } & Record<string, unknown>
-      > = {
-        id: file.path,
-        position: { x: 0, y: 0 },
-        data: {
-          ...file,
-          isBeingDragged: false,
-          isFocused: false,
-        },
-        type: "fileNode",
-      };
-      newNodes.push(node);
+      if (!nodeToHighlight.empty()) {
+        // Apply classes for highlighting (no layout!)
+        nodeToHighlight.addClass("highlighted");
+      }
+    });
+  }, [context.highlightedNodeId, cyInstance]);
 
-      file.importSources.forEach((importSource) => {
-        const id = `${file.path}-${importSource}`;
-        if (newEdges.find((edge) => edge.id === id)) {
-          return;
-        }
-        newEdges.push({
-          id: `${file.path}-${importSource}`,
-          source: file.path,
-          target: importSource,
-          type: "straight",
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            width: 30,
-            height: 30,
-          },
-          animated: false,
-        });
-      });
+  function createCyListeners(cy: Core) {
+    // On tap to a node, display details of the node if relevant
+    cy.on("onetap", "node", (evt: EventObjectNode) => {
+      const node = evt.target;
+
+      const allElements = cy.elements();
+      const connectedNodes = node.closedNeighborhood().nodes().difference(node);
+      const dependencyEdges = node
+        .connectedEdges()
+        .filter((edge) => edge.source().id() === node.id());
+      const dependentEdges = node
+        .connectedEdges()
+        .filter((edge) => edge.target().id() === node.id());
+      const backgroundElements = cy
+        .elements()
+        .difference(node.closedNeighborhood());
+
+      const isAlreadySelected = node.hasClass("selected");
+
+      // remove all, clean state
+      allElements.removeClass([
+        "background",
+        "selected",
+        "connected",
+        "dependency",
+        "dependent",
+      ]);
+
+      if (isAlreadySelected) {
+        return;
+      }
+
+      // add background class to background elements
+      backgroundElements.addClass("background");
+      // add connected class to connected nodes
+      connectedNodes.addClass("connected");
+      // add dependency class to dependency edges
+      dependencyEdges.addClass("dependency");
+      // add dependent class to dependent edges
+      dependentEdges.addClass("dependent");
+      // add selected class to selected node
+      node.addClass("selected");
+
+      // layout the closed neighborhood
+      node.closedNeighborhood().layout(layout).run();
     });
 
-    const { nodes: layoutedNodes, edges: layoutedEdges } = layoutNodesAndEdges(
-      newNodes,
-      newEdges,
-      direction,
-    ) as {
-      nodes: Node<
-        AuditFile & {
-          isBeingDragged: boolean;
-          isFocused: boolean;
-        } & Record<string, unknown>
-      >[];
-      edges: Edge[];
-    };
+    // On double tap we redirect to file or instance view
+    cy.on("dbltap", "node", (evt: EventObjectNode) => {
+      const node = evt.target;
 
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
+      const data = node.data() as NodeElementDefinition["data"];
+
+      const urlEncodedFileName = encodeURIComponent(data.customData.fileName);
+      const url = `/audit/${urlEncodedFileName}`;
+
+      navigate(url);
+    });
+
+    return cy;
   }
 
-  function handleReposition(direction: "TB" | "LR") {
-    const { nodes: layoutedNodes, edges: layoutedEdges } = layoutNodesAndEdges(
-      nodes,
-      edges,
-      direction,
-    ) as {
-      nodes: Node<
-        AuditFile & {
-          isBeingDragged: boolean;
-          isFocused: boolean;
-        } & Record<string, unknown>
-      >[];
-      edges: Edge[];
-    };
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
-  }
-
-  function handleChangeDirection() {
-    const newDirection = direction === "TB" ? "LR" : "TB";
-    setDirection(newDirection);
-    handleReposition(newDirection);
-  }
-
-  function onNodeDragStart(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: true } }
-          : n,
-      ),
-    );
-  }
-
-  function onNodeDragStop(_event: React.MouseEvent, node: Node) {
-    setNodes((nds) =>
-      nds.map((n) =>
-        n.id === node.id
-          ? { ...n, data: { ...n.data, isBeingDragged: false } }
-          : n,
-      ),
-    );
-  }
-
-  function onNodeMouseEnter(_event: React.MouseEvent, node: Node) {
-    context.onNodeFocus(node.id);
-  }
-
-  function onNodeMouseLeave() {
-    context.onNodeUnfocus();
-  }
-
-  if (context.busy) {
-    return <ReactFlowSkeleton />;
+  function onLayout() {
+    if (cyInstance) {
+      cyInstance.makeLayout(layout).run();
+    }
   }
 
   return (
-    <ReactFlow
-      nodeTypes={nodeTypes}
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onNodeDragStart={onNodeDragStart}
-      onNodeDragStop={onNodeDragStop}
-      onNodeMouseEnter={onNodeMouseEnter}
-      onNodeMouseLeave={onNodeMouseLeave}
-      fitView
-    >
-      <Controls
-        busy={context.busy}
-        reactFlow={reactFlow}
-        onHandleReposition={() => handleReposition(direction)}
-        onHandleChangeDirection={handleChangeDirection}
-      />
-      <Background variant={BackgroundVariant.Dots} />
-    </ReactFlow>
+    <div className="relative w-full h-full">
+      {(context.busy || busy || !cyInstance) && <CytoscapeSkeleton />}
+
+      {cyInstance && (
+        <Controls
+          busy={context.busy || busy}
+          cy={cyInstance}
+          onLayout={onLayout}
+        />
+      )}
+
+      <div ref={containerRef} className="relative w-full h-full z-1" />
+    </div>
   );
 }

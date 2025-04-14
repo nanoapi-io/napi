@@ -7,7 +7,7 @@ class Elf:
         self.name = data.get("name")
 
 
-elves: list[Elf] = [
+elves = [
     {"id": 1, "name": "Legolas"},
     {"id": 2, "name": "Thranduil"},
     {"id": 3, "name": "Galadriel"},

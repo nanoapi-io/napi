@@ -7,7 +7,7 @@ class Hobbit:
         self.name = data.get("name")
 
 
-hobbits: list[Hobbit] = [
+hobbits = [
     {"id": 1, "name": "Frodo Baggins"},
     {"id": 2, "name": "Samwise Gamgee"},
     {"id": 3, "name": "Meriadoc Brandybuck"},

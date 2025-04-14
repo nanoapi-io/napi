@@ -1,34 +1,54 @@
 import { useEffect, useRef, useState } from "react";
-import { getProjectOverview } from "../service/api/auditApi";
-import { toast } from "react-toastify";
-import ReactFlowLayout from "../layout/ReactFlow";
-import FileExplorer from "../components/FileExplorer/FileExplorer";
-import { AuditFile } from "../service/api/types";
 import { Outlet } from "react-router";
+import { toast } from "react-toastify";
+import { getAudit } from "../service/auditApi";
+import GraphLayout from "../layout/GraphLayout";
+import FileExplorer, {
+  FileExplorerFile,
+} from "../components/FileExplorer/FileExplorer";
+import { AuditResponse } from "../service/auditApi/types";
 
-export default function BaseAudit() {
+export interface AuditContext {
+  busy: boolean;
+  auditResponse: AuditResponse;
+  highlightedNodeId: string | null;
+}
+
+export default function BaseAuditPage() {
   const initialized = useRef(false);
 
   const [busy, setBusy] = useState<boolean>(false);
 
-  const [files, setFiles] = useState<(AuditFile & { isFocused?: boolean })[]>(
-    [],
+  const [files, setFiles] = useState<FileExplorerFile[]>([]);
+  const [auditResponse, setAuditResponse] = useState<AuditResponse>({
+    dependencyManifest: {},
+    auditManifest: {},
+  });
+
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
+    null,
   );
 
   useEffect(() => {
     async function handleOnLoad() {
       setBusy(true);
       try {
-        const projectPromise = getProjectOverview();
-        toast.promise(projectPromise, {
+        const auditResponsePromise = getAudit();
+        toast.promise(auditResponsePromise, {
           success: "Successfully loaded project overview",
           error: "Failed to load project overview",
           pending: "Loading project overview...",
         });
 
-        const AuditFiles = (await projectPromise).files;
-
-        setFiles(AuditFiles);
+        const auditResponse = await auditResponsePromise;
+        const paths = Object.values(auditResponse.dependencyManifest).map(
+          (fileManifest) => ({
+            path: fileManifest.filePath,
+            symbols: Object.keys(fileManifest.symbols),
+          }),
+        );
+        setFiles(paths);
+        setAuditResponse(auditResponse);
       } finally {
         setBusy(false);
       }
@@ -40,27 +60,22 @@ export default function BaseAudit() {
     }
   }, []);
 
-  const [focusedPath, setFocusedPath] = useState<string | undefined>(undefined);
-
   return (
-    <ReactFlowLayout
+    <GraphLayout
       sideBarSlot={
         <FileExplorer
           busy={busy}
           files={files}
-          focusedId={focusedPath}
-          onNodeFocus={setFocusedPath}
-          onNodeUnfocus={() => setFocusedPath(undefined)}
+          highlightedNodeId={highlightedNodeId}
+          setHighlightedNodeId={setHighlightedNodeId}
         />
       }
-      chartSlot={
+      graphSlot={
         <Outlet
           context={{
             busy,
-            files,
-            focusedPath,
-            onNodeFocus: setFocusedPath,
-            onNodeUnfocus: () => setFocusedPath(undefined),
+            auditResponse,
+            highlightedNodeId,
           }}
         />
       }

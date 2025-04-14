@@ -1,7 +1,6 @@
 import { json, Router } from "express";
 import { z } from "zod";
 import { localConfigSchema } from "../config/localConfig";
-import { getSplitApi } from "./split";
 import { getAuditApi } from "./audit";
 
 declare module "express-serve-static-core" {
@@ -17,8 +16,6 @@ export function getApi(
   const api = Router();
 
   api.use(json());
-
-  api.use("/api/split", getSplitApi(workDir, napiConfig));
 
   api.use("/api/audit", getAuditApi(workDir, napiConfig));
 
