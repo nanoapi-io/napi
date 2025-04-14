@@ -3,8 +3,6 @@ import { CSharpProjectMapper, DotNetProject } from "../projectMapper";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
 import { CSharpUsingResolver, UsingDirective } from "../usingResolver";
 import { DependencyManifest } from "../../../manifest/dependencyManifest";
-import fs from "fs";
-import path from "path";
 
 /**
  * Represents an extracted file containing a symbol.
@@ -92,26 +90,14 @@ export class CSharpExtractor {
    * Saves the extracted file containing a symbol into the filesystem.
    * @param file - The extracted file to save.
    */
-  private saveFile(file: ExtractedFile) {
-    const subproject = file.subproject;
-    const csprojpath = subproject.csprojPath;
-    const projname = path.basename(csprojpath, path.extname(csprojpath));
-    const outputpath = path.join(subproject.rootFolder, ".extracted", projname);
-    const srcpath = path.join(outputpath, "src");
-    if (!fs.existsSync(outputpath)) {
-      fs.mkdirSync(outputpath, { recursive: true });
-      fs.mkdirSync(srcpath);
-    }
-    const destinationPath = path.join(outputpath, `${projname}.csproj`);
-    fs.copyFileSync(csprojpath, destinationPath);
-    const outputPath = path.join(srcpath, `${file.name}.cs`);
+  public getContent(file: ExtractedFile): string {
     const usingDirectives = file.imports
       .map((directive) => directive.node.text)
       .join("\n");
     const namespaceDirective =
       file.namespace !== "" ? `namespace ${file.namespace};` : "";
     const content = `${usingDirectives}\n${namespaceDirective}\n${file.symbol.node.text}\n`;
-    fs.writeFileSync(outputPath, content);
+    return content;
   }
 
   /**
@@ -158,17 +144,6 @@ export class CSharpExtractor {
   }
 
   /**
-   * Extracts a symbol and saves it to the filesystem.
-   * @param symbol - The symbol to extract and save.
-   */
-  public extractAndSaveSymbol(symbol: SymbolNode): void {
-    const extractedFiles = this.extractSymbol(symbol);
-    for (const file of extractedFiles) {
-      this.saveFile(file);
-    }
-  }
-
-  /**
    * Extracts a symbol by its name.
    * @param symbolName - The name of the symbol to extract.
    * @returns An array of extracted files or undefined if the symbol is not found.
@@ -182,21 +157,5 @@ export class CSharpExtractor {
       return this.extractSymbol(symbol);
     }
     return undefined;
-  }
-
-  /**
-   * Extract a symbol using its name and saves it to the filesystem.
-   * @param symbolName - The name of the symbol to extract and save.
-   */
-  public extractAndSaveSymbolByName(symbolName: string): void {
-    const symbol = this.nsMapper.findClassInTree(
-      this.nsMapper.nsTree,
-      symbolName,
-    );
-    if (symbol) {
-      this.extractAndSaveSymbol(symbol);
-    } else {
-      console.error(`Symbol ${symbolName} not found.`);
-    }
   }
 }
