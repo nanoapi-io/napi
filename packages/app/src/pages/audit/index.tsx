@@ -315,7 +315,6 @@ export default function AuditPage() {
       const focusElements = [node, ...connectedNodes];
 
       if (isAlreadySelected) {
-        console.log(viewType);
         if (viewTypeRef.current !== "default") {
           cy.nodes().forEach((node) => {
             node.style({
@@ -323,6 +322,10 @@ export default function AuditPage() {
                 tailwindConfig.theme.extend.colors.border[themeContext.theme],
               "background-color": node.data("x-audit-color"),
             });
+          });
+        } else {
+          cy.nodes().forEach((node) => {
+            node.removeStyle();
           });
         }
         return;
@@ -348,6 +351,11 @@ export default function AuditPage() {
             "background-color":
               tailwindConfig.theme.extend.colors.background[themeContext.theme],
           });
+        });
+      } else {
+        // change colors back to default
+        focusElements.forEach((element) => {
+          element.removeStyle();
         });
       }
 
