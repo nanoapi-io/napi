@@ -1,4 +1,5 @@
-import { Button } from "@radix-ui/themes";
+import { Button, DropdownMenu } from "@radix-ui/themes";
+import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
 import {
   MdFilterCenterFocus,
@@ -11,6 +12,8 @@ export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
+  nodeView?: string;
+  changeNodeView?: (viewType: string) => void;
 }) {
   function handleFit() {
     const elements = props.cy.elements();
@@ -28,6 +31,76 @@ export default function Controls(props: {
       level,
       renderedPosition,
     });
+  }
+
+  function updateUrlQueryParams(
+    key: string,
+    value: string | number | boolean | null,
+  ) {
+    const fullHash = window.location.hash; // e.g., "#/audit/file/blahId?oldParam=123"
+    const [path, queryString = ""] = fullHash.slice(1).split("?");
+
+    const searchParams = new URLSearchParams(queryString);
+    if (value === null) {
+      searchParams.delete(key);
+    } else {
+      searchParams.set(key, String(value));
+    }
+
+    const newHash = `#${path}?${searchParams.toString()}`;
+    window.history.replaceState(null, "", newHash);
+  }
+
+  function changeViewType(viewType: string) {
+    if (props.changeNodeView) {
+      props.changeNodeView(viewType);
+      updateUrlQueryParams("viewType", viewType);
+    }
+  }
+
+  function showNodeViewControls() {
+    if (props.nodeView && props.changeNodeView) {
+      const nodeView = props.nodeView;
+
+      return (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Button
+              size="1"
+              variant="ghost"
+              highContrast
+              disabled={props.busy}
+              className="py-1.5"
+            >
+              {nodeView === "linesOfCode"
+                ? "LoC"
+                : nodeView === "characters"
+                  ? "Chars"
+                  : nodeView === "dependencies"
+                    ? "Deps"
+                    : "default"}
+              <LuChevronUp />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content>
+            <DropdownMenu.Item onClick={() => changeViewType("default")}>
+              Default
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeViewType("linesOfCode")}>
+              Lines of Code
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeViewType("characters")}>
+              File Characters
+            </DropdownMenu.Item>
+            <DropdownMenu.Item onClick={() => changeViewType("dependencies")}>
+              Dependencies
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      );
+    } else {
+      return <></>;
+    }
   }
 
   return (
@@ -70,6 +143,7 @@ export default function Controls(props: {
           >
             <MdOutlineZoomIn className="text-2xl h-5 w-5" />
           </Button>
+          {showNodeViewControls()}
         </div>
       </div>
     </div>

@@ -45,7 +45,7 @@ jobs:
         run: npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
 
       - name: Run release-it
-        run: npm run release -- --ci --${{ github.event.inputs.release_type }}
+        run: npm run release -- ${{ github.event.inputs.release_type }} --ci
         env:
           GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

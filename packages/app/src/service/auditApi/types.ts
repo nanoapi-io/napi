@@ -117,6 +117,7 @@ export interface FileAuditManifest {
   warnings: AuditMessage[];
   errors: AuditMessage[];
   symbols: Record<string, SymbolAuditManifest>;
+  lookup: Record<string, AuditMessage[]>; // Allows direct lookup of specific warnings and errors
 }
 
 export type AuditManifest = Record<string, FileAuditManifest>;

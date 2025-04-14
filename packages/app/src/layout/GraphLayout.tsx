@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { Button } from "@radix-ui/themes";
 import { ThemeContext } from "../contexts/ThemeContext";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { MdLightMode, MdDarkMode, MdKeyboardArrowLeft } from "react-icons/md";
 
 export default function GraphLayout(props: {
@@ -9,10 +9,8 @@ export default function GraphLayout(props: {
   graphSlot: React.ReactNode;
 }) {
   const themeContext = useContext(ThemeContext);
-  const location = useLocation();
   const { file } = useParams();
   const isBaseAuditView = file === undefined;
-  console.log(location.pathname);
 
   return (
     <div className="h-screen grow flex gap-3 bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark px-4 py-3">
