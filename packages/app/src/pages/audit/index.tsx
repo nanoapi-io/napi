@@ -102,7 +102,9 @@ export default function AuditPage() {
   const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
 
   const viewTypeFromUrl = searchParams.get("viewType") as NodeViewType;
-  const [viewType, setViewType] = useState<NodeViewType>(viewTypeFromUrl || "default");
+  const [viewType, setViewType] = useState<NodeViewType>(
+    viewTypeFromUrl || "default",
+  );
   const viewTypeRef = useRef<NodeViewType>(viewType);
   viewTypeRef.current = viewType;
 
