@@ -71,7 +71,7 @@ export function generateAuditResponse(
     napiConfig,
   );
 
-  const auditManifest = generateAuditManifest(dependencyManifest);
+  const auditManifest = generateAuditManifest(dependencyManifest, napiConfig);
 
   return {
     dependencyManifest,
