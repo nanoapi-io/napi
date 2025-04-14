@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import Controls from "../../components/Cytoscape/Controls";
-import { useNavigate, useOutletContext } from "react-router";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router";
 import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton";
 import { Core, EventObjectNode } from "cytoscape";
 import cytoscape from "cytoscape";
@@ -92,6 +92,7 @@ function getInterpolatedSeverityColor(
 
 export default function AuditPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const context = useOutletContext<AuditContext>();
 
   const themeContext = useContext(ThemeContext);
@@ -99,7 +100,9 @@ export default function AuditPage() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState<boolean>(true);
   const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
-  const [viewType, setViewType] = useState<NodeViewType>("default");
+
+  const viewTypeFromUrl = searchParams.get("viewType") as NodeViewType;
+  const [viewType, setViewType] = useState<NodeViewType>(viewTypeFromUrl || "default");
   const viewTypeRef = useRef<NodeViewType>(viewType);
   viewTypeRef.current = viewType;
 
