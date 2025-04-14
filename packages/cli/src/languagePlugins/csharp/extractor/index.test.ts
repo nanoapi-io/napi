@@ -10,8 +10,8 @@ describe("CSharpExtractor", () => {
   for (const [filePath, { path, rootNode }] of parsedfiles) {
     files.set(filePath, { path, content: rootNode.text });
   }
-  for (const [filePath, content] of csprojFiles) {
-    files.set(filePath, { path: filePath, content });
+  for (const [filePath, { path, content }] of csprojFiles) {
+    files.set(filePath, { path, content });
   }
   const manifest = generateCSharpDependencyManifest(files);
   const extractor = new CSharpExtractor(parsedfiles, csprojFiles, manifest);
