@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+New release major release
+
 ## [0.0.32] - 2025-04-14
 
 New version of napi
