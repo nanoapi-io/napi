@@ -28,7 +28,7 @@ export class CSharpExtractor {
 
   constructor(
     parsedFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-    csprojFiles: Map<string, string>,
+    csprojFiles: Map<string, { path: string; content: string }>,
     manifest: DependencyManifest,
   ) {
     this.manifest = manifest;

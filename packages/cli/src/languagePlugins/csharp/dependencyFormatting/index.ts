@@ -113,7 +113,7 @@ export class CSharpDependencyFormatter {
    */
   constructor(
     parsedFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-    csprojFiles: Map<string, string>,
+    csprojFiles: Map<string, { path: string; content: string }>,
   ) {
     this.nsMapper = new CSharpNamespaceMapper(parsedFiles);
     this.projectMapper = new CSharpProjectMapper(csprojFiles);

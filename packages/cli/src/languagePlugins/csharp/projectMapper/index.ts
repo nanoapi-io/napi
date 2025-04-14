@@ -30,8 +30,10 @@ export class CSharpProjectMapper {
   rootFolder: string;
   subprojects: DotNetProject[];
 
-  constructor(csprojFiles: Map<string, string>) {
-    this.rootFolder = this.#getRootFolder(Array.from(csprojFiles.values()));
+  constructor(csprojFiles: Map<string, { path: string; content: string }>) {
+    this.rootFolder = this.#getRootFolder(
+      Array.from(csprojFiles.values()).map((csproj) => csproj.path),
+    );
     this.subprojects = this.#makeSubprojects(csprojFiles);
   }
 
@@ -40,13 +42,15 @@ export class CSharpProjectMapper {
    * @param dir - The directory to search in.
    * @returns An array of dotnet projects (path to project and csproj file).
    */
-  #makeSubprojects(csprojFiles: Map<string, string>): DotNetProject[] {
+  #makeSubprojects(
+    csprojFiles: Map<string, { path: string; content: string }>,
+  ): DotNetProject[] {
     const subprojects: DotNetProject[] = [];
     for (const [csprojPath, csprojContent] of csprojFiles) {
       const subproject: DotNetProject = {
         rootFolder: path.dirname(csprojPath),
         csprojPath,
-        csprojContent: csprojContent,
+        csprojContent: csprojContent.content,
         globalUsings: { internal: [], external: [] },
       };
       subprojects.push(subproject);

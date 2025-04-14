@@ -20,12 +20,12 @@ export function generateCSharpDependencyManifest(
     string,
     { path: string; rootNode: Parser.SyntaxNode }
   >();
-  const csprojFiles = new Map<string, string>();
+  const csprojFiles = new Map<string, { path: string; content: string }>();
 
   // Filter out csproj files
   for (const [filePath, { content: fileContent }] of files) {
     if (filePath.endsWith(".csproj")) {
-      csprojFiles.set(filePath, fileContent);
+      csprojFiles.set(filePath, { path: filePath, content: fileContent });
       files.delete(filePath);
     }
   }

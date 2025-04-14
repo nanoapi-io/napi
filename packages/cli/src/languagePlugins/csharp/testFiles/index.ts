@@ -9,7 +9,7 @@ const csharpFilesMap = new Map<
   string,
   { path: string; rootNode: Parser.SyntaxNode }
 >();
-const csprojFiles = new Map<string, string>();
+const csprojFiles = new Map<string, { path: string; content: string }>();
 
 /**
  * Recursively finds all C# files in the given directory and its subdirectories.
@@ -55,7 +55,7 @@ function findCsprojFiles(dir: string): void {
       }
     } else if (path.extname(fullPath) === ".csproj") {
       const content = fs.readFileSync(fullPath, "utf8");
-      csprojFiles.set(fullPath, content);
+      csprojFiles.set(fullPath, { path: fullPath, content: content });
     }
   });
 }
