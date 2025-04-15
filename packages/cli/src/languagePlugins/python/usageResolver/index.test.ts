@@ -184,9 +184,41 @@ def use_nested_function():
 import module_a
 
 def no_usage():
-    # No usage of module_a
+    # No module usage
     return "No module usage"
         `).rootNode,
+        },
+      ],
+      // Re-export test modules
+      [
+        "original.py",
+        {
+          path: "original.py",
+          rootNode: parser.parse(`
+def original_func():
+    return "Original function"
+          `).rootNode,
+        },
+      ],
+      [
+        "reexporter.py",
+        {
+          path: "reexporter.py",
+          rootNode: parser.parse(`
+from original import original_func
+          `).rootNode,
+        },
+      ],
+      [
+        "consumer.py",
+        {
+          path: "consumer.py",
+          rootNode: parser.parse(`
+from reexporter import original_func
+
+def consumer_func():
+    return original_func()
+          `).rootNode,
         },
       ],
     ]);
@@ -535,5 +567,62 @@ def no_usage():
       // Verify the module is tracked but no symbols are used
       expect(internalUsageMap.size).toBe(0);
     });
+  });
+
+  test("should track re-exporting modules", () => {
+    const targetFile = files.get("consumer.py") as {
+      path: string;
+      rootNode: Parser.SyntaxNode;
+    };
+    const importExtractor = new PythonImportExtractor(parser, files);
+    const importStatements = importExtractor.getImportStatements(
+      targetFile.path,
+    );
+    const exportExtractor = new PythonExportExtractor(parser, files);
+    const { symbols: originalSymbols } =
+      exportExtractor.getSymbols("original.py");
+    const moduleResolver = new PythonModuleResolver(files, "3.10");
+
+    const originalModule = moduleResolver.getModuleFromFilePath(
+      "original.py",
+    ) as PythonModule;
+    const reexporterModule = moduleResolver.getModuleFromFilePath(
+      "reexporter.py",
+    ) as PythonModule;
+
+    // Setup a map to collect results
+    const internalUsageMap = new Map<string, InternalUsage>();
+
+    const symbol = originalSymbols.find(
+      (s) => s.identifierNode.text === "original_func",
+    ) as PythonSymbol;
+
+    // Check for usage of original.py in consumer.py with reexporter.py as the re-exporting module
+    resolver.resolveInternalUsageForSymbol(
+      targetFile.rootNode,
+      importStatements.map((i) => i.node),
+      originalModule,
+      symbol,
+      symbol.identifierNode.text,
+      internalUsageMap,
+      reexporterModule,
+    );
+
+    // Verify results
+    expect(internalUsageMap.size).toBe(1);
+    expect(internalUsageMap.has(originalModule.path)).toBeTruthy();
+
+    // Check symbol tracking
+    const usage = internalUsageMap.get(originalModule.path);
+    expect(usage?.symbols.size).toBe(1);
+    expect(usage?.symbols.get(symbol.id)).toBe(symbol);
+
+    // Check re-exporting module tracking
+    expect(usage?.reExportingModules).toBeDefined();
+    expect(usage?.reExportingModules?.size).toBe(1);
+    expect(usage?.reExportingModules?.has(reexporterModule.path)).toBeTruthy();
+    expect(usage?.reExportingModules?.get(reexporterModule.path)).toBe(
+      reexporterModule,
+    );
   });
 });

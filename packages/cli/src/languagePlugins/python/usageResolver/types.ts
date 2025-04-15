@@ -10,6 +10,8 @@ export interface InternalUsage {
   module: PythonModule;
   /** Map of symbol IDs to their corresponding PythonSymbol objects that are used in the code */
   symbols: Map<string, PythonSymbol>;
+  /** Optional information about re-exporting modules (modules that re-export this module's symbols) */
+  reExportingModules?: Map<string, PythonModule>;
 }
 
 /**

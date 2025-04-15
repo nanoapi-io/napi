@@ -125,6 +125,9 @@ export interface ResolvedInternalSymbol extends ResolvedSymbol {
 
   /** The symbol definition */
   symbol: PythonSymbol;
+
+  /** Chain of modules that re-export this symbol */
+  reExportChain: PythonModule[];
 }
 
 /**

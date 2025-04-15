@@ -27,7 +27,6 @@ describe("generateCSharpDependencymanifest", () => {
   const usage = path.join(csharpFilesFolder, "Usage.cs");
 
   test("Correctly identifies files", () => {
-    console.log(Object.keys(manifest));
     expect(Object.keys(manifest).length).toBe(9);
   });
 

@@ -230,6 +230,13 @@ export class PythonDependencyResolver {
               if (internalResolvedModule.symbol) {
                 const internalResolvedSymbol =
                   internalResolvedModule as ResolvedInternalSymbol;
+
+                // Pass the immediate re-exporting module if it's different from the original module
+                const reExportingModule =
+                  internalResolvedSymbol.module.path !== sourceModule.path
+                    ? sourceModule
+                    : undefined;
+
                 this.usageResolver.resolveInternalUsageForSymbol(
                   node,
                   nodesToExclude,
@@ -237,7 +244,29 @@ export class PythonDependencyResolver {
                   internalResolvedSymbol.symbol,
                   item.aliasNode?.text || item.identifierNode.text,
                   internalUsageMap,
+                  reExportingModule,
                 );
+
+                // Add all modules in the re-export chain as dependencies
+                if (
+                  internalResolvedSymbol.reExportChain &&
+                  internalResolvedSymbol.reExportChain.length > 0
+                ) {
+                  for (const reExportModule of internalResolvedSymbol.reExportChain) {
+                    if (reExportModule.path !== sourceModule.path) {
+                      // Skip the immediate re-exporter (already handled)
+                      this.usageResolver.resolveInternalUsageForSymbol(
+                        node,
+                        nodesToExclude,
+                        internalResolvedSymbol.module, // Original module
+                        internalResolvedSymbol.symbol, // Original symbol
+                        item.aliasNode?.text || item.identifierNode.text,
+                        internalUsageMap,
+                        reExportModule, // Intermediate re-exporting module
+                      );
+                    }
+                  }
+                }
               } else {
                 this.usageResolver.resolveInternalUsageForModule(
                   node,
@@ -394,6 +423,24 @@ export class PythonDependencyResolver {
       }
 
       dependencies.set(modulePath, dependency);
+
+      // Add re-exporting modules as dependencies without symbols
+      if (usage.reExportingModules) {
+        for (const [
+          reExportingModulePath,
+          reExportingModule,
+        ] of usage.reExportingModules.entries()) {
+          if (!dependencies.has(reExportingModulePath)) {
+            dependencies.set(reExportingModulePath, {
+              id: reExportingModulePath,
+              isExternal: false,
+              isNamespaceModule:
+                reExportingModule.type === PYTHON_NAMESPACE_MODULE_TYPE,
+              symbols: new Set(), // Empty set since we don't need specific symbols
+            });
+          }
+        }
+      }
     }
 
     return dependencies;
