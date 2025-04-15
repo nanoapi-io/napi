@@ -32,9 +32,17 @@ import {
  * It handles both internal modules (analyzable within the project) and external
  * modules (from third-party or standard libraries). The resolver uses caching
  * to improve performance and to handle circular dependencies.
+ *
+ * This class ties together several components:
+ * - ExportExtractor to find symbols defined in modules
+ * - ImportExtractor to analyze import statements
+ * - ModuleResolver to locate modules within the project
  */
 export class PythonItemResolver {
-  // Cache for final symbol resolution results
+  /**
+   * Cache for final symbol resolution results
+   * Maps a moduleId:symbolName pair to its resolved item
+   */
   private resolutionCache = new Map<string, ResolvedItem | undefined>();
 
   /**
@@ -43,12 +51,27 @@ export class PythonItemResolver {
    * When a symbol resolution is in progress but not completed, we store
    * its partial result here. This prevents infinite recursion when modules
    * import each other in a circular fashion, which is allowed in Python.
+   *
+   * Maps a moduleId:symbolName pair to its in-progress resolved item
    */
   private recursiveCache = new Map<string, ResolvedItem | undefined>();
 
-  // Cache for all symbols in a module, used for wildcard imports
+  /**
+   * Cache for all symbols in a module, used for wildcard imports
+   * Maps a module path to a map of symbol names to resolved symbols
+   *
+   * This caches the complete set of symbols available in a module,
+   * including both directly defined symbols and imported symbols.
+   */
   private allSymbolsCache = new Map<string, Map<string, ResolvedSymbol>>();
 
+  /**
+   * Creates a new PythonItemResolver
+   *
+   * @param exportExtractor - Used to extract symbols defined in modules
+   * @param importExtractor - Used to analyze import statements
+   * @param moduleResolver - Used to resolve module references
+   */
   constructor(
     private exportExtractor: PythonExportExtractor,
     private importExtractor: PythonImportExtractor,

@@ -18,11 +18,45 @@ import {
  * Dependencies (assumed provided externally):
  *  - Tree-sitter parser for AST parsing.
  *  - A map of files with their paths and parsed AST root nodes.
+ *
+ * Usage example:
+ * ```typescript
+ * // Get import statements for a Python file
+ * const importStatements = importExtractor.getImportStatements(filePath);
+ * // Process them to understand imports and dependencies
+ * for (const stmt of importStatements) {
+ *   if (stmt.type === NORMAL_IMPORT_STATEMENT_TYPE) {
+ *     // Handle regular imports
+ *   } else {
+ *     // Handle from-imports
+ *   }
+ * }
+ * ```
  */
 export class PythonImportExtractor {
+  /**
+   * Map of file paths to their parsed AST root nodes
+   * Used to access file content for analysis
+   */
   private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+
+  /**
+   * Tree-sitter parser for Python code
+   * Used to parse import statements
+   */
   private parser: Parser;
+
+  /**
+   * Tree-sitter query to find import statements in Python code
+   * This identifies both normal imports and from-imports
+   */
   private importQuery: Parser.Query;
+
+  /**
+   * Cache for import statements
+   * Maps file paths to their parsed import statements
+   * Used to avoid reprocessing files already analyzed
+   */
   private cache = new Map<string, ImportStatement[]>();
 
   /**
