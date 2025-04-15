@@ -1,11 +1,12 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import Controls from "../../components/Cytoscape/Controls";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router";
-import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton";
 import { Core, EventObjectNode } from "cytoscape";
 import cytoscape from "cytoscape";
 import fcose from "cytoscape-fcose";
 import layoutUtilities from "cytoscape-layout-utilities";
+import Controls from "../../components/Cytoscape/Controls";
+import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton";
+import ActionMenu from "../../components/Cytoscape/ActionMenu";
 import {
   getCyElements,
   layout,
@@ -16,8 +17,11 @@ import { ThemeContext } from "../../contexts/ThemeContext";
 import { AuditContext } from "../audit";
 import { AuditMessage, AuditResponse } from "../../service/auditApi/types";
 import tailwindConfig from "../../../tailwind.config";
+import { DetailsPane } from "../../components/Cytoscape/DetailsPane";
 
 type NodeViewType = "default" | "linesOfCode" | "characters" | "dependencies";
+
+type NodeData = NodeElementDefinition["data"];
 
 // Interpolates between two colors
 function interpolateColor(color1: number[], color2: number[], factor: number) {
@@ -98,6 +102,17 @@ export default function AuditPage() {
   const viewTypeRef = useRef<NodeViewType>(viewType);
   viewTypeRef.current = viewType;
 
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [selectedNodeData, setSelectedNodeData] = useState<null | NodeData>(
+    null,
+  );
+
+  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
+
   useEffect(() => {
     setBusy(true);
     // If we already have an instance, reinstantiate it
@@ -153,10 +168,24 @@ export default function AuditPage() {
     );
 
     cy.batch(() => {
+      // Check if an element was previously highlighted
+      const previouslyHighlighted = cy.elements(".highlighted");
+      if (previouslyHighlighted.length > 0) {
+        previouslyHighlighted.removeClass("highlighted");
+        // Reapply styles
+        previouslyHighlighted.forEach((node) => {
+          node.style({
+            "background-color": node.data("x-audit-color"),
+          });
+        });
+      }
+
       // Clear previously applied classes quickly
       cy.elements(".highlighted").removeClass(["highlighted"]);
 
       if (!nodeToHighlight.empty()) {
+        // Remove other styles
+        nodeToHighlight.removeStyle();
         // Apply classes for highlighting (no layout!)
         nodeToHighlight.addClass("highlighted");
       }
@@ -207,7 +236,7 @@ export default function AuditPage() {
 
           // Apply colors for that type
           cy.nodes().forEach((node) => {
-            const data = node.data() as NodeElementDefinition["data"];
+            const data = node.data() as NodeData;
             const nodeAuditManifest = auditResponse.auditManifest[data.id];
             if (!nodeAuditManifest) {
               node.data("x-audit-color", "green");
@@ -279,8 +308,21 @@ export default function AuditPage() {
   }, [viewType, cyInstance]);
 
   function createCyListeners(cy: Core) {
+    // On tap to the background, remove the context menu
+    cy.on("onetap", () => {
+      if (contextMenuOpen) {
+        setContextMenuOpen(false);
+        setSelectedNodeData(null);
+      }
+    });
+
     // On tap to a node, display details of the node if relevant
     cy.on("onetap", "node", (evt: EventObjectNode) => {
+      if (contextMenuOpen) {
+        setContextMenuOpen(false);
+        setSelectedNodeData(null);
+      }
+
       const node = evt.target;
 
       const allElements = cy.elements();
@@ -304,7 +346,10 @@ export default function AuditPage() {
         "connected",
         "dependency",
         "dependent",
+        "highlighted",
       ]);
+      // Also unset the highlighted node
+      context.actions.setHighlightedNodeId(null);
 
       const focusElements = [node, ...connectedNodes];
 
@@ -361,12 +406,24 @@ export default function AuditPage() {
     cy.on("dbltap", "node", (evt: EventObjectNode) => {
       const node = evt.target;
 
-      const data = node.data() as NodeElementDefinition["data"];
+      const data = node.data() as NodeData;
 
       const urlEncodedFileName = encodeURIComponent(data.customData.fileName);
       const url = `/audit/${urlEncodedFileName}`;
 
       navigate(url);
+    });
+
+    // On right click, display the context menu
+    cy.on("cxttap", "node", (evt: EventObjectNode) => {
+      const node = evt.target;
+      const { x, y } = node.renderedPosition();
+
+      const data = node.data() as NodeData;
+
+      setContextMenuPosition({ x, y });
+      setContextMenuOpen(true);
+      setSelectedNodeData(data);
     });
 
     return cy;
@@ -392,6 +449,25 @@ export default function AuditPage() {
         />
       )}
 
+      <ActionMenu
+        x={contextMenuPosition.x}
+        y={contextMenuPosition.y}
+        nodeData={selectedNodeData}
+        open={contextMenuOpen}
+        onOpenChange={setContextMenuOpen}
+        showInSidebar={context.actions.showInSidebar}
+        setDetailsPaneOpen={setDetailsPaneOpen}
+      />
+
+      <DetailsPane
+        nodeData={selectedNodeData}
+        open={detailsPaneOpen}
+        setOpen={setDetailsPaneOpen}
+      />
+
+      {/* This is the container for Cytoscape */}
+      {/* It is important to set the width and height to 100% */}
+      {/* Otherwise, Cytoscape will not render correctly */}
       <div ref={containerRef} className="relative w-full h-full z-1" />
     </div>
   );

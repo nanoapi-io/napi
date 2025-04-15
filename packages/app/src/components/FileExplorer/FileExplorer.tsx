@@ -1,8 +1,14 @@
-import { Button, ScrollArea, TextField, Tooltip } from "@radix-ui/themes";
+import {
+  Button,
+  IconButton,
+  ScrollArea,
+  TextField,
+  Tooltip,
+} from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
-import { LuPackageSearch } from "react-icons/lu";
+import { LuPackageSearch, LuX } from "react-icons/lu";
 import languageIcon from "./languageIcons";
 import {
   MdSearch,
@@ -28,6 +34,10 @@ export interface FileExplorerFile {
 }
 
 export default function FileExplorer(props: {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  search: string;
+  setSearch: (search: string) => void;
   busy: boolean;
   files: FileExplorerFile[];
   context: {
@@ -37,9 +47,9 @@ export default function FileExplorer(props: {
     };
   };
 }) {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [search, setSearch] = useState<string>("");
   const [treeData, setTreeData] = useState<TreeData[]>([]);
+
+  const { isOpen, setIsOpen, search, setSearch } = props;
 
   function nodeMatchesSearch(name: string, symbols: string[]): boolean {
     return (
@@ -220,10 +230,22 @@ export default function FileExplorer(props: {
               className={`transition-all duration-300 overflow-hidden ${!isOpen && "w-0"}`}
             >
               <TextField.Slot>
-                <MdSearch className="h-8 w-8" />
+                <MdSearch className="h-6 w-6 my-auto" />
               </TextField.Slot>
+              {search.length > 0 && (
+                <TextField.Slot>
+                  <IconButton
+                    variant="ghost"
+                    size="1"
+                    className="text-text-light dark:text-text-dark"
+                    onClick={() => setSearch("")}
+                  >
+                    <LuX />
+                  </IconButton>
+                </TextField.Slot>
+              )}
             </TextField.Root>
-            <ScrollArea scrollbars="vertical">
+            <ScrollArea scrollbars="both">
               <ListElement
                 nodes={treeData}
                 search={search}
@@ -310,7 +332,7 @@ function NodeElement(props: {
               ) : (
                 <MdOutlineKeyboardArrowRight className="text-lg text-gray-light dark:text-gray-dark" />
               )}
-              <DisplayedPath node={props.node} />
+              <DisplayedPath node={props.node} search={props.search} />
             </div>
           </Button>
         ) : (
@@ -325,7 +347,7 @@ function NodeElement(props: {
                   >
                     <div className="flex space-x-2 items-center overflow-hidden">
                       {languageIcon(props.node.name.split(".").pop() || "txt")}
-                      <DisplayedPath node={props.node} />
+                      <DisplayedPath node={props.node} search={props.search} />
                     </div>
                   </Button>
                 </div>
@@ -365,7 +387,7 @@ function NodeElement(props: {
               >
                 <div className="w-full flex items-center space-x-2">
                   <MdSubdirectoryArrowRight className="text-gray-light dark:text-gray-dark" />
-                  <DisplayedPath node={props.node} />
+                  <DisplayedPath node={props.node} search={props.search} />
                 </div>
               </Button>
             )}
@@ -384,16 +406,34 @@ function NodeElement(props: {
   );
 }
 
-function DisplayedPath({ node }: { node: TreeData }) {
+function DisplayedPath({
+  node,
+  search = "",
+}: {
+  node: TreeData;
+  search: string;
+}) {
   const maxPathLength = 35 - 2 * node.level;
+  let foundInSearch = false;
+  if (search.length > 2) {
+    foundInSearch = node.name.toLowerCase().includes(search.toLowerCase());
+  }
 
   if (node.name.length > maxPathLength) {
     return (
       <Tooltip content={node.name}>
-        <div className="overflow-ellipsis">{`...${node.name.slice(-maxPathLength)}`}</div>
+        <div
+          className={`overflow-ellipsis ${foundInSearch ? "bg-yellow-400/40 px-1 rounded-md" : ""}`}
+        >{`...${node.name.slice(-maxPathLength)}`}</div>
       </Tooltip>
     );
   }
 
-  return <div>{node.name}</div>;
+  return (
+    <div
+      className={`${foundInSearch ? "bg-yellow-400/40 px-1 rounded-md" : ""}`}
+    >
+      {node.name}
+    </div>
+  );
 }
