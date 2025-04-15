@@ -124,6 +124,7 @@ export class PythonUsageResolver {
    * @param symbol - Symbol being checked for usage
    * @param lookupRef - Reference name to search for (often includes module alias)
    * @param internalUsageMap - Map to record usage information
+   * @param reExportingModule - Optional module that re-exports this symbol
    */
   public resolveInternalUsageForSymbol(
     /* The node to search for usage. eg a function or class */
@@ -138,6 +139,8 @@ export class PythonUsageResolver {
     lookupRef: string,
     /* Map of internal usage results, used for recursions */
     internalUsageMap: Map<string, InternalUsage>,
+    /* Optional module that re-exports this symbol */
+    reExportingModule?: PythonModule,
   ) {
     const usageNodes = this.getUsageNode(
       targetNode,
@@ -151,15 +154,30 @@ export class PythonUsageResolver {
         internalUsageMap.set(module.path, {
           module,
           symbols: new Map(),
+          reExportingModules: reExportingModule ? new Map() : undefined,
         });
       }
       const internalUsage = internalUsageMap.get(module.path) as {
         module: PythonModule;
         symbols: Map<string, PythonSymbol>;
+        reExportingModules?: Map<string, PythonModule>;
       };
 
       if (!internalUsage.symbols.has(symbol.id)) {
         internalUsage.symbols.set(symbol.id, symbol);
+      }
+
+      // Add re-exporting module as a dependency if provided
+      if (reExportingModule) {
+        if (!internalUsage.reExportingModules) {
+          internalUsage.reExportingModules = new Map();
+        }
+        if (!internalUsage.reExportingModules.has(reExportingModule.path)) {
+          internalUsage.reExportingModules.set(
+            reExportingModule.path,
+            reExportingModule,
+          );
+        }
       }
     }
   }

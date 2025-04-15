@@ -193,6 +193,24 @@ export class PythonItemResolver {
                   item.identifierNode.text,
                   visited,
                 );
+
+                // If we got a result and it's an internal symbol, track the re-export chain
+                if (
+                  lastExplicitImport &&
+                  lastExplicitImport.type === PYTHON_INTERNAL_MODULE_TYPE &&
+                  (lastExplicitImport as ResolvedInternalSymbol).symbol
+                ) {
+                  const resolvedSymbol =
+                    lastExplicitImport as ResolvedInternalSymbol;
+
+                  // Initialize or update the re-export chain
+                  if (!resolvedSymbol.reExportChain) {
+                    resolvedSymbol.reExportChain = [];
+                  }
+
+                  // Add this module to the re-export chain
+                  resolvedSymbol.reExportChain.push(sourceModule);
+                }
               } else {
                 // external module reference
                 lastExplicitImport = {
