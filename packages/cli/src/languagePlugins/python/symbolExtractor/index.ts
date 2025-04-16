@@ -1,313 +1,285 @@
 import Parser from "tree-sitter";
 import { PythonExportExtractor } from "../exportExtractor";
 import { PythonModuleResolver } from "../moduleResolver";
+import { PythonItemResolver } from "../itemResolver";
+import { PythonImportExtractor } from "../importExtractor";
+import { PythonUsageResolver } from "../usageResolver";
+import { DependencyManifest } from "../../../manifest/dependencyManifest";
+import { PythonSymbolType } from "../exportExtractor/types";
 import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode";
-import { FileDependencies } from "../dependencyResolver/types";
-import {
-  PYTHON_PACKAGE_MODULE_TYPE,
-  PythonModule,
-} from "../moduleResolver/types";
-import { PythonSymbol } from "../exportExtractor/types";
-import { SymbolToKeepMap } from "./types";
 
+/**
+ * Python Symbol Extractor
+ *
+ * This class extracts a Python symbol and all its dependencies from a project
+ * while preserving the original project structure.
+ */
 export class PythonSymbolExtractor {
-  private files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
-  private exportExtractor: PythonExportExtractor;
-  private moduleResolver: PythonModuleResolver;
-  private dependencyMap: Map<string, FileDependencies>;
+  private originalFiles: Map<
+    string,
+    { path: string; rootNode: Parser.SyntaxNode }
+  >;
   private parser: Parser;
-  private removeErrorQuery: Parser.Query;
+  private exportExtractor: PythonExportExtractor;
+  public importExtractor: PythonImportExtractor;
+  private moduleResolver: PythonModuleResolver;
+  public itemResolver: PythonItemResolver;
+  public usageResolver: PythonUsageResolver;
+  private dependencyManifest: DependencyManifest;
+  private errorNodeQuery: Parser.Query;
 
+  /**
+   * Creates a new Python Symbol Extractor
+   */
   constructor(
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-    exportExtractor: PythonExportExtractor,
-    moduleResolver: PythonModuleResolver,
-    dependencyMap: Map<string, FileDependencies>,
     parser: Parser,
+    originalFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    exportExtractor: PythonExportExtractor,
+    importExtractor: PythonImportExtractor,
+    moduleResolver: PythonModuleResolver,
+    itemResolver: PythonItemResolver,
+    usageResolver: PythonUsageResolver,
+    dependencyManifest: DependencyManifest,
   ) {
-    this.files = files;
-    this.exportExtractor = exportExtractor;
-    this.moduleResolver = moduleResolver;
-    this.dependencyMap = dependencyMap;
     this.parser = parser;
-    this.removeErrorQuery = new Parser.Query(
+    this.originalFiles = originalFiles;
+    this.exportExtractor = exportExtractor;
+    this.importExtractor = importExtractor;
+    this.moduleResolver = moduleResolver;
+    this.itemResolver = itemResolver;
+    this.usageResolver = usageResolver;
+    this.dependencyManifest = dependencyManifest;
+    this.errorNodeQuery = new Parser.Query(
       this.parser.getLanguage(),
       "(ERROR) @error",
     );
   }
 
-  private getSymbolsToKeep(
-    symbols: {
-      name: string;
-      type: string;
+  /**
+   * Extracts a symbol and all its dependencies from the project
+   *
+   * @param symbolsToExtract A list of symbols to extract
+   * @returns Symbol extraction result
+   */
+  public extractSymbol(
+    symbolsToExtract: {
       filePath: string;
+      symbols: { name: string; type: PythonSymbolType }[];
     }[],
   ) {
-    // Track files to extract and their required symbols
-    const filesToExtract = new Map<string, Set<string>>();
-
-    // Process each requested symbol
-    for (const symbolInfo of symbols) {
-      const { name, type, filePath } = symbolInfo;
-
-      // check if the file exists
-      const file = this.files.get(filePath);
-      if (!file) {
-        throw new Error(`File ${filePath} not found in files map`);
+    // 1. Create a map from the list
+    const symbolsMap = new Map<
+      string,
+      {
+        path: string;
+        symbolMap: Map<string, { name: string; type: PythonSymbolType }>;
       }
-      // check if the symbol exists
-      const symbol = this.exportExtractor
-        .getSymbols(filePath)
-        .symbols.find((s) => s.id === name && s.type === type);
-      if (!symbol) {
-        throw new Error(`Symbol ${name} not found in file ${filePath}`);
+    >();
+    for (const { filePath, symbols } of symbolsToExtract) {
+      symbolsMap.set(filePath, {
+        path: filePath,
+        symbolMap: new Map(symbols.map((symbol) => [symbol.name, symbol])),
+      });
+    }
+
+    // 2. Identify symbols to keep and their dependencies recursively
+    console.info("Finding dependencies for all symbols to extract...");
+    const filesToKeep = this.identifySymbolsAndDependencies(symbolsMap);
+
+    // 3. Extract all the symbols
+    console.info(`Extracting files in-memory...`);
+    const extractedFiles = this.extractFilesInMemory(filesToKeep);
+
+    // 4. Clean error nodes
+    console.info("Cleaning error nodes from files...");
+    this.cleanErrorNodes(extractedFiles);
+
+    // Return the extracted files
+    return extractedFiles;
+  }
+
+  /**
+   * Identifies symbols and their dependencies to keep
+   */
+  private identifySymbolsAndDependencies(
+    symbolsMap: Map<
+      string,
+      {
+        path: string;
+        symbolMap: Map<string, { name: string; type: PythonSymbolType }>;
       }
+    >,
+  ) {
+    const filesToKeep = new Map<
+      string,
+      {
+        path: string;
+        symbols: Set<string>;
+      }
+    >();
 
-      // Add the original symbol
-      this.addSymbolToExtract(filePath, name, filesToExtract);
+    symbolsMap.forEach(({ path, symbolMap }) => {
+      symbolMap.forEach((symbol) => {
+        this.addSymbolAndDependencies(path, symbol.name, filesToKeep);
+      });
+    });
 
-      if (!symbol) {
-        console.warn(`Symbol ${name} not found in ${filePath}`);
+    return filesToKeep;
+  }
+
+  private addSymbolAndDependencies(
+    filePath: string,
+    symbolName: string,
+    filesToKeep = new Map<
+      string,
+      {
+        path: string;
+        symbols: Set<string>;
+      }
+    >(),
+  ) {
+    // Add the symbol itself to the filesToKeep map
+    let fileToKeep = filesToKeep.get(filePath);
+    if (!fileToKeep) {
+      fileToKeep = {
+        path: filePath,
+        symbols: new Set(),
+      };
+    }
+    fileToKeep.symbols.add(symbolName);
+    filesToKeep.set(filePath, fileToKeep);
+
+    const fileManifest = this.dependencyManifest[filePath];
+    if (!fileManifest) {
+      throw new Error(`Could not find dependency file for ${filePath}`);
+    }
+
+    const symbolManifest = fileManifest.symbols[symbolName];
+    if (!symbolManifest) {
+      throw new Error(`Could not find symbol manifest for ${symbolName}`);
+    }
+
+    for (const dependency of Object.values(symbolManifest.dependencies)) {
+      // skip external dependencies
+      if (dependency.isExternal) {
         continue;
       }
 
-      // Include necessary __init__.py files
-      const module = this.moduleResolver.getModuleFromFilePath(filePath);
-      if (module) {
-        this.includeInitFiles(module, filesToExtract);
+      // add the file to the filesToKeep map
+      if (!filesToKeep.has(dependency.id)) {
+        filesToKeep.set(dependency.id, {
+          path: dependency.id,
+          symbols: new Set(),
+        });
       }
-
-      // Recursively collect all symbol dependencies
-      const visited = new Set<string>();
-      this.collectDependenciesRecursively(
-        filePath,
-        symbol,
-        filesToExtract,
-        visited,
-      );
-    }
-
-    // Filter out invalid files (those that were deleted)
-    const validFiles = new Map<string, Set<string>>();
-    filesToExtract.forEach((symbolSet, path) => {
-      if (this.files.get(path)) {
-        validFiles.set(path, symbolSet);
+      let fileToKeep = filesToKeep.get(dependency.id);
+      if (!fileToKeep) {
+        fileToKeep = {
+          path: dependency.id,
+          symbols: new Set(),
+        };
       }
-    });
-
-    // Format the result
-    const result: SymbolToKeepMap = {
-      files: new Map<string, { symbols: string[] }>(),
-    };
-
-    validFiles.forEach((symbols, path) => {
-      result.files.set(path, {
-        symbols: Array.from(symbols),
+      Object.values(dependency.symbols).forEach((depSymbol) => {
+        // add the symbol and its dependencies to the filesToKeep map
+        this.addSymbolAndDependencies(dependency.id, depSymbol, filesToKeep);
       });
-    });
-
-    return result;
-  }
-
-  private addSymbolToExtract(
-    filePath: string,
-    symbolName: string,
-    filesToExtract: Map<string, Set<string>>,
-  ): void {
-    if (!filesToExtract.has(filePath)) {
-      filesToExtract.set(filePath, new Set<string>());
-    }
-
-    if (symbolName) {
-      filesToExtract.get(filePath)?.add(symbolName);
-    }
-  }
-
-  private includeInitFiles(
-    module: PythonModule,
-    filesToExtract: Map<string, Set<string>>,
-  ): void {
-    // Walk up the module hierarchy and include all __init__.py files
-    let current: PythonModule | undefined = module;
-    while (current) {
-      if (current.type === PYTHON_PACKAGE_MODULE_TYPE) {
-        this.addSymbolToExtract(current.path, "", filesToExtract); // Empty string means include all symbols
-      }
-      current = current.parent;
-    }
-  }
-
-  private collectDependenciesRecursively(
-    filePath: string,
-    symbol: PythonSymbol,
-    filesToExtract: Map<string, Set<string>>,
-    visited: Set<string>,
-  ): void {
-    const depKey = `${filePath}:${symbol.id}`;
-
-    // Prevent circular dependencies
-    if (visited.has(depKey)) {
-      return;
-    }
-    visited.add(depKey);
-
-    try {
-      // Get dependencies for this symbol from the dependency map
-      const fileDependencies = this.dependencyMap.get(filePath);
-      if (!fileDependencies) {
-        console.warn(`No dependency information found for file: ${filePath}`);
-        return;
-      }
-
-      const symbolDep = fileDependencies.symbols.find(
-        (s) => s.id === symbol.id,
-      );
-
-      if (!symbolDep) {
-        return;
-      }
-
-      // Process each dependency
-      symbolDep.dependencies.forEach((dependency, depPath) => {
-        if (dependency.isExternal) {
-          // Skip external dependencies
-          return;
-        }
-
-        // Include necessary __init__.py files for this dependency
-        const depModule = this.moduleResolver.getModuleFromFilePath(depPath);
-        if (depModule) {
-          this.includeInitFiles(depModule, filesToExtract);
-        }
-
-        // Handle specific symbols used from this dependency
-        if (dependency.symbols.size > 0) {
-          dependency.symbols.forEach((_, symbolName) => {
-            this.addSymbolToExtract(depPath, symbolName, filesToExtract);
-
-            // Find the symbol definition to get its dependencies
-            const depExports = this.exportExtractor.getSymbols(depPath);
-            const depSymbol = depExports.symbols.find(
-              (s) => s.id === symbolName,
-            );
-
-            if (depSymbol) {
-              // Recursively process this symbol's dependencies
-              this.collectDependenciesRecursively(
-                depPath,
-                depSymbol,
-                filesToExtract,
-                visited,
-              );
-            }
-          });
-        } else {
-          // No specific symbols - include the whole file
-          this.addSymbolToExtract(depPath, "", filesToExtract);
-        }
-      });
-    } finally {
-      // Always clean up visited marker when done with this branch
-      visited.delete(depKey);
     }
   }
 
   /**
-   * Creates a minimized version of the project based on the extraction results.
-   *
-   * @param symbolToKeepMap The result of symbol extraction
-   * @returns Map of minimized files
+   * Extracts files in memory
    */
-  public extractSymbols(
-    symbols: {
-      name: string;
-      type: string;
-      filePath: string;
-    }[],
-  ) {
-    const symbolToKeepMap = this.getSymbolsToKeep(symbols);
-
-    const minimizedFiles = new Map<
+  private extractFilesInMemory(
+    filesToKeep: Map<
       string,
-      { path: string; rootNode: Parser.SyntaxNode }
-    >();
+      {
+        path: string;
+        symbols: Set<string>;
+      }
+    >,
+  ) {
+    const extractedFiles = new Map<string, { path: string; content: string }>();
 
-    // Process each file in the extraction result
-    for (const [filePath, fileInfo] of symbolToKeepMap.files.entries()) {
-      const symbols = this.exportExtractor.getSymbols(filePath);
-
-      const symbolsToRemove: PythonSymbol[] = [];
-      symbols.symbols.forEach((symbol) => {
-        if (!fileInfo.symbols.includes(symbol.id)) {
-          symbolsToRemove.push(symbol);
-        }
-      });
-
-      const existingFile = this.files.get(filePath);
-      if (!existingFile) {
-        throw new Error(`File ${filePath} not found in files map`);
+    // Process each file to keep
+    for (const [filePath, fileInfo] of filesToKeep.entries()) {
+      // Get the file from originalFiles using the exact file path
+      const file = this.originalFiles.get(filePath);
+      if (!file) {
+        throw new Error(`Could not find file ${filePath} for extraction`);
       }
 
-      let newRootNode = this.pruneSymbolsFromFile(
-        existingFile.rootNode,
-        symbolsToRemove,
+      // Get the full file content
+      const fileContent = file.rootNode.text;
+
+      // Get exported symbols
+      const exports = this.exportExtractor.getSymbols(filePath);
+
+      const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
+      for (const symbol of exports.symbols) {
+        if (!fileInfo.symbols.has(symbol.id)) {
+          const symbolNode = symbol.node;
+          indexesToRemove.push({
+            startIndex: symbolNode.startIndex,
+            endIndex: symbolNode.endIndex,
+          });
+        }
+      }
+
+      const cleanedContent = removeIndexesFromSourceCode(
+        fileContent,
+        indexesToRemove,
       );
 
-      newRootNode = this.removeErrorFromSource(newRootNode);
-
-      minimizedFiles.set(filePath, {
+      // Add the cleaned content to our extracted files
+      extractedFiles.set(filePath, {
         path: filePath,
-        rootNode: newRootNode,
+        content: cleanedContent,
       });
     }
 
-    return minimizedFiles;
+    return extractedFiles;
   }
 
   /**
-   * Removes symbols from a file's syntax tree
+   * Cleans error nodes from extracted files
    */
-  private pruneSymbolsFromFile(
-    rootNode: Parser.SyntaxNode,
-    symbolsToRemove: PythonSymbol[],
-  ) {
-    const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+  private cleanErrorNodes(
+    extractedFiles: Map<string, { path: string; content: string }>,
+  ): void {
+    for (const [filePath, fileData] of extractedFiles.entries()) {
+      // Parse the file content
+      const tree = this.parser.parse(fileData.content);
 
-    symbolsToRemove.forEach((symbol) => {
-      const { startIndex, endIndex } = symbol.node;
-      indexesToRemove.push({ startIndex, endIndex });
-    });
+      // Find error nodes
+      const matches = this.errorNodeQuery.matches(tree.rootNode);
 
-    const newSourceCode = removeIndexesFromSourceCode(
-      rootNode.text,
-      indexesToRemove,
-    );
+      // If there are error nodes, clean them by removing the content
+      if (matches.length > 0) {
+        console.warn(
+          `Found ${matches.length} error nodes in ${filePath}, cleaning...`,
+        );
 
-    const newRootNode = this.parser.parse(newSourceCode).rootNode;
+        // Sort matches by start position in descending order to avoid offset issues
+        matches.sort((a, b) => {
+          const nodeA = a.captures[0].node;
+          const nodeB = b.captures[0].node;
+          return nodeB.startIndex - nodeA.startIndex;
+        });
 
-    return newRootNode;
-  }
+        let cleanedContent = fileData.content;
 
-  /**
-   * Removes error nodes from source code
-   */
-  private removeErrorFromSource(rootNode: Parser.SyntaxNode) {
-    const captures = this.removeErrorQuery.captures(rootNode);
+        // Remove each error node
+        for (const match of matches) {
+          const errorNode = match.captures[0].node;
+          cleanedContent =
+            cleanedContent.substring(0, errorNode.startIndex) +
+            cleanedContent.substring(errorNode.endIndex);
+        }
 
-    const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
-
-    captures.forEach(({ node }) => {
-      const { startIndex, endIndex } = node;
-      indexesToRemove.push({ startIndex, endIndex });
-    });
-
-    const newSourceCode = removeIndexesFromSourceCode(
-      rootNode.text,
-      indexesToRemove,
-    );
-
-    const newRootNode = this.parser.parse(newSourceCode).rootNode;
-
-    return newRootNode;
+        // Update the file content
+        fileData.content = cleanedContent;
+      }
+    }
   }
 }
