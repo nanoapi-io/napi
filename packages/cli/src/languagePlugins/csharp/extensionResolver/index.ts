@@ -38,6 +38,10 @@ export interface ExtensionMethod {
    * The type of the extension method.
    */
   type: string;
+  /**
+   * The type that is being extended
+   */
+  extendedType: string;
 }
 
 /**
@@ -84,12 +88,20 @@ export class CSharpExtensionResolver {
       const methodName = methodNode.childForFieldName("name")?.text;
       const methodType =
         methodNode.childForFieldName("returns")?.text || "void";
+      const parameters = methodNode.childrenForFieldName("parameters");
+      let extendedType = "void";
+      parameters.forEach((param) => {
+        if (param.text.startsWith("this ")) {
+          extendedType = param.childForFieldName("type")?.text || "void";
+        }
+      });
       if (methodName) {
         extensions[methodName] = {
           node: methodNode,
           symbol: symbol,
           name: methodName,
           type: methodType,
+          extendedType: extendedType,
         };
       }
     }
