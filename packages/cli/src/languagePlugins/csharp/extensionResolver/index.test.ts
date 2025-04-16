@@ -7,7 +7,7 @@ describe("CSharpExtensionResolver", () => {
   const files = getCSharpFilesMap();
   const nsMapper = new CSharpNamespaceMapper(files);
   const extensionResolver = new CSharpExtensionResolver(nsMapper);
-  const extensions = extensionResolver.resolveExtensionMethodsInNamespaceTree();
+  const extensions = extensionResolver.getExtensions();
 
   test("should resolve extension methods in the project", () => {
     expect(Object.keys(extensions).length).toBe(1);

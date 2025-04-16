@@ -51,9 +51,19 @@ export type ExtensionMethodMap = Record<string, NamespaceExtensions>;
 
 export class CSharpExtensionResolver {
   private namespaceMapper: CSharpNamespaceMapper;
+  private extensions: ExtensionMethodMap = {};
 
   constructor(namespaceMapper: CSharpNamespaceMapper) {
     this.namespaceMapper = namespaceMapper;
+    this.resolveExtensionMethodsInNamespaceTree();
+  }
+
+  /**
+   * Returns the extensions found in the project.
+   * @returns A map of extension methods found in the project.
+   */
+  getExtensions(): ExtensionMethodMap {
+    return this.extensions;
   }
 
   /**
@@ -94,13 +104,14 @@ export class CSharpExtensionResolver {
    * Resolves extension methods in the namespace tree.
    * @returns A map of extension methods found in the project.
    */
-  public resolveExtensionMethodsInNamespaceTree(): ExtensionMethodMap {
-    const extensions: ExtensionMethodMap = {};
+  private resolveExtensionMethodsInNamespaceTree() {
+    this.extensions = {};
 
     const resolveExtensionsRecursively = (namespace: NamespaceNode) => {
       const extMethods = this.resolveExtensionMethodsInNamespace(namespace);
       if (Object.keys(extMethods).length > 0) {
-        extensions[this.namespaceMapper.getFullNSName(namespace)] = extMethods;
+        this.extensions[this.namespaceMapper.getFullNSName(namespace)] =
+          extMethods;
       }
       for (const childNamespace of namespace.childrenNamespaces) {
         resolveExtensionsRecursively(childNamespace);
@@ -108,6 +119,5 @@ export class CSharpExtensionResolver {
     };
 
     resolveExtensionsRecursively(this.namespaceMapper.nsTree);
-    return extensions;
   }
 }
