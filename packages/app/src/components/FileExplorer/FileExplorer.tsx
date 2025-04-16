@@ -6,9 +6,9 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router";
+import { useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton";
-import { LuPackageSearch, LuX } from "react-icons/lu";
+import { LuPanelRightOpen, LuX } from "react-icons/lu";
 import languageIcon from "./languageIcons";
 import {
   MdSearch,
@@ -34,22 +34,24 @@ export interface FileExplorerFile {
 }
 
 export default function FileExplorer(props: {
-  isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
-  search: string;
-  setSearch: (search: string) => void;
   busy: boolean;
   files: FileExplorerFile[];
   context: {
+    isOpen: boolean;
+    search: string;
     highlightedNodeId: string | null;
     actions: {
+      setIsOpen: (open: boolean) => void;
+      setSearch: (search: string) => void;
       setHighlightedNodeId: (node: string | null) => void;
+      setDetailNodeId: (node: string | null) => void;
     };
   };
 }) {
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
-  const { isOpen, setIsOpen, search, setSearch } = props;
+  const { isOpen, search } = props.context;
+  const { setIsOpen, setSearch, setDetailNodeId } = props.context.actions;
 
   function nodeMatchesSearch(name: string, symbols: string[]): boolean {
     return (
@@ -251,6 +253,7 @@ export default function FileExplorer(props: {
                 search={search}
                 hlNodeId={props.context.highlightedNodeId}
                 setHLNodeId={props.context.actions.setHighlightedNodeId}
+                setDetailNodeId={setDetailNodeId}
               />
             </ScrollArea>
           </>
@@ -265,6 +268,7 @@ function ListElement(props: {
   search: string;
   hlNodeId: string | null;
   setHLNodeId: (node: string | null) => void;
+  setDetailNodeId: (node: string | null) => void;
 }) {
   return (
     <ul>
@@ -276,6 +280,7 @@ function ListElement(props: {
             search={props.search}
             hlNodeId={props.hlNodeId}
             setHLNodeId={props.setHLNodeId}
+            setDetailNodeId={props.setDetailNodeId}
           />
         );
       })}
@@ -288,6 +293,7 @@ function NodeElement(props: {
   search: string;
   hlNodeId: string | null;
   setHLNodeId: (node: string | null) => void;
+  setDetailNodeId: (node: string | null) => void;
 }) {
   const params = useParams<{ file?: string }>();
 
@@ -352,32 +358,28 @@ function NodeElement(props: {
                   </Button>
                 </div>
                 <div className="flex space-x-2 items-center">
-                  <Button
-                    variant="ghost"
-                    className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
-                      isHighlighted
-                        ? "bg-focus-light dark:bg-focus-dark bg-opacity-20"
-                        : ""
-                    }`}
-                    onClick={() => toggleHighlight(props.node.id)}
-                  >
-                    <MdOutlineRemoveRedEye className="text-gray-light dark:text-gray-dark" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
-                  >
-                    <Link
-                      to={
-                        params.file === props.node.id
-                          ? "/audit"
-                          : encodeURIComponent(props.node.id)
-                      }
-                      className="w-full"
+                  <Tooltip content="Highlight this node">
+                    <Button
+                      variant="ghost"
+                      className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
+                        isHighlighted
+                          ? "bg-focus-light dark:bg-focus-dark bg-opacity-20"
+                          : ""
+                      }`}
+                      onClick={() => toggleHighlight(props.node.id)}
                     >
-                      <LuPackageSearch className="text-gray-light dark:text-gray-dark" />
-                    </Link>
-                  </Button>
+                      <MdOutlineRemoveRedEye className="text-gray-light dark:text-gray-dark" />
+                    </Button>
+                  </Tooltip>
+                  <Tooltip content="View details">
+                    <Button
+                      variant="ghost"
+                      className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
+                      onClick={() => props.setDetailNodeId(props.node.id)}
+                    >
+                      <LuPanelRightOpen className="text-gray-light dark:text-gray-dark" />
+                    </Button>
+                  </Tooltip>
                 </div>
               </div>
             ) : (
@@ -400,6 +402,7 @@ function NodeElement(props: {
           search={props.search}
           hlNodeId={props.hlNodeId}
           setHLNodeId={props.setHLNodeId}
+          setDetailNodeId={props.setDetailNodeId}
         />
       )}
     </li>

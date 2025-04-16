@@ -192,6 +192,23 @@ export default function AuditPage() {
     });
   }, [context.highlightedNodeId, cyInstance]);
 
+  // Set the detail node ID when the user selects a node in the sidebar
+  useEffect(() => {
+    if (!cyInstance) return;
+
+    if (!context.detailNodeId) {
+      setDetailsPaneOpen(false);
+      return;
+    }
+
+    const cy = cyInstance;
+    const detailNode = cy.getElementById(context.detailNodeId as string);
+
+    const data = detailNode.data() as NodeData;
+    setSelectedNodeData(data);
+    setDetailsPaneOpen(true);
+  }, [context.detailNodeId, cyInstance]);
+
   // Change the node view type, which will place colors on nodes based on
   // the selected view type
   useEffect(() => {

@@ -98,7 +98,11 @@ export default function ActionMenu(props: {
             <DropdownMenu.Separator />
             <DropdownMenu.Item
               className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark cursor-pointer"
-              onSelect={() => console.log("Delete", nodeData?.id)}
+              onSelect={() =>
+                alert(
+                  "This functionality is not yet implemented. Please check back soon.",
+                )
+              }
             >
               <div className="w-full flex justify-between space-x-2">
                 <span>Extract</span>
