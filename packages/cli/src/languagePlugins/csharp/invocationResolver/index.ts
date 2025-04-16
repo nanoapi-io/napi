@@ -229,8 +229,8 @@ export class CSharpInvocationResolver {
       // We also want the last part for extension methods
       const methodName = funcParts[funcParts.length - 1];
       // Check if the method is an extension method
-      const extMethod = this.#findExtension(methodName, filepath);
-      if (extMethod) {
+      const extMethods = this.#findExtension(methodName, filepath);
+      for (const extMethod of extMethods) {
         invocations.resolvedSymbols.push(extMethod.symbol);
         return;
       }
@@ -260,7 +260,8 @@ export class CSharpInvocationResolver {
    * @param ext - The extension method to find.
    * @returns The resolved symbol node or null if not found.
    */
-  #findExtension(ext: string, filepath: string): ExtensionMethod | null {
+  #findExtension(ext: string, filepath: string): ExtensionMethod[] {
+    const methods: ExtensionMethod[] = [];
     const usedNamespaces =
       this.usingResolver.resolveUsingDirectives(filepath).internal;
     // Check if the extension method is in the extensions map
@@ -271,12 +272,13 @@ export class CSharpInvocationResolver {
       ) {
         const extensions =
           this.extensions[this.nsMapper.getFullNSName(ns.namespace)];
-        if (extensions[ext]) {
-          return extensions[ext];
+        const extMethods = extensions.filter((method) => method.name === ext);
+        if (extMethods.length > 0) {
+          methods.push(...extMethods);
         }
       }
     }
-    return null;
+    return methods;
   }
 
   /**

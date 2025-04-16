@@ -45,17 +45,11 @@ export interface ExtensionMethod {
 }
 
 /**
- * Record for the extensions present in a namespace.
- * Key : name of the method.
- * Value : ExtensionMethod object of the method.
- */
-export type NamespaceExtensions = Record<string, ExtensionMethod>;
-/**
  * Record for all extensions in the project.
  * Key : name of a namespace that has extensions.
  * Value : the extensions of said namespace.
  */
-export type ExtensionMethodMap = Record<string, NamespaceExtensions>;
+export type ExtensionMethodMap = Record<string, ExtensionMethod[]>;
 
 export class CSharpExtensionResolver {
   private namespaceMapper: CSharpNamespaceMapper;
@@ -79,8 +73,8 @@ export class CSharpExtensionResolver {
    * @param symbol - the symbol to analyse.
    * @returns A map of extension methods found in the file.
    */
-  private resolveExtensionMethods(symbol: SymbolNode): NamespaceExtensions {
-    const extensions: NamespaceExtensions = {};
+  private resolveExtensionMethods(symbol: SymbolNode): ExtensionMethod[] {
+    const extensions: ExtensionMethod[] = [];
     const extensionMethods = extensionMethodQuery.captures(symbol.node);
     for (const ext of extensionMethods) {
       if (ext.name === "mod") continue;
@@ -96,13 +90,13 @@ export class CSharpExtensionResolver {
         }
       });
       if (methodName) {
-        extensions[methodName] = {
+        extensions.push({
           node: methodNode,
           symbol: symbol,
           name: methodName,
           type: methodType,
           extendedType: extendedType,
-        };
+        });
       }
     }
     return extensions;
@@ -115,8 +109,8 @@ export class CSharpExtensionResolver {
    */
   private resolveExtensionMethodsInNamespace(
     namespace: NamespaceNode,
-  ): NamespaceExtensions {
-    const extensions: NamespaceExtensions = {};
+  ): ExtensionMethod[] {
+    const extensions: ExtensionMethod[] = [];
     for (const symbol of namespace.exports) {
       const extMethods = this.resolveExtensionMethods(symbol);
       Object.assign(extensions, extMethods);
