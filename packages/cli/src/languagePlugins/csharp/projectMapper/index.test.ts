@@ -27,7 +27,6 @@ describe("CSharpProjectMapper", () => {
     csharpFilesFolder,
     "Subfolder/GlobalUsings.cs",
   );
-  console.log(projectMapper.subprojects);
   test("Global using resolution", () => {
     usingResolver.resolveUsingDirectives(usagecsFile);
     usingResolver.resolveUsingDirectives(globalusingcsFile);
