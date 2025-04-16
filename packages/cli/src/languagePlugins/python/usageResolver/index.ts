@@ -7,6 +7,13 @@
  *
  * The implementation uses Tree-sitter for parsing Python code into an Abstract Syntax Tree (AST),
  * then traverses the AST to find references to modules and symbols.
+ *
+ * Key features:
+ * - Tracks usage of internal modules (within the project)
+ * - Tracks usage of external modules (from standard library or third-party)
+ * - Distinguishes between module imports and symbol imports
+ * - Handles aliased imports correctly
+ * - Detects re-exports of imported symbols
  */
 import {
   PYTHON_NAMESPACE_MODULE_TYPE,
@@ -20,10 +27,29 @@ import { ExternalUsage, InternalUsage } from "./types";
 /**
  * UsageResolver analyzes Python code to identify module and symbol references.
  * It tracks which imported modules and symbols are actually used within a file.
+ *
+ * This class provides essential information for:
+ * - Dependency analysis (what modules depend on what)
+ * - Dead code detection (which imports are unused)
+ * - Refactoring safety (understanding the impact of changes)
  */
 export class PythonUsageResolver {
+  /**
+   * Tree-sitter parser for Python code
+   * Used to parse and analyze Python ASTs
+   */
   private parser: Parser;
+
+  /**
+   * Export extractor for retrieving symbols from modules
+   * Used to get the symbols defined in each module
+   */
   private exportExtractor: PythonExportExtractor;
+
+  /**
+   * Tree-sitter query for finding identifiers and attributes in code
+   * Used to locate references to modules and symbols
+   */
   private query: Parser.Query;
 
   /**
@@ -124,6 +150,7 @@ export class PythonUsageResolver {
    * @param symbol - Symbol being checked for usage
    * @param lookupRef - Reference name to search for (often includes module alias)
    * @param internalUsageMap - Map to record usage information
+   * @param reExportingModule - Optional module that re-exports this symbol
    */
   public resolveInternalUsageForSymbol(
     /* The node to search for usage. eg a function or class */
@@ -138,6 +165,8 @@ export class PythonUsageResolver {
     lookupRef: string,
     /* Map of internal usage results, used for recursions */
     internalUsageMap: Map<string, InternalUsage>,
+    /* Optional module that re-exports this symbol */
+    reExportingModule?: PythonModule,
   ) {
     const usageNodes = this.getUsageNode(
       targetNode,
@@ -151,15 +180,30 @@ export class PythonUsageResolver {
         internalUsageMap.set(module.path, {
           module,
           symbols: new Map(),
+          reExportingModules: reExportingModule ? new Map() : undefined,
         });
       }
       const internalUsage = internalUsageMap.get(module.path) as {
         module: PythonModule;
         symbols: Map<string, PythonSymbol>;
+        reExportingModules?: Map<string, PythonModule>;
       };
 
       if (!internalUsage.symbols.has(symbol.id)) {
         internalUsage.symbols.set(symbol.id, symbol);
+      }
+
+      // Add re-exporting module as a dependency if provided
+      if (reExportingModule) {
+        if (!internalUsage.reExportingModules) {
+          internalUsage.reExportingModules = new Map();
+        }
+        if (!internalUsage.reExportingModules.has(reExportingModule.path)) {
+          internalUsage.reExportingModules.set(
+            reExportingModule.path,
+            reExportingModule,
+          );
+        }
       }
     }
   }

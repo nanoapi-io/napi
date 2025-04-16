@@ -30,20 +30,35 @@ export class PythonModuleResolver {
   /**
    * The root PythonModule representing the top-level namespace of the project.
    * This module serves as the entry point for traversing the module tree.
+   *
+   * All project modules will be children or descendants of this root module.
    */
   public pythonModule: PythonModule;
+
   /**
    * Set containing standard library module names for faster lookups.
+   *
+   * Used to quickly identify imports from the Python standard library versus
+   * project modules or third-party dependencies.
    */
   private stdModuleSet: Set<string>;
+
   /**
    * Cache that maps file paths to their corresponding resolved PythonModule objects.
    * This improves performance by avoiding redundant resolution for frequently accessed modules.
+   *
+   * Key: filesystem path of the module
+   * Value: resolved PythonModule object
    */
   private modulePathCache: Map<string, PythonModule>;
+
   /**
    * Cache that maps import strings to their resolved module within a specific context.
    * Format: `${currentModule.fullName}:${importString}` → resolvedModule
+   *
+   * This caches the results of import resolution to avoid redundant lookups,
+   * taking into account both the module being imported and the context from which
+   * it's being imported (for handling relative imports correctly).
    */
   private importResolutionCache: Map<string, PythonModule | undefined>;
 
@@ -106,7 +121,7 @@ export class PythonModuleResolver {
    * - Builds or reuses intermediate namespace modules corresponding to directories.
    * - Sets the final module's type and full file path.
    *
-   * @returns The root PythonModule representing the project’s top-level namespace.
+   * @returns The root PythonModule representing the project's top-level namespace.
    */
   private buildModuleMap(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,

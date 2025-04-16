@@ -11,6 +11,11 @@ export interface NodeElementDefinition extends ElementDefinition {
     "x-audit-color"?: string;
     customData: {
       fileName: string;
+      loc: number;
+      dependencies: number;
+      totalSymbols: number;
+      errors: string[];
+      warnings: string[];
       expanded: {
         label: string;
         width: number;
@@ -78,6 +83,11 @@ export function getCyElements(auditResponse: AuditResponse) {
         position: { x, y },
         customData: {
           fileName: fileManifest.id,
+          loc: fileManifest.lineCount,
+          dependencies: Object.keys(fileManifest.dependencies).length,
+          totalSymbols: Object.keys(fileManifest.symbols).length,
+          errors: errorMessages,
+          warnings: warningMessages,
           expanded: {
             label: expandedLabel,
             width: expandedWitdh,
@@ -166,8 +176,11 @@ export function getCyStyle(theme: "light" | "dark") {
     {
       selector: "node.highlighted",
       style: {
-        "background-color": "yellow",
+        "background-color": tailwindConfig.theme.extend.colors.secondary.dark,
         "z-index": 1000,
+        width: 50,
+        height: 50,
+        "corner-radius": "100%",
       },
     },
     {
