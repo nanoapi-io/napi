@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router";
 import { Callout } from "@radix-ui/themes";
 import {
   LuX,
@@ -5,6 +6,7 @@ import {
   LuMessageSquareX,
   LuCircleAlert,
   LuCircleX,
+  LuSearchCode,
 } from "react-icons/lu";
 import { NodeElementDefinition } from "../../helpers/cytoscape/views/audit";
 
@@ -13,8 +15,22 @@ export function DetailsPane(props: {
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
+  const navigate = useNavigate();
+
   const { nodeData, setOpen } = props;
   const file = nodeData?.customData.fileName;
+
+  const navigateToFile = () => {
+    if (nodeData?.customData.fileName) {
+      const urlEncodedFileName = encodeURIComponent(
+        nodeData.customData.fileName,
+      );
+      const url = `/audit/${urlEncodedFileName}`;
+
+      navigate(url);
+      setOpen(false);
+    }
+  };
 
   const onClose = () => {
     setOpen(false);
@@ -50,7 +66,7 @@ export function DetailsPane(props: {
 
         <div className="w-full border-b border-b-border-light dark:border-b-border-dark"></div>
 
-        <div className="mt-6 flex flex-col space-y-5">
+        <div className="mt-6 h-full flex flex-col space-y-5">
           <p>
             <strong>Total Lines of Code:</strong> {nodeData?.customData.loc}
           </p>
@@ -108,6 +124,16 @@ export function DetailsPane(props: {
               </Callout.Root>
             ))}
           </div>
+        </div>
+
+        <div className="absolute bottom-6 right-6 w-[350px]">
+          <button
+            onClick={navigateToFile}
+            className="w-full px-4 py-2 flex justify-center space-x-2 bg-primary-light dark:bg-primary-dark text-white rounded-lg hover:bg-primary-dark dark:hover:bg-primary-light transition-colors duration-300"
+          >
+            <LuSearchCode className="text-xl my-auto" />{" "}
+            <span className="my-auto">Inspect file interactions</span>
+          </button>
         </div>
       </div>
     </>

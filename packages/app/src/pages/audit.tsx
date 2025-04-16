@@ -12,10 +12,12 @@ export interface AuditContext {
   busy: boolean;
   auditResponse: AuditResponse;
   highlightedNodeId: string | null;
+  detailNodeId: string | null;
   actions: {
     setHighlightedNodeId: (nodeId: string | null) => void;
     getAuditManifest: () => Promise<AuditResponse>;
     showInSidebar: (filename: string) => void;
+    setDetailNodeId: (nodeId: string | null) => void;
   };
 }
 
@@ -35,6 +37,7 @@ export default function BaseAuditPage() {
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null,
   );
+  const [detailNodeId, setDetailNodeId] = useState<string | null>(null);
 
   async function getAuditManifest(): Promise<AuditResponse> {
     if (Object.keys(auditResponse.auditManifest).length > 0) {
@@ -98,15 +101,16 @@ export default function BaseAuditPage() {
     <GraphLayout
       sideBarSlot={
         <FileExplorer
-          isOpen={sidebarOpen}
-          setIsOpen={setSidebarOpen}
-          search={sidebarSearch}
-          setSearch={setSidebarSearch}
           busy={busy}
           files={files}
           context={{
+            isOpen: sidebarOpen,
+            search: sidebarSearch,
             highlightedNodeId,
             actions: {
+              setIsOpen: setSidebarOpen,
+              setSearch: setSidebarSearch,
+              setDetailNodeId,
               setHighlightedNodeId,
             },
           }}
@@ -118,10 +122,12 @@ export default function BaseAuditPage() {
             busy,
             auditResponse,
             highlightedNodeId,
+            detailNodeId,
             actions: {
               setHighlightedNodeId,
               getAuditManifest,
               showInSidebar,
+              setDetailNodeId,
             },
           }}
         />
