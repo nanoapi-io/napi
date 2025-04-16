@@ -8,6 +8,11 @@ import {
 import { csharpParser } from "../../../helpers/treeSitter/parsers";
 import { CSharpUsingResolver, ResolvedImports } from "../usingResolver";
 import { CSharpProjectMapper } from "../projectMapper";
+import {
+  CSharpExtensionResolver,
+  ExtensionMethod,
+  ExtensionMethodMap,
+} from "../extensionResolver";
 
 /**
  * Query to identify variable names in the file
@@ -90,6 +95,7 @@ export class CSharpInvocationResolver {
   parser: Parser = csharpParser;
   public nsMapper: CSharpNamespaceMapper;
   private usingResolver: CSharpUsingResolver;
+  private extensions: ExtensionMethodMap = {};
   private resolvedImports: ResolvedImports;
   private cache: Map<string, Invocations> = new Map<string, Invocations>();
 
@@ -103,6 +109,7 @@ export class CSharpInvocationResolver {
       internal: [],
       external: [],
     };
+    this.extensions = new CSharpExtensionResolver(nsMapper).getExtensions();
   }
 
   /**
@@ -216,9 +223,17 @@ export class CSharpInvocationResolver {
       // They get through the net because their type is invocation_expression.
       if (func.includes("(")) return;
       // The query gives us a full invocation,
-      // but we only want a class or namespace name.
+      // but we only want a class or namespace name for the called class.
       const funcParts = func.split(".");
       const classname = funcParts.slice(0, -1).join(".");
+      // We also want the last part for extension methods
+      const methodName = funcParts[funcParts.length - 1];
+      // Check if the method is an extension method
+      const extMethod = this.#findExtension(methodName, filepath);
+      if (extMethod) {
+        invocations.resolvedSymbols.push(extMethod.symbol);
+        return;
+      }
       // If the function is called from a variable, then we ignore it.
       // (Because the dependency will already be managed by the variable creation)
       if (variablenames.includes(classname)) {
@@ -237,6 +252,31 @@ export class CSharpInvocationResolver {
       }
     });
     return invocations;
+  }
+
+  /**
+   * Finds an extension among the available extension methods.
+   * The available extension methods are only in used namespaces.
+   * @param ext - The extension method to find.
+   * @returns The resolved symbol node or null if not found.
+   */
+  #findExtension(ext: string, filepath: string): ExtensionMethod | null {
+    const usedNamespaces =
+      this.usingResolver.resolveUsingDirectives(filepath).internal;
+    // Check if the extension method is in the extensions map
+    for (const ns of usedNamespaces) {
+      if (
+        ns.namespace &&
+        this.extensions[this.nsMapper.getFullNSName(ns.namespace)]
+      ) {
+        const extensions =
+          this.extensions[this.nsMapper.getFullNSName(ns.namespace)];
+        if (extensions[ext]) {
+          return extensions[ext];
+        }
+      }
+    }
+    return null;
   }
 
   /**

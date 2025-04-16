@@ -5,6 +5,7 @@ import {
   LOCAL_USING,
   USING_ALIAS,
   USING_STATIC,
+  USING_CURRENT,
 } from ".";
 import { CSharpNamespaceMapper } from "../namespaceMapper";
 import {
@@ -76,6 +77,14 @@ describe("UsingResolver", () => {
           alias: "Valve",
           namespace: {
             name: "HalfNamespace",
+            exports: expect.any(Array),
+            childrenNamespaces: expect.any(Array),
+          },
+        },
+        {
+          usingtype: USING_CURRENT,
+          namespace: {
+            name: "",
             exports: expect.any(Array),
             childrenNamespaces: expect.any(Array),
           },
