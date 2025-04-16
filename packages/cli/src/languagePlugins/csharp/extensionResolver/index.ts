@@ -89,6 +89,11 @@ export class CSharpExtensionResolver {
     return extensions;
   }
 
+  /**
+   * Resolves extension methods in a namespace.
+   * @param namespace - The namespace to analyze.
+   * @returns A map of extension methods found in the namespace.
+   */
   private resolveExtensionMethodsInNamespace(
     namespace: NamespaceNode,
   ): NamespaceExtensions {
