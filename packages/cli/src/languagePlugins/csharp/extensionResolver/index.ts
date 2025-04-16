@@ -34,6 +34,10 @@ export interface ExtensionMethod {
    * The name of the extension method.
    */
   name: string;
+  /**
+   * The type of the extension method.
+   */
+  type: string;
 }
 
 /**
@@ -78,11 +82,14 @@ export class CSharpExtensionResolver {
       if (ext.name === "mod") continue;
       const methodNode = ext.node;
       const methodName = methodNode.childForFieldName("name")?.text;
+      const methodType =
+        methodNode.childForFieldName("returns")?.text || "void";
       if (methodName) {
         extensions[methodName] = {
           node: methodNode,
           symbol: symbol,
           name: methodName,
+          type: methodType,
         };
       }
     }
