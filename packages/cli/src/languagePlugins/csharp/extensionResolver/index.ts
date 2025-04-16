@@ -61,7 +61,7 @@ export class CSharpExtensionResolver {
    * @param symbol - the symbol to analyse.
    * @returns A map of extension methods found in the file.
    */
-  public resolveExtensionMethods(symbol: SymbolNode): NamespaceExtensions {
+  private resolveExtensionMethods(symbol: SymbolNode): NamespaceExtensions {
     const extensions: NamespaceExtensions = {};
     const extensionMethods = extensionMethodQuery.captures(symbol.node);
     for (const ext of extensionMethods) {
@@ -79,7 +79,7 @@ export class CSharpExtensionResolver {
     return extensions;
   }
 
-  public resolveExtensionMethodsInNamespace(
+  private resolveExtensionMethodsInNamespace(
     namespace: NamespaceNode,
   ): NamespaceExtensions {
     const extensions: NamespaceExtensions = {};
