@@ -133,4 +133,27 @@ describe("UsingResolver", () => {
       namespace: "MyApp.Models",
     });
   });
+
+  test("Current namespace resolution", () => {
+    const filepath = path.join(csharpFilesFolder, "Models.cs");
+    const imports = resolver.resolveUsingDirectives(filepath).internal;
+    expect(imports).toMatchObject([
+      {
+        usingtype: USING_CURRENT,
+        namespace: {
+          name: "Models",
+          exports: expect.any(Array),
+          childrenNamespaces: expect.any(Array),
+        },
+      },
+      {
+        usingtype: USING_CURRENT,
+        namespace: {
+          name: "",
+          exports: expect.any(Array),
+          childrenNamespaces: expect.any(Array),
+        },
+      },
+    ]);
+  });
 });
