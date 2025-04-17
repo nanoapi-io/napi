@@ -8,7 +8,6 @@ import { PythonImportExtractor } from "../importExtractor";
 import { PythonUsageResolver } from "../usageResolver";
 import { DependencyManifest } from "../../../manifest/dependencyManifest";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
-import { PYTHON_CLASS_TYPE, PythonSymbolType } from "../exportExtractor/types";
 import { localConfigSchema } from "../../../config/localConfig";
 import z from "zod";
 import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python";
@@ -128,14 +127,15 @@ class Helper:
 
     const symbolExtractor = createSymbolExtractor(files);
 
-    const symbolsToExtract = [
-      {
-        filePath: "main.py",
-        symbols: [
-          { name: "MyClass", type: PYTHON_CLASS_TYPE as PythonSymbolType },
-        ],
-      },
-    ];
+    const symbolsToExtract = new Map([
+      [
+        "main.py",
+        {
+          filePath: "main.py",
+          symbols: new Set(["MyClass"]),
+        },
+      ],
+    ]);
 
     const result = symbolExtractor.extractSymbol(symbolsToExtract);
 
@@ -287,14 +287,15 @@ class Repository:
 
     const symbolExtractor = createSymbolExtractor(files);
 
-    const symbolsToExtract = [
-      {
-        filePath: "app.py",
-        symbols: [
-          { name: "Application", type: PYTHON_CLASS_TYPE as PythonSymbolType },
-        ],
-      },
-    ];
+    const symbolsToExtract = new Map([
+      [
+        "app.py",
+        {
+          filePath: "app.py",
+          symbols: new Set(["Application"]),
+        },
+      ],
+    ]);
 
     const result = symbolExtractor.extractSymbol(symbolsToExtract);
 
