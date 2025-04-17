@@ -1,4 +1,3 @@
-import Parser from "tree-sitter";
 import { sep } from "path";
 import pythonStdLib from "../../../scripts/generate_python_stdlib_list/output.json";
 import {
@@ -36,6 +35,11 @@ export class PythonModuleResolver {
   public pythonModule: PythonModule;
 
   /**
+   * The version of Python being used (only major).
+   */
+  public pythonVersion: string;
+
+  /**
    * Set containing standard library module names for faster lookups.
    *
    * Used to quickly identify imports from the Python standard library versus
@@ -69,11 +73,9 @@ export class PythonModuleResolver {
    *                containing its file system path and its parsed syntax tree.
    * @param pythonVersion - The version of Python being used (only major).
    */
-  constructor(
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-    pythonVersion: string,
-  ) {
-    this.pythonModule = this.buildModuleMap(files);
+  constructor(filePaths: Set<string>, pythonVersion: string) {
+    this.pythonModule = this.buildModuleMap(filePaths);
+    this.pythonVersion = pythonVersion;
     this.stdModuleSet = this.getPythonStdModules(pythonVersion);
     // Initialize empty caches
     this.modulePathCache = new Map();
@@ -123,9 +125,7 @@ export class PythonModuleResolver {
    *
    * @returns The root PythonModule representing the project's top-level namespace.
    */
-  private buildModuleMap(
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-  ): PythonModule {
+  private buildModuleMap(filePaths: Set<string>): PythonModule {
     const root: PythonModule = {
       name: "",
       fullName: "",
@@ -135,9 +135,9 @@ export class PythonModuleResolver {
       parent: undefined,
     };
 
-    files.forEach((file) => {
+    filePaths.forEach((filePath) => {
       // Split the file path into directories and file name.
-      const parts = file.path.split(sep);
+      const parts = filePath.split(sep);
 
       // Default to a normal module unless it is an __init__.py file.
       let endModuleType: PythonModuleType = PYTHON_MODULE_TYPE;
@@ -180,7 +180,7 @@ export class PythonModuleResolver {
 
       // Update the final module with the correct type and its original file path.
       currentModule.type = endModuleType;
-      currentModule.path = file.path;
+      currentModule.path = filePath;
     });
 
     return root;

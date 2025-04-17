@@ -4,8 +4,12 @@ import { PythonModuleResolver } from "../moduleResolver";
 import { PythonItemResolver } from "../itemResolver";
 import { PythonImportExtractor } from "../importExtractor";
 import { PythonUsageResolver } from "../usageResolver";
-import { DependencyManifest } from "../../../manifest/dependencyManifest";
+import { DependencyManifest } from "../../../manifest/dependencyManifest/types";
 import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode";
+import {
+  FROM_IMPORT_STATEMENT_TYPE,
+  NORMAL_IMPORT_STATEMENT_TYPE,
+} from "../importExtractor/types";
 
 /**
  * Python Symbol Extractor
@@ -69,15 +73,23 @@ export class PythonSymbolExtractor {
       }
     >,
   ) {
-    // 2. Identify symbols to keep and their dependencies recursively
+    // 1. Identify symbols to keep and their dependencies recursively
     console.info("Finding dependencies for all symbols to extract...");
     const symbolsToKeep = this.identifySymbolsAndDependencies(symbolsMap);
 
-    // 3. Extract all the symbols
+    // 2. Extract all the symbols
     console.info(`Extracting files in-memory...`);
     const extractedFiles = this.extractFilesInMemory(symbolsToKeep);
 
-    // 4. Clean error nodes
+    // 3. Clean error nodes
+    console.info("Cleaning error nodes from files...");
+    this.cleanErrorNodes(extractedFiles);
+
+    // 4. Remove invalid imports.
+    console.info("Removing invalid imports...");
+    this.removeInvalidImports(extractedFiles);
+
+    // 5. Clean error nodes
     console.info("Cleaning error nodes from files...");
     this.cleanErrorNodes(extractedFiles);
 
@@ -266,6 +278,210 @@ export class PythonSymbolExtractor {
 
         // Update the file content
         fileData.content = cleanedContent;
+      }
+    }
+  }
+
+  /**
+   * Removes invalid imports from the extracted files
+   * Invalid imports are those that used to resolve to internal symbols or modules
+   * but no longer do after extraction.
+   */
+  private removeInvalidImports(
+    extractedFiles: Map<string, { path: string; content: string }>,
+  ) {
+    const extractedParsedFiles = new Map<
+      string,
+      { path: string; rootNode: Parser.SyntaxNode }
+    >();
+    for (const { path, content } of extractedFiles.values()) {
+      const tree = this.parser.parse(content, undefined, {
+        bufferSize: content.length + 10,
+      });
+      extractedParsedFiles.set(path, { path, rootNode: tree.rootNode });
+    }
+
+    const extractedExportExtractor = new PythonExportExtractor(
+      this.parser,
+      extractedParsedFiles,
+    );
+    const extractedFilesImportExtractor = new PythonImportExtractor(
+      this.parser,
+      extractedParsedFiles,
+    );
+    const extractedFilesModuleResolver = new PythonModuleResolver(
+      new Set(extractedParsedFiles.keys()),
+      this.moduleResolver.pythonVersion,
+    );
+    const extractedFilesItemResolver = new PythonItemResolver(
+      extractedExportExtractor,
+      extractedFilesImportExtractor,
+      extractedFilesModuleResolver,
+    );
+
+    for (const { path, content } of extractedFiles.values()) {
+      // Get all imports in the file
+      const importStatements = this.importExtractor.getImportStatements(path);
+
+      const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
+      // Check each import statement to see if it's still valid
+      for (const importStatement of importStatements) {
+        if (importStatement.type === NORMAL_IMPORT_STATEMENT_TYPE) {
+          const indexesToRemoveForImport: {
+            startIndex: number;
+            endIndex: number;
+          }[] = [];
+          // Handle normal imports (import foo, import foo.bar)
+          for (const member of importStatement.members) {
+            // resolve the module from the original file
+            const originalFileModule =
+              this.moduleResolver.getModuleFromFilePath(path);
+            const resolvedOriginalModule = this.moduleResolver.resolveModule(
+              originalFileModule,
+              member.identifierNode.text,
+            );
+
+            if (!resolvedOriginalModule) {
+              // If the module doesn't resolve, it's an external module
+              // and we don't need to remove it
+              continue;
+            }
+
+            // resolve the module from the extracted file
+            const extractedFileModule =
+              extractedFilesModuleResolver.getModuleFromFilePath(path);
+            const resolvedExtractedFileModule =
+              extractedFilesModuleResolver.resolveModule(
+                extractedFileModule,
+                member.identifierNode.text,
+              );
+
+            if (!resolvedExtractedFileModule) {
+              // the module does not resolve anymore, we remove it
+              indexesToRemoveForImport.push({
+                startIndex: importStatement.node.startIndex,
+                endIndex: importStatement.node.endIndex,
+              });
+              continue;
+            }
+          }
+
+          if (indexesToRemoveForImport.length > 0) {
+            if (
+              indexesToRemoveForImport.length === importStatement.members.length
+            ) {
+              // remove the whole import
+              indexesToRemove.push({
+                startIndex: importStatement.node.startIndex,
+                endIndex: importStatement.node.endIndex,
+              });
+            } else {
+              // remove the members that are not kept
+              indexesToRemove.push(...indexesToRemoveForImport);
+            }
+          }
+        } else if (importStatement.type === FROM_IMPORT_STATEMENT_TYPE) {
+          // Handle from imports (from foo import bar)
+          const member = importStatement.members[0];
+
+          const originalFileModule =
+            this.moduleResolver.getModuleFromFilePath(path);
+          const resolvedOriginalModule = this.moduleResolver.resolveModule(
+            originalFileModule,
+            member.identifierNode.text,
+          );
+
+          // If the module doesn't resolve in the original files, it's external - keep it
+          if (!resolvedOriginalModule) {
+            continue;
+          }
+
+          // Check if the module can be resolved in the extracted files
+          const extractedFileModule =
+            extractedFilesModuleResolver.getModuleFromFilePath(path);
+          const resolvedExtractedModule =
+            extractedFilesModuleResolver.resolveModule(
+              extractedFileModule,
+              member.identifierNode.text,
+            );
+
+          // If the module doesn't resolve anymore, remove the entire import
+          if (!resolvedExtractedModule) {
+            indexesToRemove.push({
+              startIndex: importStatement.node.startIndex,
+              endIndex: importStatement.node.endIndex,
+            });
+            continue;
+          }
+
+          // if the module resolve we need to check each item in the import
+          if (member.isWildcardImport) {
+            // if wildcard, we skip it
+            continue;
+          }
+
+          // if the member is not a wildcard, we need to check if each items
+          const indexesToRemoveForImport: {
+            startIndex: number;
+            endIndex: number;
+          }[] = [];
+
+          if (!member.items) {
+            throw new Error(
+              `Could not find items for import ${member.identifierNode.text} in ${path}`,
+            );
+          }
+
+          for (const item of member.items) {
+            // resolve the item from the original file
+            const originalItem = this.itemResolver.resolveItem(
+              resolvedOriginalModule,
+              item.identifierNode.text,
+            );
+
+            if (!originalItem) {
+              // if the item doesn't resolve in the original file, it's external - keep it
+              continue;
+            }
+
+            const extractedItem = extractedFilesItemResolver.resolveItem(
+              resolvedExtractedModule,
+              item.identifierNode.text,
+            );
+
+            if (!extractedItem) {
+              // if the item doesn't resolve we need to remove it
+              indexesToRemoveForImport.push({
+                startIndex: importStatement.node.startIndex,
+                endIndex: importStatement.node.endIndex,
+              });
+            }
+          }
+
+          if (indexesToRemoveForImport.length > 0) {
+            if (indexesToRemoveForImport.length === member.items.length) {
+              // remove the whole import
+              indexesToRemove.push({
+                startIndex: importStatement.node.startIndex,
+                endIndex: importStatement.node.endIndex,
+              });
+            } else {
+              // remove the items that are not kept
+              indexesToRemove.push(...indexesToRemoveForImport);
+            }
+          }
+        }
+      }
+
+      // Remove the invalid imports from the file content
+      if (indexesToRemove.length > 0) {
+        const newContent = removeIndexesFromSourceCode(
+          content,
+          indexesToRemove,
+        );
+        // Update the file in the map
+        extractedFiles.set(path, { path, content: newContent });
       }
     }
   }

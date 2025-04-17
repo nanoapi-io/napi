@@ -1,5 +1,5 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
-import { AuditResponse } from "../../../service/auditApi/types";
+import { AuditResponse } from "../../../service/api/types/auditManifest";
 import tailwindConfig from "../../../../tailwind.config";
 import { FcoseLayoutOptions } from "cytoscape-fcose";
 

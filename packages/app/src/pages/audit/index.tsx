@@ -14,10 +14,10 @@ import {
   NodeElementDefinition,
 } from "../../helpers/cytoscape/views/audit";
 import { ThemeContext } from "../../contexts/ThemeContext";
-import { AuditContext } from "../audit";
-import { AuditMessage, AuditResponse } from "../../service/auditApi/types";
+import { AuditContext } from "./base";
 import tailwindConfig from "../../../tailwind.config";
 import { DetailsPane } from "../../components/Cytoscape/DetailsPane";
+import { AuditMessage } from "../../service/api/types/auditManifest";
 
 type NodeViewType = "default" | "linesOfCode" | "characters" | "dependencies";
 
@@ -123,10 +123,6 @@ export default function AuditPage() {
       setCyInstance(undefined);
     }
 
-    if (Object.values(context.auditResponse.dependencyManifest).length === 0) {
-      return;
-    }
-
     cytoscape.use(fcose);
     cytoscape.use(layoutUtilities);
     const cy = cytoscape();
@@ -136,7 +132,10 @@ export default function AuditPage() {
     const style = getCyStyle(themeContext.theme);
     cy.style(style);
 
-    const elements = getCyElements(context.auditResponse);
+    const elements = getCyElements(
+      context.dependencyManifest,
+      context.auditManifest,
+    );
     cy.add(elements);
 
     cy.layout(layout).run();
@@ -152,11 +151,13 @@ export default function AuditPage() {
       cy.destroy();
       setCyInstance(undefined);
     };
-  }, [context.auditResponse]);
+  }, [context.dependencyManifest, context.auditManifest]);
 
   useEffect(() => {
-    cyInstance?.style(getCyStyle(themeContext.theme));
-  }, [themeContext.changeTheme]);
+    if (!cyInstance) return;
+
+    cyInstance.style(getCyStyle(themeContext.theme));
+  }, [themeContext.theme]);
 
   // Highlight the node when the user selects it in the sidebar
   useEffect(() => {
@@ -214,48 +215,58 @@ export default function AuditPage() {
   useEffect(() => {
     if (!cyInstance) return;
 
-    context.actions
-      .getAuditManifest()
-      .then((auditResponse: AuditResponse) => {
-        const cy = cyInstance;
-        cy.batch(() => {
-          // Clear previously applied classes quickly
-          cy.elements().removeClass([
-            "highlighted",
-            "background",
-            "selected",
-            "connected",
-            "dependency",
-            "dependent",
-            "linesOfCode",
-            "characters",
-            "dependencies",
-          ]);
-          context.actions.setHighlightedNodeId(null);
+    cyInstance.batch(() => {
+      // Clear previously applied classes quickly
+      cyInstance
+        .elements()
+        .removeClass([
+          "highlighted",
+          "background",
+          "selected",
+          "connected",
+          "dependency",
+          "dependent",
+          "linesOfCode",
+          "characters",
+          "dependencies",
+        ]);
+      context.actions.setHighlightedNodeId(null);
 
-          // If the view type is default, we don't need to do anything else
-          if (viewType === "default") {
-            // Clear the audit colors and reset the background color
-            cy.nodes().forEach((node) => {
-              node.data("x-audit-color", "");
-              node.style({
-                "background-color":
-                  tailwindConfig.theme.extend.colors.primary[
-                    themeContext.theme
-                  ],
-              });
-            });
-            return;
-          }
+      // If the view type is default, we don't need to do anything else
+      if (viewType === "default") {
+        // Clear the audit colors and reset the background color
+        cyInstance.nodes().forEach((node) => {
+          node.data("x-audit-color", "");
+          node.style({
+            "background-color":
+              tailwindConfig.theme.extend.colors.primary[themeContext.theme],
+          });
+        });
+        return;
+      }
 
-          // Otherwise, apply classes for highlighting (no layout!)
-          cy.nodes().addClass(viewType);
+      // Otherwise, apply classes for highlighting (no layout!)
+      cyInstance.nodes().addClass(viewType);
 
-          // Apply colors for that type
-          cy.nodes().forEach((node) => {
-            const data = node.data() as NodeData;
-            const nodeAuditManifest = auditResponse.auditManifest[data.id];
-            if (!nodeAuditManifest) {
+      // Apply colors for that type
+      cyInstance.nodes().forEach((node) => {
+        const data = node.data() as NodeData;
+        const nodeAuditManifest = context.auditManifest[data.id];
+        if (!nodeAuditManifest) {
+          node.data("x-audit-color", "green");
+          node.style({
+            "background-color": "green",
+          });
+          return;
+        }
+
+        let value: string;
+        let target: string;
+        let auditError: AuditMessage | undefined;
+        switch (viewType) {
+          case "linesOfCode":
+            auditError = nodeAuditManifest.lookup.targetMaxLineInFile[0];
+            if (!auditError) {
               node.data("x-audit-color", "green");
               node.style({
                 "background-color": "green",
@@ -263,65 +274,47 @@ export default function AuditPage() {
               return;
             }
 
-            let value: string;
-            let target: string;
-            let auditError: AuditMessage | undefined;
-            switch (viewType) {
-              case "linesOfCode":
-                auditError = nodeAuditManifest.lookup.targetMaxLineInFile[0];
-                if (!auditError) {
-                  node.data("x-audit-color", "green");
-                  node.style({
-                    "background-color": "green",
-                  });
-                  return;
-                }
-
-                value = nodeAuditManifest.lookup.targetMaxLineInFile[0].value;
-                target = nodeAuditManifest.lookup.targetMaxLineInFile[0].target;
-                break;
-              case "characters":
-                auditError = nodeAuditManifest.lookup.targetMaxCharInFile[0];
-                if (!auditError) {
-                  node.data("x-audit-color", "green");
-                  node.style({
-                    "background-color": "green",
-                  });
-                  return;
-                }
-
-                value = nodeAuditManifest.lookup.targetMaxCharInFile[0].value;
-                target = nodeAuditManifest.lookup.targetMaxCharInFile[0].target;
-                break;
-              case "dependencies":
-                auditError = nodeAuditManifest.lookup.targetMaxDepPerFile[0];
-                if (!auditError) {
-                  node.data("x-audit-color", "green");
-                  node.style({
-                    "background-color": "green",
-                  });
-                  return;
-                }
-
-                value = nodeAuditManifest.lookup.targetMaxDepPerFile[0].value;
-                target = nodeAuditManifest.lookup.targetMaxDepPerFile[0].target;
-                break;
-              default:
-                console.error("Unknown view type: ", viewType);
-                return;
+            value = nodeAuditManifest.lookup.targetMaxLineInFile[0].value;
+            target = nodeAuditManifest.lookup.targetMaxLineInFile[0].target;
+            break;
+          case "characters":
+            auditError = nodeAuditManifest.lookup.targetMaxCharInFile[0];
+            if (!auditError) {
+              node.data("x-audit-color", "green");
+              node.style({
+                "background-color": "green",
+              });
+              return;
             }
 
-            const color = getInterpolatedSeverityColor(value, target);
-            node.data("x-audit-color", color);
-            node.style({
-              "background-color": color,
-            });
-          });
+            value = nodeAuditManifest.lookup.targetMaxCharInFile[0].value;
+            target = nodeAuditManifest.lookup.targetMaxCharInFile[0].target;
+            break;
+          case "dependencies":
+            auditError = nodeAuditManifest.lookup.targetMaxDepPerFile[0];
+            if (!auditError) {
+              node.data("x-audit-color", "green");
+              node.style({
+                "background-color": "green",
+              });
+              return;
+            }
+
+            value = nodeAuditManifest.lookup.targetMaxDepPerFile[0].value;
+            target = nodeAuditManifest.lookup.targetMaxDepPerFile[0].target;
+            break;
+          default:
+            console.error("Unknown view type: ", viewType);
+            return;
+        }
+
+        const color = getInterpolatedSeverityColor(value, target);
+        node.data("x-audit-color", color);
+        node.style({
+          "background-color": color,
         });
-      })
-      .catch((error) => {
-        console.error("Error getting audit manifest:", error);
       });
+    });
   }, [viewType, cyInstance]);
 
   function createCyListeners(cy: Core) {

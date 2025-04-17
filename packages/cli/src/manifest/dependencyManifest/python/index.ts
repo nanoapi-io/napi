@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { DependencyManifest, FileManifest } from "..";
+import { DependencyManifest, FileManifest } from "../types";
 import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver";
@@ -91,7 +91,10 @@ export function generatePythonDependencyManifest(
   const importExtractor = new PythonImportExtractor(parser, parsedFiles);
   console.info("Initializing Python module resolver...");
 
-  const moduleResolver = new PythonModuleResolver(parsedFiles, pythonVersion);
+  const moduleResolver = new PythonModuleResolver(
+    new Set(parsedFiles.keys()),
+    pythonVersion,
+  );
   console.info("Initializing Python item resolver...");
   const itemResolver = new PythonItemResolver(
     exportExtractor,

@@ -1,8 +1,9 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config";
-import { AuditResponse } from "../../../service/auditApi/types";
 import { FcoseLayoutOptions } from "cytoscape-fcose";
 import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition";
+import { AuditManifest } from "../../../service/api/types/auditManifest";
+import { DependencyManifest } from "../../../service/api/types/dependencyManifest";
 
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
@@ -37,7 +38,10 @@ export interface EdgeElementDefinition extends ElementDefinition {
   };
 }
 
-export function getCyElements(auditResponse: AuditResponse) {
+export function getCyElements(
+  dependencyManifest: DependencyManifest,
+  auditManifest: AuditManifest,
+) {
   const nodes: NodeElementDefinition[] = [];
   const edges: EdgeElementDefinition[] = [];
 
@@ -46,11 +50,11 @@ export function getCyElements(auditResponse: AuditResponse) {
   const x = 0;
   const y = 0;
 
-  Object.values(auditResponse.dependencyManifest).forEach((fileManifest) => {
+  Object.values(dependencyManifest).forEach((fileManifest) => {
     const errorMessages: string[] = [];
     const warningMessages: string[] = [];
 
-    const fileAuditManifest = auditResponse.auditManifest[fileManifest.id];
+    const fileAuditManifest = auditManifest[fileManifest.id];
     if (fileAuditManifest) {
       Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
         errorMessages.push(auditMessage.shortMessage);

@@ -6,7 +6,7 @@ import { PythonModuleResolver } from "../moduleResolver";
 import { PythonItemResolver } from "../itemResolver";
 import { PythonImportExtractor } from "../importExtractor";
 import { PythonUsageResolver } from "../usageResolver";
-import { DependencyManifest } from "../../../manifest/dependencyManifest";
+import { DependencyManifest } from "../../../manifest/dependencyManifest/types";
 import { pythonParser } from "../../../helpers/treeSitter/parsers";
 import { localConfigSchema } from "../../../config/localConfig";
 import z from "zod";
@@ -22,11 +22,11 @@ describe("PythonSymbolExtractor", () => {
       { path: string; rootNode: Parser.SyntaxNode }
     >();
 
-    for (const [filePath, { content: fileContent }] of files.entries()) {
-      const rootNode = pythonParser.parse(fileContent, undefined, {
-        bufferSize: fileContent.length + 10,
+    for (const { path, content } of files.values()) {
+      const rootNode = pythonParser.parse(content, undefined, {
+        bufferSize: content.length + 10,
       }).rootNode;
-      parsedFiles.set(filePath, { path: filePath, rootNode });
+      parsedFiles.set(path, { path, rootNode });
     }
 
     return parsedFiles;
@@ -54,7 +54,6 @@ describe("PythonSymbolExtractor", () => {
     const parsedFiles = createParsedFiles(files);
     const dependencyManifest = createDependencyManifest(files);
 
-    // Set up the real extractors and resolvers
     const exportExtractor = new PythonExportExtractor(
       pythonParser,
       parsedFiles,
@@ -63,7 +62,10 @@ describe("PythonSymbolExtractor", () => {
       pythonParser,
       parsedFiles,
     );
-    const moduleResolver = new PythonModuleResolver(parsedFiles, "3.10");
+    const moduleResolver = new PythonModuleResolver(
+      new Set(parsedFiles.keys()),
+      "3.10",
+    );
     const itemResolver = new PythonItemResolver(
       exportExtractor,
       importExtractor,
@@ -74,7 +76,6 @@ describe("PythonSymbolExtractor", () => {
       exportExtractor,
     );
 
-    // Create the extractor
     const symbolExtractor = new PythonSymbolExtractor(
       pythonParser,
       parsedFiles,
@@ -397,6 +398,161 @@ class Repository:
             return self.data[username]
         return None
 `.trim(),
+    );
+  });
+
+  test("should remove invalid normal imports", () => {
+    const files = new Map([
+      [
+        "main.py",
+        {
+          path: "main.py",
+          content: `
+import valid_module
+import invalid_module
+
+class MyClass:
+    def __init__(self):
+        self.helper = valid_module.valid_function()
+
+class AnotherClass:
+    def __init__(self):
+        self.invalid = invalid_module.something()
+  `.trim(),
+        },
+      ],
+      [
+        "valid_module.py",
+        {
+          path: "valid_module.py",
+          content: `
+def valid_function():
+    return "I'm valid"
+  `.trim(),
+        },
+      ],
+      [
+        "invalid_module.py",
+        {
+          path: "invalid_module.py",
+          content: `
+def something():
+    return "I'll be removed"
+  `.trim(),
+        },
+      ],
+    ]);
+
+    const symbolExtractor = createSymbolExtractor(files);
+
+    // Only extract MyClass which depends on Helper but not on invalid_module
+    const symbolsToExtract = new Map([
+      [
+        "main.py",
+        {
+          filePath: "main.py",
+          symbols: new Set(["MyClass"]),
+        },
+      ],
+    ]);
+
+    const result = symbolExtractor.extractSymbol(symbolsToExtract);
+
+    expect(result.size).toBe(2);
+    expect(result.get("main.py")).toBeDefined();
+    expect(result.get("main.py")?.content.trim()).toEqual(
+      `
+import valid_module
+
+
+class MyClass:
+    def __init__(self):
+        self.helper = valid_module.valid_function()
+  `.trim(),
+    );
+    expect(result.get("valid_module.py")).toBeDefined();
+    expect(result.get("valid_module.py")?.content.trim()).toEqual(
+      `
+def valid_function():
+    return "I'm valid"
+  `.trim(),
+    );
+  });
+
+  test("should remove invalid from imports", () => {
+    const files = new Map([
+      [
+        "main.py",
+        {
+          path: "main.py",
+          content: `
+from valid_module import valid_function
+from invalid_module import something
+
+class MyClass:
+    def __init__(self):
+        self.helper = valid_function()
+
+class AnotherClass:
+    def __init__(self):
+        self.invalid = something()
+  `.trim(),
+        },
+      ],
+      [
+        "valid_module.py",
+        {
+          path: "valid_module.py",
+          content: `
+def valid_function():
+    return "I'm valid"
+  `.trim(),
+        },
+      ],
+      [
+        "invalid_module.py",
+        {
+          path: "invalid_module.py",
+          content: `
+def something():
+    return "I'll be removed"
+  `.trim(),
+        },
+      ],
+    ]);
+
+    const symbolExtractor = createSymbolExtractor(files);
+
+    const symbolsToExtract = new Map([
+      [
+        "main.py",
+        {
+          filePath: "main.py",
+          symbols: new Set(["MyClass"]),
+        },
+      ],
+    ]);
+
+    const result = symbolExtractor.extractSymbol(symbolsToExtract);
+
+    expect(result.size).toBe(2);
+    expect(result.get("main.py")).toBeDefined();
+    expect(result.get("main.py")?.content.trim()).toEqual(
+      `
+from valid_module import valid_function
+
+
+class MyClass:
+    def __init__(self):
+        self.helper = valid_function()
+  `.trim(),
+    );
+    expect(result.get("valid_module.py")).toBeDefined();
+    expect(result.get("valid_module.py")?.content.trim()).toEqual(
+      `
+def valid_function():
+    return "I'm valid"
+  `.trim(),
     );
   });
 });

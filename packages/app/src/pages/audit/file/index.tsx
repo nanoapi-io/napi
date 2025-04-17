@@ -12,7 +12,7 @@ import {
   getNodeLabel,
 } from "../../../helpers/cytoscape/views/auditFile";
 import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton";
-import { AuditContext } from "../../audit";
+import { AuditContext } from "../base";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
@@ -33,9 +33,6 @@ export default function AuditFilePage() {
       setCyInstance(undefined);
     }
 
-    if (Object.values(context.auditResponse.dependencyManifest).length === 0) {
-      return;
-    }
     if (!params.file) {
       return;
     }
@@ -48,7 +45,10 @@ export default function AuditFilePage() {
     const style = getCyStyle(themeContext.theme);
     cy.style(style);
 
-    const elements = getCyElements(context.auditResponse, params.file);
+    const elements = getCyElements(
+      context.dependencyManifest,
+      context.auditManifest,
+    );
     cy.add(elements);
 
     cy.layout(layout).run();
