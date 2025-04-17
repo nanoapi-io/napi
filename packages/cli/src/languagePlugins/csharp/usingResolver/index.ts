@@ -5,19 +5,33 @@ import {
   SymbolNode,
 } from "../namespaceMapper";
 import { CSharpProjectMapper } from "../projectMapper";
+import { csharpParser } from "../../../helpers/treeSitter/parsers";
+
+const namespaceDeclarationQuery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  (file_scoped_namespace_declaration
+  name : (_) @name)
+  (namespace_declaration
+  name: (_) @name)
+`,
+);
 
 // Constants representing different types of 'using' directives in C#
 export const GLOBAL_USING = "global";
 export const LOCAL_USING = "local";
 export const USING_STATIC = "static";
 export const USING_ALIAS = "alias";
+// Not for using directives, but for the namespace which is currently being worked on.
+export const USING_CURRENT = "current";
 
 /** Type alias for the different 'using' directive types */
 export type UsingType =
   | typeof GLOBAL_USING
   | typeof LOCAL_USING
   | typeof USING_STATIC
-  | typeof USING_ALIAS;
+  | typeof USING_ALIAS
+  | typeof USING_CURRENT;
 
 /**
  * Interface representing a 'using' directive in the code
@@ -179,6 +193,19 @@ export class CSharpUsingResolver {
     return { usingtype: type, filepath, alias, name: id };
   }
 
+  private getCurrentNamespaces(filepath: string): string[] {
+    const file = this.nsMapper.getFile(filepath);
+    if (!file) {
+      return [];
+    }
+    const currentNamespaces: string[] = [];
+    const namespaces = namespaceDeclarationQuery.captures(file.rootNode);
+    for (const nsName of namespaces) {
+      currentNamespaces.push(nsName.node.text);
+    }
+    return currentNamespaces;
+  }
+
   /**
    * Resolves all 'using' directives in a file and categorizes them into internal and external symbols.
    * @param filepath - The path to the file to resolve.
@@ -205,6 +232,21 @@ export class CSharpUsingResolver {
         }
       }
     });
+    const currentNamespaces = this.getCurrentNamespaces(filepath).concat("");
+    // Add the current namespaces to the internal symbols
+    for (const ns of currentNamespaces) {
+      const namespace = this.nsMapper.findNamespaceInTree(
+        this.nsMapper.nsTree,
+        ns,
+      );
+      if (namespace) {
+        internal.push({
+          usingtype: USING_CURRENT,
+          filepath,
+          namespace,
+        });
+      }
+    }
     const resolvedimports = { internal, external };
     // Update the global usings for the project
     const subproject = this.projectmapper.findSubprojectForFile(filepath);

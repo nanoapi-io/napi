@@ -69,6 +69,11 @@ describe("InvocationResolver", () => {
           type: "enum",
           namespace: "MyApp.Models",
         },
+        {
+          name: "HeadCrab",
+          type: "class",
+          namespace: "",
+        },
       ],
       unresolved: ["System.Math"],
     });
@@ -89,6 +94,13 @@ describe("InvocationResolver", () => {
       namespace: "",
       node: {} as Parser.SyntaxNode,
     };
+    const iorder: SymbolNode = {
+      name: "IOrder",
+      type: "interface",
+      filepath: path.join(csharpFilesFolder, "Models.cs"),
+      namespace: "MyApp.Models",
+      node: {} as Parser.SyntaxNode,
+    };
     expect(
       invResolver.isUsedInFile(
         path.join(csharpFilesFolder, "Program.cs"),
@@ -99,6 +111,12 @@ describe("InvocationResolver", () => {
       invResolver.isUsedInFile(
         path.join(csharpFilesFolder, "Program.cs"),
         headcrab,
+      ),
+    ).toBe(true);
+    expect(
+      invResolver.isUsedInFile(
+        path.join(csharpFilesFolder, "Program.cs"),
+        iorder,
       ),
     ).toBe(false);
   });

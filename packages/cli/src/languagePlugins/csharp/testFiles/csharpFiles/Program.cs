@@ -20,6 +20,7 @@ namespace Tests
             gordon.Crowbar();
             // Class that is in no namespace
             Freeman freeman = new Freeman();
+            freeman.Bite();
             // Nested classes
             OuterInnerClass outerInnerClass = new OuterInnerClass();
             InnerClass innerClass = new InnerClass();
