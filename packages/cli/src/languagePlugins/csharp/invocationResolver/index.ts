@@ -232,36 +232,36 @@ export class CSharpInvocationResolver {
       // Remove intermediate members (e.g., System.Mario in System.Mario.Bros)
       if (ctc.node.type === "member_access_expression") return;
       // Get the root member access expression
-      const mae = ctc.node.children.find(
+      const mae = ctc.node.children.filter(
         (child) => child.type === "member_access_expression",
       );
-      // There should be one according to the query, but safety first.
-      if (!mae) return;
-      const func = mae.text;
+      let func = mae.map((m) => m.text);
       // Among all the matches, even the functions dont have parentheses
       // That means that nodes with parentheses in it are intermediate members
       // They get through the net because their type is invocation_expression.
-      if (func.includes("(")) return;
-      // The query gives us a full invocation,
-      // but we only want a class or namespace name for the called class.
-      const funcParts = func.split(".");
-      const classname = funcParts.slice(0, -1).join(".");
-      // If the function is called from a variable, then we ignore it.
-      // (Because the dependency will already be managed by the variable creation)
-      if (variablenames.includes(classname)) {
-        return;
-      }
-      const resolvedSymbol = this.resolveSymbol(
-        classname,
-        namespaceTree,
-        filepath,
-      );
-      if (resolvedSymbol) {
-        invocations.resolvedSymbols.push(resolvedSymbol);
-      } else {
-        // If class not found, mark as unresolved
-        invocations.unresolved.push(classname);
-      }
+      func = func.filter((f) => !f.includes("("));
+      func.forEach((f) => {
+        // The query gives us a full invocation,
+        // but we only want a class or namespace name for the called class.
+        const funcParts = f.split(".");
+        const classname = funcParts.slice(0, -1).join(".");
+        // If the function is called from a variable, then we ignore it.
+        // (Because the dependency will already be managed by the variable creation)
+        if (variablenames.includes(classname)) {
+          return;
+        }
+        const resolvedSymbol = this.resolveSymbol(
+          classname,
+          namespaceTree,
+          filepath,
+        );
+        if (resolvedSymbol) {
+          invocations.resolvedSymbols.push(resolvedSymbol);
+        } else {
+          // If class not found, mark as unresolved
+          invocations.unresolved.push(classname);
+        }
+      });
     });
     return invocations;
   }
