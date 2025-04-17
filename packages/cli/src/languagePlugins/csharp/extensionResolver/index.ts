@@ -113,7 +113,9 @@ export class CSharpExtensionResolver {
     const extensions: ExtensionMethod[] = [];
     for (const symbol of namespace.exports) {
       const extMethods = this.resolveExtensionMethods(symbol);
-      Object.assign(extensions, extMethods);
+      if (extMethods.length > 0) {
+        extensions.push(...extMethods);
+      }
     }
     return extensions;
   }
@@ -127,7 +129,7 @@ export class CSharpExtensionResolver {
 
     const resolveExtensionsRecursively = (namespace: NamespaceNode) => {
       const extMethods = this.resolveExtensionMethodsInNamespace(namespace);
-      if (Object.keys(extMethods).length > 0) {
+      if (extMethods.length > 0) {
         this.extensions[this.namespaceMapper.getFullNSName(namespace)] =
           extMethods;
       }
