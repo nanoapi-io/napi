@@ -52,10 +52,6 @@ const calledClassesQuery = new Parser.Query(
   (identifier) @cls)
   (type_argument_list
   (qualified_name) @cls)
-  (attribute
-  (identifier) @cls)
-  (attribute
-  (qualified_name) @cls)
   (base_list
   (identifier) @cls)
   (base_list
@@ -69,13 +65,37 @@ const calledClassesQuery = new Parser.Query(
 );
 
 /**
- * Query to identify invocation expressions in the file
+ * Query to identify member accesses in the file
  * for function or constant calls
+ */
+const memberAccessQuery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  (_
+    (member_access_expression
+  ))@cls
+  `,
+);
+
+/**
+ * Query to identify attribute uses in the file
+ */
+const attributeQuery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+  (attribute
+  name: (_) @cls)
+  `,
+);
+
+/**
+ * Query to identify invocation expressions in the file
+ * exclusively for function calls
  */
 const invocationQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
-  (_
+  (invocation_expression
     (member_access_expression
   ))@cls
   `,
@@ -189,12 +209,12 @@ export class CSharpInvocationResolver {
   }
 
   /**
-   * Resolves invocation expressions within the given syntax node.
+   * Resolves member accesses within the given syntax node.
    * @param node - The syntax node to analyze.
    * @param namespaceTree - The namespace tree to search within.
    * @returns An object containing resolved and unresolved symbols.
    */
-  #resolveInvocationExpressions(
+  #resolveMemberAccesses(
     node: Parser.SyntaxNode,
     namespaceTree: NamespaceNode,
     filepath: string,
@@ -206,7 +226,7 @@ export class CSharpInvocationResolver {
       unresolved: [],
     };
     // Query to capture invocation expressions
-    const catches = invocationQuery.captures(node);
+    const catches = memberAccessQuery.captures(node);
     // Process each captured access expression
     catches.forEach((ctc) => {
       // Remove intermediate members (e.g., System.Mario in System.Mario.Bros)
@@ -226,14 +246,6 @@ export class CSharpInvocationResolver {
       // but we only want a class or namespace name for the called class.
       const funcParts = func.split(".");
       const classname = funcParts.slice(0, -1).join(".");
-      // We also want the last part for extension methods
-      const methodName = funcParts[funcParts.length - 1];
-      // Check if the method is an extension method
-      const extMethods = this.#findExtension(methodName, filepath);
-      for (const extMethod of extMethods) {
-        invocations.resolvedSymbols.push(extMethod.symbol);
-        return;
-      }
       // If the function is called from a variable, then we ignore it.
       // (Because the dependency will already be managed by the variable creation)
       if (variablenames.includes(classname)) {
@@ -249,6 +261,71 @@ export class CSharpInvocationResolver {
       } else {
         // If class not found, mark as unresolved
         invocations.unresolved.push(classname);
+      }
+    });
+    return invocations;
+  }
+
+  /**
+   * Resolves extension uses within the given syntax node.
+   * @param node - The syntax node to analyze.
+   * @param namespaceTree - The namespace tree to search within.
+   * @returns An object containing resolved classes the extensions come from.
+   */
+  #resolveExtensionUses(
+    node: Parser.SyntaxNode,
+    filepath: string,
+  ): Invocations {
+    const invocations: Invocations = {
+      resolvedSymbols: [],
+      unresolved: [],
+    };
+    const catches = invocationQuery.captures(node);
+    catches.forEach((ctc) => {
+      const parts = ctc.node.text.split(".");
+      const methods = parts
+        .filter((p) => p.includes("("))
+        .map((p) => p.split("(")[0]);
+      for (const method of methods) {
+        const extMethods = this.#findExtension(method, filepath);
+        for (const extMethod of extMethods) {
+          invocations.resolvedSymbols.push(extMethod.symbol);
+        }
+      }
+    });
+    return invocations;
+  }
+
+  #resolveAttributeUses(
+    node: Parser.SyntaxNode,
+    filepath: string,
+  ): Invocations {
+    const invocations: Invocations = {
+      resolvedSymbols: [],
+      unresolved: [],
+    };
+    const catches = attributeQuery.captures(node);
+    catches.forEach((ctc) => {
+      const resolvedSymbol = this.resolveSymbol(
+        ctc.node.text,
+        this.nsMapper.nsTree,
+        filepath,
+      );
+      if (resolvedSymbol) {
+        invocations.resolvedSymbols.push(resolvedSymbol);
+      } else {
+        // If class not found, try again by adding "Attribute" to the name
+        const resolvedSymbol = this.resolveSymbol(
+          ctc.node.text + "Attribute",
+          this.nsMapper.nsTree,
+          filepath,
+        );
+        if (resolvedSymbol) {
+          invocations.resolvedSymbols.push(resolvedSymbol);
+        } else {
+          // If class not found, mark as unresolved
+          invocations.unresolved.push(ctc.node.text);
+        }
       }
     });
     return invocations;
@@ -323,24 +400,32 @@ export class CSharpInvocationResolver {
       this.nsMapper.nsTree,
       filepath,
     );
-    // Resolve invocation expressions
-    const invocationExpressions = this.#resolveInvocationExpressions(
+    // Resolve member accesses expressions
+    const memberAccesses = this.#resolveMemberAccesses(
       node,
       this.nsMapper.nsTree,
       filepath,
     );
+    // Resolve extension uses
+    const extensions = this.#resolveExtensionUses(node, filepath);
+    // Resolve attribute uses
+    const attributes = this.#resolveAttributeUses(node, filepath);
 
     // Combine results from both methods, ensuring uniqueness with Set
     invocations.resolvedSymbols = [
       ...new Set([
         ...calledClasses.resolvedSymbols,
-        ...invocationExpressions.resolvedSymbols,
+        ...memberAccesses.resolvedSymbols,
+        ...extensions.resolvedSymbols,
+        ...attributes.resolvedSymbols,
       ]),
     ];
     invocations.unresolved = [
       ...new Set([
         ...calledClasses.unresolved,
-        ...invocationExpressions.unresolved,
+        ...memberAccesses.unresolved,
+        ...extensions.unresolved,
+        ...attributes.unresolved,
       ]),
     ];
     return invocations;
