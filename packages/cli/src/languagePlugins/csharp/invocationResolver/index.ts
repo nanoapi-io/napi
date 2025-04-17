@@ -317,8 +317,13 @@ export class CSharpInvocationResolver {
     };
     const catches = attributeQuery.captures(node);
     catches.forEach((ctc) => {
+      let method = ctc.node.text;
+      if (ctc.node.type === "generic_name") {
+        const index = method.indexOf("<");
+        method = method.substring(0, index);
+      }
       const resolvedSymbol = this.resolveSymbol(
-        ctc.node.text,
+        method,
         this.nsMapper.nsTree,
         filepath,
       );
@@ -327,7 +332,7 @@ export class CSharpInvocationResolver {
       } else {
         // If class not found, try again by adding "Attribute" to the name
         const resolvedSymbol = this.resolveSymbol(
-          ctc.node.text + "Attribute",
+          method + "Attribute",
           this.nsMapper.nsTree,
           filepath,
         );
