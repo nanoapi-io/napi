@@ -50,6 +50,7 @@ classDiagram
         - usingResolver: CSharpUsingResolver
         - resolvedImports: ResolvedImports
         - cache: Map<string, Invocations>
+        - extensions: ExtensionMethodMap
         + getInvocationsFromFile(filepath: string): Invocations
         + getInvocationsFromNode(node: Parser.SyntaxNode, filepath: string): Invocations
         + isUsedInFile(filepath: string, symbol: SymbolNode): boolean
@@ -65,11 +66,13 @@ classDiagram
         - nsResolver: CSharpNamespaceResolver
         - nsTree: NamespaceNode
         - exportsCache: Map<string, SymbolNode[]>
+        - fileExports: Map<string, SymbolNode[]>
         + getFile(key: string): File
         + buildNamespaceTree(): NamespaceNode
         + findNamespaceInTree(tree: NamespaceNode, namespaceName: string): NamespaceNode | null
         + findClassInTree(tree: NamespaceNode, className: string): SymbolNode | null
         + getExportsForFile(filepath: string): SymbolNode[]
+        + getFullNSName(namespace: NamespaceNode): string
     }
 
     class NamespaceNode {
@@ -124,6 +127,7 @@ classDiagram
     class DotNetProject {
         + rootFolder: string
         + csprojPath: string
+        + csprojContent: string
         + globalUsings: ResolvedImports
     }
 
@@ -172,13 +176,6 @@ classDiagram
         + rootNode: Parser.SyntaxNode
     }
 
-    enum SymbolType
-    enum UsingType
-    class Parser {
-        + getLanguage(): any
-        + parse(content: string): any
-    }
-
     class ExtractedFile {
         + subproject: DotNetProject
         + namespace: string
@@ -196,6 +193,33 @@ classDiagram
         + extractAndSaveSymbol(symbol: SymbolNode): void
         + extractSymbolByName(symbolName: string): ExtractedFile[] | undefined
         + extractAndSaveSymbolByName(symbolName: string): void
+        + getContent(file: ExtractedFile): string
+    }
+
+    class CSharpExtensionResolver {
+        - namespaceMapper: CSharpNamespaceMapper
+        - extensions: ExtensionMethodMap
+        + getExtensions(): ExtensionMethodMap
+    }
+
+    class ExtensionMethod {
+        + node: Parser.SyntaxNode
+        + symbol: SymbolNode
+        + name: string
+        + type: string
+        + extendedType: string
+        + typeParameters?: string[]
+    }
+
+    class ExtensionMethodMap {
+        + [namespace: string]: ExtensionMethod[]
+    }
+
+    enum SymbolType
+    enum UsingType
+    class Parser {
+        + getLanguage(): any
+        + parse(content: string): any
     }
 
     CSharpDependencyFormatter --> CSharpInvocationResolver
@@ -231,4 +255,7 @@ classDiagram
     ExtractedFile --> DotNetProject
     ExtractedFile --> SymbolNode
     ExtractedFile --> UsingDirective
+    CSharpExtensionResolver --> CSharpNamespaceMapper
+    CSharpExtensionResolver --> ExtensionMethodMap
+    ExtensionMethodMap --> ExtensionMethod
 ```
