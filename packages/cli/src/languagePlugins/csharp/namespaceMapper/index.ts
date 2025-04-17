@@ -53,6 +53,7 @@ export class CSharpNamespaceMapper {
   #nsResolver: CSharpNamespaceResolver;
   nsTree: NamespaceNode;
   #exportsCache: Map<string, SymbolNode[]> = new Map<string, SymbolNode[]>();
+  fileExports: Map<string, SymbolNode[]> = new Map<string, SymbolNode[]>();
 
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
@@ -69,6 +70,27 @@ export class CSharpNamespaceMapper {
    */
   getFile(key: string) {
     return this.files.get(key);
+  }
+
+  /**
+   * Gets the exports for a given filepath.
+   * @param filepath - The path of the file to get exports for.
+   * @returns An array of exported symbols.
+   */
+  getFileExports(filepath: string): SymbolNode[] {
+    return this.fileExports.get(filepath) ?? [];
+  }
+
+  /**
+   * Adds a symbol to the file exports map.
+   * @param symbol - the node to add.
+   */
+  #addFileExport(symbol: SymbolNode) {
+    const filepath = symbol.filepath;
+    if (!this.fileExports.has(filepath)) {
+      this.fileExports.set(filepath, []);
+    }
+    this.fileExports.get(filepath)?.push(symbol);
   }
 
   /**
@@ -159,6 +181,11 @@ export class CSharpNamespaceMapper {
       namespaces.forEach((namespace) => {
         this.#assignParentNamespaces(namespace);
         this.#addNamespaceToTree(namespace, namespaceTree);
+        // Add the file path to the exports
+        namespace.exports.forEach((symbol) => {
+          symbol.filepath = file.path;
+          this.#addFileExport(symbol);
+        });
       });
     });
 
@@ -219,6 +246,9 @@ export class CSharpNamespaceMapper {
     tree: NamespaceNode,
     namespaceName: string,
   ): NamespaceNode | null {
+    if (namespaceName === "") {
+      return tree;
+    }
     if (namespaceName.includes(".")) {
       const parts = namespaceName.split(".");
       const simpleNamespaceName = parts[0];

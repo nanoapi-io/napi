@@ -17,7 +17,7 @@ describe("CSharpExtractor", () => {
   const extractor = new CSharpExtractor(parsedfiles, csprojFiles, manifest);
 
   test("should extract symbols correctly", () => {
-    expect(extractor.extractSymbolByName("Program")?.length).toBe(8);
+    expect(extractor.extractSymbolByName("Program")?.length).toBe(9);
     expect(extractor.extractSymbolByName("ChickenBurger.Salad")?.length).toBe(
       1,
     );

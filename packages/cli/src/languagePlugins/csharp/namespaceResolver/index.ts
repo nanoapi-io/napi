@@ -210,8 +210,15 @@ export class CSharpNamespaceResolver {
         child.type === "record_declaration" ||
         child.type === "delegate_declaration"
       ) {
+        let name = this.#getIdentifierNode(child).text;
+        // Handle generic types
+        // Kind of dirty, needs to be corrected
+        if (name.includes("<")) {
+          const index = name.indexOf("<");
+          name = name.substring(0, index);
+        }
         const symbol: ExportedSymbol = {
-          name: this.#getIdentifierNode(child).text,
+          name: name,
           type: child.type.replace("_declaration", "") as SymbolType,
           node: child,
           identifierNode: this.#getIdentifierNode(child),

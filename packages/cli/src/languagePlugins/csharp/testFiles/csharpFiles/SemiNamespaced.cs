@@ -18,10 +18,14 @@ public class Freeman
     }
 }
 
-class HeadCrab
+static class HeadCrab
 {
-    public void Bite(Freeman freeman)
+    public static void Bite(this Freeman freeman)
     {
         freeman.Health -= 10;
+    }
+    public static void Heal(this Freeman freeman)
+    {
+        freeman.Health += 10;
     }
 }
