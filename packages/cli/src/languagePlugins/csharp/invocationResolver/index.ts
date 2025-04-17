@@ -57,7 +57,15 @@ const calledClassesQuery = new Parser.Query(
   (base_list
   (qualified_name) @cls)
   (property_declaration
+  type: (qualified_name) @cls)
+  (property_declaration
   type: (identifier) @cls)
+  (property_declaration
+  type: (nullable_type
+  type: (identifier) @cls))
+  (property_declaration
+  type: (nullable_type
+  type: (qualified_name) @cls))
   (typeof_expression
   type: (_) @cls)
   (generic_name) @cls
