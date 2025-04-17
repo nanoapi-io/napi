@@ -96,8 +96,9 @@ const invocationQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
   (invocation_expression
-    (member_access_expression
-  ))@cls
+      function: (member_access_expression
+      name: (_) @cls
+    ))
   `,
 );
 
@@ -282,15 +283,10 @@ export class CSharpInvocationResolver {
     };
     const catches = invocationQuery.captures(node);
     catches.forEach((ctc) => {
-      const parts = ctc.node.text.split(".");
-      const methods = parts
-        .filter((p) => p.includes("("))
-        .map((p) => p.split("(")[0]);
-      for (const method of methods) {
-        const extMethods = this.#findExtension(method, filepath);
-        for (const extMethod of extMethods) {
-          invocations.resolvedSymbols.push(extMethod.symbol);
-        }
+      const method = ctc.node.text;
+      const extMethods = this.#findExtension(method, filepath);
+      for (const extMethod of extMethods) {
+        invocations.resolvedSymbols.push(extMethod.symbol);
       }
     });
     return invocations;
