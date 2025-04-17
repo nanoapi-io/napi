@@ -283,9 +283,14 @@ export class CSharpInvocationResolver {
     };
     const catches = invocationQuery.captures(node);
     catches.forEach((ctc) => {
-      const method = ctc.node.text;
+      let method = ctc.node.text;
+      if (ctc.node.type === "generic_name") {
+        const index = method.indexOf("<");
+        method = method.substring(0, index);
+      }
       const extMethods = this.#findExtension(method, filepath);
       for (const extMethod of extMethods) {
+        // TODO : check if there is the correct amount of type arguments
         invocations.resolvedSymbols.push(extMethod.symbol);
       }
     });

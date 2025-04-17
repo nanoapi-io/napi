@@ -18,6 +18,14 @@ const extensionMethodQuery = new Parser.Query(
 `,
 );
 
+const typeParameterQuery = new Parser.Query(
+  csharpParser.getLanguage(),
+  `
+    (type_parameter
+    name: (_) @cls)
+  `,
+);
+
 /**
  * Interface representing an extension method in C#.
  */
@@ -42,6 +50,10 @@ export interface ExtensionMethod {
    * The type that is being extended
    */
   extendedType: string;
+  /**
+   * The type parameters of the extension method.
+   */
+  typeParameters?: string[];
 }
 
 /**
@@ -79,7 +91,20 @@ export class CSharpExtensionResolver {
     for (const ext of extensionMethods) {
       if (ext.name === "mod") continue;
       const methodNode = ext.node;
-      const methodName = methodNode.childForFieldName("name")?.text;
+      let methodName = methodNode.childForFieldName("name")?.text;
+      if (!methodName) continue;
+      const typeParameters = methodNode.childForFieldName("type_parameters");
+      const typeParameterNames: string[] = [];
+      if (typeParameters) {
+        const typeParams = typeParameterQuery.captures(typeParameters);
+        for (const param of typeParams) {
+          typeParameterNames.push(param.node.text);
+        }
+      }
+      if (methodName.includes("<")) {
+        const index = methodName.indexOf("<");
+        methodName = methodName.substring(0, index);
+      }
       const methodType =
         methodNode.childForFieldName("returns")?.text || "void";
       const parameters = methodNode.childrenForFieldName("parameters");
@@ -89,15 +114,15 @@ export class CSharpExtensionResolver {
           extendedType = param.childForFieldName("type")?.text || "void";
         }
       });
-      if (methodName) {
-        extensions.push({
-          node: methodNode,
-          symbol: symbol,
-          name: methodName,
-          type: methodType,
-          extendedType: extendedType,
-        });
-      }
+      extensions.push({
+        node: methodNode,
+        symbol: symbol,
+        name: methodName,
+        type: methodType,
+        extendedType: extendedType,
+        typeParameters:
+          typeParameterNames.length > 0 ? typeParameterNames : undefined,
+      });
     }
     return extensions;
   }
