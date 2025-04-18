@@ -83,6 +83,7 @@ describe("InvocationResolver", () => {
     const myclass: SymbolNode = {
       name: "MyClass",
       type: "class",
+      typeParameterCount: 0,
       filepath: path.join(csharpFilesFolder, "Namespaced.cs"),
       namespace: "MyNamespace",
       node: {} as Parser.SyntaxNode,
@@ -90,6 +91,7 @@ describe("InvocationResolver", () => {
     const headcrab: SymbolNode = {
       name: "HeadCrab",
       type: "class",
+      typeParameterCount: 0,
       filepath: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
       namespace: "",
       node: {} as Parser.SyntaxNode,
@@ -97,6 +99,7 @@ describe("InvocationResolver", () => {
     const iorder: SymbolNode = {
       name: "IOrder",
       type: "interface",
+      typeParameterCount: 0,
       filepath: path.join(csharpFilesFolder, "Models.cs"),
       namespace: "MyApp.Models",
       node: {} as Parser.SyntaxNode,
