@@ -85,6 +85,7 @@ classDiagram
     class SymbolNode {
         + name: string
         + type: SymbolType
+        + typeParameterCount: int
         + namespace: string
         + filepath: string
         + node: Parser.SyntaxNode
@@ -109,6 +110,7 @@ classDiagram
     class ExportedSymbol {
         + name: string
         + type: SymbolType
+        + typeParameterCount: int
         + node: Parser.SyntaxNode
         + identifierNode: Parser.SyntaxNode
         + namespace?: string
