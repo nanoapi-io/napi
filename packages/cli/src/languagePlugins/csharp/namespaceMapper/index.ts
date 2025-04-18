@@ -24,6 +24,8 @@ export interface SymbolNode {
   name: string;
   /** The type of the symbol (class, interface, etc.) */
   type: SymbolType;
+  /** The type parameter count for the class */
+  typeParameterCount: number;
   /** Kept for ambiguity resolution */
   namespace: string;
   /** The file path where the symbol is defined */

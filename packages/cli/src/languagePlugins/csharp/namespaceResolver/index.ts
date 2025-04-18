@@ -45,6 +45,8 @@ export interface ExportedSymbol {
   name: string;
   /** The type of the symbol (i.e. class, struct, enum, etc.) */
   type: SymbolType;
+  /** The type parameter count for the class */
+  typeParameterCount: number;
   /** The syntax node corresponding to the symbol */
   node: Parser.SyntaxNode;
   /** The syntax node corresponding to the identifier */
@@ -191,6 +193,21 @@ export class CSharpNamespaceResolver {
   }
 
   /**
+   * Gets the type parameters from a node
+   * @param node The syntax node to search for type parameters
+   * @returns An array of type parameter nodes
+   */
+  #getTypeParameters(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
+    const typeParameterList = node.childForFieldName("type_parameter_list");
+    if (!typeParameterList) {
+      return [];
+    }
+    return typeParameterList.children.filter(
+      (child) => child.type === "type_parameter",
+    );
+  }
+
+  /**
    * Gets the classes, structs and enums from a node
    * @param node The syntax node to search for exported symbols
    * @param parent The parent symbol if this is a nested class
@@ -210,16 +227,12 @@ export class CSharpNamespaceResolver {
         child.type === "record_declaration" ||
         child.type === "delegate_declaration"
       ) {
-        let name = this.#getIdentifierNode(child).text;
-        // Handle generic types
-        // Kind of dirty, needs to be corrected
-        if (name.includes("<")) {
-          const index = name.indexOf("<");
-          name = name.substring(0, index);
-        }
+        const name = this.#getIdentifierNode(child).text;
+        const typeParameters = this.#getTypeParameters(child);
         const symbol: ExportedSymbol = {
           name: name,
           type: child.type.replace("_declaration", "") as SymbolType,
+          typeParameterCount: typeParameters.length,
           node: child,
           identifierNode: this.#getIdentifierNode(child),
           filepath: this.#currentFile,
