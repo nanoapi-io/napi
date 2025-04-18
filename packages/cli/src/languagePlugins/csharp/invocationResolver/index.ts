@@ -307,6 +307,12 @@ export class CSharpInvocationResolver {
     return invocations;
   }
 
+  /**
+   * Resolves attribute uses within the given syntax node.
+   * @param node - The syntax node to analyze.
+   * @param filepath - The path of the file being analyzed.
+   * @returns An object containing resolved and unresolved symbols.
+   */
   #resolveAttributeUses(
     node: Parser.SyntaxNode,
     filepath: string,
