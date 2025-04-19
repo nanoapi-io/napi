@@ -1,20 +1,41 @@
-import { ElementDefinition, StylesheetJson } from "cytoscape";
+import {
+  Core,
+  ElementDefinition,
+  NodeSingular,
+  StylesheetJson,
+} from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config";
 import { FcoseLayoutOptions } from "cytoscape-fcose";
 import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition";
-import { AuditManifest } from "../../../service/api/types/auditManifest";
+import {
+  AuditManifest,
+  AuditMessage,
+  FileAuditManifest,
+} from "../../../service/api/types/auditManifest";
 import { DependencyManifest } from "../../../service/api/types/dependencyManifest";
+import { Theme } from "../../../contexts/ThemeContext";
+
+export type ViewType =
+  | "default"
+  | "linesOfCode"
+  | "characters"
+  | "dependencies";
 
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
     id: string;
     position: { x: number; y: number };
-    "x-audit-color"?: string;
     customData: {
       fileName: string;
       loc: number;
       dependencies: number;
       totalSymbols: number;
+      viewColors: {
+        default: string;
+        linesOfCode: string;
+        characters: string;
+        dependencies: string;
+      };
       errors: string[];
       warnings: string[];
       expanded: {
@@ -41,55 +62,57 @@ export interface EdgeElementDefinition extends ElementDefinition {
 export function getCyElements(
   dependencyManifest: DependencyManifest,
   auditManifest: AuditManifest,
+  theme: Theme,
 ) {
+  const nodes = createNodes(dependencyManifest, auditManifest, theme);
+  const edges = createEdges(dependencyManifest);
+
+  return [...nodes, ...edges];
+}
+
+function createNodes(
+  dependencyManifest: DependencyManifest,
+  auditManifest: AuditManifest,
+  theme: Theme,
+): NodeElementDefinition[] {
   const nodes: NodeElementDefinition[] = [];
-  const edges: EdgeElementDefinition[] = [];
 
-  // initial node position
-  // will be updated by layout
-  const x = 0;
-  const y = 0;
+  Object.values(dependencyManifest).forEach((fileDependencyManifest) => {
+    const fileAuditManifest = auditManifest[fileDependencyManifest.id];
+    const errorMessages: string[] = Object.values(fileAuditManifest.errors).map(
+      (auditMessage) => auditMessage.shortMessage,
+    );
+    const warningMessages: string[] = Object.values(
+      fileAuditManifest.warnings,
+    ).map((auditMessage) => auditMessage.shortMessage);
 
-  Object.values(dependencyManifest).forEach((fileManifest) => {
-    const errorMessages: string[] = [];
-    const warningMessages: string[] = [];
-
-    const fileAuditManifest = auditManifest[fileManifest.id];
-    if (fileAuditManifest) {
-      Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
-        errorMessages.push(auditMessage.shortMessage);
-      });
-      Object.values(fileAuditManifest.warnings).forEach((auditMessage) => {
-        warningMessages.push(auditMessage.shortMessage);
-      });
-    }
-
-    const expandedLabel = getNodeLabel({
-      isExpanded: true,
-      fileName: fileManifest.id,
-      errorMessages,
-      warningMessages,
+    const expandedLabel = getExpandedNodeLabel({
+      fileName: fileDependencyManifest.id,
+      fileAuditManifest,
     });
     const { width: expandedWitdh, height: expandedHeight } =
       getNodeWidthAndHeightFromLabel(expandedLabel);
-    const collapsedLabel = getNodeLabel({
-      isExpanded: false,
-      fileName: fileManifest.id,
-      errorMessages,
-      warningMessages,
+
+    const collapsedLabel = getCollapsedNodeLabel({
+      fileName: fileDependencyManifest.id,
+      fileAuditManifest,
     });
     const { width: collapsedWidth, height: collapsedHeight } =
       getNodeWidthAndHeightFromLabel(collapsedLabel);
 
+    const viewColors = getAuditColorsForNode(theme, fileAuditManifest);
+
     const nodeElement: NodeElementDefinition = {
       data: {
-        id: fileManifest.id,
-        position: { x, y },
+        id: fileDependencyManifest.id,
+        // initial node position - will be updated by layout
+        position: { x: 0, y: 0 },
         customData: {
-          fileName: fileManifest.id,
-          loc: fileManifest.lineCount,
-          dependencies: Object.keys(fileManifest.dependencies).length,
-          totalSymbols: Object.keys(fileManifest.symbols).length,
+          fileName: fileDependencyManifest.id,
+          loc: fileDependencyManifest.lineCount,
+          dependencies: Object.keys(fileDependencyManifest.dependencies).length,
+          totalSymbols: Object.keys(fileDependencyManifest.symbols).length,
+          viewColors,
           errors: errorMessages,
           warnings: warningMessages,
           expanded: {
@@ -107,37 +130,41 @@ export function getCyElements(
     };
 
     nodes.push(nodeElement);
+  });
 
-    const edgeElements: EdgeElementDefinition[] = [];
+  return nodes;
+}
+
+function createEdges(
+  dependencyManifest: DependencyManifest,
+): EdgeElementDefinition[] {
+  const edges: EdgeElementDefinition[] = [];
+
+  Object.values(dependencyManifest).forEach((fileManifest) => {
     Object.values(fileManifest.dependencies).forEach((dependency) => {
       if (dependency.isExternal) {
         return;
       }
-      const edgeElement: EdgeElementDefinition = {
+
+      edges.push({
         data: {
           source: dependency.id,
           target: fileManifest.id,
         },
-      };
-      edgeElements.push(edgeElement);
+      });
     });
-
-    edges.push(...edgeElements);
   });
 
-  const allElements = [...nodes, ...edges];
-
-  return allElements;
+  return edges;
 }
 
-export function getCyStyle(theme: "light" | "dark") {
+function getCyStyleSheet(theme: Theme) {
   return [
     {
       selector: "node",
       style: {
         "text-wrap": "wrap",
         color: tailwindConfig.theme.extend.colors.text[theme],
-        "background-color": tailwindConfig.theme.extend.colors.primary[theme],
         "border-width": 1,
         "border-color": tailwindConfig.theme.extend.colors.border[theme],
         "text-valign": "center",
@@ -180,24 +207,11 @@ export function getCyStyle(theme: "light" | "dark") {
     {
       selector: "node.highlighted",
       style: {
-        "background-color": tailwindConfig.theme.extend.colors.secondary.dark,
+        "background-color": tailwindConfig.theme.extend.colors.secondary[theme],
         "z-index": 1000,
-        width: 50,
-        height: 50,
-        "corner-radius": "100%",
+        "min-width": 50,
+        "min-height": 50,
       },
-    },
-    {
-      selector: "node.linesOfCode",
-      style: {},
-    },
-    {
-      selector: "node.characters",
-      style: {},
-    },
-    {
-      selector: "node.dependencies",
-      style: {},
     },
     {
       selector: "edge",
@@ -241,12 +255,22 @@ export function getCyStyle(theme: "light" | "dark") {
   ] as StylesheetJson;
 }
 
+export function setStylesForNodes(cy: Core, theme: Theme, viewType: ViewType) {
+  const styleSheet = getCyStyleSheet(theme);
+  cy.style(styleSheet);
+
+  cy.nodes().style({
+    "background-color": (node: NodeSingular) =>
+      node.data(`customData.viewColors.${viewType}`),
+  });
+}
+
 export const layout = {
   name: "fcose",
   quality: "proof",
-  nodeRepulsion: 1000000, // the repulsion force between nodes connected by an edge
+  nodeRepulsion: 1000000,
   idealEdgeLength: 200,
-  gravity: 0.1, // the gravity force of the graph. Lower value means looser graph in the center
+  gravity: 0.1,
   packComponents: true,
   nodeDimensionsIncludeLabels: true,
 } as FcoseLayoutOptions;
@@ -255,49 +279,114 @@ const errorChar = "❗";
 const warningChar = "⚠️";
 const successChar = "🎉";
 
-export function getNodeLabel(data: {
-  isExpanded: boolean;
+function getExpandedNodeLabel(data: {
   fileName: string;
-  errorMessages: string[];
-  warningMessages: string[];
+  fileAuditManifest: FileAuditManifest;
 }) {
-  let label = "";
+  let label = data.fileName;
 
+  const errorMessages = Object.values(data.fileAuditManifest.errors).map(
+    (auditMessage) => auditMessage.shortMessage,
+  );
+  const warningMessages = Object.values(data.fileAuditManifest.warnings).map(
+    (auditMessage) => auditMessage.shortMessage,
+  );
+
+  if (errorMessages.length > 0 || warningMessages.length > 0) {
+    errorMessages.forEach((message) => {
+      label += `\n${errorChar} ${message}`;
+    });
+    warningMessages.forEach((message) => {
+      label += `\n${warningChar} ${message}`;
+    });
+  } else {
+    label += `\n${successChar} No issues found`;
+  }
+
+  return label;
+}
+
+function getCollapsedNodeLabel(data: {
+  fileName: string;
+  fileAuditManifest: FileAuditManifest;
+}) {
   const fileNameMaxLength = 25;
-  // display only last 10 characters of file name
-  // if file name is longer than 10 characters, add ellipsis
-  // to the end of the file name
-  // if file name is shorter than 10 characters, display the whole file name
   const fileName =
     data.fileName.length > fileNameMaxLength
       ? `...${data.fileName.slice(-fileNameMaxLength)}`
       : data.fileName;
 
-  if (data.isExpanded) {
-    label = data.fileName;
+  let label = fileName;
 
-    if (data.errorMessages.length > 0 || data.warningMessages.length > 0) {
-      data.errorMessages.forEach((message) => {
-        label += `\n${errorChar} ${message}`;
-      });
-      data.warningMessages.forEach((message) => {
-        label += `\n${warningChar} ${message}`;
-      });
-    } else {
-      label += `\n${successChar} No issues found`;
-    }
+  const errorMessages = Object.values(data.fileAuditManifest.errors).map(
+    (auditMessage) => auditMessage.shortMessage,
+  );
+  const warningMessages = Object.values(data.fileAuditManifest.warnings).map(
+    (auditMessage) => auditMessage.shortMessage,
+  );
 
-    return label;
+  if (errorMessages.length > 0) {
+    label += `\n${errorChar}(${errorMessages.length})`;
   }
-
-  label = fileName;
-
-  if (data.errorMessages.length > 0) {
-    label += `\n${errorChar}(${data.errorMessages.length})`;
-  }
-  if (data.warningMessages.length > 0) {
-    label += `\n${warningChar}(${data.warningMessages.length})`;
+  if (warningMessages.length > 0) {
+    label += `\n${warningChar}(${warningMessages.length})`;
   }
 
   return label;
+}
+
+function getAuditColorsForNode(
+  theme: Theme,
+  nodeAuditManifest: FileAuditManifest | undefined,
+): {
+  default: string;
+  linesOfCode: string;
+  characters: string;
+  dependencies: string;
+} {
+  const defaultColor = tailwindConfig.theme.extend.colors.primary[theme];
+  const severityColorMap = [
+    { threshold: 1.0, color: "#8BC34A" }, // green
+    { threshold: 1.2, color: "#ffdd00" }, // yellow
+    { threshold: 1.5, color: "#ff8c00" }, // orange
+    { threshold: 2.0, color: "#dc1414" }, // red
+  ];
+
+  if (!nodeAuditManifest || !nodeAuditManifest.lookup) {
+    return {
+      default: defaultColor,
+      linesOfCode: defaultColor,
+      characters: defaultColor,
+      dependencies: defaultColor,
+    };
+  }
+
+  function getColorForMetric(auditError: AuditMessage | undefined): string {
+    if (!auditError) {
+      return severityColorMap[0].color;
+    }
+
+    const ratio = parseFloat(auditError.value) / parseFloat(auditError.target);
+
+    for (const severityColor of severityColorMap) {
+      if (ratio <= severityColor.threshold) {
+        return severityColor.color;
+      }
+    }
+
+    return severityColorMap[severityColorMap.length - 1].color;
+  }
+
+  return {
+    default: defaultColor,
+    linesOfCode: getColorForMetric(
+      nodeAuditManifest.lookup.targetMaxLineInFile?.[0],
+    ),
+    characters: getColorForMetric(
+      nodeAuditManifest.lookup.targetMaxCharInFile?.[0],
+    ),
+    dependencies: getColorForMetric(
+      nodeAuditManifest.lookup.targetMaxDepPerFile?.[0],
+    ),
+  };
 }

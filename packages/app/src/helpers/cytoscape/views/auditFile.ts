@@ -1,8 +1,9 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
-import { AuditResponse } from "../../../service/api/types/auditManifest";
 import tailwindConfig from "../../../../tailwind.config";
 import { FcoseLayoutOptions } from "cytoscape-fcose";
-
+import { DependencyManifest } from "../../../service/api/types/dependencyManifest";
+import { AuditManifest } from "../../../service/api/types/auditManifest";
+import { Theme } from "../../../contexts/ThemeContext";
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
     id: string;
@@ -34,12 +35,13 @@ export interface EdgeElementDefinition extends ElementDefinition {
 }
 
 export function getCyElements(
-  auditResponse: AuditResponse,
+  dependencyManifest: DependencyManifest,
+  auditManifest: AuditManifest,
   currentFilePath: string,
 ) {
   const joinChar = "|";
 
-  const currentFile = auditResponse.dependencyManifest[currentFilePath];
+  const currentFile = dependencyManifest[currentFilePath];
   if (!currentFile) {
     throw new Error(`File not found in audit map: ${currentFilePath}`);
   }
@@ -64,7 +66,7 @@ export function getCyElements(
   const errorMessages: string[] = [];
   const warningMessages: string[] = [];
 
-  const fileAuditManifest = auditResponse.auditManifest[currentFile.id];
+  const fileAuditManifest = auditManifest[currentFile.id];
   if (fileAuditManifest) {
     Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
       errorMessages.push(auditMessage.shortMessage);
@@ -212,9 +214,8 @@ export function getCyElements(
         dependencyFileSymbols.forEach((dependencySymbolId) => {
           const id = `${dependencyFileId}${joinChar}${dependencySymbolId}`;
           const instanceType =
-            auditResponse.dependencyManifest[dependencyFileId]?.symbols[
-              dependencySymbolId
-            ]?.type;
+            dependencyManifest[dependencyFileId]?.symbols[dependencySymbolId]
+              ?.type;
 
           const label = getNodeLabel({
             isExpanded: false,
@@ -327,9 +328,8 @@ export function getCyElements(
         dependentFileSymbolIds.forEach((dependentFileSymbolId) => {
           const id = `${dependentFileId}${joinChar}${dependentFileSymbolId}`;
           const instanceType =
-            auditResponse.dependencyManifest[dependentFileId]?.symbols[
-              dependentFileSymbolId
-            ]?.type;
+            dependencyManifest[dependentFileId]?.symbols[dependentFileSymbolId]
+              ?.type;
 
           const label = getNodeLabel({
             isExpanded: false,
@@ -401,7 +401,7 @@ export function getCyElements(
   return allElements;
 }
 
-export function getCyStyle(theme: "light" | "dark") {
+export function getCyStyle(theme: Theme) {
   return [
     // filenode general style
     {
