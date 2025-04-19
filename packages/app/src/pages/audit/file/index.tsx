@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import cytoscape, { Core, EventObjectNode } from "cytoscape";
+import cytoscape, { Core } from "cytoscape";
 import Controls from "../../../components/Cytoscape/Controls";
 import { useOutletContext, useParams, useNavigate } from "react-router";
 import fcose from "cytoscape-fcose";
@@ -12,67 +12,68 @@ import {
   getNodeLabel,
 } from "../../../helpers/cytoscape/views/auditFile";
 import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton";
-import { AuditContext } from "../../audit";
+import { AuditContext } from "../base";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
   const params = useParams<{ file: string }>();
   const context = useOutletContext<AuditContext>();
-
   const themeContext = useContext(ThemeContext);
-
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
 
+  // Initialize and cleanup Cytoscape
   useEffect(() => {
-    // If we already have an instance, reinstantiate it
-    // This prevents some bugs with data not being updated
-    // when new file is selected
     if (cyInstance) {
       cyInstance.destroy();
       setCyInstance(undefined);
     }
 
-    if (Object.values(context.auditResponse.dependencyManifest).length === 0) {
-      return;
-    }
-    if (!params.file) {
-      return;
-    }
+    if (!params.file) return;
 
-    cytoscape.use(fcose);
-    const cy = cytoscape();
-
-    cy.mount(containerRef.current as Element);
-
-    const style = getCyStyle(themeContext.theme);
-    cy.style(style);
-
-    const elements = getCyElements(context.auditResponse, params.file);
-    cy.add(elements);
-
-    cy.layout(layout).run();
-
-    createCyListeners(cy);
-
+    const cy = initializeCytoscape();
     setCyInstance(cy);
 
-    // Cleanup on unmount
     return () => {
       cy.destroy();
       setCyInstance(undefined);
     };
-  }, [params.file, context.auditResponse]);
+  }, [params.file, context.dependencyManifest, context.auditManifest]);
 
+  // Update style when theme changes
   useEffect(() => {
     cyInstance?.style(getCyStyle(themeContext.theme));
   }, [themeContext.changeTheme]);
 
-  function createCyListeners(cy: Core) {
-    // On tap to a node, display details of the node if relevant
-    cy.on("tap", "node", (evt: EventObjectNode) => {
-      const node = evt.target;
+  function initializeCytoscape() {
+    cytoscape.use(fcose);
+    const cy = cytoscape();
+    cy.mount(containerRef.current as Element);
 
+    // Apply style
+    cy.style(getCyStyle(themeContext.theme));
+
+    // Add elements
+    const elements = getCyElements(
+      context.dependencyManifest,
+      context.auditManifest,
+      params.file as string,
+    );
+    cy.add(elements);
+
+    // Apply layout
+    cy.layout(layout).run();
+
+    // Add event listeners
+    addEventListeners(cy);
+
+    return cy;
+  }
+
+  function addEventListeners(cy: Core) {
+    // Toggle node expansion on tap
+    cy.on("tap", "node", (evt) => {
+      const node = evt.target;
       const data = node.data() as NodeElementDefinition["data"];
 
       const isExpanded = !data.isExpanded;
@@ -90,34 +91,31 @@ export default function AuditFilePage() {
       node.data({ label, isExpanded });
     });
 
-    // On double tap we redirect to file or instance view
-    cy.on("dbltap", "node", (evt: EventObjectNode) => {
+    // Navigate to file/instance on double tap
+    cy.on("dbltap", "node", (evt) => {
       const node = evt.target;
-
       const data = node.data() as NodeElementDefinition["data"];
 
-      if (!data.isExternal) {
-        const urlEncodedFileName = encodeURIComponent(data.customData.fileName);
-        let url = `/audit/${urlEncodedFileName}`;
+      if (data.isExternal) return;
 
-        if (data.type === "instance" && data.customData.instance) {
-          const urlEncodedInstance = encodeURIComponent(
-            data.customData.instance.name,
-          );
-          url += `/${urlEncodedInstance}`;
-        }
+      const urlEncodedFileName = encodeURIComponent(data.customData.fileName);
+      let url = `/audit/${urlEncodedFileName}`;
 
-        navigate(url);
+      if (data.type === "instance" && data.customData.instance) {
+        const urlEncodedInstance = encodeURIComponent(
+          data.customData.instance.name,
+        );
+        url += `/${urlEncodedInstance}`;
       }
+
+      navigate(url);
     });
 
     return cy;
   }
 
-  function onLayout() {
-    if (cyInstance) {
-      cyInstance.makeLayout(layout).run();
-    }
+  function handleLayout() {
+    cyInstance?.makeLayout(layout).run();
   }
 
   return (
@@ -125,7 +123,7 @@ export default function AuditFilePage() {
       {(context.busy || !cyInstance) && <CytoscapeSkeleton />}
 
       {cyInstance && (
-        <Controls busy={false} cy={cyInstance} onLayout={onLayout} />
+        <Controls busy={false} cy={cyInstance} onLayout={handleLayout} />
       )}
 
       <div ref={containerRef} className="relative w-full h-full z-1" />

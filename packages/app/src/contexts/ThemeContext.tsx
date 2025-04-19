@@ -1,10 +1,14 @@
 import { createContext, useState } from "react";
 
+export const lightTheme = "light";
+export const darkTheme = "dark";
+export type Theme = typeof lightTheme | typeof darkTheme;
+
 export const ThemeContext = createContext<{
-  theme: "light" | "dark";
-  changeTheme: (newTheme: "light" | "dark") => void;
+  theme: Theme;
+  changeTheme: (newTheme: Theme) => void;
 }>({
-  theme: "light",
+  theme: lightTheme,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   changeTheme: () => {},
 });
@@ -12,28 +16,26 @@ export const ThemeContext = createContext<{
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   function getModeFromLocalStorage() {
     if (
-      localStorage.theme === "dark" ||
+      localStorage.theme === darkTheme ||
       (!("theme" in localStorage) &&
         window.matchMedia("(prefers-color-scheme: dark)").matches)
     ) {
-      localStorage.theme = "dark";
-      document.documentElement.classList.add("dark");
-      return "dark";
+      localStorage.theme = darkTheme;
+      document.documentElement.classList.add(darkTheme);
+      return darkTheme;
     }
-    return "light";
+    return lightTheme;
   }
 
-  const [theme, setTheme] = useState<"light" | "dark">(
-    getModeFromLocalStorage(),
-  );
+  const [theme, setTheme] = useState<Theme>(getModeFromLocalStorage());
 
-  function changeTheme(newTheme: "light" | "dark") {
+  function changeTheme(newTheme: Theme) {
     localStorage.theme = newTheme;
     setTheme(newTheme);
-    if (newTheme === "light") {
-      document.documentElement.classList.remove("dark");
+    if (newTheme === lightTheme) {
+      document.documentElement.classList.remove(darkTheme);
     } else {
-      document.documentElement.classList.add("dark");
+      document.documentElement.classList.add(darkTheme);
     }
   }
 

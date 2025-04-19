@@ -2,7 +2,7 @@ import Parser from "tree-sitter";
 import { CSharpProjectMapper, DotNetProject } from "../projectMapper";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
 import { CSharpUsingResolver, UsingDirective } from "../usingResolver";
-import { DependencyManifest } from "../../../manifest/dependencyManifest";
+import { DependencyManifest } from "../../../manifest/dependencyManifest/types";
 
 /**
  * Represents an extracted file containing a symbol.

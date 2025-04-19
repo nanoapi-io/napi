@@ -239,7 +239,10 @@ def consumer_func():
       );
       const exportExtractor = new PythonExportExtractor(parser, files);
       const { symbols } = exportExtractor.getSymbols("module_a.py");
-      const moduleResolver = new PythonModuleResolver(files, "3.10");
+      const moduleResolver = new PythonModuleResolver(
+        new Set(files.keys()),
+        "3.10",
+      );
 
       const moduleA = moduleResolver.getModuleFromFilePath(
         "module_a.py",
@@ -282,7 +285,10 @@ def consumer_func():
       );
       const exportExtractor = new PythonExportExtractor(parser, files);
       const { symbols } = exportExtractor.getSymbols("module_a.py");
-      const moduleResolver = new PythonModuleResolver(files, "3.10");
+      const moduleResolver = new PythonModuleResolver(
+        new Set(files.keys()),
+        "3.10",
+      );
 
       const moduleA = moduleResolver.getModuleFromFilePath(
         "module_a.py",
@@ -325,7 +331,10 @@ def consumer_func():
       );
       const exportExtractor = new PythonExportExtractor(parser, files);
       const { symbols } = exportExtractor.getSymbols("module_a.py");
-      const moduleResolver = new PythonModuleResolver(files, "3.10");
+      const moduleResolver = new PythonModuleResolver(
+        new Set(files.keys()),
+        "3.10",
+      );
 
       const moduleA = moduleResolver.getModuleFromFilePath(
         "module_a.py",
@@ -363,7 +372,10 @@ def consumer_func():
       );
       const exportExtractor = new PythonExportExtractor(parser, files);
       const { symbols } = exportExtractor.getSymbols("module_a.py");
-      const moduleResolver = new PythonModuleResolver(files, "3.10");
+      const moduleResolver = new PythonModuleResolver(
+        new Set(files.keys()),
+        "3.10",
+      );
 
       const moduleA = moduleResolver.getModuleFromFilePath(
         "module_a.py",
@@ -420,7 +432,7 @@ def consumer_func():
     let moduleResolver: PythonModuleResolver;
 
     beforeEach(() => {
-      moduleResolver = new PythonModuleResolver(files, "3.10");
+      moduleResolver = new PythonModuleResolver(new Set(files.keys()), "3.10");
     });
 
     test("should resolve usage of module and its symbols", () => {
@@ -581,7 +593,10 @@ def consumer_func():
     const exportExtractor = new PythonExportExtractor(parser, files);
     const { symbols: originalSymbols } =
       exportExtractor.getSymbols("original.py");
-    const moduleResolver = new PythonModuleResolver(files, "3.10");
+    const moduleResolver = new PythonModuleResolver(
+      new Set(files.keys()),
+      "3.10",
+    );
 
     const originalModule = moduleResolver.getModuleFromFilePath(
       "original.py",

@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router";
 import { toast } from "react-toastify";
-import { getAudit } from "../service/auditApi";
-import GraphLayout from "../layout/GraphLayout";
+import { getDependencyManifest, getAuditManifest } from "../../service/api";
+import GraphLayout from "../../layout/GraphLayout";
 import FileExplorer, {
   FileExplorerFile,
-} from "../components/FileExplorer/FileExplorer";
-import { AuditResponse } from "../service/auditApi/types";
+} from "../../components/FileExplorer/FileExplorer";
+import { DependencyManifest } from "../../service/api/types/dependencyManifest";
+import { AuditManifest } from "../../service/api/types/auditManifest";
 
 export interface AuditContext {
   busy: boolean;
-  auditResponse: AuditResponse;
+  dependencyManifest: DependencyManifest;
+  auditManifest: AuditManifest;
   highlightedNodeId: string | null;
   detailNodeId: string | null;
   actions: {
     setHighlightedNodeId: (nodeId: string | null) => void;
-    getAuditManifest: () => Promise<AuditResponse>;
     showInSidebar: (filename: string) => void;
     setDetailNodeId: (nodeId: string | null) => void;
   };
@@ -24,42 +25,20 @@ export interface AuditContext {
 export default function BaseAuditPage() {
   const initialized = useRef(false);
 
-  const [busy, setBusy] = useState<boolean>(false);
+  const [busy, setBusy] = useState<boolean>(true);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
   const [sidebarSearch, setSidebarSearch] = useState<string>("");
 
   const [files, setFiles] = useState<FileExplorerFile[]>([]);
-  const [auditResponse, setAuditResponse] = useState<AuditResponse>({
-    dependencyManifest: {},
-    auditManifest: {},
-  });
+
+  const [auditManifest, setAuditManifest] = useState<AuditManifest>({});
+  const [dependencyManifest, setDependencyManifest] =
+    useState<DependencyManifest>({});
 
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null,
   );
   const [detailNodeId, setDetailNodeId] = useState<string | null>(null);
-
-  async function getAuditManifest(): Promise<AuditResponse> {
-    if (Object.keys(auditResponse.auditManifest).length > 0) {
-      // Already loaded
-      return auditResponse;
-    }
-    setBusy(true);
-
-    const response = await getAudit();
-
-    if (!response) {
-      setBusy(false);
-      return {
-        dependencyManifest: {},
-        auditManifest: {},
-      };
-    }
-
-    setAuditResponse(response);
-    setBusy(false);
-    return response;
-  }
 
   function showInSidebar(filename: string) {
     setSidebarOpen(true);
@@ -70,22 +49,31 @@ export default function BaseAuditPage() {
     async function handleOnLoad() {
       setBusy(true);
       try {
-        const auditResponsePromise = getAudit();
-        toast.promise(auditResponsePromise, {
+        const dependencyManifestPromise = getDependencyManifest();
+        const auditManifestPromise = getAuditManifest();
+
+        const allPromise = Promise.all([
+          dependencyManifestPromise,
+          auditManifestPromise,
+        ]);
+
+        toast.promise(allPromise, {
           success: "Successfully loaded project overview",
           error: "Failed to load project overview",
           pending: "Loading project overview...",
         });
 
-        const auditResponse = await auditResponsePromise;
-        const paths = Object.values(auditResponse.dependencyManifest).map(
-          (fileManifest) => ({
-            path: fileManifest.filePath,
-            symbols: Object.keys(fileManifest.symbols),
-          }),
-        );
+        const [dependencyManifest, auditManifest] = await allPromise;
+
+        setDependencyManifest(dependencyManifest);
+        setAuditManifest(auditManifest);
+
+        const paths = Object.values(dependencyManifest).map((fileManifest) => ({
+          path: fileManifest.filePath,
+          symbols: Object.keys(fileManifest.symbols),
+        }));
+
         setFiles(paths);
-        setAuditResponse(auditResponse);
       } finally {
         setBusy(false);
       }
@@ -103,29 +91,25 @@ export default function BaseAuditPage() {
         <FileExplorer
           busy={busy}
           files={files}
-          context={{
-            isOpen: sidebarOpen,
-            search: sidebarSearch,
-            highlightedNodeId,
-            actions: {
-              setIsOpen: setSidebarOpen,
-              setSearch: setSidebarSearch,
-              setDetailNodeId,
-              setHighlightedNodeId,
-            },
-          }}
+          isOpen={sidebarOpen}
+          setIsOpen={setSidebarOpen}
+          search={sidebarSearch}
+          setIsSearch={setSidebarSearch}
+          highlightedNodeId={highlightedNodeId}
+          setHighlightedNodeId={setHighlightedNodeId}
+          setDetailNodeId={setDetailNodeId}
         />
       }
       graphSlot={
         <Outlet
           context={{
             busy,
-            auditResponse,
+            dependencyManifest,
+            auditManifest,
             highlightedNodeId,
             detailNodeId,
             actions: {
               setHighlightedNodeId,
-              getAuditManifest,
               showInSidebar,
               setDetailNodeId,
             },

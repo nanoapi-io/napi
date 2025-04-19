@@ -1,39 +1,16 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import Parser from "tree-sitter";
 import { PythonModuleResolver } from "./index";
 import {
   PYTHON_MODULE_TYPE,
   PYTHON_NAMESPACE_MODULE_TYPE,
   PYTHON_PACKAGE_MODULE_TYPE,
 } from "./types";
-import { pythonParser } from "../../../helpers/treeSitter/parsers";
 import { sep } from "path";
-
-// Use the real parser for Python
-const parser = pythonParser;
-
-// Helper function to create a map of files with empty content
-function createFiles(paths: string[]) {
-  const fileMap = new Map<
-    string,
-    { path: string; rootNode: Parser.SyntaxNode }
-  >();
-
-  paths.forEach((path) => {
-    fileMap.set(path, {
-      path,
-      rootNode: parser.parse("").rootNode,
-    });
-  });
-
-  return fileMap;
-}
 
 describe("PythonModuleResolver", () => {
   describe("Module Map Building", () => {
     test("should build module map for a single file", () => {
-      const files = createFiles(["main.py"]);
-      const resolver = new PythonModuleResolver(files, "3.13");
+      const resolver = new PythonModuleResolver(new Set(["main.py"]), "3.13");
       const root = resolver.pythonModule;
 
       expect(root.name).toBe("");
@@ -50,8 +27,10 @@ describe("PythonModuleResolver", () => {
     });
 
     test("should build module map for multiple files at root level", () => {
-      const files = createFiles(["main.py", "utils.py", "config.py"]);
-      const resolver = new PythonModuleResolver(files, "3.13");
+      const resolver = new PythonModuleResolver(
+        new Set(["main.py", "utils.py", "config.py"]),
+        "3.13",
+      );
       const root = resolver.pythonModule;
 
       expect(root.children.size).toBe(3);
@@ -72,9 +51,10 @@ describe("PythonModuleResolver", () => {
     });
 
     test("should build module map for a simple package", () => {
-      const files = createFiles(["pkg/__init__.py", "pkg/module.py"]);
-
-      const resolver = new PythonModuleResolver(files, "3.13");
+      const resolver = new PythonModuleResolver(
+        new Set(["pkg/__init__.py", "pkg/module.py"]),
+        "3.13",
+      );
       const root = resolver.pythonModule;
 
       expect(root.children.size).toBe(1);
@@ -96,16 +76,17 @@ describe("PythonModuleResolver", () => {
     });
 
     test("should build module map for nested packages", () => {
-      const files = createFiles([
-        "pkg/__init__.py",
-        "pkg/module.py",
-        "pkg/subpkg/__init__.py",
-        "pkg/subpkg/submodule.py",
-        "pkg/subpkg/deeper/__init__.py",
-        "pkg/subpkg/deeper/core.py",
-      ]);
-
-      const resolver = new PythonModuleResolver(files, "3.13");
+      const resolver = new PythonModuleResolver(
+        new Set([
+          "pkg/__init__.py",
+          "pkg/module.py",
+          "pkg/subpkg/__init__.py",
+          "pkg/subpkg/submodule.py",
+          "pkg/subpkg/deeper/__init__.py",
+          "pkg/subpkg/deeper/core.py",
+        ]),
+        "3.13",
+      );
       const root = resolver.pythonModule;
 
       // Check first level
@@ -143,14 +124,15 @@ describe("PythonModuleResolver", () => {
     });
 
     test("should handle package namespaces with multiple modules", () => {
-      const files = createFiles([
-        "pkg/__init__.py",
-        "pkg/module1.py",
-        "pkg/module2.py",
-        "pkg/module3.py",
-      ]);
-
-      const resolver = new PythonModuleResolver(files, "3.13");
+      const resolver = new PythonModuleResolver(
+        new Set([
+          "pkg/__init__.py",
+          "pkg/module1.py",
+          "pkg/module2.py",
+          "pkg/module3.py",
+        ]),
+        "3.13",
+      );
       const pkgModule = resolver.pythonModule.children.get("pkg");
 
       expect(pkgModule?.children.size).toBe(3);
@@ -161,15 +143,16 @@ describe("PythonModuleResolver", () => {
     });
 
     test("should handle multiple packages at root level", () => {
-      const files = createFiles([
-        "pkg1/__init__.py",
-        "pkg1/module.py",
-        "pkg2/__init__.py",
-        "pkg2/module.py",
-        "main.py",
-      ]);
-
-      const resolver = new PythonModuleResolver(files, "3.13");
+      const resolver = new PythonModuleResolver(
+        new Set([
+          "pkg1/__init__.py",
+          "pkg1/module.py",
+          "pkg2/__init__.py",
+          "pkg2/module.py",
+          "main.py",
+        ]),
+        "3.13",
+      );
       const root = resolver.pythonModule;
 
       expect(root.children.size).toBe(3); // pkg1, pkg2, main
@@ -191,24 +174,24 @@ describe("PythonModuleResolver", () => {
     let resolver: PythonModuleResolver;
 
     beforeEach(() => {
-      // Set up a comprehensive project structure for testing all resolution scenarios
-      const files = createFiles([
-        "main.py",
-        "utils.py",
-        "config.py",
-        "pkg/__init__.py",
-        "pkg/module1.py",
-        "pkg/module2.py",
-        "pkg/subpkg/__init__.py",
-        "pkg/subpkg/submodule1.py",
-        "pkg/subpkg/submodule2.py",
-        "pkg/subpkg/deeper/__init__.py",
-        "pkg/subpkg/deeper/core.py",
-        "anotherpkg/__init__.py",
-        "anotherpkg/helper.py",
-      ]);
-
-      resolver = new PythonModuleResolver(files, "3.13");
+      resolver = new PythonModuleResolver(
+        new Set([
+          "main.py",
+          "utils.py",
+          "config.py",
+          "pkg/__init__.py",
+          "pkg/module1.py",
+          "pkg/module2.py",
+          "pkg/subpkg/__init__.py",
+          "pkg/subpkg/submodule1.py",
+          "pkg/subpkg/submodule2.py",
+          "pkg/subpkg/deeper/__init__.py",
+          "pkg/subpkg/deeper/core.py",
+          "anotherpkg/__init__.py",
+          "anotherpkg/helper.py",
+        ]),
+        "3.13",
+      );
     });
 
     describe("getModuleFromFilePath", () => {
@@ -580,13 +563,10 @@ describe("PythonModuleResolver", () => {
 
       test("should handle namespace packages (PEP 420)", () => {
         // Python 3.3+ allows namespace packages without __init__.py
-        const files = createFiles([
-          "main.py",
-          "namespace/pkg/module.py",
-          // No __init__.py in namespace/pkg
-        ]);
-
-        const resolver = new PythonModuleResolver(files, "3.13");
+        const resolver = new PythonModuleResolver(
+          new Set(["main.py", "namespace/pkg/module.py"]),
+          "3.13",
+        );
 
         // Should create implicit namespace package
         const root = resolver.pythonModule;
@@ -611,14 +591,15 @@ describe("PythonModuleResolver", () => {
 
       test("should handle special file names", () => {
         // Files with names matching keywords or special patterns
-        const files = createFiles([
-          "main.py",
-          "special/class.py",
-          "special/_private.py",
-          "special/with.py",
-        ]);
-
-        const resolver = new PythonModuleResolver(files, "3.13");
+        const resolver = new PythonModuleResolver(
+          new Set([
+            "main.py",
+            "special/class.py",
+            "special/_private.py",
+            "special/with.py",
+          ]),
+          "3.13",
+        );
 
         // These names are valid Python module names despite being keywords
         const classModule = resolver.getModuleFromFilePath("special/class.py");
@@ -648,15 +629,16 @@ describe("PythonModuleResolver", () => {
 
       test("should handle importing from deeply nested paths", () => {
         // Tests the from X.Y.Z import A syntax equivalent
-        const files = createFiles([
-          "main.py",
-          "deep/a/__init__.py",
-          "deep/a/b/__init__.py",
-          "deep/a/b/c/__init__.py",
-          "deep/a/b/c/d.py",
-        ]);
-
-        const resolver = new PythonModuleResolver(files, "3.13");
+        const resolver = new PythonModuleResolver(
+          new Set([
+            "main.py",
+            "deep/a/__init__.py",
+            "deep/a/b/__init__.py",
+            "deep/a/b/c/__init__.py",
+            "deep/a/b/c/d.py",
+          ]),
+          "3.13",
+        );
         const mainModule = resolver.getModuleFromFilePath("main.py");
 
         // Test importing d from deep.a.b.c
@@ -673,15 +655,15 @@ describe("PythonModuleResolver", () => {
       });
 
       test("should handle imports with ..* patterns", () => {
-        // Create files
-        const files = createFiles([
-          "patterns/a/__init__.py",
-          "patterns/a/b/__init__.py",
-          "patterns/a/b/module.py",
-          "patterns/a/other.py",
-        ]);
-
-        const resolver = new PythonModuleResolver(files, "3.13");
+        const resolver = new PythonModuleResolver(
+          new Set([
+            "patterns/a/__init__.py",
+            "patterns/a/b/__init__.py",
+            "patterns/a/b/module.py",
+            "patterns/a/other.py",
+          ]),
+          "3.13",
+        );
 
         // Get the module point of view
         const moduleFile = resolver.getModuleFromFilePath(
@@ -699,14 +681,15 @@ describe("PythonModuleResolver", () => {
 
       test("should handle resolution of _name modules", () => {
         // Modules starting with underscore are treated as internal/private
-        const files = createFiles([
-          "main.py",
-          "pkg/__init__.py",
-          "pkg/_internal.py",
-          "pkg/public.py",
-        ]);
-
-        const resolver = new PythonModuleResolver(files, "3.13");
+        const resolver = new PythonModuleResolver(
+          new Set([
+            "main.py",
+            "pkg/__init__.py",
+            "pkg/_internal.py",
+            "pkg/public.py",
+          ]),
+          "3.13",
+        );
 
         // Get the internal module
         const internalModule =

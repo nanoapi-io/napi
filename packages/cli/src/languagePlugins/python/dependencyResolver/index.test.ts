@@ -117,7 +117,7 @@ def level3_func():
 
     exportExtractor = new PythonExportExtractor(parser, files);
     importExtractor = new PythonImportExtractor(parser, files);
-    moduleResolver = new PythonModuleResolver(files, "3.10");
+    moduleResolver = new PythonModuleResolver(new Set(files.keys()), "3.10");
     usageResolver = new PythonUsageResolver(parser, exportExtractor);
     itemResolver = new PythonItemResolver(
       exportExtractor,

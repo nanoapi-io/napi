@@ -1,4 +1,4 @@
-import { DependencyManifest, Symbol } from "..";
+import { DependencyManifest, Symbol } from "../types";
 import {
   CSharpDependencyFormatter,
   CSharpFile,

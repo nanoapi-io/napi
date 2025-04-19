@@ -7,13 +7,20 @@ import {
   MdOutlineZoomIn,
   MdOutlineZoomOut,
 } from "react-icons/md";
+import {
+  charactersMetric,
+  dependenciesMetric,
+  linesOfCodeMetric,
+  noMetric,
+  TargetMetric,
+} from "../../helpers/cytoscape/projectOverview";
 
 export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
-  nodeView?: string;
-  changeNodeView?: (viewType: string) => void;
+  metricType?: TargetMetric;
+  changeMetricType?: (metricType: TargetMetric) => void;
 }) {
   function handleFit() {
     const elements = props.cy.elements();
@@ -51,16 +58,16 @@ export default function Controls(props: {
     window.history.replaceState(null, "", newHash);
   }
 
-  function changeViewType(viewType: string) {
-    if (props.changeNodeView) {
-      props.changeNodeView(viewType);
-      updateUrlQueryParams("viewType", viewType);
+  function changeMetricType(metricType: TargetMetric) {
+    if (props.changeMetricType) {
+      props.changeMetricType(metricType);
+      updateUrlQueryParams("metricType", metricType);
     }
   }
 
   function showNodeViewControls() {
-    if (props.nodeView && props.changeNodeView) {
-      const nodeView = props.nodeView;
+    if (props.metricType && props.changeMetricType) {
+      const metricType = props.metricType;
 
       return (
         <DropdownMenu.Root>
@@ -72,27 +79,33 @@ export default function Controls(props: {
               disabled={props.busy}
               className="py-1.5"
             >
-              {nodeView === "linesOfCode"
+              {metricType === "linesOfCode"
                 ? "LoC"
-                : nodeView === "characters"
+                : metricType === "characters"
                   ? "Chars"
-                  : nodeView === "dependencies"
+                  : metricType === "dependencies"
                     ? "Deps"
-                    : "default"}
+                    : "None"}
               <LuChevronUp />
             </Button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content>
-            <DropdownMenu.Item onClick={() => changeViewType("default")}>
-              Default
+            <DropdownMenu.Item onClick={() => changeMetricType(noMetric)}>
+              No Metric
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeViewType("linesOfCode")}>
+            <DropdownMenu.Item
+              onClick={() => changeMetricType(linesOfCodeMetric)}
+            >
               Lines of Code
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeViewType("characters")}>
+            <DropdownMenu.Item
+              onClick={() => changeMetricType(charactersMetric)}
+            >
               File Characters
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeViewType("dependencies")}>
+            <DropdownMenu.Item
+              onClick={() => changeMetricType(dependenciesMetric)}
+            >
               Dependencies
             </DropdownMenu.Item>
           </DropdownMenu.Content>

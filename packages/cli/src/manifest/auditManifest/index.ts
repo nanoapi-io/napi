@@ -1,6 +1,6 @@
 import z from "zod";
 import { localConfigSchema } from "../../config/localConfig";
-import { DependencyManifest } from "../dependencyManifest";
+import { DependencyManifest } from "../dependencyManifest/types";
 
 export interface AuditMessage {
   shortMessage: string;
