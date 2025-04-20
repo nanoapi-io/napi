@@ -36,29 +36,22 @@ export interface FileExplorerFile {
 export default function FileExplorer(props: {
   busy: boolean;
   files: FileExplorerFile[];
-  context: {
-    isOpen: boolean;
-    search: string;
-    highlightedNodeId: string | null;
-    actions: {
-      setIsOpen: (open: boolean) => void;
-      setSearch: (search: string) => void;
-      setHighlightedNodeId: (node: string | null) => void;
-      setDetailNodeId: (node: string | null) => void;
-    };
-  };
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  search: string;
+  setIsSearch: (search: string) => void;
+  highlightedNodeId: string | null;
+  setHighlightedNodeId: (node: string | null) => void;
+  setDetailNodeId: (node: string | null) => void;
 }) {
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
-  const { isOpen, search } = props.context;
-  const { setIsOpen, setSearch, setDetailNodeId } = props.context.actions;
-
   function nodeMatchesSearch(name: string, symbols: string[]): boolean {
     return (
-      !search ||
-      name.toLowerCase().includes(search.toLowerCase()) ||
+      !props.search ||
+      name.toLowerCase().includes(props.search.toLowerCase()) ||
       symbols.some((symbol) =>
-        symbol.toLowerCase().includes(search.toLowerCase()),
+        symbol.toLowerCase().includes(props.search.toLowerCase()),
       )
     );
   }
@@ -105,7 +98,8 @@ export default function FileExplorer(props: {
           level: existingNode.level + 1,
           name: symbol,
           matchesSearch:
-            !search || symbol.toLowerCase().includes(search.toLowerCase()),
+            !props.search ||
+            symbol.toLowerCase().includes(props.search.toLowerCase()),
           isSymbol: true,
         }));
 
@@ -187,12 +181,12 @@ export default function FileExplorer(props: {
 
   useEffect(() => {
     setTreeData(buildTreeData(props.files));
-  }, [props.files, search]);
+  }, [props.files, props.search]);
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between">
-        {isOpen && (
+        {props.isOpen && (
           <a
             className="flex items-center space-x-1 pl-3 text-gray-light dark:text-gray-dark no-underline	"
             href="https://nanoapi.io"
@@ -205,11 +199,11 @@ export default function FileExplorer(props: {
         <Button
           className="text-text-light dark:text-text-dark p-0 mx-2 my-1"
           size="1"
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={() => props.setIsOpen(!props.isOpen)}
           variant="ghost"
           radius="full"
         >
-          {isOpen ? (
+          {props.isOpen ? (
             <MdOutlineKeyboardArrowLeft className="h-8 w-8" />
           ) : (
             <MdOutlineKeyboardArrowRight className="h-8 w-8" />
@@ -218,7 +212,7 @@ export default function FileExplorer(props: {
       </div>
 
       <div
-        style={{ width: isOpen ? "325px" : "0px" }}
+        style={{ width: props.isOpen ? "325px" : "0px" }}
         className="grow flex flex-col gap-4 overflow-hidden transition-all duration-300 my-2"
       >
         {props.busy ? (
@@ -227,20 +221,20 @@ export default function FileExplorer(props: {
           <>
             <TextField.Root
               placeholder="Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={`transition-all duration-300 overflow-hidden ${!isOpen && "w-0"}`}
+              value={props.search}
+              onChange={(e) => props.setIsSearch(e.target.value)}
+              className={`transition-all duration-300 overflow-hidden ${!props.isOpen && "w-0"}`}
             >
               <TextField.Slot>
                 <MdSearch className="h-6 w-6 my-auto" />
               </TextField.Slot>
-              {search.length > 0 && (
+              {props.search.length > 0 && (
                 <TextField.Slot>
                   <IconButton
                     variant="ghost"
                     size="1"
                     className="text-text-light dark:text-text-dark"
-                    onClick={() => setSearch("")}
+                    onClick={() => props.setIsSearch("")}
                   >
                     <LuX />
                   </IconButton>
@@ -250,10 +244,10 @@ export default function FileExplorer(props: {
             <ScrollArea scrollbars="both">
               <ListElement
                 nodes={treeData}
-                search={search}
-                hlNodeId={props.context.highlightedNodeId}
-                setHLNodeId={props.context.actions.setHighlightedNodeId}
-                setDetailNodeId={setDetailNodeId}
+                search={props.search}
+                hlNodeId={props.highlightedNodeId}
+                setHLNodeId={props.setHighlightedNodeId}
+                setDetailNodeId={props.setDetailNodeId}
               />
             </ScrollArea>
           </>

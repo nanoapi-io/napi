@@ -509,7 +509,7 @@ describe("PythonItemResolver", () => {
     // Initialize resolvers
     exportExtractor = new PythonExportExtractor(pythonParser, files);
     importExtractor = new PythonImportExtractor(pythonParser, files);
-    moduleResolver = new PythonModuleResolver(files, "3.13");
+    moduleResolver = new PythonModuleResolver(new Set(files.keys()), "3.13");
     resolver = new PythonItemResolver(
       exportExtractor,
       importExtractor,

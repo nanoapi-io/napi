@@ -7,13 +7,20 @@ import {
   MdOutlineZoomIn,
   MdOutlineZoomOut,
 } from "react-icons/md";
+import {
+  charactersMetric,
+  dependenciesMetric,
+  linesOfCodeMetric,
+  noMetric,
+  TargetMetric,
+} from "../../helpers/cytoscape/projectDependencyVisualizer/types";
 
 export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
-  nodeView?: string;
-  changeNodeView?: (viewType: string) => void;
+  metricType?: TargetMetric;
+  setMetricType?: (metricType: TargetMetric) => void;
 }) {
   function handleFit() {
     const elements = props.cy.elements();
@@ -33,34 +40,9 @@ export default function Controls(props: {
     });
   }
 
-  function updateUrlQueryParams(
-    key: string,
-    value: string | number | boolean | null,
-  ) {
-    const fullHash = window.location.hash; // e.g., "#/audit/file/blahId?oldParam=123"
-    const [path, queryString = ""] = fullHash.slice(1).split("?");
-
-    const searchParams = new URLSearchParams(queryString);
-    if (value === null) {
-      searchParams.delete(key);
-    } else {
-      searchParams.set(key, String(value));
-    }
-
-    const newHash = `#${path}?${searchParams.toString()}`;
-    window.history.replaceState(null, "", newHash);
-  }
-
-  function changeViewType(viewType: string) {
-    if (props.changeNodeView) {
-      props.changeNodeView(viewType);
-      updateUrlQueryParams("viewType", viewType);
-    }
-  }
-
   function showNodeViewControls() {
-    if (props.nodeView && props.changeNodeView) {
-      const nodeView = props.nodeView;
+    if (props.metricType && props.setMetricType) {
+      const metricType = props.metricType;
 
       return (
         <DropdownMenu.Root>
@@ -72,27 +54,33 @@ export default function Controls(props: {
               disabled={props.busy}
               className="py-1.5"
             >
-              {nodeView === "linesOfCode"
+              {metricType === "linesOfCode"
                 ? "LoC"
-                : nodeView === "characters"
+                : metricType === "characters"
                   ? "Chars"
-                  : nodeView === "dependencies"
+                  : metricType === "dependencies"
                     ? "Deps"
-                    : "default"}
+                    : "None"}
               <LuChevronUp />
             </Button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content>
-            <DropdownMenu.Item onClick={() => changeViewType("default")}>
-              Default
+            <DropdownMenu.Item onClick={() => props.setMetricType?.(noMetric)}>
+              No Metric
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeViewType("linesOfCode")}>
+            <DropdownMenu.Item
+              onClick={() => props.setMetricType?.(linesOfCodeMetric)}
+            >
               Lines of Code
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeViewType("characters")}>
+            <DropdownMenu.Item
+              onClick={() => props.setMetricType?.(charactersMetric)}
+            >
               File Characters
             </DropdownMenu.Item>
-            <DropdownMenu.Item onClick={() => changeViewType("dependencies")}>
+            <DropdownMenu.Item
+              onClick={() => props.setMetricType?.(dependenciesMetric)}
+            >
               Dependencies
             </DropdownMenu.Item>
           </DropdownMenu.Content>

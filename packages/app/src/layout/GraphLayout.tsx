@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Button } from "@radix-ui/themes";
-import { ThemeContext } from "../contexts/ThemeContext";
+import { ThemeContext, lightTheme, darkTheme } from "../contexts/ThemeContext";
 import { Link, useParams } from "react-router";
 import { MdLightMode, MdDarkMode, MdKeyboardArrowLeft } from "react-icons/md";
 
@@ -45,9 +45,9 @@ export default function GraphLayout(props: {
             <Button
               variant="ghost"
               size="1"
-              onClick={() => themeContext.changeTheme("light")}
+              onClick={() => themeContext.changeTheme(lightTheme)}
               className={`p-2.5 rounded-md ${
-                themeContext.theme === "light"
+                themeContext.theme === lightTheme
                   ? "bg-secondarySurface-light"
                   : ""
               }`}
@@ -57,9 +57,11 @@ export default function GraphLayout(props: {
             <Button
               variant="ghost"
               size="1"
-              onClick={() => themeContext.changeTheme("dark")}
+              onClick={() => themeContext.changeTheme(darkTheme)}
               className={`p-2.5 rounded-md ${
-                themeContext.theme === "dark" ? "bg-secondarySurface-dark" : ""
+                themeContext.theme === darkTheme
+                  ? "bg-secondarySurface-dark"
+                  : ""
               }`}
             >
               <MdDarkMode className="text-gray-light dark:text-gray-dark h-6 w-6" />
