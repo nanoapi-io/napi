@@ -122,7 +122,6 @@ export function generatePythonDependencyManifest(
   let i = 0;
   for (const [, { path }] of files) {
     i++;
-    console.info(`Processing file ${i}/${files.size}: ${path}`);
 
     const fileDependencies = dependencyResolver.getFileDependencies(path);
     if (!fileDependencies) {
@@ -176,6 +175,8 @@ export function generatePythonDependencyManifest(
     }
 
     manifest[path] = fileManifest;
+
+    console.info(`✅ Processed file ${i}/${files.size}: ${path}`);
   }
 
   console.info(
