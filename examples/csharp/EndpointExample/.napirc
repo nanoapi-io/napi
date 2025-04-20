@@ -3,6 +3,5 @@
     "language": "c-sharp",
     "include": ["**/*"],
     "exclude": ["bin/**", "obj/**"],
-    "manifestoJsonOutputPath": "./"
   }
 }

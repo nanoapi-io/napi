@@ -37,9 +37,12 @@ describe("PythonSymbolExtractor", () => {
     files: Map<string, { path: string; content: string }>,
   ): DependencyManifest {
     const dependencyManifest = generatePythonDependencyManifest(files, {
-      audit: {
-        language: "python",
-        pythonVersion: "3.10",
+      language: "python",
+      python: {
+        version: "3.10",
+      },
+      outDir: "napi_out",
+      project: {
         include: [],
         exclude: [],
       },

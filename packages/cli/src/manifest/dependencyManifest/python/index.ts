@@ -77,7 +77,7 @@ export function generatePythonDependencyManifest(
 
   const parser = pythonParser;
 
-  const pythonVersion = napiConfig.audit?.pythonVersion;
+  const pythonVersion = napiConfig.python?.version;
   if (!pythonVersion) {
     throw new Error(
       "Python version is required in the .napirc file (audit.pythonVersion).",

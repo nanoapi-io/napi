@@ -16,11 +16,11 @@ export function getApi(
   workDir: string,
   napiConfig: z.infer<typeof localConfigSchema>,
 ) {
-  const fileExtensions = getExtensionsForLanguage(napiConfig.audit.language);
+  const fileExtensions = getExtensionsForLanguage(napiConfig.language);
 
   const files = getFilesFromDirectory(workDir, {
-    includes: napiConfig.audit?.include || ["**"],
-    excludes: napiConfig.audit?.exclude || [],
+    includes: napiConfig.project.include,
+    excludes: napiConfig.project.exclude,
     extensions: fileExtensions,
     logMessages: true,
   });
