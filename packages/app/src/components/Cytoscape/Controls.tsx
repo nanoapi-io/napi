@@ -13,14 +13,14 @@ import {
   linesOfCodeMetric,
   noMetric,
   TargetMetric,
-} from "../../helpers/cytoscape/projectOverview";
+} from "../../helpers/cytoscape/projectDependencyVisualizer/types";
 
 export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
   metricType?: TargetMetric;
-  changeMetricType?: (metricType: TargetMetric) => void;
+  setMetricType?: (metricType: TargetMetric) => void;
 }) {
   function handleFit() {
     const elements = props.cy.elements();
@@ -40,33 +40,8 @@ export default function Controls(props: {
     });
   }
 
-  function updateUrlQueryParams(
-    key: string,
-    value: string | number | boolean | null,
-  ) {
-    const fullHash = window.location.hash; // e.g., "#/audit/file/blahId?oldParam=123"
-    const [path, queryString = ""] = fullHash.slice(1).split("?");
-
-    const searchParams = new URLSearchParams(queryString);
-    if (value === null) {
-      searchParams.delete(key);
-    } else {
-      searchParams.set(key, String(value));
-    }
-
-    const newHash = `#${path}?${searchParams.toString()}`;
-    window.history.replaceState(null, "", newHash);
-  }
-
-  function changeMetricType(metricType: TargetMetric) {
-    if (props.changeMetricType) {
-      props.changeMetricType(metricType);
-      updateUrlQueryParams("metricType", metricType);
-    }
-  }
-
   function showNodeViewControls() {
-    if (props.metricType && props.changeMetricType) {
+    if (props.metricType && props.setMetricType) {
       const metricType = props.metricType;
 
       return (
@@ -90,21 +65,21 @@ export default function Controls(props: {
             </Button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content>
-            <DropdownMenu.Item onClick={() => changeMetricType(noMetric)}>
+            <DropdownMenu.Item onClick={() => props.setMetricType?.(noMetric)}>
               No Metric
             </DropdownMenu.Item>
             <DropdownMenu.Item
-              onClick={() => changeMetricType(linesOfCodeMetric)}
+              onClick={() => props.setMetricType?.(linesOfCodeMetric)}
             >
               Lines of Code
             </DropdownMenu.Item>
             <DropdownMenu.Item
-              onClick={() => changeMetricType(charactersMetric)}
+              onClick={() => props.setMetricType?.(charactersMetric)}
             >
               File Characters
             </DropdownMenu.Item>
             <DropdownMenu.Item
-              onClick={() => changeMetricType(dependenciesMetric)}
+              onClick={() => props.setMetricType?.(dependenciesMetric)}
             >
               Dependencies
             </DropdownMenu.Item>
