@@ -44,7 +44,7 @@ export function getApi(
     res.json(auditManifest);
   });
 
-  api.post("api/extractSymbol", (req, res) => {
+  api.post("/api/extractSymbol", (req, res) => {
     const parsedPayload = extractSymbolPayloadSchema.safeParse(req.body);
 
     if (!parsedPayload.success) {

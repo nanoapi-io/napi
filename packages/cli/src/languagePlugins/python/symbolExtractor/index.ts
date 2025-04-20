@@ -30,6 +30,7 @@ export class PythonSymbolExtractor {
   public usageResolver: PythonUsageResolver;
   private dependencyManifest: DependencyManifest;
   private errorNodeQuery: Parser.Query;
+  private processedSymbols: Set<string> = new Set<string>();
 
   /**
    * Creates a new Python Symbol Extractor
@@ -137,6 +138,17 @@ export class PythonSymbolExtractor {
       }
     >(),
   ) {
+    // Create a unique key for this symbol to track processing
+    const symbolKey = `${filePath}:${symbolName}`;
+
+    // If we've already processed this symbol, return to avoid circular dependency
+    if (this.processedSymbols.has(symbolKey)) {
+      return symbolsToKeep;
+    }
+
+    // Mark this symbol as being processed
+    this.processedSymbols.add(symbolKey);
+
     // Add the symbol itself to the filesToKeep map
     let fileToKeep = symbolsToKeep.get(filePath);
     if (!fileToKeep) {
@@ -183,6 +195,8 @@ export class PythonSymbolExtractor {
         this.addSymbolAndDependencies(dependency.id, depSymbol, symbolsToKeep);
       });
     }
+
+    return symbolsToKeep;
   }
 
   /**

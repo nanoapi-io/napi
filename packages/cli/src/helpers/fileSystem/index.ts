@@ -6,7 +6,7 @@ import {
   writeFileSync,
 } from "fs";
 import { globSync } from "glob";
-import { join } from "path";
+import { dirname, join } from "path";
 
 export function getExtensionsForLanguage(language: string) {
   const supportedLanguages = {
@@ -94,6 +94,7 @@ export function writeFilesToDirectory(
 
   for (const { path, content } of files.values()) {
     const fullPath = join(dir, path);
+    mkdirSync(dirname(fullPath), { recursive: true });
     writeFileSync(fullPath, content);
   }
 }
