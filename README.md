@@ -7,7 +7,7 @@ With both a powerful CLI and an intuitive UI, `napi` is compatible with all majo
 
 Historically, tools like this have only been built by large consulting firms or contractors and kept behind the paywalls of consulting fees. `napi` aims to make these tools accessible to developers of all skill levels, without the cost. Our vision is to help you gain deeper insights into system architecture-level concerns before they become hundred-million-dollar problems. The added benefit? No more black-box tools running on your code and the confidence of a 100% determinstic tool.
 
-![NanoAPI UI Overview](/media/hero-app.png)
+![NanoAPI UI Overview](/media/hero-app.jpeg)
 
 ## Features
 
