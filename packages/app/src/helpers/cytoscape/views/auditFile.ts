@@ -496,6 +496,13 @@ export function getCyStyle(theme: Theme) {
         "curve-style": "bezier",
       },
     },
+    // hide elements
+    {
+      selector: ".hidden",
+      style: {
+        display: "none",
+      },
+    }
   ] as StylesheetJson;
 }
 

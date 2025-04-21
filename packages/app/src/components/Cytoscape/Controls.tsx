@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button, DropdownMenu } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
@@ -6,6 +7,7 @@ import {
   MdOutlineAccountTree,
   MdOutlineZoomIn,
   MdOutlineZoomOut,
+  MdFilterAlt
 } from "react-icons/md";
 import {
   charactersMetric,
@@ -22,6 +24,8 @@ export default function Controls(props: {
   metricType?: TargetMetric;
   setMetricType?: (metricType: TargetMetric) => void;
 }) {
+  const [filters, setFilters] = useState({});
+
   function handleFit() {
     const elements = props.cy.elements();
     const padding = 10;
@@ -91,6 +95,33 @@ export default function Controls(props: {
     }
   }
 
+  function showFileViewControls() {
+    if (props.metricType) {
+      return <></>;
+    }
+    const isFiltered = Object.keys(filters).length > 0;
+
+    return (
+      <div className="flex gap-4">
+        <Button
+          size="1"
+          variant="ghost"
+          highContrast
+          className={`${isFiltered ? "bg-primary-light/20 dark:bg-primary-dark/20" : ""}`}
+          disabled={props.busy}
+          onClick={() => props.onLayout()}
+        >
+          <MdFilterAlt className={`text-xl h-5 w-5 ${
+            isFiltered
+              ? "text-primary-light dark:text-primary-dark"
+              : "text-gray-light dark:text-gray-dark"
+          }`} />
+          <LuChevronUp />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute bottom-6 inset-x-4 z-10 flex justify-around">
       <div className="flex gap-3 items-center">
@@ -132,6 +163,7 @@ export default function Controls(props: {
             <MdOutlineZoomIn className="text-2xl h-5 w-5" />
           </Button>
           {showNodeViewControls()}
+          {showFileViewControls()}
         </div>
       </div>
     </div>

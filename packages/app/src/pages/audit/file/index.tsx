@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import cytoscape, { Core } from "cytoscape";
 import Controls from "../../../components/Cytoscape/Controls.js";
 import { useOutletContext, useParams, useNavigate } from "react-router";
@@ -13,6 +14,8 @@ import {
 } from "../../../helpers/cytoscape/views/auditFile.js";
 import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
 import { AuditContext } from "../base.js";
+
+const INITIAL_ELEMENT_LIMIT = 50;
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
@@ -63,6 +66,45 @@ export default function AuditFilePage() {
 
     // Apply layout
     cy.layout(layout).run();
+
+    if (elements.length > INITIAL_ELEMENT_LIMIT) {
+      // If there are more than INITIAL_ELEMENT_LIMIT elements, we want to collapse all of the external nodes and edges
+      toast.info(
+        "We've auto-collapsed the graph to improve performance. You can expand nodes via filter and search to see more details.",
+      );
+      cy.elements().forEach((element) => {
+        // Done like this so ts doesn't complain about the type
+        let edge = false;
+        if (element.isEdge()) {
+          edge = true;
+        }
+  
+        if (edge) {
+          // If the source or the target of the edge is not in the current file, we want to hide it
+          const source = element.source();
+          const target = element.target();
+          const sourceData = source.data() as NodeElementDefinition["data"];
+          const targetData = target.data() as NodeElementDefinition["data"];
+          if (sourceData.isExternal || targetData.isExternal) {
+            element.addClass("hidden");
+          }
+          return;
+        } 
+        else {
+          const data = element.data() as NodeElementDefinition["data"];
+          // Hide all of the nodes that are not defined within the current file
+          if (data.isExternal) {
+            element.addClass("hidden");
+            return;
+          }
+          else if (!data.isExternal && !data.isCurrentFile) {
+            // If it's an instance, we want to hide it
+            element.addClass("hidden");
+          }
+        }
+      });
+    }
+
 
     // Add event listeners
     addEventListeners(cy);
