@@ -36,14 +36,17 @@ export default function AuditPage() {
     setMetricType(metricType);
   }
 
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
     y: 0,
   });
-  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>(
+  const [actionMenuNodeId, setActionMenuNodeId] = useState<string | undefined>(
     undefined,
   );
+  const [detailsPaneNodeId, setDetailsPaneNodeId] = useState<
+    string | undefined
+  >(undefined);
 
   const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
 
@@ -63,8 +66,8 @@ export default function AuditPage() {
           id: string;
         }) => {
           setContextMenuPosition(value.position);
-          setContextMenuOpen(true);
-          setSelectedNodeId(value.id);
+          setActionMenuOpen(true);
+          setActionMenuNodeId(value.id);
         },
         onAfterNodeDblClick: (data: NapiNodeData) => {
           const urlEncodedFileName = encodeURIComponent(
@@ -101,6 +104,11 @@ export default function AuditPage() {
 
   return (
     <div className="relative w-full h-full">
+      {/* This is the container for Cytoscape */}
+      {/* It is important to set the width and height to 100% */}
+      {/* Otherwise, Cytoscape will not render correctly */}
+      <div ref={containerRef} className="absolute w-full h-full z-10" />
+
       {(context.busy || busy || !projectVisualizer) && <CytoscapeSkeleton />}
 
       {projectVisualizer && (
@@ -113,30 +121,34 @@ export default function AuditPage() {
         />
       )}
 
-      {selectedNodeId && (
+      {actionMenuNodeId && (
         <>
           <FileActionMenu
             position={contextMenuPosition}
-            fileDependencyManifest={context.dependencyManifest[selectedNodeId]}
-            open={contextMenuOpen}
-            onOpenChange={setContextMenuOpen}
+            fileDependencyManifest={
+              context.dependencyManifest[actionMenuNodeId]
+            }
+            open={actionMenuOpen}
+            onOpenChange={setActionMenuOpen}
             showInSidebar={context.actions.showInSidebar}
-            setDetailsPaneOpen={setDetailsPaneOpen}
-          />
-
-          <FileDetailsPane
-            fileDependencyManifest={context.dependencyManifest[selectedNodeId]}
-            fileAuditManifest={context.auditManifest[selectedNodeId]}
-            open={detailsPaneOpen}
-            setOpen={setDetailsPaneOpen}
+            setDetailsPaneOpen={(open) => {
+              setDetailsPaneOpen(open);
+              if (open) {
+                setDetailsPaneNodeId(actionMenuNodeId);
+              }
+            }}
           />
         </>
       )}
 
-      {/* This is the container for Cytoscape */}
-      {/* It is important to set the width and height to 100% */}
-      {/* Otherwise, Cytoscape will not render correctly */}
-      <div ref={containerRef} className="relative w-full h-full z-1" />
+      {detailsPaneNodeId && (
+        <FileDetailsPane
+          fileDependencyManifest={context.dependencyManifest[detailsPaneNodeId]}
+          fileAuditManifest={context.auditManifest[detailsPaneNodeId]}
+          open={detailsPaneOpen}
+          setOpen={setDetailsPaneOpen}
+        />
+      )}
     </div>
   );
 }

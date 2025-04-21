@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { Callout } from "@radix-ui/themes";
+import { Button, Callout, Separator } from "@radix-ui/themes";
 import {
   LuX,
   LuMessageSquareWarning,
@@ -34,41 +34,47 @@ export default function FileDetailsPane(props: {
   };
 
   return (
-    <dialog
-      open={props.open}
-      className="mr-0 w-[400px] h-[91%] bg-background-light dark:bg-background-dark shadow-xl z-[8888] p-6 rounded-l-lg"
-    >
-      <div className="flex justify-between items-center my-4">
-        <h2 className="text-xl font-semibold font-mono break-words text-wrap max-w-[310px]">
-          {props.fileDependencyManifest.filePath.split("/").pop()}
-        </h2>
-        <button
-          onClick={onClose}
-          className="text-xl text-gray-light hover:text-black dark:text-gray-dark dark:hover:text-white"
-        >
-          <LuX />
-        </button>
-      </div>
+    <div className="relative h-full flex justify-end z-1">
+      <div
+        style={{
+          width: props.open ? "400px" : "0px",
+          opacity: props.open ? 1 : 0,
+        }}
+        className="z-20 h-full flex flex-col gap-5 bg-background-light dark:bg-background-dark shadow-xl p-6 rounded-l-lg transition-all duration-300 ease-in-out overflow-hidden"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold font-mono break-words text-wrap">
+              {props.fileDependencyManifest.filePath.split("/").pop()}
+            </h2>
+            <Button
+              onClick={onClose}
+              variant="ghost"
+              className="text-xl text-text-light dark:text-text-dark"
+            >
+              <LuX />
+            </Button>
+          </div>
 
-      <div className="w-full border-b border-b-border-light dark:border-b-border-dark"></div>
-
-      <div className="mt-6 h-full flex flex-col space-y-5">
-        <p>
-          <strong>Total Lines of Code:</strong>{" "}
-          {props.fileDependencyManifest.lineCount}
-        </p>
-
-        <p>
-          <strong>Total dependencies:</strong>{" "}
-          {Object.keys(props.fileDependencyManifest.dependencies).length}
-        </p>
+          <Separator className="w-full" />
+        </div>
 
         <div>
-          <p>
+          <strong>Total Lines of Code:</strong>{" "}
+          {props.fileDependencyManifest.lineCount}
+        </div>
+
+        <div>
+          <strong>Total dependencies:</strong>{" "}
+          {Object.keys(props.fileDependencyManifest.dependencies).length}
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <div>
             <strong>Total Symbols:</strong>{" "}
             {Object.keys(props.fileDependencyManifest.symbols).length}
-          </p>
-          <ul className="mt-2 pl-6 list-disc">
+          </div>
+          <ul className="list-inside list-disc">
             {Object.entries(
               Object.values(props.fileDependencyManifest.symbols).reduce(
                 (acc, symbol) => {
@@ -85,19 +91,19 @@ export default function FileDetailsPane(props: {
           </ul>
         </div>
 
-        <div>
+        <div className="flex flex-col gap-2">
           <div className="flex justify-between">
-            <p>
+            <div>
               <strong>Errors:</strong> {props.fileAuditManifest.errors.length}
-            </p>
+            </div>
             <LuMessageSquareX
               className={`text-2xl ${
-                props.fileAuditManifest.errors.length > 0 ? "text-red-500" : ""
+                props.fileAuditManifest.errors.length > 0 && "text-red-500"
               }`}
             />
           </div>
           {props.fileAuditManifest.errors.map((error, index) => (
-            <Callout.Root key={index} color="red" className="mt-2">
+            <Callout.Root key={index} color="red">
               <Callout.Icon>
                 <LuCircleX />
               </Callout.Icon>
@@ -106,22 +112,20 @@ export default function FileDetailsPane(props: {
           ))}
         </div>
 
-        <div>
+        <div className="flex flex-col gap-2">
           <div className="flex justify-between">
-            <p>
+            <div>
               <strong>Warnings:</strong>{" "}
               {props.fileAuditManifest.warnings.length}
-            </p>
+            </div>
             <LuMessageSquareWarning
               className={`text-2xl ${
-                props.fileAuditManifest.warnings.length > 0
-                  ? "text-yellow-500"
-                  : ""
+                props.fileAuditManifest.warnings.length > 0 && "text-yellow"
               }`}
             />
           </div>
           {props.fileAuditManifest.warnings.map((warning, index) => (
-            <Callout.Root key={index} color="yellow" className="mt-2">
+            <Callout.Root key={index} color="yellow">
               <Callout.Icon>
                 <LuCircleAlert />
               </Callout.Icon>
@@ -129,17 +133,19 @@ export default function FileDetailsPane(props: {
             </Callout.Root>
           ))}
         </div>
-      </div>
 
-      <div className="absolute bottom-6 right-6 w-[350px]">
-        <button
-          onClick={navigateToFile}
-          className="w-full px-4 py-2 flex justify-center space-x-2 bg-primary-light dark:bg-primary-dark text-white rounded-lg hover:bg-primary-dark dark:hover:bg-primary-light transition-colors duration-300"
-        >
-          <LuSearchCode className="text-xl my-auto" />{" "}
-          <span className="my-auto">Inspect file interactions</span>
-        </button>
+        <div className="grow flex flex-col justify-end">
+          <Button
+            onClick={navigateToFile}
+            variant="ghost"
+            size="3"
+            className="flex justify-center gap-2 text-text-light dark:text-text-dark"
+          >
+            <LuSearchCode className="text-xl my-auto" />{" "}
+            <span className="my-auto">Inspect file interactions</span>
+          </Button>
+        </div>
       </div>
-    </dialog>
+    </div>
   );
 }
