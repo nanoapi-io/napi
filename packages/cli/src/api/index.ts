@@ -70,7 +70,7 @@ export function getApi(
       napiConfig,
     );
 
-    const outputDir = join(workDir, "napi-output");
+    const outputDir = join(workDir, napiConfig.outDir);
     writeFilesToDirectory(extractedFileMap, outputDir);
 
     res.status(200).json({
