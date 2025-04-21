@@ -6,7 +6,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton.js";
 import { LuPanelRightOpen, LuX } from "react-icons/lu";
 import languageIcon from "./languageIcons.js";
@@ -42,7 +42,6 @@ export default function FileExplorer(props: {
   setIsSearch: (search: string) => void;
   highlightedNodeId: string | null;
   setHighlightedNodeId: (node: string | null) => void;
-  setDetailNodeId: (node: string | null) => void;
 }) {
   const [treeData, setTreeData] = useState<TreeData[]>([]);
 
@@ -247,7 +246,6 @@ export default function FileExplorer(props: {
                 search={props.search}
                 hlNodeId={props.highlightedNodeId}
                 setHLNodeId={props.setHighlightedNodeId}
-                setDetailNodeId={props.setDetailNodeId}
               />
             </ScrollArea>
           </>
@@ -262,7 +260,6 @@ function ListElement(props: {
   search: string;
   hlNodeId: string | null;
   setHLNodeId: (node: string | null) => void;
-  setDetailNodeId: (node: string | null) => void;
 }) {
   return (
     <ul>
@@ -274,7 +271,6 @@ function ListElement(props: {
             search={props.search}
             hlNodeId={props.hlNodeId}
             setHLNodeId={props.setHLNodeId}
-            setDetailNodeId={props.setDetailNodeId}
           />
         );
       })}
@@ -287,8 +283,9 @@ function NodeElement(props: {
   search: string;
   hlNodeId: string | null;
   setHLNodeId: (node: string | null) => void;
-  setDetailNodeId: (node: string | null) => void;
 }) {
+  const navigate = useNavigate();
+
   const params = useParams<{ file?: string }>();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -296,21 +293,26 @@ function NodeElement(props: {
   const shouldAutoExpand = props.search.length > 0 && props.node.matchesSearch;
   const isHighlighted = props.hlNodeId === props.node.id;
 
-  const toggleHighlight = (id: string) => {
+  function toggleHighlight(id: string) {
     if (isHighlighted) {
       props.setHLNodeId(null);
     } else {
       props.setHLNodeId(id);
     }
-  };
+  }
 
   useEffect(() => {
     setIsOpen(shouldAutoExpand);
   }, [shouldAutoExpand]);
 
-  const handleToggle = () => {
+  function handleToggle() {
     setIsOpen((value) => !value);
-  };
+  }
+
+  function handleOnDetailClick() {
+    const urlEncodedFileName = encodeURIComponent(props.node.id);
+    navigate(`/audit/${urlEncodedFileName}`);
+  }
 
   return (
     <li
@@ -369,7 +371,7 @@ function NodeElement(props: {
                     <Button
                       variant="ghost"
                       className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
-                      onClick={() => props.setDetailNodeId(props.node.id)}
+                      onClick={handleOnDetailClick}
                     >
                       <LuPanelRightOpen className="text-gray-light dark:text-gray-dark" />
                     </Button>
@@ -396,7 +398,6 @@ function NodeElement(props: {
           search={props.search}
           hlNodeId={props.hlNodeId}
           setHLNodeId={props.setHLNodeId}
-          setDetailNodeId={props.setDetailNodeId}
         />
       )}
     </li>

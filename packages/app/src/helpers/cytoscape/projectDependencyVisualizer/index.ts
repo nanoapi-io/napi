@@ -49,7 +49,9 @@ export class ProjectDependencyVisualizer {
   /** Current metric used for node coloring */
   private targetMetric: TargetMetric;
   /** Currently selected node in the graph */
-  private selectedNode: NodeSingular | undefined;
+  private selectedNodeId: string | undefined;
+  /** Currently highlighted node in the graph */
+  private highlightedNodeId: string | undefined;
   /** Callback functions triggered by graph interactions */
   private externalCallbacks: {
     onAfterNodeClick: () => void;
@@ -139,6 +141,24 @@ export class ProjectDependencyVisualizer {
   }
 
   /**
+   * Highlights a specific node in the graph
+   *
+   * @param nodeId - The ID of the node to highlight
+   */
+  public highlightNode(nodeId: string) {
+    this.highlightedNodeId = nodeId;
+    this.setNodesStyle();
+  }
+
+  /**
+   * Unhighlights all nodes in the graph
+   */
+  public unhighlightNodes() {
+    this.highlightedNodeId = undefined;
+    this.setNodesStyle();
+  }
+
+  /**
    * Updates styles of nodes based on the current selection state
    * and target metric for coloring.
    *
@@ -146,34 +166,44 @@ export class ProjectDependencyVisualizer {
    * and background nodes based on relationships.
    */
   private setNodesStyle() {
-    if (this.selectedNode) {
-      const closedNeighborhoodNodes = this.selectedNode
-        .closedNeighborhood()
-        .nodes();
-      const backgroundElements = this.cy
-        .elements()
-        .difference(closedNeighborhoodNodes);
+    this.cy.batch(() => {
+      if (this.selectedNodeId) {
+        const closedNeighborhoodNodes = this.cy
+          .nodes(`node[id="${this.selectedNodeId}"]`)
+          .closedNeighborhood()
+          .nodes();
+        const backgroundElements = this.cy
+          .elements()
+          .difference(closedNeighborhoodNodes);
 
-      this.cy.batch(() => {
         closedNeighborhoodNodes.removeStyle();
         closedNeighborhoodNodes.style({
           "border-color": (node: NodeSingular) =>
-            node.data(`customData.viewColors.${this.targetMetric}`),
+            node.data(`customData.viewColors.${this.targetMetric}`) ||
+            undefined,
         });
 
         backgroundElements.removeStyle();
         backgroundElements.style({
           "background-color": (node: NodeSingular) =>
-            node.data(`customData.viewColors.${this.targetMetric}`),
+            node.data(`customData.viewColors.${this.targetMetric}`) ||
+            undefined,
         });
-      });
-    } else {
-      this.cy.nodes().removeStyle();
-      this.cy.nodes().style({
-        "background-color": (node: NodeSingular) =>
-          node.data(`customData.viewColors.${this.targetMetric}`),
-      });
-    }
+      } else {
+        this.cy.nodes().removeStyle();
+        this.cy.nodes().style({
+          "background-color": (node: NodeSingular) =>
+            node.data(`customData.viewColors.${this.targetMetric}`) ||
+            undefined,
+        });
+      }
+
+      if (this.highlightedNodeId) {
+        this.cy.nodes(`node[id="${this.highlightedNodeId}"]`).style({
+          "background-color": "#FF00FF", // Magenta/fuchsia color not used elsewhere
+        });
+      }
+    });
   }
 
   /**
@@ -184,32 +214,32 @@ export class ProjectDependencyVisualizer {
    */
   private createEventListeners() {
     this.cy.on("onetap", "node", (evt: EventObjectNode) => {
-      const isAlreadySelected = this.selectedNode?.id() === evt.target.id();
+      const isAlreadySelected = this.selectedNodeId === evt.target.id();
 
-      this.selectedNode = evt.target;
+      this.selectedNodeId = evt.target.id();
 
       const allElements = this.cy.elements();
 
-      const connectedNodes = this.selectedNode
+      const selectedNode = this.cy.nodes(`node[id="${this.selectedNodeId}"]`);
+
+      const connectedNodes = selectedNode
         .closedNeighborhood()
         .nodes()
-        .difference(this.selectedNode);
+        .difference(selectedNode);
 
-      const dependentEdges = this.selectedNode
+      const dependentEdges = selectedNode
         .connectedEdges()
         .filter(
-          (edge: EdgeSingular) =>
-            edge.source().id() === this.selectedNode?.id(),
+          (edge: EdgeSingular) => edge.source().id() === this.selectedNodeId,
         );
 
-      const dependencyEdges = this.selectedNode
+      const dependencyEdges = selectedNode
         .connectedEdges()
         .filter(
-          (edge: EdgeSingular) =>
-            edge.target().id() === this.selectedNode?.id(),
+          (edge: EdgeSingular) => edge.target().id() === this.selectedNodeId,
         );
 
-      const focusedElements = this.selectedNode.closedNeighborhood();
+      const focusedElements = selectedNode.closedNeighborhood();
 
       const backgroundElements = allElements.difference(focusedElements);
 
@@ -230,12 +260,12 @@ export class ProjectDependencyVisualizer {
           connectedNodes.addClass("connected");
           dependencyEdges.addClass("dependency");
           dependentEdges.addClass("dependent");
-          this.selectedNode?.addClass("selected");
+          selectedNode.addClass("selected");
 
           // layout the closed neighborhood
           focusedElements.layout(this.layout).run();
         } else {
-          this.selectedNode = undefined;
+          this.selectedNodeId = undefined;
         }
 
         this.setNodesStyle();
@@ -359,16 +389,6 @@ export class ProjectDependencyVisualizer {
           "z-index": 1000,
           width: "data(customData.collapsed.width)",
           height: "data(customData.collapsed.height)",
-        },
-      },
-      {
-        selector: "node.highlighted",
-        style: {
-          "background-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
-          "z-index": 1000,
-          "min-width": 50,
-          "min-height": 50,
         },
       },
       {
