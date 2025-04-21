@@ -31,7 +31,7 @@ export function extractSymbols(
   symbolsToExtract: Map<string, { filePath: string; symbols: Set<string> }>,
   napiConfig: z.infer<typeof localConfigSchema>,
 ): ExtractedFilesMap {
-  const languageName = napiConfig.audit.language;
+  const languageName = napiConfig.language;
   const handler = handlerMap[languageName];
   if (!handler) {
     throw new UnsupportedLanguageError(languageName);

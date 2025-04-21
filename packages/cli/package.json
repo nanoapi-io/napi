@@ -36,7 +36,7 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon src/index.ts",
+    "dev": "cross-env NODE_ENV=development nodemon --no-stdin src/index.ts",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
@@ -61,10 +61,10 @@
     "ts-node": "^10.9.2"
   },
   "dependencies": {
+    "@inquirer/prompts": "^7.4.1",
     "express": "^4.21.2",
     "glob": "^11.0.1",
     "http-proxy-middleware": "^3.0.3",
-    "prompts": "^2.4.2",
     "tree-sitter": "^0.22.4",
     "tree-sitter-c-sharp": "^0.23.1",
     "tree-sitter-python": "^0.23.5",

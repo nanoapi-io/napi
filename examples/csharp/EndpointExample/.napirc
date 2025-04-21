@@ -1,8 +1,20 @@
 {
-  "audit": {
-    "language": "c-sharp",
+  "language": "csharp",
+  "project": {
     "include": ["**/*"],
-    "exclude": ["bin/**", "obj/**"],
-    "manifestoJsonOutputPath": "./"
+    "exclude": ["bin/**", "obj/**"]
+  },
+  "outDir": "napi-output",
+  "metrics": {
+    "file": {
+      "maxChar": 100000,
+      "maxLine": 1000,
+      "maxDep": 10
+    },
+    "symbol": {
+      "maxChar": 50000,
+      "maxLine": 500,
+      "maxDep": 5
+    }
   }
 }

@@ -3,7 +3,7 @@ import { hideBin } from "yargs/helpers";
 import { checkVersionMiddleware } from "./helpers/checkNpmVersion";
 import { globalOptions } from "./helpers/options";
 import initCommand from "./handlers/init";
-import auditCommand from "./handlers/audit/index";
+import auditCommand from "./handlers/audit";
 import { TelemetryEvents, trackEvent } from "../telemetry";
 
 export function initCli() {

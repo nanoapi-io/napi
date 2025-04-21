@@ -1,8 +1,23 @@
 {
-  "audit": {
-    "language": "python",
+  "language": "python",
+  "python": {
+    "version": "3.12"
+  },
+  "project": {
     "include": ["app.py", "api/**"],
-    "exclude": [],
-    "pythonVersion": "3.12"
+    "exclude": []
+  },
+  "outDir": "napi-output",
+  "metrics": {
+    "file": {
+      "maxChar": 100000,
+      "maxLine": 1000,
+      "maxDep": 10
+    },
+    "symbol": {
+      "maxChar": 50000,
+      "maxLine": 500,
+      "maxDep": 5
+    }
   }
 }

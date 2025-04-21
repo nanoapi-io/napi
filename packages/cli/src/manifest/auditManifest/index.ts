@@ -46,8 +46,6 @@ export function generateAuditManifest(
 ): AuditManifest {
   const AuditManifest: AuditManifest = {};
 
-  const auditConfig = napiConfig.audit;
-
   for (const fileManifest of Object.values(dependencyManifest)) {
     const fileAuditManifest: FileAuditManifest = {
       id: fileManifest.id,
@@ -63,19 +61,17 @@ export function generateAuditManifest(
     };
 
     // Check #1: File length (characters)
-    if (auditConfig.targetMaxCharInFile) {
+    if (napiConfig.metrics?.file?.maxChar) {
       const charCount = fileManifest.characterCount;
-      if (charCount > auditConfig.targetMaxCharInFile) {
+      const maxChar = napiConfig.metrics.file.maxChar;
+      if (charCount > maxChar) {
         const error = {
           shortMessage: "File too large",
-          longMessage: `File exceeds maximum character limit (${charCount}/${auditConfig.targetMaxCharInFile})`,
+          longMessage: `File exceeds maximum character limit (${charCount}/${maxChar})`,
           errorCode: "MAX_CHAR_LIMIT_EXCEEDED",
           value: charCount.toString(),
-          target: auditConfig.targetMaxCharInFile.toString(),
-          severity: getNumberSeverityLevel(
-            charCount,
-            auditConfig.targetMaxCharInFile,
-          ),
+          target: maxChar.toString(),
+          severity: getNumberSeverityLevel(charCount, maxChar),
         };
         fileAuditManifest.errors.push(error);
         fileAuditManifest.lookup.targetMaxCharInFile.push(error);
@@ -83,19 +79,17 @@ export function generateAuditManifest(
     }
 
     // Check #2: Lines of Code
-    if (auditConfig.targetMaxLineInFile) {
+    if (napiConfig.metrics?.file?.maxLine) {
       const lineCount = fileManifest.lineCount;
-      if (lineCount > auditConfig.targetMaxLineInFile) {
+      const maxLine = napiConfig.metrics.file.maxLine;
+      if (lineCount > maxLine) {
         const error = {
           shortMessage: "Too many lines",
-          longMessage: `File exceeds maximum line count (${lineCount}/${auditConfig.targetMaxLineInFile})`,
+          longMessage: `File exceeds maximum line count (${lineCount}/${maxLine})`,
           errorCode: "MAX_LINE_LIMIT_EXCEEDED",
           value: lineCount.toString(),
-          target: auditConfig.targetMaxLineInFile.toString(),
-          severity: getNumberSeverityLevel(
-            lineCount,
-            auditConfig.targetMaxLineInFile,
-          ),
+          target: maxLine.toString(),
+          severity: getNumberSeverityLevel(lineCount, maxLine),
         };
         fileAuditManifest.errors.push(error);
         fileAuditManifest.lookup.targetMaxLineInFile.push(error);
@@ -103,19 +97,17 @@ export function generateAuditManifest(
     }
 
     // Check #3: Dependencies per File
-    if (auditConfig.targetMaxDepPerFile) {
+    if (napiConfig.metrics?.file?.maxDep) {
       const depCount = Object.keys(fileManifest.dependencies).length;
-      if (depCount > auditConfig.targetMaxDepPerFile) {
+      const maxDep = napiConfig.metrics.file.maxDep;
+      if (depCount > maxDep) {
         const error = {
           shortMessage: "Too many dependencies",
-          longMessage: `File has too many dependencies (${depCount}/${auditConfig.targetMaxDepPerFile})`,
+          longMessage: `File has too many dependencies (${depCount}/${maxDep})`,
           errorCode: "MAX_DEP_LIMIT_EXCEEDED",
           value: depCount.toString(),
-          target: auditConfig.targetMaxDepPerFile.toString(),
-          severity: getNumberSeverityLevel(
-            depCount,
-            auditConfig.targetMaxDepPerFile,
-          ),
+          target: maxDep.toString(),
+          severity: getNumberSeverityLevel(depCount, maxDep),
         };
         fileAuditManifest.errors.push(error);
         fileAuditManifest.lookup.targetMaxDepPerFile.push(error);

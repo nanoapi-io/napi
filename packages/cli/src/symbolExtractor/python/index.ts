@@ -17,7 +17,7 @@ export function extractPythonSymbols(
   symbolsToExtract: Map<string, { filePath: string; symbols: Set<string> }>,
   napiConfig: z.infer<typeof localConfigSchema>,
 ): ExtractedFilesMap {
-  const pythonVersion = napiConfig.audit.pythonVersion;
+  const pythonVersion = napiConfig.python?.version;
   if (!pythonVersion) {
     throw new Error("Python version is required");
   }

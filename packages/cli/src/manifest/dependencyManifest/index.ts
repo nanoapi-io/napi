@@ -28,7 +28,7 @@ export function generateDependencyManifest(
   files: Map<string, { path: string; content: string }>,
   napiConfig: z.infer<typeof localConfigSchema>,
 ): DependencyManifest {
-  const languageName = napiConfig.audit.language;
+  const languageName = napiConfig.language;
 
   const handler = handlerMap[languageName];
   if (!handler) {
