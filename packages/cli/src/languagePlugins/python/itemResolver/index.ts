@@ -1,14 +1,14 @@
-import { PythonExportExtractor } from "../exportExtractor";
-import { PythonImportExtractor } from "../importExtractor";
+import { PythonExportExtractor } from "../exportExtractor/index.js";
+import { PythonImportExtractor } from "../importExtractor/index.js";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "../importExtractor/types";
-import { PythonModuleResolver } from "../moduleResolver";
+} from "../importExtractor/types.js";
+import { PythonModuleResolver } from "../moduleResolver/index.js";
 import {
   PYTHON_NAMESPACE_MODULE_TYPE,
   PythonModule,
-} from "../moduleResolver/types";
+} from "../moduleResolver/types.js";
 import {
   PYTHON_EXTERNAL_MODULE_TYPE,
   PYTHON_INTERNAL_MODULE_TYPE,
@@ -18,7 +18,7 @@ import {
   ResolvedInternalSymbol,
   ResolvedItem,
   ResolvedSymbol,
-} from "./types";
+} from "./types.js";
 
 /**
  * PythonItemResolver resolves items across Python modules following Python's

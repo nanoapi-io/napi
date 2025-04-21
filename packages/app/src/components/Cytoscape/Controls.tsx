@@ -13,7 +13,7 @@ import {
   linesOfCodeMetric,
   noMetric,
   TargetMetric,
-} from "../../helpers/cytoscape/projectDependencyVisualizer/types";
+} from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
 
 export default function Controls(props: {
   busy: boolean;

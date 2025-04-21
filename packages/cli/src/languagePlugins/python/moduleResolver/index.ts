@@ -1,12 +1,12 @@
 import { sep } from "path";
-import pythonStdLib from "../../../scripts/generate_python_stdlib_list/output.json";
+import pythonStdLib from "../../../scripts/generate_python_stdlib_list/output.json" with { type: "json" };
 import {
   PYTHON_MODULE_TYPE,
   PYTHON_NAMESPACE_MODULE_TYPE,
   PYTHON_PACKAGE_MODULE_TYPE,
   PythonModule,
   PythonModuleType,
-} from "./types";
+} from "./types.js";
 
 /**
  * PythonModuleResolver builds a hierarchical tree structure representing

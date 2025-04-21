@@ -1,27 +1,31 @@
 import Parser from "tree-sitter";
-import { PythonExportExtractor } from "../exportExtractor";
-import { PythonUsageResolver } from "../usageResolver";
-import { ExternalUsage, InternalUsage } from "../usageResolver/types";
-import { PythonItemResolver } from "../itemResolver";
+import { PythonExportExtractor } from "../exportExtractor/index.js";
+import { PythonUsageResolver } from "../usageResolver/index.js";
+import { ExternalUsage, InternalUsage } from "../usageResolver/types.js";
+import { PythonItemResolver } from "../itemResolver/index.js";
 import {
   PYTHON_INTERNAL_MODULE_TYPE,
   ResolvedExternalModule,
   ResolvedExternalSymbol,
   ResolvedInternalModule,
   ResolvedInternalSymbol,
-} from "../itemResolver/types";
-import { PythonImportExtractor } from "../importExtractor";
-import { PythonModuleResolver } from "../moduleResolver";
+} from "../itemResolver/types.js";
+import { PythonImportExtractor } from "../importExtractor/index.js";
+import { PythonModuleResolver } from "../moduleResolver/index.js";
 import {
   PYTHON_NAMESPACE_MODULE_TYPE,
   PythonModule,
-} from "../moduleResolver/types";
-import { FileDependencies, ModuleDependency, SymbolDependency } from "./types";
+} from "../moduleResolver/types.js";
+import {
+  FileDependencies,
+  ModuleDependency,
+  SymbolDependency,
+} from "./types.js";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
   ImportStatement,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "../importExtractor/types";
+} from "../importExtractor/types.js";
 
 /**
  * PythonDependencyResolver analyzes a Python file's AST to build a dependency manifest.

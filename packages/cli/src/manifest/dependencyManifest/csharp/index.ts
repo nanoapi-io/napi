@@ -1,10 +1,10 @@
-import { DependencyManifest, Symbol } from "../types";
+import { DependencyManifest, Symbol } from "../types.js";
 import {
   CSharpDependencyFormatter,
   CSharpFile,
-} from "../../../languagePlugins/csharp/dependencyFormatting";
+} from "../../../languagePlugins/csharp/dependencyFormatting/index.js";
 import Parser from "tree-sitter";
-import { csharpParser } from "../../../helpers/treeSitter/parsers";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 
 /**
  * Generates a dependency manifest for C# files.

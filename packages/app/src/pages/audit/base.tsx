@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router";
 import { toast } from "react-toastify";
-import { getDependencyManifest, getAuditManifest } from "../../service/api";
-import GraphLayout from "../../layout/GraphLayout";
+import {
+  getDependencyManifest,
+  getAuditManifest,
+} from "../../service/api/index.js";
+import GraphLayout from "../../layout/GraphLayout.js";
 import FileExplorer, {
   FileExplorerFile,
-} from "../../components/FileExplorer/FileExplorer";
-import { DependencyManifest } from "../../service/api/types/dependencyManifest";
-import { AuditManifest } from "../../service/api/types/auditManifest";
+} from "../../components/FileExplorer/FileExplorer.js";
+import { DependencyManifest } from "../../service/api/types/dependencyManifest.js";
+import { AuditManifest } from "../../service/api/types/auditManifest.js";
 
 export interface AuditContext {
   busy: boolean;

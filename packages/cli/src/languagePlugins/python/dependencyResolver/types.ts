@@ -1,4 +1,4 @@
-import { PythonSymbolType } from "../exportExtractor/types";
+import { PythonSymbolType } from "../exportExtractor/types.js";
 
 /**
  * Represents a dependency on a specific module.

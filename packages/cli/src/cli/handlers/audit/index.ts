@@ -1,11 +1,10 @@
-import viewHandler from "./view";
-import yargs from "yargs";
-import { globalOptions } from "../../helpers/options";
+import viewHandler from "./view.js";
+import { Argv, InferredOptionTypes } from "yargs";
+import { globalOptions } from "../../helpers/options.js";
 
 function builder(
-  yargs: yargs.Argv<
-    yargs.Omit<object, "workdir"> &
-      yargs.InferredOptionTypes<typeof globalOptions>
+  yargs: Argv<
+    Omit<object, "workdir"> & InferredOptionTypes<typeof globalOptions>
   >,
 ) {
   return yargs

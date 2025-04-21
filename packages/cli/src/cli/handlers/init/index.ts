@@ -1,17 +1,15 @@
 import {
   createConfig,
   getConfigFromWorkDir,
-} from "../../../config/localConfig";
-import yargs from "yargs";
-import { globalOptions } from "../../helpers/options";
-import { TelemetryEvents, trackEvent } from "../../../telemetry";
-import { generateConfig } from "./prompts";
+} from "../../../config/localConfig.js";
+import { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
+import { globalOptions } from "../../helpers/options.js";
+import { TelemetryEvents, trackEvent } from "../../../telemetry.js";
+import { generateConfig } from "./prompts.js";
 import { confirm } from "@inquirer/prompts";
 
 async function handler(
-  argv: yargs.ArgumentsCamelCase<
-    yargs.InferredOptionTypes<typeof globalOptions>
-  >,
+  argv: ArgumentsCamelCase<InferredOptionTypes<typeof globalOptions>>,
 ) {
   const startTime = Date.now();
   trackEvent(TelemetryEvents.CLI_INIT_COMMAND, {

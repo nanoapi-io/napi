@@ -4,7 +4,7 @@ import {
   ImportMember,
   ImportStatement,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "./types";
+} from "./types.js";
 
 /**
  * PythonImportExtractor parses and extracts Python import statements (normal and from-import).

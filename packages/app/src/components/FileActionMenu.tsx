@@ -6,7 +6,7 @@ import {
   LuSearchCode,
   LuGitGraph,
 } from "react-icons/lu";
-import { FileManifest } from "../service/api/types/dependencyManifest";
+import { FileManifest } from "../service/api/types/dependencyManifest.js";
 import { toast } from "react-toastify";
 
 export default function FileActionMenu(props: {

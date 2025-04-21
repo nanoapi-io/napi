@@ -3,9 +3,9 @@ import {
   CSharpNamespaceMapper,
   NamespaceNode,
   SymbolNode,
-} from "../namespaceMapper";
-import { CSharpProjectMapper } from "../projectMapper";
-import { csharpParser } from "../../../helpers/treeSitter/parsers";
+} from "../namespaceMapper/index.js";
+import { CSharpProjectMapper } from "../projectMapper/index.js";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 
 const namespaceDeclarationQuery = new Parser.Query(
   csharpParser.getLanguage(),

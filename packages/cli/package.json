@@ -1,6 +1,7 @@
 {
   "name": "@nanoapi.io/napi",
   "version": "1.0.0",
+  "type": "module",
   "publishConfig": {
     "access": "public"
   },
@@ -36,7 +37,7 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon --no-stdin src/index.ts",
+    "dev": "cross-env NODE_ENV=development nodemon --no-stdin --exec \"node --loader ts-node/esm src/index.ts\"",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",

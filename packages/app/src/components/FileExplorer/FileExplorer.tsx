@@ -7,9 +7,9 @@ import {
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
-import { FileExplorerSkeleton } from "./Skeleton";
+import { FileExplorerSkeleton } from "./Skeleton.js";
 import { LuPanelRightOpen, LuX } from "react-icons/lu";
-import languageIcon from "./languageIcons";
+import languageIcon from "./languageIcons.js";
 import {
   MdSearch,
   MdOutlineRemoveRedEye,

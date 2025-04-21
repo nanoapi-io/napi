@@ -1,15 +1,15 @@
 import z from "zod";
-import { localConfigSchema } from "../../config/localConfig";
-import { ExtractedFilesMap } from "../types";
+import { localConfigSchema } from "../../config/localConfig.js";
+import { ExtractedFilesMap } from "../types.js";
 import Parser from "tree-sitter";
-import { pythonParser } from "../../helpers/treeSitter/parsers";
-import { DependencyManifest } from "../../manifest/dependencyManifest/types";
-import { PythonExportExtractor } from "../../languagePlugins/python/exportExtractor";
-import { PythonImportExtractor } from "../../languagePlugins/python/importExtractor";
-import { PythonModuleResolver } from "../../languagePlugins/python/moduleResolver";
-import { PythonItemResolver } from "../../languagePlugins/python/itemResolver";
-import { PythonUsageResolver } from "../../languagePlugins/python/usageResolver";
-import { PythonSymbolExtractor } from "../../languagePlugins/python/symbolExtractor";
+import { pythonParser } from "../../helpers/treeSitter/parsers.js";
+import { DependencyManifest } from "../../manifest/dependencyManifest/types.js";
+import { PythonExportExtractor } from "../../languagePlugins/python/exportExtractor/index.js";
+import { PythonImportExtractor } from "../../languagePlugins/python/importExtractor/index.js";
+import { PythonModuleResolver } from "../../languagePlugins/python/moduleResolver/index.js";
+import { PythonItemResolver } from "../../languagePlugins/python/itemResolver/index.js";
+import { PythonUsageResolver } from "../../languagePlugins/python/usageResolver/index.js";
+import { PythonSymbolExtractor } from "../../languagePlugins/python/symbolExtractor/index.js";
 
 export function extractPythonSymbols(
   files: Map<string, { path: string; content: string }>,

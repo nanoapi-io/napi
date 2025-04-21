@@ -1,16 +1,16 @@
 import { describe, expect, test } from "vitest";
 import Parser from "tree-sitter";
-import { PythonSymbolExtractor } from "./index";
-import { PythonExportExtractor } from "../exportExtractor";
-import { PythonModuleResolver } from "../moduleResolver";
-import { PythonItemResolver } from "../itemResolver";
-import { PythonImportExtractor } from "../importExtractor";
-import { PythonUsageResolver } from "../usageResolver";
-import { DependencyManifest } from "../../../manifest/dependencyManifest/types";
-import { pythonParser } from "../../../helpers/treeSitter/parsers";
-import { localConfigSchema } from "../../../config/localConfig";
+import { PythonSymbolExtractor } from "./index.js";
+import { PythonExportExtractor } from "../exportExtractor/index.js";
+import { PythonModuleResolver } from "../moduleResolver/index.js";
+import { PythonItemResolver } from "../itemResolver/index.js";
+import { PythonImportExtractor } from "../importExtractor/index.js";
+import { PythonUsageResolver } from "../usageResolver/index.js";
+import { DependencyManifest } from "../../../manifest/dependencyManifest/types.js";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+import { localConfigSchema } from "../../../config/localConfig.js";
 import z from "zod";
-import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python";
+import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python/index.js";
 
 describe("PythonSymbolExtractor", () => {
   // Helper to create a map of parsed files

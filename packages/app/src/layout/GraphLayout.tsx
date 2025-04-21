@@ -1,6 +1,10 @@
 import { useContext } from "react";
 import { Button } from "@radix-ui/themes";
-import { ThemeContext, lightTheme, darkTheme } from "../contexts/ThemeContext";
+import {
+  ThemeContext,
+  lightTheme,
+  darkTheme,
+} from "../contexts/ThemeContext.js";
 import { Link, useParams } from "react-router";
 import { MdLightMode, MdDarkMode, MdKeyboardArrowLeft } from "react-icons/md";
 

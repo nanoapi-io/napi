@@ -18,11 +18,11 @@
 import {
   PYTHON_NAMESPACE_MODULE_TYPE,
   PythonModule,
-} from "../moduleResolver/types";
-import { PythonExportExtractor } from "../exportExtractor";
+} from "../moduleResolver/types.js";
+import { PythonExportExtractor } from "../exportExtractor/index.js";
 import Parser from "tree-sitter";
-import { PythonSymbol } from "../exportExtractor/types";
-import { ExternalUsage, InternalUsage } from "./types";
+import { PythonSymbol } from "../exportExtractor/types.js";
+import { ExternalUsage, InternalUsage } from "./types.js";
 
 /**
  * UsageResolver analyzes Python code to identify module and symbol references.

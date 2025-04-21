@@ -1,11 +1,11 @@
 import { describe, test, expect } from "vitest";
-import { generateCSharpDependencyManifest } from ".";
+import { generateCSharpDependencyManifest } from "./index.js";
 import path from "path";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../../../languagePlugins/csharp/testFiles";
+} from "../../../languagePlugins/csharp/testFiles/index.js";
 
 describe("generateCSharpDependencymanifest", () => {
   const parsedfiles = getCSharpFilesMap();

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { PythonModuleResolver } from "./index";
+import { PythonModuleResolver } from "./index.js";
 import {
   PYTHON_MODULE_TYPE,
   PYTHON_NAMESPACE_MODULE_TYPE,
   PYTHON_PACKAGE_MODULE_TYPE,
-} from "./types";
+} from "./types.js";
 import { sep } from "path";
 
 describe("PythonModuleResolver", () => {

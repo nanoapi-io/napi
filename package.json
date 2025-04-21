@@ -1,11 +1,11 @@
 {
   "name": "napi",
+  "type": "module",
   "workspaces": [
     "packages/app",
     "packages/cli"
   ],
   "scripts": {
-    "dev:shared": "npm run build --workspace packages/shared",
     "dev:app": "npm run dev --workspace packages/app",
     "dev:cli": "npm run dev --workspace packages/cli",
     "build": "npm run build --workspace packages/cli",

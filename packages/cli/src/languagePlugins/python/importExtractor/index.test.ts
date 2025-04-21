@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { PythonImportExtractor } from ".";
+import { PythonImportExtractor } from "./index.js";
 import {
   ImportItem,
   FROM_IMPORT_STATEMENT_TYPE,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "./types";
-import { pythonParser } from "../../../helpers/treeSitter/parsers";
+} from "./types.js";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
 
 describe("Python Import Extractor", () => {
   const parser = pythonParser;

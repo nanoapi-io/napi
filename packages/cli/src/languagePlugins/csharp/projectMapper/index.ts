@@ -1,5 +1,5 @@
 import path from "path";
-import { ResolvedImports } from "../usingResolver";
+import { ResolvedImports } from "../usingResolver/index.js";
 
 /**
  * Represents a .NET project.

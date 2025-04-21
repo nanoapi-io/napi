@@ -1,18 +1,18 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import cytoscape, { Core } from "cytoscape";
-import Controls from "../../../components/Cytoscape/Controls";
+import Controls from "../../../components/Cytoscape/Controls.js";
 import { useOutletContext, useParams, useNavigate } from "react-router";
 import fcose from "cytoscape-fcose";
-import { ThemeContext } from "../../../contexts/ThemeContext";
+import { ThemeContext } from "../../../contexts/ThemeContext.js";
 import {
   getCyElements,
   layout,
   getCyStyle,
   NodeElementDefinition,
   getNodeLabel,
-} from "../../../helpers/cytoscape/views/auditFile";
-import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton";
-import { AuditContext } from "../base";
+} from "../../../helpers/cytoscape/views/auditFile.js";
+import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
+import { AuditContext } from "../base.js";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();

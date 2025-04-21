@@ -1,16 +1,16 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useOutletContext, useSearchParams, useNavigate } from "react-router";
-import Controls from "../../components/Cytoscape/Controls";
-import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton";
-import FileActionMenu from "../../components/FileActionMenu";
-import { ThemeContext } from "../../contexts/ThemeContext";
-import { AuditContext } from "./base";
-import FileDetailsPane from "../../components/FileDetailsPane";
-import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer";
+import Controls from "../../components/Cytoscape/Controls.js";
+import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton.js";
+import FileActionMenu from "../../components/FileActionMenu.js";
+import { ThemeContext } from "../../contexts/ThemeContext.js";
+import { AuditContext } from "./base.js";
+import FileDetailsPane from "../../components/FileDetailsPane.js";
+import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.js";
 import {
   NapiNodeData,
   TargetMetric,
-} from "../../helpers/cytoscape/projectDependencyVisualizer/types";
+} from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
 
 export default function AuditPage() {
   const navigate = useNavigate();
