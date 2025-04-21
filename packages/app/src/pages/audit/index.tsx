@@ -96,6 +96,18 @@ export default function AuditPage() {
     }
   }, [metricType]);
 
+  // Hook to update highlight node in the graph
+  useEffect(() => {
+    if (projectVisualizer) {
+      if (context.highlightedNodeId) {
+        projectVisualizer.highlightNode(context.highlightedNodeId);
+      } else {
+        projectVisualizer.unhighlightNodes();
+      }
+    }
+  }, [context.highlightedNodeId]);
+
+  // Hook to update the theme in the graph
   useEffect(() => {
     if (projectVisualizer) {
       projectVisualizer.updateTheme(themeContext.theme);

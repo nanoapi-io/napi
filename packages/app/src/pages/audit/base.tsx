@@ -17,11 +17,9 @@ export interface AuditContext {
   dependencyManifest: DependencyManifest;
   auditManifest: AuditManifest;
   highlightedNodeId: string | null;
-  detailNodeId: string | null;
   actions: {
     setHighlightedNodeId: (nodeId: string | null) => void;
     showInSidebar: (filename: string) => void;
-    setDetailNodeId: (nodeId: string | null) => void;
   };
 }
 
@@ -41,7 +39,6 @@ export default function BaseAuditPage() {
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null,
   );
-  const [detailNodeId, setDetailNodeId] = useState<string | null>(null);
 
   function showInSidebar(filename: string) {
     setSidebarOpen(true);
@@ -100,7 +97,6 @@ export default function BaseAuditPage() {
           setIsSearch={setSidebarSearch}
           highlightedNodeId={highlightedNodeId}
           setHighlightedNodeId={setHighlightedNodeId}
-          setDetailNodeId={setDetailNodeId}
         />
       }
       graphSlot={
@@ -110,11 +106,9 @@ export default function BaseAuditPage() {
             dependencyManifest,
             auditManifest,
             highlightedNodeId,
-            detailNodeId,
             actions: {
               setHighlightedNodeId,
               showInSidebar,
-              setDetailNodeId,
             },
           }}
         />
