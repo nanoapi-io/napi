@@ -26,7 +26,7 @@ import {
 } from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
 import { NodeElementDefinition } from "../../helpers/cytoscape/views/auditFile.js";
 
-const INITIAL_ELEMENT_LIMIT = 25;
+const INITIAL_ELEMENT_LIMIT = 50;
 
 interface FiltersType {
   search: string;
