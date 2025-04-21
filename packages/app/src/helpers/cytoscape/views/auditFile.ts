@@ -502,7 +502,7 @@ export function getCyStyle(theme: Theme) {
       style: {
         display: "none",
       },
-    }
+    },
   ] as StylesheetJson;
 }
 
