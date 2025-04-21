@@ -2,12 +2,12 @@
 
 # napi - Better Software Architecture for the AI Age
 
-`napi` is a versatile tool built by NanoAPI and designed to automatically extract functionality from large, monolithic codebases into smaller units, while providing insights into the architectural complexity of your software.
+`napi` is a versatile tool built by NanoAPI and designed to automatically provide insights into the architectural complexity of your software, while allowing for the novel extraction of functionality from codebases into smaller units.
 With both a powerful CLI and an intuitive UI, `napi` is compatible with all major CI/CD platforms, allowing seamless integration into your development and deployment pipelines.
 
-Historically, tools like this have only been built by large consulting firms or contractors and kept behind the paywalls of consulting fees. `napi` aims to make these tools accessible to developers of all skill levels, without the cost. Our vision is to help you gain deeper insights into system architecture-level concerns before they become hundred-million-dollar problems. The added benefit? No more black-box tools running on your code.
+Historically, tools like this have only been built by large consulting firms or contractors and kept behind the paywalls of consulting fees. `napi` aims to make these tools accessible to developers of all skill levels, without the cost. Our vision is to help you gain deeper insights into system architecture-level concerns before they become hundred-million-dollar problems. The added benefit? No more black-box tools running on your code and the confidence of a 100% determinstic tool.
 
-![NanoAPI UI Overview](/media/hero-app.png)
+![NanoAPI UI Overview](/media/hero-app.jpeg)
 
 ## Features
 
@@ -16,16 +16,16 @@ Historically, tools like this have only been built by large consulting firms or 
 - **🏗️ Build**: Generate modular microservices ready for deployment.
 - **⚙️ Integrate**: Use CLI commands compatible with all CI/CD workflows for automation.
 - **🔍 Architecture**: Get a live view of all your software and their interactions; scoped to a specific moment in time.
-- **📖 History**: Track changes to architecture through time using a git-history-style tool.
-- **📈 Graphs**: Understand if your software is improving or degrading over time.
+<!-- - **📖 History**: Track changes to architecture through time using a git-history-style tool.
+- **📈 Graphs**: Understand if your software is improving or degrading over time. -->
 
 ## Why `napi`?
 
-- Identifies problematic code and potential improvements early.
-- Simplifies the process of extracting functionality using non-AI strangler refactoring.
-- Improves understanding, maintainability, and robustness at both the architecture and code level.
-- Reduces dependency on outside sources for complex refactoring tasks.
-- Gain a deeper trust of what your system is doing today - even in the face of AI-generated code.
+- **Enables discovery into legacy systems**: indentify problematic code and potential improvements early.
+- **Modular Monoliths**: Simplifies the process of extracting functionality using non-AI strangler refactoring.
+- **Risk assessment**: Improve understanding, maintainability, and robustness at both the architecture and code level.
+- **Refactoring ROI**: Reduces dependency on outside sources for complex refactoring tasks.
+- **From black box to open-book**: Gain a deeper trust of what your system is doing today - even in the face of AI-generated code.
 
 ## Supported Languages
 
@@ -34,7 +34,7 @@ Historically, tools like this have only been built by large consulting firms or 
 | Language/Framework | Status         | Related Issues                                      |
 | ------------------ | -------------- | --------------------------------------------------- |
 | Python             | ✅ Supported   | [#28](https://github.com/nanoapi-io/napi/issues/28) |
-| C#                 | 🚧 In Progress | [#31](https://github.com/nanoapi-io/napi/issues/31) |
+| C#                 | ✅ Supported   | [#31](https://github.com/nanoapi-io/napi/issues/31) |
 | PHP                | 🚧 In Progress | [#30](https://github.com/nanoapi-io/napi/issues/30) |
 | Java               | 🚧 In Progress | [#32](https://github.com/nanoapi-io/napi/issues/32) |
 | C                  | 🚧 In Progress | Not Tracked Yet                                     |
