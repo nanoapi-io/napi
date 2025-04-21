@@ -7,6 +7,7 @@ import {
   LuGitGraph,
 } from "react-icons/lu";
 import { FileManifest } from "../service/api/types/dependencyManifest";
+import { toast } from "react-toastify";
 
 export default function FileActionMenu(props: {
   position: { x: number; y: number };
@@ -18,7 +19,7 @@ export default function FileActionMenu(props: {
 }) {
   const navigate = useNavigate();
 
-  const navigateToFileView = () => {
+  function navigateToFileView() {
     if (props.fileDependencyManifest) {
       const urlEncodedFileName = encodeURIComponent(
         props.fileDependencyManifest.filePath,
@@ -26,7 +27,13 @@ export default function FileActionMenu(props: {
       const url = `/audit/${urlEncodedFileName}`;
       navigate(url);
     }
-  };
+  }
+
+  function handleOnExtract() {
+    toast.warning(
+      "This functionality is not yet implemented. Please check back soon.",
+    );
+  }
 
   return (
     <div
@@ -56,7 +63,7 @@ export default function FileActionMenu(props: {
           </DropdownMenu.Label>
           <DropdownMenu.Separator />
           <DropdownMenu.Item
-            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark cursor-pointer"
+            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
             onSelect={() => props.setDetailsPaneOpen(true)}
           >
             <div className="w-full flex justify-between space-x-2">
@@ -65,7 +72,7 @@ export default function FileActionMenu(props: {
             </div>
           </DropdownMenu.Item>
           <DropdownMenu.Item
-            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark cursor-pointer"
+            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
             onSelect={() => navigateToFileView()}
           >
             <div className="w-full flex justify-between space-x-2">
@@ -74,7 +81,7 @@ export default function FileActionMenu(props: {
             </div>
           </DropdownMenu.Item>
           <DropdownMenu.Item
-            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark cursor-pointer"
+            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
             onSelect={() =>
               props.showInSidebar(
                 props.fileDependencyManifest.filePath.split("/").pop() || "",
@@ -88,12 +95,8 @@ export default function FileActionMenu(props: {
           </DropdownMenu.Item>
           <DropdownMenu.Separator />
           <DropdownMenu.Item
-            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark cursor-pointer"
-            onSelect={() =>
-              alert(
-                "This functionality is not yet implemented. Please check back soon.",
-              )
-            }
+            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
+            onSelect={() => handleOnExtract()}
           >
             <div className="w-full flex justify-between space-x-2">
               <span>Extract</span>

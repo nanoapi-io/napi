@@ -323,7 +323,7 @@ function NodeElement(props: {
         !props.node.children[0].isSymbol ? (
           <Button
             variant="ghost"
-            className="w-full py-1 my-0.5 text-text-light dark:text-text-dark cursor-pointer"
+            className="w-full py-1 my-0.5 text-text-light dark:text-text-dark"
             onClick={handleToggle}
           >
             <div className="w-full flex items-center space-x-2">
@@ -342,7 +342,7 @@ function NodeElement(props: {
                 <div className="grow">
                   <Button
                     variant="ghost"
-                    className="w-full text-text-light dark:text-text-dark cursor-pointer justify-start pr-0"
+                    className="w-full text-text-light dark:text-text-dark justify-start pr-0"
                     onClick={handleToggle}
                   >
                     <div className="flex space-x-2 items-center overflow-hidden">
@@ -378,7 +378,7 @@ function NodeElement(props: {
               </div>
             ) : (
               <Button
-                className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-surface-light dark:bg-surface-dark"}`}
+                className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-background-light dark:bg-background-dark"}`}
                 variant="ghost"
               >
                 <div className="w-full flex items-center space-x-2">

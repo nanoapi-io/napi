@@ -42,14 +42,12 @@ const config = {
           light: "#6B7280",
         },
         primary: {
-          // In dark mode we use a lighter shade so white text pops
           dark: "#695AF0",
-          // In light mode, we brighten the color a bit so dark text has good contrast
-          light: "#7B74FF",
+          light: "#9F99FF",
         },
         secondary: {
           dark: "#E43F8C",
-          light: "#F1729E", // A brighter variant for light mode
+          light: "#F1729E",
         },
         focus: {
           dark: "#695AF0",
