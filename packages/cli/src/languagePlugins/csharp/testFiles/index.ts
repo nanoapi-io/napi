@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import Parser from "tree-sitter";
-import { csharpParser } from "../../../helpers/treeSitter/parsers";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 
 export const csharpFilesFolder = path.join(__dirname, "csharpFiles");
 

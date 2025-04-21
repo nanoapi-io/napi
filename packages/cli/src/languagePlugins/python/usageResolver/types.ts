@@ -1,5 +1,5 @@
-import { PythonModule } from "../moduleResolver/types";
-import { PythonSymbol } from "../exportExtractor/types";
+import { PythonModule } from "../moduleResolver/types.js";
+import { PythonSymbol } from "../exportExtractor/types.js";
 
 /**
  * Represents usage information for a Python module, containing the module reference

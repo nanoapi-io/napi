@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
-import { CSharpProjectMapper } from ".";
+import { CSharpProjectMapper } from "./index.js";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../testFiles";
-import { CSharpUsingResolver } from "../usingResolver";
-import { CSharpNamespaceMapper } from "../namespaceMapper";
+} from "../testFiles/index.js";
+import { CSharpUsingResolver } from "../usingResolver/index.js";
+import { CSharpNamespaceMapper } from "../namespaceMapper/index.js";
 import path from "path";
 
 describe("CSharpProjectMapper", () => {

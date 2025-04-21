@@ -7,11 +7,11 @@ import "@radix-ui/themes/styles.css";
 import "./index.css";
 import { createHashRouter, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
-import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext";
-import BaseAuditPage from "./pages/audit/base";
-import AuditPage from "./pages/audit/index";
-import AuditFilePage from "./pages/audit/file";
-import AuditInstancePage from "./pages/audit/file/instance";
+import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext.js";
+import BaseAuditPage from "./pages/audit/base.js";
+import AuditPage from "./pages/audit/index.js";
+import AuditFilePage from "./pages/audit/file/index.js";
+import AuditInstancePage from "./pages/audit/file/instance/index.js";
 
 const router = createHashRouter([
   {

@@ -1,9 +1,15 @@
-import { SymbolType } from "../namespaceResolver";
-import { CSharpInvocationResolver, Invocations } from "../invocationResolver";
-import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
+import { SymbolType } from "../namespaceResolver/index.js";
+import {
+  CSharpInvocationResolver,
+  Invocations,
+} from "../invocationResolver/index.js";
+import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
 import Parser from "tree-sitter";
-import { ResolvedImports, CSharpUsingResolver } from "../usingResolver";
-import { CSharpProjectMapper } from "../projectMapper";
+import {
+  ResolvedImports,
+  CSharpUsingResolver,
+} from "../usingResolver/index.js";
+import { CSharpProjectMapper } from "../projectMapper/index.js";
 
 /**
  * Represents a dependency in a C# file.

@@ -6,16 +6,16 @@ import {
   USING_ALIAS,
   USING_STATIC,
   USING_CURRENT,
-} from ".";
-import { CSharpNamespaceMapper } from "../namespaceMapper";
+} from "./index.js";
+import { CSharpNamespaceMapper } from "../namespaceMapper/index.js";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../testFiles";
+} from "../testFiles/index.js";
 import path from "path";
-import { File } from "../namespaceResolver";
-import { CSharpProjectMapper } from "../projectMapper";
+import { File } from "../namespaceResolver/index.js";
+import { CSharpProjectMapper } from "../projectMapper/index.js";
 
 describe("UsingResolver", () => {
   const parsedfiles: Map<string, File> = getCSharpFilesMap();

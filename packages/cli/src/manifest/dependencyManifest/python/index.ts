@@ -1,13 +1,13 @@
 import Parser from "tree-sitter";
-import { DependencyManifest, FileManifest } from "../types";
-import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor";
-import { pythonParser } from "../../../helpers/treeSitter/parsers";
-import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver";
-import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolver";
-import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver";
-import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver";
-import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor";
-import { localConfigSchema } from "../../../config/localConfig";
+import { DependencyManifest, FileManifest } from "../types.js";
+import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor/index.js";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver/index.js";
+import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolver/index.js";
+import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver/index.js";
+import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver/index.js";
+import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor/index.js";
+import { localConfigSchema } from "../../../config/localConfig.js";
 import z from "zod";
 
 function generateDependentsForManifest(

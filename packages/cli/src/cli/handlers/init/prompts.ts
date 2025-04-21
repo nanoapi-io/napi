@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
 import z from "zod";
-import { localConfigSchema } from "../../../config/localConfig";
-import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json";
+import { localConfigSchema } from "../../../config/localConfig.js";
+import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with { type: "json" };
 import { select, confirm, input, number, search } from "@inquirer/prompts";
 import { globSync } from "glob";
 

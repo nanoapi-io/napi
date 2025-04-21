@@ -1,4 +1,4 @@
-import localPackageJson from "../../../package.json";
+import localPackageJson from "../../../package.json" with { type: "json" };
 
 export async function checkVersionMiddleware() {
   const currentVersion = localPackageJson.version;

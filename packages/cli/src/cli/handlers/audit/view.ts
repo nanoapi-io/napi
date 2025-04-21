@@ -1,13 +1,11 @@
-import yargs from "yargs";
-import { globalOptions } from "../../helpers/options";
-import { TelemetryEvents, trackEvent } from "../../../telemetry";
-import { getConfigFromWorkDir } from "../../../config/localConfig";
-import { runServer } from "../../helpers/server";
+import { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
+import { globalOptions } from "../../helpers/options.js";
+import { TelemetryEvents, trackEvent } from "../../../telemetry.js";
+import { getConfigFromWorkDir } from "../../../config/localConfig.js";
+import { runServer } from "../../helpers/server.js";
 
 async function handler(
-  argv: yargs.ArgumentsCamelCase<
-    yargs.InferredOptionTypes<typeof globalOptions>
-  >,
+  argv: ArgumentsCamelCase<InferredOptionTypes<typeof globalOptions>>,
 ) {
   const start = Date.now();
 

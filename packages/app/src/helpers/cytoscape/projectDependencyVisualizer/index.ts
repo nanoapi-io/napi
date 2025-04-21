@@ -10,15 +10,15 @@ import cytoscape, {
 } from "cytoscape";
 import { Core } from "cytoscape";
 import fcose, { FcoseLayoutOptions } from "cytoscape-fcose";
-import { DependencyManifest } from "../../../service/api/types/dependencyManifest";
+import { DependencyManifest } from "../../../service/api/types/dependencyManifest.js";
 import {
   AuditManifest,
   AuditMessage,
   FileAuditManifest,
-} from "../../../service/api/types/auditManifest";
-import tailwindConfig from "../../../../tailwind.config";
-import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition";
-import { NapiNodeData, noMetric, TargetMetric } from "./types";
+} from "../../../service/api/types/auditManifest.js";
+import tailwindConfig from "../../../../tailwind.config.js";
+import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition.js";
+import { NapiNodeData, noMetric, TargetMetric } from "./types.js";
 
 /**
  * CodeDependencyVisualizer handles the visualization of project dependencies using Cytoscape.

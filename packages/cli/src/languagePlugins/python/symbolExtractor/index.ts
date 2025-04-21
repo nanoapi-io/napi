@@ -1,15 +1,15 @@
 import Parser from "tree-sitter";
-import { PythonExportExtractor } from "../exportExtractor";
-import { PythonModuleResolver } from "../moduleResolver";
-import { PythonItemResolver } from "../itemResolver";
-import { PythonImportExtractor } from "../importExtractor";
-import { PythonUsageResolver } from "../usageResolver";
-import { DependencyManifest } from "../../../manifest/dependencyManifest/types";
-import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode";
+import { PythonExportExtractor } from "../exportExtractor/index.js";
+import { PythonModuleResolver } from "../moduleResolver/index.js";
+import { PythonItemResolver } from "../itemResolver/index.js";
+import { PythonImportExtractor } from "../importExtractor/index.js";
+import { PythonUsageResolver } from "../usageResolver/index.js";
+import { DependencyManifest } from "../../../manifest/dependencyManifest/types.js";
+import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode/index.js";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "../importExtractor/types";
+} from "../importExtractor/types.js";
 
 /**
  * Python Symbol Extractor

@@ -1,8 +1,8 @@
-import { generatePythonDependencyManifest } from "./python";
-import { generateCSharpDependencyManifest } from "./csharp";
-import { localConfigSchema } from "../../config/localConfig";
+import { generatePythonDependencyManifest } from "./python/index.js";
+import { generateCSharpDependencyManifest } from "./csharp/index.js";
+import { localConfigSchema } from "../../config/localConfig.js";
 import z from "zod";
-import { DependencyManifest, Symbol } from "./types";
+import { DependencyManifest, Symbol } from "./types.js";
 
 const handlerMap: Record<
   string,

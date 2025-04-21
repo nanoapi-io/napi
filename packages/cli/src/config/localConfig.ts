@@ -1,12 +1,20 @@
 import path from "path";
 import fs from "fs";
 import { z } from "zod";
+import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json" with { type: "json" };
+
+const pythonVersions = Object.keys(pythonStdlibList);
 
 export const localConfigSchema = z.object({
   language: z.string(), // python, csharp, etc
   python: z
     .object({
-      version: z.string().optional(),
+      version: z
+        .string()
+        .refine((val) => pythonVersions.includes(val), {
+          message: `Python version must be one of: ${pythonVersions.join(", ")}`,
+        })
+        .optional(),
     })
     .optional(), // python specific config
   project: z.object({

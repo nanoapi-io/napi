@@ -1,4 +1,4 @@
-import { initCli } from "./cli";
+import { initCli } from "./cli/index.js";
 
 // remove all warning.
 // We need this because of some depreciation warning we have with 3rd party libraries

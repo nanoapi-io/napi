@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import Parser from "tree-sitter";
-import { pythonParser } from "../../../helpers/treeSitter/parsers";
-import { PythonExportExtractor } from "../exportExtractor";
-import { PythonImportExtractor } from "../importExtractor";
-import { PythonModuleResolver } from "../moduleResolver";
-import { PythonItemResolver } from ".";
-import { PYTHON_INTERNAL_MODULE_TYPE } from "./types";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+import { PythonExportExtractor } from "../exportExtractor/index.js";
+import { PythonImportExtractor } from "../importExtractor/index.js";
+import { PythonModuleResolver } from "../moduleResolver/index.js";
+import { PythonItemResolver } from "./index.js";
+import { PYTHON_INTERNAL_MODULE_TYPE } from "./types.js";
 
 /**
  * These tests verify the Python symbol resolution system, which handles:

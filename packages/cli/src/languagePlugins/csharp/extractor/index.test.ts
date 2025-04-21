@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
-import { CSharpExtractor } from ".";
-import { getCSharpFilesMap, getCsprojFilesMap } from "../testFiles";
-import { generateCSharpDependencyManifest } from "../../../manifest/dependencyManifest/csharp";
+import { CSharpExtractor } from "./index.js";
+import { getCSharpFilesMap, getCsprojFilesMap } from "../testFiles/index.js";
+import { generateCSharpDependencyManifest } from "../../../manifest/dependencyManifest/csharp/index.js";
 
 describe("CSharpExtractor", () => {
   const parsedfiles = getCSharpFilesMap();

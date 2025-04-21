@@ -1,16 +1,16 @@
 import { describe, expect, test } from "vitest";
-import { File } from "../namespaceResolver";
-import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
-import { CSharpNamespaceResolver } from "../namespaceResolver";
+import { File } from "../namespaceResolver/index.js";
+import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
+import { CSharpNamespaceResolver } from "../namespaceResolver/index.js";
 import {
   getCSharpFilesMap,
   csharpFilesFolder,
   getCsprojFilesMap,
-} from "../testFiles";
+} from "../testFiles/index.js";
 import path from "path";
-import { CSharpInvocationResolver } from ".";
+import { CSharpInvocationResolver } from "./index.js";
 import Parser from "tree-sitter";
-import { CSharpProjectMapper } from "../projectMapper";
+import { CSharpProjectMapper } from "../projectMapper/index.js";
 
 describe("InvocationResolver", () => {
   const parsedfiles: Map<string, File> = getCSharpFilesMap();

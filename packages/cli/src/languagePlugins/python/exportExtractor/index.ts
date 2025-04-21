@@ -5,7 +5,7 @@ import {
   PYTHON_VARIABLE_TYPE,
   PythonSymbol,
   PythonSymbolType,
-} from "./types";
+} from "./types.js";
 
 /**
  * PythonExportExtractor extracts exported symbols from a Python source file using Tree-sitter.

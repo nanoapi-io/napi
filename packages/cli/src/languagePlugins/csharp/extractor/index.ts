@@ -1,8 +1,8 @@
 import Parser from "tree-sitter";
-import { CSharpProjectMapper, DotNetProject } from "../projectMapper";
-import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper";
-import { CSharpUsingResolver, UsingDirective } from "../usingResolver";
-import { DependencyManifest } from "../../../manifest/dependencyManifest/types";
+import { CSharpProjectMapper, DotNetProject } from "../projectMapper/index.js";
+import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
+import { CSharpUsingResolver, UsingDirective } from "../usingResolver/index.js";
+import { DependencyManifest } from "../../../manifest/dependencyManifest/types.js";
 
 /**
  * Represents an extracted file containing a symbol.

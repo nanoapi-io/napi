@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 import Parser from "tree-sitter";
-import { PythonExportExtractor } from "./index";
+import { PythonExportExtractor } from "./index.js";
 import {
   PYTHON_CLASS_TYPE,
   PYTHON_FUNCTION_TYPE,
   PYTHON_VARIABLE_TYPE,
-} from "./types";
-import { pythonParser } from "../../../helpers/treeSitter/parsers";
+} from "./types.js";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
 
 describe("PythonExportExtractor", () => {
   const parser = pythonParser;

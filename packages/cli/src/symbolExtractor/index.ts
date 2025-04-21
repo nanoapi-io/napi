@@ -1,8 +1,8 @@
-import { ExtractedFilesMap } from "./types";
-import { extractPythonSymbols } from "./python";
-import { localConfigSchema } from "../config/localConfig";
+import { ExtractedFilesMap } from "./types.js";
+import { extractPythonSymbols } from "./python/index.js";
+import { localConfigSchema } from "../config/localConfig.js";
 import z from "zod";
-import { DependencyManifest } from "../manifest/dependencyManifest/types";
+import { DependencyManifest } from "../manifest/dependencyManifest/types.js";
 
 const handlerMap: Record<
   string,

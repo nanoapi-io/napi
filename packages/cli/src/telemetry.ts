@@ -1,7 +1,7 @@
 import { EventEmitter } from "events";
 import os from "os";
-import { getOrCreateGlobalConfig } from "./config/globalConfig";
-import packageJson from "../package.json";
+import { getOrCreateGlobalConfig } from "./config/globalConfig.js";
+import packageJson from "../package.json" with { type: "json" };
 
 export enum TelemetryEvents {
   APP_START = "app_start",

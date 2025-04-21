@@ -1,14 +1,9 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "composite": true,
-    "allowSyntheticDefaultImports": true,
-    "useDefineForClassFields": true,
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
+    "target": "ESNext",
+    "module": "NodeNext",
+    "skipLibCheck": true,
     "jsx": "react-jsx"
   },
   "include": ["vite.config.ts", "src", "postcss.config.js", "tailwind.config.ts"],

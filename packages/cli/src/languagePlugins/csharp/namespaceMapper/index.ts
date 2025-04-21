@@ -1,5 +1,8 @@
 import Parser from "tree-sitter";
-import { CSharpNamespaceResolver, SymbolType } from "../namespaceResolver";
+import {
+  CSharpNamespaceResolver,
+  SymbolType,
+} from "../namespaceResolver/index.js";
 import fs from "fs";
 
 /**

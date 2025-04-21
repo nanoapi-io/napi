@@ -2,8 +2,8 @@ import {
   SymbolNode,
   NamespaceNode,
   CSharpNamespaceMapper,
-} from "../namespaceMapper";
-import { csharpParser } from "../../../helpers/treeSitter/parsers";
+} from "../namespaceMapper/index.js";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 import Parser from "tree-sitter";
 
 const extensionMethodQuery = new Parser.Query(

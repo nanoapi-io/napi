@@ -1,8 +1,8 @@
 import { exec } from "child_process";
 import express from "express";
 import z from "zod";
-import { localConfigSchema } from "../../config/localConfig";
-import { getApi } from "../../api";
+import { localConfigSchema } from "../../config/localConfig.js";
+import { getApi } from "../../api/index.js";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import path from "path";
 
@@ -56,7 +56,9 @@ export async function runServer(
       }),
     );
   } else {
-    app.use(express.static(path.join(__dirname, "../../../app_dist")));
+    app.use(
+      express.static(path.join(import.meta.dirname, "../../../app_dist")),
+    );
   }
 
   const port = await findAvailablePort(3000);

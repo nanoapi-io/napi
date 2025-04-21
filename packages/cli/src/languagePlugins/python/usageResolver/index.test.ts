@@ -1,13 +1,13 @@
 import { describe, test, expect, beforeEach } from "vitest";
 import Parser from "tree-sitter";
-import { pythonParser } from "../../../helpers/treeSitter/parsers";
-import { PythonExportExtractor } from "../exportExtractor";
-import { PythonModuleResolver } from "../moduleResolver";
-import { PythonUsageResolver } from ".";
-import { PythonImportExtractor } from "../importExtractor";
-import { PythonModule } from "../moduleResolver/types";
-import { InternalUsage } from "./types";
-import { PythonSymbol } from "../exportExtractor/types";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+import { PythonExportExtractor } from "../exportExtractor/index.js";
+import { PythonModuleResolver } from "../moduleResolver/index.js";
+import { PythonUsageResolver } from "./index.js";
+import { PythonImportExtractor } from "../importExtractor/index.js";
+import { PythonModule } from "../moduleResolver/types.js";
+import { InternalUsage } from "./types.js";
+import { PythonSymbol } from "../exportExtractor/types.js";
 
 describe("UsageResolver", () => {
   let parser: Parser;
