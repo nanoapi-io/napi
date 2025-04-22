@@ -24,12 +24,12 @@ export default function AuditFilePage() {
 
   // Initialize and cleanup Cytoscape
   useEffect(() => {
+    if (context.busy) return;
+
     if (cyInstance) {
       cyInstance.destroy();
       setCyInstance(undefined);
     }
-
-    if (!params.file) return;
 
     const cy = initializeCytoscape();
     setCyInstance(cy);
@@ -38,7 +38,7 @@ export default function AuditFilePage() {
       cy.destroy();
       setCyInstance(undefined);
     };
-  }, [params.file, context.dependencyManifest, context.auditManifest]);
+  }, [context.busy, params.file]);
 
   // Update style when theme changes
   useEffect(() => {
@@ -120,12 +120,11 @@ export default function AuditFilePage() {
 
   return (
     <div className="relative w-full h-full">
-      {(context.busy || !cyInstance) && <CytoscapeSkeleton />}
-
-      {cyInstance && (
+      {context.busy || !cyInstance ? (
+        <CytoscapeSkeleton />
+      ) : (
         <Controls busy={false} cy={cyInstance} onLayout={handleLayout} />
       )}
-
       <div ref={containerRef} className="relative w-full h-full z-1" />
     </div>
   );

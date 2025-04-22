@@ -29,8 +29,8 @@ export type PythonSymbolType =
 export interface PythonSymbol {
   /** The identifier (name) of the symbol */
   id: string;
-  /** The full AST node for the symbol definition */
-  node: Parser.SyntaxNode;
+  /** The full AST nodes for the symbol definition */
+  nodes: Parser.SyntaxNode[];
   /** The AST node for just the identifier part of the symbol */
   identifierNode: Parser.SyntaxNode;
   /** The type of the symbol (class, function, or variable) */

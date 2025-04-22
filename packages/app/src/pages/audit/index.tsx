@@ -53,7 +53,6 @@ export default function AuditPage() {
   // On mount useEffect
   useEffect(() => {
     setBusy(true);
-
     const projectDependencyVisualizer = new ProjectDependencyVisualizer(
       containerRef.current as HTMLElement,
       context.dependencyManifest,
