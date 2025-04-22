@@ -1,5 +1,10 @@
 import path from "path";
-import { ResolvedImports } from "../usingResolver/index.js";
+import {
+  ExternalSymbol,
+  InternalSymbol,
+  ResolvedImports,
+  UsingDirective,
+} from "../usingResolver/index.js";
 
 /**
  * Represents a .NET project.
@@ -23,7 +28,25 @@ export interface DotNetProject {
   /**
    * The global usings resolved for the project.
    */
-  globalUsings: ResolvedImports;
+  globalUsings: GlobalUsings;
+}
+
+/**
+ * Interface for a subproject's global usings
+ */
+export interface GlobalUsings {
+  /**
+   * The internal symbols used in the project.
+   */
+  internal: InternalSymbol[];
+  /**
+   * The external symbols used in the project.
+   */
+  external: ExternalSymbol[];
+  /**
+   * The using directives that define the global usings.
+   */
+  directives: UsingDirective[];
 }
 
 export class CSharpProjectMapper {
@@ -51,7 +74,7 @@ export class CSharpProjectMapper {
         rootFolder: path.dirname(csprojPath),
         csprojPath,
         csprojContent: csprojContent.content,
-        globalUsings: { internal: [], external: [] },
+        globalUsings: { internal: [], external: [], directives: [] },
       };
       subprojects.push(subproject);
     }
