@@ -16,6 +16,11 @@ export interface DotNetProject {
   rootFolder: string;
 
   /**
+   * The name of the project.
+   */
+  name: string;
+
+  /**
    * The path to the .csproj file of the project.
    */
   csprojPath: string;
@@ -72,6 +77,7 @@ export class CSharpProjectMapper {
     for (const [csprojPath, csprojContent] of csprojFiles) {
       const subproject: DotNetProject = {
         rootFolder: path.dirname(csprojPath),
+        name: path.basename(csprojPath, ".csproj"),
         csprojPath,
         csprojContent: csprojContent.content,
         globalUsings: { internal: [], external: [], directives: [] },
