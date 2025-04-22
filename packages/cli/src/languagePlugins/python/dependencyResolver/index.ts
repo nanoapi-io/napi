@@ -108,58 +108,69 @@ export class PythonDependencyResolver {
 
     // For each symbol, resolve its dependencies
     for (const symbol of symbols) {
+      // Calculate total metrics across all nodes
+      let totalCharCount = 0;
+      let totalLineCount = 0;
+      for (const node of symbol.nodes) {
+        totalCharCount += node.text.length;
+        totalLineCount += node.endPosition.row - node.startPosition.row;
+      }
+
       const symbolDependencies: SymbolDependency = {
         id: symbol.id,
         type: symbol.type,
         metrics: {
-          characterCount: symbol.node.text.length,
-          lineCount:
-            symbol.node.endPosition.row - symbol.node.startPosition.row,
+          characterCount: totalCharCount,
+          lineCount: totalLineCount,
         },
         dependencies: new Map<string, ModuleDependency>(),
       };
 
-      // filter import statements, ignore the one that are within other symbols
-      // as well as the one after ther symbol
-      const filteredImportStmts = importStmts.filter((importStmt) => {
-        const isBeforeSymbol = importStmt.node.endIndex < symbol.node.endIndex;
-        let isWithinOtherSymbols = false;
-        symbols.forEach((otherSymbol) => {
-          if (
-            otherSymbol.id !== symbol.id &&
-            importStmt.node.startIndex >= otherSymbol.node.startIndex &&
-            importStmt.node.endIndex <= otherSymbol.node.endIndex
-          ) {
-            isWithinOtherSymbols = true;
-          }
-        });
+      // Process each node of the symbol independently, then merge results
+      const symbolInternalUsageMap = new Map<string, InternalUsage>();
+      const symbolExternalUsageMap = new Map<string, ExternalUsage>();
 
-        return isBeforeSymbol && !isWithinOtherSymbols;
-      });
+      // For each node of the symbol, analyze its dependencies
+      for (const symbolNode of symbol.nodes) {
+        // Find import statements that are relevant for this specific node
+        const nodeImportStmts = this.filterImportStatementsForNode(
+          symbolNode,
+          importStmts,
+          symbols,
+        );
 
-      // Analyze dependencies for the symbol-level node
-      const {
-        internalUsageMap: symbolInternalUsageMap,
-        externalUsageMap: symbolExternalUsageMap,
-      } = this.analyzeDependenciesForNode(
-        symbol.node,
-        fileModule,
-        filteredImportStmts,
-      );
-
-      // Resolve internal usage for other symbols in the file
-      for (const otherSymbol of symbols) {
-        if (otherSymbol.id === symbol.id) {
-          continue;
-        }
-        this.usageResolver.resolveInternalUsageForSymbol(
-          symbol.node,
-          filteredImportStmts.map((stmt) => stmt.node),
+        // Analyze dependencies for the current node
+        const nodeResult = this.analyzeDependenciesForNode(
+          symbolNode,
           fileModule,
-          otherSymbol,
-          otherSymbol.identifierNode.text,
+          nodeImportStmts,
+        );
+
+        // Merge the results into the symbol's usage maps
+        this.mergeUsageMaps(
+          nodeResult.internalUsageMap,
           symbolInternalUsageMap,
         );
+        this.mergeUsageMaps(
+          nodeResult.externalUsageMap,
+          symbolExternalUsageMap,
+        );
+
+        // Resolve internal usage for other symbols in the file for this node
+        for (const otherSymbol of symbols) {
+          if (otherSymbol.id === symbol.id) {
+            continue;
+          }
+
+          this.usageResolver.resolveInternalUsageForSymbol(
+            symbolNode,
+            nodeImportStmts.map((stmt) => stmt.node),
+            fileModule,
+            otherSymbol,
+            otherSymbol.identifierNode.text,
+            symbolInternalUsageMap,
+          );
+        }
       }
 
       // Convert usage maps to dependencies
@@ -175,6 +186,109 @@ export class PythonDependencyResolver {
     this.fileDependenciesCache.set(path, fileDependencies);
 
     return fileDependencies;
+  }
+
+  /**
+   * Filters import statements that are relevant for a specific node of a symbol
+   * @param symbolNode The specific node of a symbol
+   * @param allImportStmts All import statements in the file
+   * @param allSymbols All symbols in the file
+   * @returns Filtered import statements relevant for this node
+   */
+  private filterImportStatementsForNode(
+    symbolNode: Parser.SyntaxNode,
+    allImportStmts: ImportStatement[],
+    allSymbols: {
+      id: string;
+      nodes: Parser.SyntaxNode[];
+      identifierNode: Parser.SyntaxNode;
+      type: string;
+    }[],
+  ): ImportStatement[] {
+    return allImportStmts.filter((importStmt) => {
+      // Include only imports that come before this node
+      const isBeforeNode = importStmt.node.endIndex < symbolNode.endIndex;
+
+      // Exclude imports that are contained within other symbols
+      let isWithinOtherSymbols = false;
+
+      for (const otherSymbol of allSymbols) {
+        for (const otherNode of otherSymbol.nodes) {
+          // Skip the current node we're analyzing
+          if (otherNode === symbolNode) {
+            continue;
+          }
+
+          // Check if the import is contained within another symbol's node
+          if (
+            importStmt.node.startIndex >= otherNode.startIndex &&
+            importStmt.node.endIndex <= otherNode.endIndex
+          ) {
+            isWithinOtherSymbols = true;
+            break;
+          }
+        }
+
+        if (isWithinOtherSymbols) {
+          break;
+        }
+      }
+
+      return isBeforeNode && !isWithinOtherSymbols;
+    });
+  }
+
+  /**
+   * Merges two usage maps together, combining their contents
+   */
+  private mergeUsageMaps<T extends InternalUsage | ExternalUsage>(
+    source: Map<string, T>,
+    target: Map<string, T>,
+  ): void {
+    for (const [key, sourceValue] of source.entries()) {
+      if (!target.has(key)) {
+        target.set(key, sourceValue);
+      } else {
+        const targetValue = target.get(key);
+
+        if (targetValue) {
+          // Handle internal usage maps
+          if ("symbols" in sourceValue && "symbols" in targetValue) {
+            const sourceInternal = sourceValue as InternalUsage;
+            const targetInternal = targetValue as InternalUsage;
+
+            // Merge symbols
+            for (const [symbolId, symbol] of sourceInternal.symbols.entries()) {
+              targetInternal.symbols.set(symbolId, symbol);
+            }
+
+            // Merge re-exporting modules if they exist
+            if (sourceInternal.reExportingModules) {
+              if (!targetInternal.reExportingModules) {
+                targetInternal.reExportingModules = new Map();
+              }
+
+              for (const [
+                modulePath,
+                module,
+              ] of sourceInternal.reExportingModules.entries()) {
+                targetInternal.reExportingModules.set(modulePath, module);
+              }
+            }
+          }
+          // Handle external usage maps
+          else if ("itemNames" in sourceValue && "itemNames" in targetValue) {
+            const sourceExternal = sourceValue as ExternalUsage;
+            const targetExternal = targetValue as ExternalUsage;
+
+            // Merge item names
+            for (const itemName of sourceExternal.itemNames) {
+              targetExternal.itemNames.add(itemName);
+            }
+          }
+        }
+      }
+    }
   }
 
   /**

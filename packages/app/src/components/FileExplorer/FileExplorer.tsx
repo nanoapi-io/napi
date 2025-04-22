@@ -6,7 +6,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useParams } from "react-router";
 import { FileExplorerSkeleton } from "./Skeleton.js";
 import { LuPanelRightOpen, LuX } from "react-icons/lu";
 import languageIcon from "./languageIcons.js";
@@ -286,8 +286,6 @@ function NodeElement(props: {
   hlNodeId: string | null;
   setHLNodeId: (node: string | null) => void;
 }) {
-  const navigate = useNavigate();
-
   const params = useParams<{ file?: string }>();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -309,11 +307,6 @@ function NodeElement(props: {
 
   function handleToggle() {
     setIsOpen((value) => !value);
-  }
-
-  function handleOnDetailClick() {
-    const urlEncodedFileName = encodeURIComponent(props.node.id);
-    navigate(`/audit/${urlEncodedFileName}`);
   }
 
   return (
@@ -373,14 +366,15 @@ function NodeElement(props: {
                     </Button>
                   </Tooltip>
                   <Tooltip content="View details">
-                    <Button
-                      variant="ghost"
-                      color="violet"
-                      className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
-                      onClick={handleOnDetailClick}
-                    >
-                      <LuPanelRightOpen className="text-gray-light dark:text-gray-dark" />
-                    </Button>
+                    <Link to={`/audit/${encodeURIComponent(props.node.id)}`}>
+                      <Button
+                        variant="ghost"
+                        color="violet"
+                        className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
+                      >
+                        <LuPanelRightOpen className="text-gray-light dark:text-gray-dark" />
+                      </Button>
+                    </Link>
                   </Tooltip>
                 </div>
               </div>

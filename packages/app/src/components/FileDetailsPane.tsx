@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import { Button, Callout, Separator } from "@radix-ui/themes";
 import {
   LuX,
@@ -17,22 +17,6 @@ export default function FileDetailsPane(props: {
   open: boolean;
   setOpen: (open: boolean) => void;
 }) {
-  const navigate = useNavigate();
-
-  const navigateToFile = () => {
-    const urlEncodedFileName = encodeURIComponent(
-      props.fileDependencyManifest.filePath,
-    );
-    const url = `/audit/${urlEncodedFileName}`;
-
-    navigate(url);
-    props.setOpen(false);
-  };
-
-  const onClose = () => {
-    props.setOpen(false);
-  };
-
   return (
     <div className="relative h-full flex justify-end z-1">
       <div
@@ -48,7 +32,7 @@ export default function FileDetailsPane(props: {
               {props.fileDependencyManifest.filePath.split("/").pop()}
             </h2>
             <Button
-              onClick={onClose}
+              onClick={() => props.setOpen(false)}
               variant="ghost"
               className="text-xl text-text-light dark:text-text-dark"
             >
@@ -135,15 +119,19 @@ export default function FileDetailsPane(props: {
         </div>
 
         <div className="grow flex flex-col justify-end">
-          <Button
-            onClick={navigateToFile}
-            variant="ghost"
-            size="3"
-            className="flex justify-center gap-2 text-text-light dark:text-text-dark"
+          <Link
+            to={`/audit/${encodeURIComponent(props.fileDependencyManifest.filePath)}`}
+            className="block"
           >
-            <LuSearchCode className="text-xl my-auto" />{" "}
-            <span className="my-auto">Inspect file interactions</span>
-          </Button>
+            <Button
+              variant="ghost"
+              size="3"
+              className="flex justify-center gap-2 text-text-light dark:text-text-dark w-full"
+            >
+              <LuSearchCode className="text-xl my-auto" />{" "}
+              <span className="my-auto">Inspect file interactions</span>
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
