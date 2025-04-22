@@ -1,5 +1,6 @@
 import { ExtractedFilesMap } from "./types.js";
 import { extractPythonSymbols } from "./python/index.js";
+import { extractCSharpSymbols } from "./csharp/index.js";
 import { localConfigSchema } from "../config/localConfig.js";
 import z from "zod";
 import { DependencyManifest } from "../manifest/dependencyManifest/types.js";
@@ -14,6 +15,7 @@ const handlerMap: Record<
   ) => ExtractedFilesMap
 > = {
   python: extractPythonSymbols,
+  "c-sharp": extractCSharpSymbols,
 };
 
 export class UnsupportedLanguageError extends Error {
