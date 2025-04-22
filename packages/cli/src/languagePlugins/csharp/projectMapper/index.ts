@@ -138,12 +138,15 @@ export class CSharpProjectMapper {
    * Updates the global usings for the subprojects
    * @param globalUsings - The global usings to set for the subprojects
    */
-  updateGlobalUsings(globalUsings: ResolvedImports, subproject: DotNetProject) {
+  updateGlobalUsings(globalUsings: GlobalUsings, subproject: DotNetProject) {
     globalUsings.internal.forEach((symbol) => {
       subproject.globalUsings.internal.push(symbol);
     });
     globalUsings.external.forEach((symbol) => {
       subproject.globalUsings.external.push(symbol);
+    });
+    globalUsings.directives.forEach((directive) => {
+      subproject.globalUsings.directives.push(directive);
     });
   }
 

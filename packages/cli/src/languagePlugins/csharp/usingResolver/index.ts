@@ -228,6 +228,7 @@ export class CSharpUsingResolver {
         internal.push(resolved);
         if (directive.type === GLOBAL_USING) {
           globalUsings.internal.push(resolved);
+          globalUsings.directives.push(directive);
         }
       } else {
         external.push(resolved as ExternalSymbol);
