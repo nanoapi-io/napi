@@ -200,6 +200,7 @@ export default function FileExplorer(props: {
           size="1"
           onClick={() => props.setIsOpen(!props.isOpen)}
           variant="ghost"
+          color="violet"
           radius="full"
         >
           {props.isOpen ? (
@@ -219,6 +220,7 @@ export default function FileExplorer(props: {
         ) : (
           <>
             <TextField.Root
+              color="violet"
               placeholder="Search"
               value={props.search}
               onChange={(e) => props.setIsSearch(e.target.value)}
@@ -317,6 +319,7 @@ function NodeElement(props: {
         props.node.children.length > 0 &&
         !props.node.children[0].isSymbol ? (
           <Button
+            color="violet"
             variant="ghost"
             className="w-full py-1 my-0.5 text-text-light dark:text-text-dark"
             onClick={handleToggle}
@@ -337,7 +340,8 @@ function NodeElement(props: {
                 <div className="grow">
                   <Button
                     variant="ghost"
-                    className="w-full text-text-light dark:text-text-dark justify-start pr-0"
+                    color="violet"
+                    className="w-full text-text-light dark:text-text-dark cursor-pointer justify-start pr-0"
                     onClick={handleToggle}
                   >
                     <div className="flex space-x-2 items-center overflow-hidden">
@@ -350,6 +354,7 @@ function NodeElement(props: {
                   <Tooltip content="Highlight this node">
                     <Button
                       variant="ghost"
+                      color="violet"
                       className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
                         isHighlighted
                           ? "bg-focus-light dark:bg-focus-dark bg-opacity-20"
@@ -364,6 +369,7 @@ function NodeElement(props: {
                     <Link to={`/audit/${encodeURIComponent(props.node.id)}`}>
                       <Button
                         variant="ghost"
+                        color="violet"
                         className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
                       >
                         <LuPanelRightOpen className="text-gray-light dark:text-gray-dark" />
@@ -376,6 +382,7 @@ function NodeElement(props: {
               <Button
                 className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-background-light dark:bg-background-dark"}`}
                 variant="ghost"
+                color="violet"
               >
                 <div className="w-full flex items-center space-x-2">
                   <MdSubdirectoryArrowRight className="text-gray-light dark:text-gray-dark" />

@@ -32,6 +32,7 @@ export default function GraphLayout(props: {
           >
             <Link to="/audit">
               <Button
+                color="violet"
                 radius="large"
                 variant="ghost"
                 size="3"
@@ -47,6 +48,7 @@ export default function GraphLayout(props: {
           </div>
           <div className="flex gap-4 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 py-2 rounded-xl">
             <Button
+              color="violet"
               variant="ghost"
               size="1"
               onClick={() => themeContext.changeTheme(lightTheme)}
@@ -59,6 +61,7 @@ export default function GraphLayout(props: {
               <MdLightMode className="text-gray-light dark:text-gray-dark h-6 w-6" />
             </Button>
             <Button
+              color="violet"
               variant="ghost"
               size="1"
               onClick={() => themeContext.changeTheme(darkTheme)}
