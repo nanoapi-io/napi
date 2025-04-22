@@ -4,7 +4,10 @@ import {
   CSharpFile,
 } from "../../../languagePlugins/csharp/dependencyFormatting/index.js";
 import Parser from "tree-sitter";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+import {
+  csharpLanguage,
+  csharpParser,
+} from "../../../helpers/treeSitter/parsers.js";
 
 /**
  * Generates a dependency manifest for C# files.
@@ -50,7 +53,7 @@ export function generateCSharpDependencyManifest(
     manifest[path] = {
       id: fm.id,
       filePath: fm.filepath,
-      language: "c-sharp",
+      language: csharpLanguage,
       characterCount: fm.characterCount,
       lineCount: fm.lineCount,
       dependencies: fm.dependencies,

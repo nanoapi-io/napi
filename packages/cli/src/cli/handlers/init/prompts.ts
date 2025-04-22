@@ -5,6 +5,10 @@ import { localConfigSchema } from "../../../config/localConfig.js";
 import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with { type: "json" };
 import { select, confirm, input, number, search } from "@inquirer/prompts";
 import { globSync } from "glob";
+import {
+  csharpLanguage,
+  pythonLanguage,
+} from "../../../helpers/treeSitter/parsers.js";
 
 /**
  * Shows files that match a given glob pattern
@@ -385,7 +389,7 @@ function suggestIncludePatterns(
   const suggestions: string[] = [];
 
   // Language-specific suggestions
-  if (language === "python") {
+  if (language === pythonLanguage) {
     // Check for common Python project structures
     if (projectStructure.some((entry) => entry.includes("📂 src/"))) {
       suggestions.push("src/**/*.py");
@@ -406,7 +410,7 @@ function suggestIncludePatterns(
     if (suggestions.length === 0) {
       suggestions.push("**/*.py");
     }
-  } else if (language === "csharp") {
+  } else if (language === csharpLanguage) {
     // Check for common C# project structures
     if (projectStructure.some((entry) => entry.includes("📂 src/"))) {
       suggestions.push("src/**/*.cs");
@@ -453,7 +457,7 @@ function suggestExcludePatterns(
   suggestions.push("**/build/**");
 
   // Language-specific suggestions
-  if (language === "python") {
+  if (language === pythonLanguage) {
     suggestions.push("**/__pycache__/**");
     suggestions.push("**/*.pyc");
     suggestions.push("**/.pytest_cache/**");
@@ -464,7 +468,7 @@ function suggestExcludePatterns(
     suggestions.push("**/.coverage");
     suggestions.push("**/htmlcov/**");
     suggestions.push("**/.mypy_cache/**");
-  } else if (language === "csharp") {
+  } else if (language === csharpLanguage) {
     suggestions.push("**/bin/**");
     suggestions.push("**/obj/**");
     suggestions.push("**/packages/**");
@@ -490,15 +494,15 @@ export async function generateConfig(
   const language = await select({
     message: "Select the language of your project",
     choices: [
-      { name: "Python", value: "python" },
-      { name: "C#", value: "csharp" },
+      { name: "Python", value: pythonLanguage },
+      { name: "C#", value: csharpLanguage },
     ],
   });
 
   // Python-specific config (if Python is selected)
   let pythonConfig: z.infer<typeof localConfigSchema>["python"] | undefined =
     undefined;
-  if (language === "python") {
+  if (language === pythonLanguage) {
     const supportedVersions = Object.keys(pythonStdlibList);
     const pythonVersion = await search<string>({
       message: "Enter or search for your Python version (e.g., 3.9)",
