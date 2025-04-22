@@ -23,7 +23,7 @@ export interface ExtractedFile {
 
 export class CSharpExtractor {
   private manifest: DependencyManifest;
-  private projectMapper: CSharpProjectMapper;
+  public projectMapper: CSharpProjectMapper;
   private nsMapper: CSharpNamespaceMapper;
   private usingResolver: CSharpUsingResolver;
 
@@ -53,6 +53,9 @@ export class CSharpExtractor {
       this.nsMapper,
       this.projectMapper,
     );
+    for (const [filePath] of parsedFiles) {
+      this.usingResolver.resolveUsingDirectives(filePath);
+    }
   }
 
   /**
@@ -172,5 +175,14 @@ export class CSharpExtractor {
       return this.extractSymbol(symbol);
     }
     return undefined;
+  }
+
+  public generateGlobalUsings(subproject: DotNetProject): string {
+    let content = "";
+    const directives = subproject.globalUsings.directives;
+    for (const directive of directives) {
+      content += `${directive.node.text}\n`;
+    }
+    return content;
   }
 }

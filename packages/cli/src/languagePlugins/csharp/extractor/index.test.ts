@@ -1,7 +1,12 @@
 import { describe, test, expect } from "vitest";
 import { CSharpExtractor } from "./index.js";
-import { getCSharpFilesMap, getCsprojFilesMap } from "../testFiles/index.js";
+import {
+  getCSharpFilesMap,
+  getCsprojFilesMap,
+  csharpFilesFolder,
+} from "../testFiles/index.js";
 import { generateCSharpDependencyManifest } from "../../../manifest/dependencyManifest/csharp/index.js";
+import path from "path";
 
 describe("CSharpExtractor", () => {
   const parsedfiles = getCSharpFilesMap();
@@ -25,5 +30,25 @@ describe("CSharpExtractor", () => {
       extractor.extractSymbolByName("MyApp.BeefBurger.Steak")?.length,
     ).toBe(1);
     expect(extractor.extractSymbolByName("HeadCrab")?.length).toBe(2);
+  });
+
+  test("should extract global using directives", () => {
+    const project = extractor.projectMapper.findSubprojectForFile(
+      path.join(csharpFilesFolder, "Program.cs"),
+    );
+    const usingDirectives = extractor.generateGlobalUsings(project);
+    expect(usingDirectives.startsWith("global using System.IO;")).toBe(true);
+
+    const subproject = extractor.projectMapper.findSubprojectForFile(
+      path.join(csharpFilesFolder, "Subfolder/GlobalUsings.cs"),
+    );
+    const subprojectUsingDirectives =
+      extractor.generateGlobalUsings(subproject);
+    expect(subprojectUsingDirectives.includes("global using System;")).toBe(
+      true,
+    );
+    expect(
+      subprojectUsingDirectives.includes("global using MyApp.Models;"),
+    ).toBe(true);
   });
 });
