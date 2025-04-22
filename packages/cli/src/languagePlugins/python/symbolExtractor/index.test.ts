@@ -7,7 +7,10 @@ import { PythonItemResolver } from "../itemResolver/index.js";
 import { PythonImportExtractor } from "../importExtractor/index.js";
 import { PythonUsageResolver } from "../usageResolver/index.js";
 import { DependencyManifest } from "../../../manifest/dependencyManifest/types.js";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+import {
+  pythonLanguage,
+  pythonParser,
+} from "../../../helpers/treeSitter/parsers.js";
 import { localConfigSchema } from "../../../config/localConfig.js";
 import z from "zod";
 import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python/index.js";
@@ -37,7 +40,7 @@ describe("PythonSymbolExtractor", () => {
     files: Map<string, { path: string; content: string }>,
   ): DependencyManifest {
     const dependencyManifest = generatePythonDependencyManifest(files, {
-      language: "python",
+      language: pythonLanguage,
       python: {
         version: "3.10",
       },

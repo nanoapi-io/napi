@@ -7,11 +7,12 @@ import {
 } from "fs";
 import { globSync } from "glob";
 import { dirname, join } from "path";
+import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.js";
 
 export function getExtensionsForLanguage(language: string) {
   const supportedLanguages = {
-    ["python" as string]: ["py"],
-    ["c-sharp" as string]: ["cs", "csproj"],
+    [pythonLanguage]: ["py"],
+    [csharpLanguage]: ["cs", "csproj"],
   };
 
   const supportedLanguage = supportedLanguages[language];
