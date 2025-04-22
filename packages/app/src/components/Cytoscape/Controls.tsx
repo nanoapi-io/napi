@@ -1,12 +1,6 @@
-import { useState, useEffect } from "react";
-import {
-  Button,
-  DropdownMenu,
-  TextField,
-  IconButton,
-  Checkbox,
-} from "@radix-ui/themes";
-import { LuChevronUp, LuX } from "react-icons/lu";
+import { useState, useEffect, useRef } from "react";
+import { Button, DropdownMenu, Checkbox } from "@radix-ui/themes";
+import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
 import { toast } from "react-toastify";
 import {
@@ -15,7 +9,6 @@ import {
   MdOutlineZoomIn,
   MdOutlineZoomOut,
   MdFilterAlt,
-  MdSearch,
 } from "react-icons/md";
 import {
   charactersMetric,
@@ -24,12 +17,10 @@ import {
   noMetric,
   TargetMetric,
 } from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
-import { NodeElementDefinition } from "../../helpers/cytoscape/views/auditFile.js";
 
-const INITIAL_ELEMENT_LIMIT = 50;
+const INITIAL_ELEMENT_LIMIT = 75;
 
 interface FiltersType {
-  search: string;
   showExternal: boolean;
   showInternal: boolean;
   showVariables: boolean;
@@ -44,23 +35,17 @@ export default function Controls(props: {
   metricType?: TargetMetric;
   setMetricType?: (metricType: TargetMetric) => void;
 }) {
-  const [debouncedSearch, setDebouncedSearch] = useState<string>("");
+  const initialized = useRef(false);
   const [filters, setFilters] = useState<FiltersType>({
-    search: "",
     showExternal: true,
     showInternal: true,
     showVariables: true,
     showFunctions: true,
     showClasses: true,
   });
-  const [searchedNodeIds, setSearchedNodeIds] = useState<string[]>([]);
 
   function checkFiltersSet() {
     if (!filters) return false;
-
-    if (filters.search.length > 0) {
-      return true;
-    }
 
     // For boolean filters, assuming they take the form "show X"
     // then we need to return false if they are set to their default value
@@ -112,31 +97,18 @@ export default function Controls(props: {
 
     const elements = props.cy.elements();
 
+    // Handle strict mode for dev
+    if (!initialized.current) {
+      initialized.current = true;
+      return;
+    }
+
     if (elements.length > INITIAL_ELEMENT_LIMIT) {
       toast.info(
-        "We've auto-collapsed the graph to improve performance. You can expand nodes via filter and search to see more details.",
+        "There are more than 75 elements on screen. We recommend using the filters in the control bar to get a better view of the graph.",
       );
-      setFilters({
-        search: "",
-        showExternal: false,
-        showInternal: false,
-        showVariables: true,
-        showFunctions: true,
-        showClasses: true,
-      });
     }
-  }, [props.cy]);
-
-  // Debounce the search input
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(filters.search);
-    }, 300);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [filters.search]);
+  }, []);
 
   // Show and hide external nodes and edges
   useEffect(() => {
@@ -152,7 +124,7 @@ export default function Controls(props: {
     } else {
       nodes.addClass("hidden");
     }
-  }, [filters.showExternal, props.cy]);
+  }, [filters.showExternal]);
 
   // Show and hide internal nodes and edges
   useEffect(() => {
@@ -167,7 +139,7 @@ export default function Controls(props: {
     } else {
       nodes.addClass("hidden");
     }
-  }, [filters.showInternal, props.cy]);
+  }, [filters.showInternal]);
 
   // Show and hide variables
   useEffect(() => {
@@ -175,14 +147,17 @@ export default function Controls(props: {
 
     // Grab only the variable nodes
     const nodes = props.cy.nodes().filter((node) => {
-      return node.data("customData").instance?.type === "variable";
+      return (
+        node.data("customData").instance?.type === "variable" &&
+        node.data("isCurrentFile")
+      );
     });
     if (filters.showVariables) {
       nodes.removeClass("hidden");
     } else {
       nodes.addClass("hidden");
     }
-  }, [filters.showVariables, props.cy]);
+  }, [filters.showVariables]);
 
   // Show and hide functions
   useEffect(() => {
@@ -190,14 +165,17 @@ export default function Controls(props: {
 
     // Grab only the function nodes
     const nodes = props.cy.nodes().filter((node) => {
-      return node.data("customData").instance?.type === "function";
+      return (
+        node.data("customData").instance?.type === "function" &&
+        node.data("isCurrentFile")
+      );
     });
     if (filters.showFunctions) {
       nodes.removeClass("hidden");
     } else {
       nodes.addClass("hidden");
     }
-  }, [filters.showFunctions, props.cy]);
+  }, [filters.showFunctions]);
 
   // Show and hide classes
   useEffect(() => {
@@ -205,7 +183,10 @@ export default function Controls(props: {
 
     // Grab only the class nodes
     const nodes = props.cy.nodes().filter((node) => {
-      return node.data("customData").instance?.type === "class";
+      return (
+        node.data("customData").instance?.type === "class" &&
+        node.data("isCurrentFile")
+      );
     });
 
     if (filters.showClasses) {
@@ -213,61 +194,7 @@ export default function Controls(props: {
     } else {
       nodes.addClass("hidden");
     }
-  }, [filters.showClasses, props.cy]);
-
-  // Filter based off of search results
-  useEffect(() => {
-    if (!props.cy) return;
-
-    // Grab all of the nodes
-    const nodes = props.cy.nodes();
-
-    // If there is no search term, and there was one before,
-    // then we want to show all of the nodes we recently hid
-    if (filters.search.length === 0 && searchedNodeIds.length > 0) {
-      nodes.forEach((node) => {
-        if (searchedNodeIds.includes(node.id())) {
-          node.removeClass("hidden");
-        }
-      });
-      setSearchedNodeIds([]);
-      return;
-    } else if (filters.search.length > 0 && searchedNodeIds.length > 0) {
-      // If there is a search term, and there was one before,
-      // then we want to show all of the nodes we recently hid
-      // that now match the current term again
-      nodes.forEach((node) => {
-        if (searchedNodeIds.includes(node.id())) {
-          const data = node.data() as NodeElementDefinition["data"];
-          const label = data.label.toLowerCase();
-          const searchTerm = filters.search.toLowerCase();
-
-          if (label.includes(searchTerm)) {
-            node.removeClass("hidden");
-            setSearchedNodeIds((prev) => prev.filter((id) => id !== node.id()));
-          }
-        }
-      });
-      return;
-    }
-
-    if (!debouncedSearch) {
-      return;
-    }
-
-    // Filter based off of the search term
-    nodes.forEach((node) => {
-      console.log("node", node);
-      const data = node.data() as NodeElementDefinition["data"];
-      const label = data.label.toLowerCase();
-      const searchTerm = filters.search.toLowerCase();
-
-      if (!label.includes(searchTerm)) {
-        node.addClass("hidden");
-        setSearchedNodeIds((prev) => [...prev, node.id()]);
-      }
-    });
-  }, [debouncedSearch, props.cy]);
+  }, [filters.showClasses]);
 
   function showNodeViewControls() {
     if (props.metricType && props.setMetricType) {
@@ -350,31 +277,6 @@ export default function Controls(props: {
         </DropdownMenu.Trigger>
         <DropdownMenu.Content color="violet" variant="soft">
           {/* Add filter options here */}
-          <TextField.Root
-            value={filters.search}
-            onChange={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setFilters({ ...filters, search: e.target.value });
-            }}
-          >
-            <TextField.Slot>
-              <MdSearch />
-            </TextField.Slot>
-            {filters.search && filters.search.length > 2 && (
-              <TextField.Slot>
-                <IconButton
-                  variant="ghost"
-                  size="1"
-                  className="text-text-light dark:text-text-dark"
-                  onClick={() => setFilters({ ...filters, search: "" })}
-                >
-                  <LuX />
-                </IconButton>
-              </TextField.Slot>
-            )}
-          </TextField.Root>
-          <DropdownMenu.Separator />
           <DropdownMenu.Item
             // This keeps the search typing from changing focus
             textValue=""
@@ -469,7 +371,6 @@ export default function Controls(props: {
             disabled={!checkFiltersSet()}
             onClick={() => {
               setFilters({
-                search: "",
                 showExternal: true,
                 showInternal: true,
                 showVariables: true,
