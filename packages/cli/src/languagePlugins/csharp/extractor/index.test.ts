@@ -13,8 +13,12 @@ describe("CSharpExtractor", () => {
   for (const [filePath, { path, content }] of csprojFiles) {
     files.set(filePath, { path, content });
   }
-  const manifest = generateCSharpDependencyManifest(files);
-  const extractor = new CSharpExtractor(parsedfiles, csprojFiles, manifest);
+  const copiedFiles = new Map<string, { path: string; content: string }>();
+  for (const [filePath, { path, content }] of files) {
+    copiedFiles.set(filePath, { path, content });
+  }
+  const manifest = generateCSharpDependencyManifest(copiedFiles);
+  const extractor = new CSharpExtractor(files, manifest);
 
   test("should extract symbols correctly", () => {
     expect(extractor.extractSymbolByName("Program")?.length).toBe(9);
