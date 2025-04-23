@@ -7,6 +7,7 @@ import {
   ExtractedFile,
 } from "../../languagePlugins/csharp/extractor/index.js";
 import { DependencyManifest } from "../../manifest/dependencyManifest/types.js";
+import { DotNetProject } from "../../languagePlugins/csharp/projectMapper/index.js";
 
 export function extractCSharpSymbols(
   files: Map<string, { path: string; content: string }>,
@@ -27,14 +28,32 @@ export function extractCSharpSymbols(
       extractedFiles.push(...extractedFile);
     }
   }
+  const subprojects: DotNetProject[] = [];
   const extractedFilesMap: ExtractedFilesMap = new Map();
   for (const extractedFile of extractedFiles) {
     const { subproject, namespace, name } = extractedFile;
+    if (!subprojects.includes(subproject)) {
+      subprojects.push(subproject);
+    }
     const key = path.join(subproject.name, namespace, name);
     if (!extractedFilesMap.has(key)) {
       extractedFilesMap.set(key, {
         path: key,
         content: extractor.getContent(extractedFile),
+      });
+    }
+  }
+  for (const subproject of subprojects) {
+    const projectPath = path.join(subproject.name, `${subproject.name}.csproj`);
+    const globalUsingPath = path.join(subproject.name, "GlobalUsings.cs");
+    if (!extractedFilesMap.has(projectPath)) {
+      extractedFilesMap.set(projectPath, {
+        path: projectPath,
+        content: subproject.csprojContent,
+      });
+      extractedFilesMap.set(globalUsingPath, {
+        path: globalUsingPath,
+        content: extractor.generateGlobalUsings(subproject),
       });
     }
   }
