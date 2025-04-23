@@ -4,7 +4,7 @@ import {
   NamespaceNode,
   SymbolNode,
 } from "../namespaceMapper/index.js";
-import { CSharpProjectMapper } from "../projectMapper/index.js";
+import { CSharpProjectMapper, GlobalUsings } from "../projectMapper/index.js";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 
 const namespaceDeclarationQuery = new Parser.Query(
@@ -212,7 +212,11 @@ export class CSharpUsingResolver {
    * @returns A ResolvedImports object containing internal and external symbols.
    */
   public resolveUsingDirectives(filepath: string): ResolvedImports {
-    const globalUsings: ResolvedImports = { internal: [], external: [] };
+    const globalUsings: GlobalUsings = {
+      internal: [],
+      external: [],
+      directives: [],
+    };
     if (this.cachedImports.has(filepath)) {
       return this.cachedImports.get(filepath) as ResolvedImports;
     }
@@ -224,11 +228,13 @@ export class CSharpUsingResolver {
         internal.push(resolved);
         if (directive.type === GLOBAL_USING) {
           globalUsings.internal.push(resolved);
+          globalUsings.directives.push(directive);
         }
       } else {
         external.push(resolved as ExternalSymbol);
         if (directive.type === GLOBAL_USING) {
           globalUsings.external.push(resolved as ExternalSymbol);
+          globalUsings.directives.push(directive);
         }
       }
     });

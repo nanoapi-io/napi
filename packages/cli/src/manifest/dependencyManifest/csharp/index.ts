@@ -38,7 +38,6 @@ export function generateCSharpDependencyManifest(
   for (const [filePath, { content: fileContent }] of files) {
     if (filePath.endsWith(".csproj")) {
       csprojFiles.set(filePath, { path: filePath, content: fileContent });
-      files.delete(filePath);
     } else {
       try {
         const rootNode = csharpParser.parse(fileContent, undefined, {
@@ -54,7 +53,7 @@ export function generateCSharpDependencyManifest(
 
   const formatter = new CSharpDependencyFormatter(parsedFiles, csprojFiles);
   const manifest: DependencyManifest = {};
-  const filecount = files.size;
+  const filecount = parsedFiles.size;
   let i = 0;
   for (const [, { path }] of parsedFiles) {
     console.info(`Processing ${path} (${++i}/${filecount})`);
