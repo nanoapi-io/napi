@@ -54,7 +54,7 @@ export class ProjectDependencyVisualizer {
     nodeDimensionsIncludeLabels: true,
   } as FcoseLayoutOptions;
   /** Current metric used for node coloring */
-  private targetMetric: Metric;
+  private targetMetric: Metric | undefined;
   /** Currently selected node in the graph */
   private selectedNodeId: string | undefined;
   /** Currently highlighted node in the graph */
