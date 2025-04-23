@@ -7,10 +7,8 @@ import { ThemeContext } from "../../contexts/ThemeContext.js";
 import { AuditContext } from "./base.js";
 import FileDetailsPane from "../../components/FileDetailsPane.js";
 import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.js";
-import {
-  NapiNodeData,
-  TargetMetric,
-} from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
+import { NapiNodeData } from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
+import { Metric } from "@napi/shared";
 
 export default function AuditPage() {
   const navigate = useNavigate();
@@ -26,14 +24,15 @@ export default function AuditPage() {
     ProjectDependencyVisualizer | undefined
   >(undefined);
 
-  const metricTypeFromUrl = (searchParams.get("metricType") ||
-    "noMetric") as TargetMetric;
+  const metricFromUrl = (searchParams.get("metric") || undefined) as
+    | Metric
+    | undefined;
 
-  const [metricType, setMetricType] = useState<TargetMetric>(metricTypeFromUrl);
+  const [metric, setMetric] = useState<Metric | undefined>(metricFromUrl);
 
-  function handleMetricTypeChange(metricType: TargetMetric) {
-    setSearchParams({ metricType: metricType });
-    setMetricType(metricType);
+  function handleMetricChange(metric: Metric | undefined) {
+    setSearchParams({ metric: metric });
+    setMetric(metric);
   }
 
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
@@ -59,7 +58,7 @@ export default function AuditPage() {
       context.auditManifest,
       {
         theme: themeContext.theme,
-        defaultMetric: metricType,
+        defaultMetric: metric,
         onAfterNodeRightClick: (value: {
           position: { x: number; y: number };
           id: string;
@@ -91,9 +90,9 @@ export default function AuditPage() {
   // Hook to update the target metric in the graph
   useEffect(() => {
     if (projectVisualizer) {
-      projectVisualizer.setTargetMetric(metricType);
+      projectVisualizer.setTargetMetric(metric);
     }
-  }, [metricType]);
+  }, [metric]);
 
   // Hook to update highlight node in the graph
   useEffect(() => {
@@ -127,8 +126,8 @@ export default function AuditPage() {
           busy={context.busy || busy}
           cy={projectVisualizer.cy}
           onLayout={() => projectVisualizer.layoutGraph(projectVisualizer.cy)}
-          metricType={metricType}
-          setMetricType={handleMetricTypeChange}
+          metric={metric}
+          setMetric={handleMetricChange}
         />
       )}
 

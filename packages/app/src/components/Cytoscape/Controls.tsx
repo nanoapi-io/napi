@@ -11,12 +11,15 @@ import {
   MdFilterAlt,
 } from "react-icons/md";
 import {
-  charactersMetric,
-  dependenciesMetric,
-  linesOfCodeMetric,
-  noMetric,
-  TargetMetric,
-} from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
+  Metric,
+  metricCharacterCount,
+  metricCodeCharacterCount,
+  metricCodeLineCount,
+  metricCyclomaticComplexity,
+  metricDependencyCount,
+  metricDependentCount,
+  metricLinesCount,
+} from "@napi/shared";
 
 const INITIAL_ELEMENT_LIMIT = 75;
 
@@ -32,8 +35,8 @@ export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
-  metricType?: TargetMetric;
-  setMetricType?: (metricType: TargetMetric) => void;
+  metric?: Metric;
+  setMetric?: (metricType: Metric | undefined) => void;
 }) {
   const initialized = useRef(false);
   const [filters, setFilters] = useState<FiltersType>({
@@ -93,7 +96,7 @@ export default function Controls(props: {
   // Check the number of elements on the file view
   // if there are more than 50, add some filters
   useEffect(() => {
-    if (!props.cy || props.metricType) return;
+    if (!props.cy || props.metric) return;
 
     const elements = props.cy.elements();
 
@@ -197,8 +200,32 @@ export default function Controls(props: {
   }, [filters.showClasses]);
 
   function showNodeViewControls() {
-    if (props.metricType && props.setMetricType) {
-      const metricType = props.metricType;
+    if (props.metric && props.setMetric) {
+      const metric = props.metric;
+
+      function getMetricLabel(metric: Metric) {
+        if (metric === metricLinesCount) {
+          return "Lines";
+        }
+        if (metric === metricCodeLineCount) {
+          return "Code Lines";
+        }
+        if (metric === metricCharacterCount) {
+          return "Chars";
+        }
+        if (metric === metricCodeCharacterCount) {
+          return "Code Chars";
+        }
+        if (metric === metricDependencyCount) {
+          return "Dependencies";
+        }
+        if (metric === metricDependentCount) {
+          return "Dependents";
+        }
+        if (metric === metricCyclomaticComplexity) {
+          return "Complexity";
+        }
+      }
 
       return (
         <DropdownMenu.Root>
@@ -211,35 +238,39 @@ export default function Controls(props: {
               disabled={props.busy}
               className="py-1.5"
             >
-              {metricType === "linesOfCode"
-                ? "LoC"
-                : metricType === "characters"
-                  ? "Chars"
-                  : metricType === "dependencies"
-                    ? "Deps"
-                    : "None"}
+              {getMetricLabel(metric)}
               <LuChevronUp />
             </Button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Content color="violet" variant="soft">
-            <DropdownMenu.Item onClick={() => props.setMetricType?.(noMetric)}>
+            <DropdownMenu.Item
+              onClick={() => props.setMetric?.(undefined)}
+              className="cursor-not-allowed"
+              disabled={props.busy}
+            >
               No Metric
             </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onClick={() => props.setMetricType?.(linesOfCodeMetric)}
-            >
-              Lines of Code
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onClick={() => props.setMetricType?.(charactersMetric)}
-            >
-              File Characters
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onClick={() => props.setMetricType?.(dependenciesMetric)}
-            >
-              Dependencies
-            </DropdownMenu.Item>
+            {(
+              [
+                { metric: metricLinesCount, label: "Total Lines" },
+                { metric: metricCodeLineCount, label: "Code Lines" },
+                { metric: metricCharacterCount, label: "Total Characters" },
+                { metric: metricCodeCharacterCount, label: "Code Characters" },
+                { metric: metricDependencyCount, label: "Dependencies Count" },
+                { metric: metricDependentCount, label: "Dependents Count" },
+                {
+                  metric: metricCyclomaticComplexity,
+                  label: "Cyclomatic Complexity",
+                },
+              ] as { metric: Metric; label: string }[]
+            ).map(({ metric, label }) => (
+              <DropdownMenu.Item
+                key={metric}
+                onClick={() => props.setMetric?.(metric)}
+              >
+                {label}
+              </DropdownMenu.Item>
+            ))}
           </DropdownMenu.Content>
         </DropdownMenu.Root>
       );
@@ -249,7 +280,7 @@ export default function Controls(props: {
   }
 
   function showFileViewControls() {
-    if (props.metricType) {
+    if (props.metric) {
       return <></>;
     }
 
@@ -261,7 +292,7 @@ export default function Controls(props: {
             variant="ghost"
             color="violet"
             highContrast
-            className={`${checkFiltersSet() ? "bg-primary-light/20 dark:bg-primary-dark/20" : ""}`}
+            className={`${checkFiltersSet() && "bg-primary-light/20 dark:bg-primary-dark/20"}`}
             disabled={props.busy}
             onClick={() => props.onLayout()}
           >

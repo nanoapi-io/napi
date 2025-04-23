@@ -14,10 +14,18 @@ import {
   DependencyManifest,
   AuditManifest,
   FileAuditManifest,
+  metricLinesCount,
+  metricCodeCharacterCount,
+  metricCodeLineCount,
+  metricCharacterCount,
+  metricDependencyCount,
+  metricDependentCount,
+  metricCyclomaticComplexity,
+  Metric,
 } from "@napi/shared";
 import tailwindConfig from "../../../../tailwind.config.js";
 import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition.js";
-import { NapiNodeData, noMetric, TargetMetric } from "./types.js";
+import { NapiNodeData } from "./types.js";
 
 /**
  * CodeDependencyVisualizer handles the visualization of project dependencies using Cytoscape.
@@ -46,7 +54,7 @@ export class ProjectDependencyVisualizer {
     nodeDimensionsIncludeLabels: true,
   } as FcoseLayoutOptions;
   /** Current metric used for node coloring */
-  private targetMetric: TargetMetric;
+  private targetMetric: Metric;
   /** Currently selected node in the graph */
   private selectedNodeId: string | undefined;
   /** Currently highlighted node in the graph */
@@ -75,7 +83,7 @@ export class ProjectDependencyVisualizer {
     auditManifest: AuditManifest,
     options?: {
       theme?: "light" | "dark";
-      defaultMetric?: TargetMetric;
+      defaultMetric?: Metric | undefined;
       onAfterNodeClick?: () => void;
       onAfterNodeRightClick?: (data: {
         position: { x: number; y: number };
@@ -92,7 +100,7 @@ export class ProjectDependencyVisualizer {
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeRightClick: () => {},
       theme: "light" as const,
-      defaultMetric: noMetric as TargetMetric,
+      defaultMetric: undefined,
     };
 
     const mergedOptions = { ...defaultOptions, ...options };
@@ -305,7 +313,7 @@ export class ProjectDependencyVisualizer {
    *
    * @param metric - The new metric to use for node coloring (e.g., LOC, characters, dependencies)
    */
-  public setTargetMetric(metric: TargetMetric) {
+  public setTargetMetric(metric: Metric | undefined) {
     this.targetMetric = metric;
 
     this.setNodesStyle();
@@ -460,9 +468,6 @@ export class ProjectDependencyVisualizer {
 
     Object.values(dependencyManifest).forEach((fileDependencyManifest) => {
       const fileAuditManifest = auditManifest[fileDependencyManifest.id];
-      const alertMessage: string[] = Object.values(
-        fileAuditManifest.alerts,
-      ).map((alert) => alert.message.short);
 
       const expandedLabel = this.getExpandedNodeLabel({
         fileName: fileDependencyManifest.id,
@@ -478,7 +483,10 @@ export class ProjectDependencyVisualizer {
       const { width: collapsedWidth, height: collapsedHeight } =
         getNodeWidthAndHeightFromLabel(collapsedLabel);
 
-      const viewColors = this.getAuditColorsForNode(theme, fileAuditManifest);
+      const metricsColors = this.getMetricsColorsForNode(
+        theme,
+        fileAuditManifest,
+      );
 
       const nodeElement: CustomNodeDefinition = {
         data: {
@@ -487,18 +495,7 @@ export class ProjectDependencyVisualizer {
           position: { x: 0, y: 0 },
           customData: {
             fileName: fileDependencyManifest.id,
-            viewColors,
-            metrics: {
-              linesOfCodeCount: {
-                value: fileDependencyManifest.metrics.codeLineCount,
-              },
-              characterCount: fileDependencyManifest.characterCount,
-              symbolCount: Object.keys(fileDependencyManifest.symbols).length,
-              dependencyCount: Object.keys(fileDependencyManifest.dependencies)
-                .length,
-            },
-            errors: errorMessages,
-            warnings: warningMessages,
+            metricsColors,
             expanded: {
               label: expandedLabel,
               width: expandedWitdh,
@@ -553,8 +550,7 @@ export class ProjectDependencyVisualizer {
     return edges;
   }
 
-  private errorChar = "❗";
-  private warningChar = "⚠️";
+  private errorChar = "⚠️";
   private successChar = "🎉";
 
   /**
@@ -572,19 +568,11 @@ export class ProjectDependencyVisualizer {
   }) {
     let label = data.fileName;
 
-    const errorMessages = Object.values(data.fileAuditManifest.errors).map(
-      (auditMessage) => auditMessage.shortMessage,
-    );
-    const warningMessages = Object.values(data.fileAuditManifest.warnings).map(
-      (auditMessage) => auditMessage.shortMessage,
-    );
+    const alerts = Object.values(data.fileAuditManifest.alerts);
 
-    if (errorMessages.length > 0 || warningMessages.length > 0) {
-      errorMessages.forEach((message) => {
-        label += `\n${this.errorChar} ${message}`;
-      });
-      warningMessages.forEach((message) => {
-        label += `\n${this.warningChar} ${message}`;
+    if (alerts.length > 0) {
+      alerts.forEach((alert) => {
+        label += `\n${this.errorChar} ${alert.message.short}`;
       });
     } else {
       label += `\n${this.successChar} No issues found`;
@@ -613,18 +601,10 @@ export class ProjectDependencyVisualizer {
 
     let label = fileName;
 
-    const errorMessages = Object.values(data.fileAuditManifest.errors).map(
-      (auditMessage) => auditMessage.shortMessage,
-    );
-    const warningMessages = Object.values(data.fileAuditManifest.warnings).map(
-      (auditMessage) => auditMessage.shortMessage,
-    );
+    const alerts = Object.values(data.fileAuditManifest.alerts);
 
-    if (errorMessages.length > 0) {
-      label += `\n${this.errorChar}(${errorMessages.length})`;
-    }
-    if (warningMessages.length > 0) {
-      label += `\n${this.warningChar}(${warningMessages.length})`;
+    if (alerts.length > 0) {
+      label += `\n${this.errorChar}(${alerts.length})`;
     }
 
     return label;
@@ -633,62 +613,59 @@ export class ProjectDependencyVisualizer {
   /**
    * Determines the colors for a node based on audit metrics and severity
    *
-   * Uses a color scale from green to red based on how metrics compare to target values:
-   * - Green: Within acceptable range
-   * - Yellow/Orange: Approaching threshold limits
-   * - Red: Exceeding recommended limits
+   * Uses a color scale from green to red based on severity levels:
+   * - Green (0): No issues
+   * - Yellow (1): Minor issues
+   * - Orange (2): Moderate issues
+   * - Amber (3): Significant issues
+   * - Dark Red (4): Severe issues
+   * - Red (5): Critical issues
    *
-   * @param theme - The current theme (light or dark)
-   * @param nodeAuditManifest - Audit information for the node
+   * @param fileAuditManifest - Audit information for the file
    * @returns Object containing colors for different metrics
    */
-  private getAuditColorsForNode(
+  private getMetricsColorsForNode(
     theme: "light" | "dark",
-    nodeAuditManifest: FileAuditManifest,
-  ): {
-    noMetric: string;
-    linesOfCode: string;
-    characters: string;
-    dependencies: string;
-  } {
-    const defaultColor = tailwindConfig.theme.extend.colors.primary[theme];
-    const severityColorMap = [
-      { threshold: 1.0, color: "#8BC34A" }, // green
-      { threshold: 1.2, color: "#ffdd00" }, // yellow
-      { threshold: 1.5, color: "#ff8c00" }, // orange
-      { threshold: 2.0, color: "#dc1414" }, // red
-    ];
+    fileAuditManifest: FileAuditManifest,
+  ) {
+    const levelToColor =
+      theme === "light"
+        ? {
+            0: "#22c55e", // green
+            1: "#eab308", // yellow
+            2: "#f97316", // orange
+            3: "#d97706", // amber
+            4: "#991b1b", // dark red
+            5: "#ef4444", // red
+          }
+        : {
+            0: "#4ade80", // lighter green for dark theme
+            1: "#facc15", // brighter yellow for dark theme
+            2: "#fb923c", // lighter orange for dark theme
+            3: "#fbbf24", // brighter amber for dark theme
+            4: "#b91c1c", // slightly brighter dark red for dark theme
+            5: "#f87171", // lighter red for dark theme
+          };
 
-    const getColorForMetric = (
-      auditError: AuditMessage | undefined,
-    ): string => {
-      if (!auditError) {
-        return severityColorMap[0].color;
-      }
-
-      const ratio =
-        parseFloat(auditError.value) / parseFloat(auditError.target);
-
-      for (const severityColor of severityColorMap) {
-        if (ratio <= severityColor.threshold) {
-          return severityColor.color;
-        }
-      }
-
-      return severityColorMap[severityColorMap.length - 1].color;
+    const metrics = {
+      [metricLinesCount]: levelToColor[0],
+      [metricCodeLineCount]: levelToColor[0],
+      [metricCodeCharacterCount]: levelToColor[0],
+      [metricCharacterCount]: levelToColor[0],
+      [metricDependencyCount]: levelToColor[0],
+      [metricDependentCount]: levelToColor[0],
+      [metricCyclomaticComplexity]: levelToColor[0],
     };
 
-    return {
-      noMetric: defaultColor,
-      linesOfCode: getColorForMetric(
-        nodeAuditManifest.lookup.targetMaxLineInFile?.[0],
-      ),
-      characters: getColorForMetric(
-        nodeAuditManifest.lookup.targetMaxCharInFile?.[0],
-      ),
-      dependencies: getColorForMetric(
-        nodeAuditManifest.lookup.targetMaxDepPerFile?.[0],
-      ),
-    };
+    // Check each metric for audit alerts
+    Object.keys(metrics).forEach((metricKey) => {
+      // Look for audit alert related to this metric
+      const alert = fileAuditManifest.alerts[metricKey];
+      if (alert) {
+        metrics[metricKey] = levelToColor[alert.severity];
+      }
+    });
+
+    return metrics;
   }
 }

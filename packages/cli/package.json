@@ -39,7 +39,7 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsc --watch",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
-    "build:shared": "npm run build --workspace packages/shared",
+    "build:shared": "npm run build --prefix ../shared",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
     "build:cli": "tsc",
