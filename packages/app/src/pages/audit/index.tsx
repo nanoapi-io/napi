@@ -31,7 +31,11 @@ export default function AuditPage() {
   const [metric, setMetric] = useState<Metric | undefined>(metricFromUrl);
 
   function handleMetricChange(metric: Metric | undefined) {
-    setSearchParams({ metric: metric });
+    if (metric) {
+      setSearchParams({ metric: metric });
+    } else {
+      setSearchParams({});
+    }
     setMetric(metric);
   }
 
@@ -126,8 +130,10 @@ export default function AuditPage() {
           busy={context.busy || busy}
           cy={projectVisualizer.cy}
           onLayout={() => projectVisualizer.layoutGraph(projectVisualizer.cy)}
-          metric={metric}
-          setMetric={handleMetricChange}
+          metricState={{
+            metric,
+            setMetric: handleMetricChange,
+          }}
         />
       )}
 

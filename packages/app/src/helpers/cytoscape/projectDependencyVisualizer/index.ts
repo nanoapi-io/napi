@@ -127,9 +127,13 @@ export class ProjectDependencyVisualizer {
     this.cy.style(this.getCyStyleSheet(this.theme));
     this.cy.nodes().style({
       "background-color": (node: NodeSingular) =>
-        node.data(`customData.viewColors.${this.targetMetric}`),
+        node.data(
+          `customData.metricsColors.${this.targetMetric || "undefined"}`,
+        ),
       "border-color": (node: NodeSingular) =>
-        node.data(`customData.viewColors.${this.targetMetric}`),
+        node.data(
+          `customData.metricsColors.${this.targetMetric || "undefined"}`,
+        ),
     });
 
     this.layoutGraph(this.cy);
@@ -186,22 +190,25 @@ export class ProjectDependencyVisualizer {
         closedNeighborhoodNodes.removeStyle();
         closedNeighborhoodNodes.style({
           "border-color": (node: NodeSingular) =>
-            node.data(`customData.viewColors.${this.targetMetric}`) ||
-            undefined,
+            node.data(
+              `customData.metricsColors.${this.targetMetric || "undefined"}`,
+            ) || undefined,
         });
 
         backgroundElements.removeStyle();
         backgroundElements.style({
           "background-color": (node: NodeSingular) =>
-            node.data(`customData.viewColors.${this.targetMetric}`) ||
-            undefined,
+            node.data(
+              `customData.metricsColors.${this.targetMetric || "undefined"}`,
+            ) || undefined,
         });
       } else {
         this.cy.nodes().removeStyle();
         this.cy.nodes().style({
           "background-color": (node: NodeSingular) =>
-            node.data(`customData.viewColors.${this.targetMetric}`) ||
-            undefined,
+            node.data(
+              `customData.metricsColors.${this.targetMetric || "undefined"}`,
+            ) || undefined,
         });
       }
 
@@ -652,6 +659,7 @@ export class ProjectDependencyVisualizer {
           };
 
     const metrics = {
+      undefined: levelToColor[0],
       [metricLinesCount]: levelToColor[0],
       [metricCodeLineCount]: levelToColor[0],
       [metricCodeCharacterCount]: levelToColor[0],
