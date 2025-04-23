@@ -460,6 +460,7 @@ export class ProjectDependencyVisualizer {
 
     Object.values(dependencyManifest).forEach((fileDependencyManifest) => {
       const fileAuditManifest = auditManifest[fileDependencyManifest.id];
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const alertMessage: string[] = Object.values(
         fileAuditManifest.alerts,
       ).map((alert) => alert.message.short);

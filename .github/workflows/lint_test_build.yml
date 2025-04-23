@@ -19,9 +19,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build shared
-        run: npm run build:shared
-
       - name: Lint
         run: npm run lint:check
 
