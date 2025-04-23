@@ -20,7 +20,7 @@ jobs:
         run: npm install
 
       - name: Build shared
-        run: npm run dev:shared
+        run: npm run build:shared
 
       - name: Lint
         run: npm run lint:check
@@ -40,7 +40,7 @@ jobs:
         run: npm install
 
       - name: Build shared
-        run: npm run dev:shared
+        run: npm run build:shared
 
       - name: Tests
         run: npm run test
