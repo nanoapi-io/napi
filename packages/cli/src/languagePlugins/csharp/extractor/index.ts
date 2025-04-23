@@ -3,6 +3,7 @@ import { CSharpProjectMapper, DotNetProject } from "../projectMapper/index.js";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
 import { CSharpUsingResolver, UsingDirective } from "../usingResolver/index.js";
 import { DependencyManifest } from "../../../manifest/dependencyManifest/types.js";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 
 /**
  * Represents an extracted file containing a symbol.
@@ -22,22 +23,39 @@ export interface ExtractedFile {
 
 export class CSharpExtractor {
   private manifest: DependencyManifest;
-  private projectMapper: CSharpProjectMapper;
+  public projectMapper: CSharpProjectMapper;
   private nsMapper: CSharpNamespaceMapper;
   private usingResolver: CSharpUsingResolver;
 
   constructor(
-    parsedFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-    csprojFiles: Map<string, { path: string; content: string }>,
+    files: Map<string, { path: string; content: string }>,
     manifest: DependencyManifest,
   ) {
     this.manifest = manifest;
+    const csprojFiles = new Map<string, { path: string; content: string }>();
+    const parsedFiles = new Map<
+      string,
+      { path: string; rootNode: Parser.SyntaxNode }
+    >();
+    for (const [filePath, file] of files) {
+      if (filePath.endsWith(".csproj")) {
+        csprojFiles.set(filePath, file);
+      } else if (filePath.endsWith(".cs")) {
+        parsedFiles.set(filePath, {
+          path: filePath,
+          rootNode: csharpParser.parse(file.content).rootNode,
+        });
+      }
+    }
     this.projectMapper = new CSharpProjectMapper(csprojFiles);
     this.nsMapper = new CSharpNamespaceMapper(parsedFiles);
     this.usingResolver = new CSharpUsingResolver(
       this.nsMapper,
       this.projectMapper,
     );
+    for (const [filePath] of parsedFiles) {
+      this.usingResolver.resolveUsingDirectives(filePath);
+    }
   }
 
   /**
@@ -157,5 +175,14 @@ export class CSharpExtractor {
       return this.extractSymbol(symbol);
     }
     return undefined;
+  }
+
+  public generateGlobalUsings(subproject: DotNetProject): string {
+    let content = "";
+    const directives = subproject.globalUsings.directives;
+    for (const directive of directives) {
+      content += `${directive.node.text}\n`;
+    }
+    return content;
   }
 }
