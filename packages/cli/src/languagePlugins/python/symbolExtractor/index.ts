@@ -231,11 +231,12 @@ export class PythonSymbolExtractor {
 
       for (const symbol of exports.symbols) {
         if (!symbols.has(symbol.id)) {
-          const symbolNode = symbol.node;
-          indexesToRemove.push({
-            startIndex: symbolNode.startIndex,
-            endIndex: symbolNode.endIndex,
-          });
+          for (const node of symbol.nodes) {
+            indexesToRemove.push({
+              startIndex: node.startIndex,
+              endIndex: node.endIndex,
+            });
+          }
         }
       }
 

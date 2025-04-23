@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2025-04-22
+
+Switch to ESM
+Some UI improvement with project view
+Symbol extraction for python
+
 ## [1.0.0] - 2025-04-14
 
 New release major release
