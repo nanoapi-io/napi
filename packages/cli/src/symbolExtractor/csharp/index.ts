@@ -35,7 +35,7 @@ export function extractCSharpSymbols(
     if (!subprojects.includes(subproject)) {
       subprojects.push(subproject);
     }
-    const key = path.join(subproject.name, namespace, name);
+    const key = path.join(subproject.name, namespace, `${name}.cs`);
     if (!extractedFilesMap.has(key)) {
       extractedFilesMap.set(key, {
         path: key,
