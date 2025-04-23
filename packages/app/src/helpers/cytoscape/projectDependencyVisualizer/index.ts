@@ -10,12 +10,11 @@ import cytoscape, {
 } from "cytoscape";
 import { Core } from "cytoscape";
 import fcose, { FcoseLayoutOptions } from "cytoscape-fcose";
-import { DependencyManifest } from "../../../service/api/types/dependencyManifest.js";
 import {
+  DependencyManifest,
   AuditManifest,
-  AuditMessage,
   FileAuditManifest,
-} from "../../../service/api/types/auditManifest.js";
+} from "@napi/shared";
 import tailwindConfig from "../../../../tailwind.config.js";
 import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition.js";
 import { NapiNodeData, noMetric, TargetMetric } from "./types.js";
@@ -461,12 +460,9 @@ export class ProjectDependencyVisualizer {
 
     Object.values(dependencyManifest).forEach((fileDependencyManifest) => {
       const fileAuditManifest = auditManifest[fileDependencyManifest.id];
-      const errorMessages: string[] = Object.values(
-        fileAuditManifest.errors,
-      ).map((auditMessage) => auditMessage.shortMessage);
-      const warningMessages: string[] = Object.values(
-        fileAuditManifest.warnings,
-      ).map((auditMessage) => auditMessage.shortMessage);
+      const alertMessage: string[] = Object.values(
+        fileAuditManifest.alerts,
+      ).map((alert) => alert.message.short);
 
       const expandedLabel = this.getExpandedNodeLabel({
         fileName: fileDependencyManifest.id,
@@ -493,7 +489,9 @@ export class ProjectDependencyVisualizer {
             fileName: fileDependencyManifest.id,
             viewColors,
             metrics: {
-              linesOfCodeCount: fileDependencyManifest.lineCount,
+              linesOfCodeCount: {
+                value: fileDependencyManifest.metrics.codeLineCount,
+              },
               characterCount: fileDependencyManifest.characterCount,
               symbolCount: Object.keys(fileDependencyManifest.symbols).length,
               dependencyCount: Object.keys(fileDependencyManifest.dependencies)

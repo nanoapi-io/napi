@@ -2,7 +2,7 @@ import { ExtractedFilesMap } from "./types.js";
 import { extractPythonSymbols } from "./python/index.js";
 import { localConfigSchema } from "../config/localConfig.js";
 import z from "zod";
-import { DependencyManifest } from "../manifest/dependencyManifest/types.js";
+import { DependencyManifest } from "@napi/shared";
 
 const handlerMap: Record<
   string,

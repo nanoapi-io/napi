@@ -6,7 +6,7 @@ import { PythonModuleResolver } from "../moduleResolver/index.js";
 import { PythonItemResolver } from "../itemResolver/index.js";
 import { PythonImportExtractor } from "../importExtractor/index.js";
 import { PythonUsageResolver } from "../usageResolver/index.js";
-import { DependencyManifest } from "../../../manifest/dependencyManifest/types.js";
+import { DependencyManifest } from "@napi/shared";
 import {
   pythonLanguage,
   pythonParser,
@@ -478,8 +478,7 @@ class MyClass:
     );
     expect(result.get("valid_module.py")).toBeDefined();
     expect(result.get("valid_module.py")?.content.trim()).toEqual(
-      `
-def valid_function():
+      `def valid_function():
     return "I'm valid"
   `.trim(),
     );
@@ -544,8 +543,7 @@ def something():
     expect(result.size).toBe(2);
     expect(result.get("main.py")).toBeDefined();
     expect(result.get("main.py")?.content.trim()).toEqual(
-      `
-from valid_module import valid_function
+      `from valid_module import valid_function
 
 
 class MyClass:
@@ -555,8 +553,7 @@ class MyClass:
     );
     expect(result.get("valid_module.py")).toBeDefined();
     expect(result.get("valid_module.py")?.content.trim()).toEqual(
-      `
-def valid_function():
+      `def valid_function():
     return "I'm valid"
   `.trim(),
     );

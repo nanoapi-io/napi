@@ -1,8 +1,7 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config.js";
 import { FcoseLayoutOptions } from "cytoscape-fcose";
-import { DependencyManifest } from "../../../service/api/types/dependencyManifest.js";
-import { AuditManifest } from "../../../service/api/types/auditManifest.js";
+import { DependencyManifest, AuditManifest } from "@napi/shared";
 import { Theme } from "../../../contexts/ThemeContext.js";
 export interface NodeElementDefinition extends ElementDefinition {
   data: {

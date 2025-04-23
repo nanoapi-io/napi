@@ -4,7 +4,7 @@ import { PythonModuleResolver } from "../moduleResolver/index.js";
 import { PythonItemResolver } from "../itemResolver/index.js";
 import { PythonImportExtractor } from "../importExtractor/index.js";
 import { PythonUsageResolver } from "../usageResolver/index.js";
-import { DependencyManifest } from "../../../manifest/dependencyManifest/types.js";
+import { DependencyManifest } from "@napi/shared";
 import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode/index.js";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
@@ -78,6 +78,8 @@ export class PythonSymbolExtractor {
     console.info("Finding dependencies for all symbols to extract...");
     const symbolsToKeep = this.identifySymbolsAndDependencies(symbolsMap);
 
+    console.log("symbolsToKeep:", symbolsToKeep);
+
     // 2. Extract all the symbols
     console.info(`Extracting files in-memory...`);
     const extractedFiles = this.extractFilesInMemory(symbolsToKeep);
@@ -117,6 +119,8 @@ export class PythonSymbolExtractor {
         symbols: Set<string>;
       }
     >();
+
+    console.log("symbolsToKeep:", symbolsToKeep);
 
     symbolsMap.values().forEach(({ filePath, symbols }) => {
       symbols.forEach((symbol) => {

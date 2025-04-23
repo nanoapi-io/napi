@@ -3,11 +3,13 @@
   "type": "module",
   "workspaces": [
     "packages/app",
-    "packages/cli"
+    "packages/cli",
+    "packages/shared"
   ],
   "scripts": {
     "dev:app": "npm run dev --workspace packages/app",
     "dev:cli": "npm run dev --workspace packages/cli",
+    "dev:shared": "npm run dev --workspace packages/shared",
     "build": "npm run build --workspace packages/cli",
     "start": "npm run start --workspace packages/cli",
     "lint": "eslint . --fix",

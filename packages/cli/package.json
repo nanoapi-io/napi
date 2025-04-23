@@ -37,13 +37,14 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon --no-stdin --exec \"node --loader ts-node/esm src/index.ts\"",
+    "dev": "cross-env NODE_ENV=development tsc --watch",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
+    "build:shared": "npm run build --workspace packages/shared",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
     "build:cli": "tsc",
     "build:add-shebang": "echo '#!/usr/bin/env node' | cat - ./dist/src/index.js > temp && mv temp ./dist/src/index.js && chmod +x ./dist/src/index.js",
-    "build": "npm run build:cleanup && npm run build:app && npm run build:cli && npm run build:copy-app-dist && npm run build:add-shebang",
+    "build": "npm run build:cleanup && npm run build:shared && npm run build:app && npm run build:cli && npm run build:copy-app-dist && npm run build:add-shebang",
     "start": "node dist/src/index.js",
     "npm:publish": "npm publish",
     "release": "npx release-it"
@@ -63,6 +64,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",
+    "@napi/shared": "1.0.0",
     "express": "^4.21.2",
     "glob": "^11.0.1",
     "http-proxy-middleware": "^3.0.3",

@@ -2,7 +2,7 @@ import { generatePythonDependencyManifest } from "./python/index.js";
 import { generateCSharpDependencyManifest } from "./csharp/index.js";
 import { localConfigSchema } from "../../config/localConfig.js";
 import z from "zod";
-import { DependencyManifest, Symbol } from "./types.js";
+import { DependencyManifest, SymbolDependencyManifest } from "@napi/shared";
 import {
   pythonLanguage,
   csharpLanguage,
@@ -57,7 +57,7 @@ export function generateDependencyManifest(
 
     // Then put the symbols in a new object with sorted keys
     // in their original case
-    const sortedSymbolsMap: Record<string, Symbol> = {};
+    const sortedSymbolsMap: Record<string, SymbolDependencyManifest> = {};
     for (const symbolKey of sortedSymbols) {
       sortedSymbolsMap[symbolKey] = depMap[key].symbols[symbolKey];
     }

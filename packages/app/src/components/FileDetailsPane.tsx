@@ -8,11 +8,10 @@ import {
   LuCircleX,
   LuSearchCode,
 } from "react-icons/lu";
-import { FileManifest } from "../service/api/types/dependencyManifest.js";
-import { FileAuditManifest } from "../service/api/types/auditManifest.js";
+import { FileAuditManifest, FileDependencyManifest } from "@napi/shared";
 
 export default function FileDetailsPane(props: {
-  fileDependencyManifest: FileManifest;
+  fileDependencyManifest: FileDependencyManifest;
   fileAuditManifest: FileAuditManifest;
   open: boolean;
   setOpen: (open: boolean) => void;

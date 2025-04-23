@@ -30,16 +30,24 @@ export const localConfigSchema = z.object({
     .object({
       file: z
         .object({
+          maxCodeChar: z.number().optional(),
           maxChar: z.number().optional(),
+          maxCodeLine: z.number().optional(),
           maxLine: z.number().optional(),
-          maxDep: z.number().optional(),
+          maxDependency: z.number().optional(),
+          maxDependent: z.number().optional(),
+          maxCyclomaticComplexity: z.number().optional(),
         })
         .optional(),
       symbol: z
         .object({
+          maxCodeChar: z.number().optional(),
           maxChar: z.number().optional(),
+          maxCodeLine: z.number().optional(),
           maxLine: z.number().optional(),
-          maxDep: z.number().optional(),
+          maxDependency: z.number().optional(),
+          maxDependent: z.number().optional(),
+          maxCyclomaticComplexity: z.number().optional(),
         })
         .optional(),
     })

@@ -1,42 +1,36 @@
 import z from "zod";
 import { localConfigSchema } from "../../config/localConfig.js";
-import { DependencyManifest } from "../dependencyManifest/types.js";
+import {
+  AuditAlert,
+  DependencyManifest,
+  metricCharacterCount,
+  metricCodeCharacterCount,
+  metricCodeLineCount,
+  metricCyclomaticComplexity,
+  metricDependencyCount,
+  metricDependentCount,
+  metricLinesCount,
+} from "@napi/shared";
+import {
+  AuditManifest,
+  FileAuditManifest,
+  SymbolAuditManifest,
+} from "@napi/shared";
 
-export interface AuditMessage {
-  shortMessage: string;
-  longMessage: string;
-  errorCode: string;
-  value: string;
-  target: string;
-  severity: number;
-}
-
-export interface SymbolAuditManifest {
-  id: string;
-  warnings: AuditMessage[];
-  errors: AuditMessage[];
-}
-
-export interface FileAuditManifest {
-  id: string;
-  filePath: string;
-  warnings: AuditMessage[];
-  errors: AuditMessage[];
-  symbols: Record<string, SymbolAuditManifest>;
-  lookup: Record<string, AuditMessage[]>; // Allows direct lookup of specific warnings and errors
-}
-
-export type AuditManifest = Record<string, FileAuditManifest>;
-
-export function getNumberSeverityLevel(value: number, targetValue = 0): number {
-  if (value > targetValue * 2) {
+function getNumberSeverityLevel(
+  value: number,
+  targetValue = 0,
+): 1 | 2 | 3 | 4 | 5 {
+  if (value > targetValue * 10) {
+    return 5;
+  } else if (value > targetValue * 5) {
+    return 4;
+  } else if (value > targetValue * 2) {
     return 3;
   } else if (value > targetValue * 1.5) {
     return 2;
-  } else if (value > targetValue * 1.1) {
-    return 1;
   } else {
-    return 0;
+    return 1;
   }
 }
 
@@ -46,85 +40,277 @@ export function generateAuditManifest(
 ): AuditManifest {
   const AuditManifest: AuditManifest = {};
 
-  for (const fileManifest of Object.values(dependencyManifest)) {
+  for (const fileDependencyManifest of Object.values(dependencyManifest)) {
     const fileAuditManifest: FileAuditManifest = {
-      id: fileManifest.id,
-      filePath: fileManifest.filePath,
-      warnings: [],
-      errors: [],
+      id: fileDependencyManifest.id,
+      alerts: {},
       symbols: {},
-      lookup: {
-        targetMaxCharInFile: [],
-        targetMaxLineInFile: [],
-        targetMaxDepPerFile: [],
-      }, // Allows direct lookup of specific warnings and errors
     };
 
     // Check #1: File length (characters)
-    if (napiConfig.metrics?.file?.maxChar) {
-      const charCount = fileManifest.characterCount;
-      const maxChar = napiConfig.metrics.file.maxChar;
-      if (charCount > maxChar) {
-        const error = {
-          shortMessage: "File too large",
-          longMessage: `File exceeds maximum character limit (${charCount}/${maxChar})`,
-          errorCode: "MAX_CHAR_LIMIT_EXCEEDED",
-          value: charCount.toString(),
-          target: maxChar.toString(),
-          severity: getNumberSeverityLevel(charCount, maxChar),
+    if (napiConfig.metrics?.file?.maxCodeChar) {
+      const value = fileDependencyManifest.metrics[metricCodeCharacterCount];
+      const target = napiConfig.metrics.file.maxCodeChar;
+      if (value > target) {
+        const alert: AuditAlert = {
+          metric: metricCodeCharacterCount,
+          severity: getNumberSeverityLevel(value, target),
+          message: {
+            short: "File too large",
+            long: `File exceeds maximum character limit (${value}/${target})`,
+          },
+          value: value.toString(),
+          target: target.toString(),
         };
-        fileAuditManifest.errors.push(error);
-        fileAuditManifest.lookup.targetMaxCharInFile.push(error);
+        fileAuditManifest.alerts[metricCodeCharacterCount] = alert;
+      }
+    }
+    if (napiConfig.metrics?.file?.maxChar) {
+      const value = fileDependencyManifest.metrics[metricCharacterCount];
+      const target = napiConfig.metrics.file.maxChar;
+      if (value > target) {
+        const alert: AuditAlert = {
+          metric: metricCharacterCount,
+          severity: getNumberSeverityLevel(value, target),
+          message: {
+            short: "File too large",
+            long: `File exceeds maximum character limit (${value}/${target})`,
+          },
+          value: value.toString(),
+          target: target.toString(),
+        };
+        fileAuditManifest.alerts[metricCharacterCount] = alert;
       }
     }
 
     // Check #2: Lines of Code
-    if (napiConfig.metrics?.file?.maxLine) {
-      const lineCount = fileManifest.lineCount;
-      const maxLine = napiConfig.metrics.file.maxLine;
-      if (lineCount > maxLine) {
-        const error = {
-          shortMessage: "Too many lines",
-          longMessage: `File exceeds maximum line count (${lineCount}/${maxLine})`,
-          errorCode: "MAX_LINE_LIMIT_EXCEEDED",
-          value: lineCount.toString(),
-          target: maxLine.toString(),
-          severity: getNumberSeverityLevel(lineCount, maxLine),
+    if (napiConfig.metrics?.file?.maxCodeLine) {
+      const value = fileDependencyManifest.metrics[metricCodeLineCount];
+      const target = napiConfig.metrics.file.maxCodeLine;
+      if (value > target) {
+        const alert: AuditAlert = {
+          metric: metricCodeLineCount,
+          severity: getNumberSeverityLevel(value, target),
+          message: {
+            short: "Too many lines",
+            long: `File exceeds maximum line count (${value}/${target})`,
+          },
+          value: value.toString(),
+          target: target.toString(),
         };
-        fileAuditManifest.errors.push(error);
-        fileAuditManifest.lookup.targetMaxLineInFile.push(error);
+        fileAuditManifest.alerts[metricCodeLineCount] = alert;
+      }
+    }
+    if (napiConfig.metrics?.file?.maxLine) {
+      const value = fileDependencyManifest.metrics[metricLinesCount];
+      const target = napiConfig.metrics.file.maxLine;
+      if (value > target) {
+        const alert: AuditAlert = {
+          metric: metricLinesCount,
+          severity: getNumberSeverityLevel(value, target),
+          message: {
+            short: "Too many lines",
+            long: `File exceeds maximum line count (${value}/${target})`,
+          },
+          value: value.toString(),
+          target: target.toString(),
+        };
+        fileAuditManifest.alerts[metricLinesCount] = alert;
       }
     }
 
     // Check #3: Dependencies per File
-    if (napiConfig.metrics?.file?.maxDep) {
-      const depCount = Object.keys(fileManifest.dependencies).length;
-      const maxDep = napiConfig.metrics.file.maxDep;
-      if (depCount > maxDep) {
-        const error = {
-          shortMessage: "Too many dependencies",
-          longMessage: `File has too many dependencies (${depCount}/${maxDep})`,
-          errorCode: "MAX_DEP_LIMIT_EXCEEDED",
-          value: depCount.toString(),
-          target: maxDep.toString(),
-          severity: getNumberSeverityLevel(depCount, maxDep),
+    if (napiConfig.metrics?.file?.maxDependency) {
+      const value = fileDependencyManifest.metrics[metricDependencyCount];
+      const target = napiConfig.metrics.file.maxDependency;
+      if (value > target) {
+        const alert: AuditAlert = {
+          metric: metricDependencyCount,
+          severity: getNumberSeverityLevel(value, target),
+          message: {
+            short: "Too many dependencies",
+            long: `File exceeds maximum dependency count (${value}/${target})`,
+          },
+          value: value.toString(),
+          target: target.toString(),
         };
-        fileAuditManifest.errors.push(error);
-        fileAuditManifest.lookup.targetMaxDepPerFile.push(error);
+        fileAuditManifest.alerts[metricDependencyCount] = alert;
+      }
+    }
+    if (napiConfig.metrics?.file?.maxDependent) {
+      const value = fileDependencyManifest.metrics[metricDependentCount];
+      const target = napiConfig.metrics.file.maxDependent;
+      if (value > target) {
+        const alert: AuditAlert = {
+          metric: metricDependentCount,
+          severity: getNumberSeverityLevel(value, target),
+          message: {
+            short: "Too many dependents",
+            long: `File exceeds maximum dependent count (${value}/${target})`,
+          },
+          value: value.toString(),
+          target: target.toString(),
+        };
+        fileAuditManifest.alerts[metricDependentCount] = alert;
       }
     }
 
-    // TODO: add symbol-level audits similarly here if needed
-    for (const symbol of Object.values(fileManifest.symbols)) {
+    // Check #4: Cyclomatic Complexity per file
+    if (napiConfig.metrics.file.maxCyclomaticComplexity) {
+      const value = fileDependencyManifest.metrics[metricCyclomaticComplexity];
+      const target = napiConfig.metrics.file.maxCyclomaticComplexity;
+      if (value > target) {
+        const alert: AuditAlert = {
+          metric: metricCyclomaticComplexity,
+          severity: getNumberSeverityLevel(value, target),
+          message: {
+            short: "Too complex",
+            long: `File exceeds maximum cyclomatic complexity (${value}/${target})`,
+          },
+          value: value.toString(),
+          target: target.toString(),
+        };
+        fileAuditManifest.alerts[metricCyclomaticComplexity] = alert;
+      }
+    }
+
+    for (const symbol of Object.values(fileDependencyManifest.symbols)) {
       const symbolAuditManifest: SymbolAuditManifest = {
         id: symbol.id,
-        warnings: [],
-        errors: [],
+        alerts: {},
       };
+
+      // Check #1: Symbol length (characters)
+      if (napiConfig.metrics?.symbol?.maxCodeChar) {
+        const value = symbol.metrics[metricCodeCharacterCount];
+        const target = napiConfig.metrics.symbol.maxCodeChar;
+        if (value > target) {
+          const alert: AuditAlert = {
+            metric: metricCodeCharacterCount,
+            severity: getNumberSeverityLevel(value, target),
+            message: {
+              short: "Symbol too large",
+              long: `Symbol exceeds maximum character limit (${value}/${target})`,
+            },
+            value: value.toString(),
+            target: target.toString(),
+          };
+          symbolAuditManifest.alerts[metricCodeCharacterCount] = alert;
+        }
+      }
+      if (napiConfig.metrics?.symbol?.maxChar) {
+        const value = symbol.metrics[metricCharacterCount];
+        const target = napiConfig.metrics.symbol.maxChar;
+        if (value > target) {
+          const alert: AuditAlert = {
+            metric: metricCharacterCount,
+            severity: getNumberSeverityLevel(value, target),
+            message: {
+              short: "Symbol too large",
+              long: `Symbol exceeds maximum character limit (${value}/${target})`,
+            },
+            value: value.toString(),
+            target: target.toString(),
+          };
+          symbolAuditManifest.alerts[metricCharacterCount] = alert;
+        }
+      }
+
+      // Check #2: Symbol length (lines)
+      if (napiConfig.metrics?.symbol?.maxCodeLine) {
+        const value = symbol.metrics[metricCodeLineCount];
+        const target = napiConfig.metrics.symbol.maxCodeLine;
+        if (value > target) {
+          const alert: AuditAlert = {
+            metric: metricCodeLineCount,
+            severity: getNumberSeverityLevel(value, target),
+            message: {
+              short: "Symbol too long",
+              long: `Symbol exceeds maximum line count (${value}/${target})`,
+            },
+            value: value.toString(),
+            target: target.toString(),
+          };
+          symbolAuditManifest.alerts[metricCodeLineCount] = alert;
+        }
+      }
+      if (napiConfig.metrics?.symbol?.maxLine) {
+        const value = symbol.metrics[metricLinesCount];
+        const target = napiConfig.metrics.symbol.maxLine;
+        if (value > target) {
+          const alert: AuditAlert = {
+            metric: metricLinesCount,
+            severity: getNumberSeverityLevel(value, target),
+            message: {
+              short: "Symbol too long",
+              long: `Symbol exceeds maximum line count (${value}/${target})`,
+            },
+            value: value.toString(),
+            target: target.toString(),
+          };
+          symbolAuditManifest.alerts[metricLinesCount] = alert;
+        }
+      }
+
+      // Check #3: Dependencies per Symbol
+      if (napiConfig.metrics?.symbol?.[metricDependencyCount]) {
+        const value = symbol.metrics[metricDependencyCount];
+        const target = napiConfig.metrics.symbol[metricDependencyCount];
+        if (value > target) {
+          const alert: AuditAlert = {
+            metric: metricDependencyCount,
+            severity: getNumberSeverityLevel(value, target),
+            message: {
+              short: "Too many dependencies",
+              long: `Symbol exceeds maximum dependency count (${value}/${target})`,
+            },
+            value: value.toString(),
+            target: target.toString(),
+          };
+          symbolAuditManifest.alerts[metricDependencyCount] = alert;
+        }
+      }
+      if (napiConfig.metrics?.symbol?.[metricDependentCount]) {
+        const value = symbol.metrics[metricDependentCount];
+        const target = napiConfig.metrics.symbol[metricDependentCount];
+        if (value > target) {
+          const alert: AuditAlert = {
+            metric: metricDependentCount,
+            severity: getNumberSeverityLevel(value, target),
+            message: {
+              short: "Too many dependents",
+              long: `Symbol exceeds maximum dependent count (${value}/${target})`,
+            },
+            value: value.toString(),
+            target: target.toString(),
+          };
+          symbolAuditManifest.alerts[metricDependentCount] = alert;
+        }
+      }
+
+      // Check #4: Cyclomatic Complexity
+      if (napiConfig.metrics?.symbol?.[metricCyclomaticComplexity]) {
+        const value = symbol.metrics[metricCyclomaticComplexity];
+        const target = napiConfig.metrics.symbol[metricCyclomaticComplexity];
+        if (value > target) {
+          const alert: AuditAlert = {
+            metric: metricCyclomaticComplexity,
+            severity: getNumberSeverityLevel(value, target),
+            message: {
+              short: "Symbol too complex",
+              long: `Symbol exceeds maximum cyclomatic complexity (${value}/${target})`,
+            },
+            value: value.toString(),
+            target: target.toString(),
+          };
+          symbolAuditManifest.alerts[metricCyclomaticComplexity] = alert;
+        }
+      }
+
       fileAuditManifest.symbols[symbol.id] = symbolAuditManifest;
     }
 
-    AuditManifest[fileManifest.id] = fileAuditManifest;
+    AuditManifest[fileDependencyManifest.id] = fileAuditManifest;
   }
 
   return AuditManifest;

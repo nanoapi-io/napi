@@ -14,20 +14,44 @@ export interface NapiNodeData {
   position: { x: number; y: number };
   customData: {
     fileName: string;
-    viewColors: {
-      noMetric: string;
-      linesOfCode: string;
-      characters: string;
-      dependencies: string;
-    };
     metrics: {
-      linesOfCodeCount: number;
-      characterCount: number;
-      symbolCount: number;
-      dependencyCount: number;
+      codeLineCount: {
+        value: number;
+        target: number;
+        color: string;
+      };
+      lineCount: {
+        value: number;
+        target: number;
+        color: string;
+      };
+      maxCodeChar: {
+        value: number;
+        target: number;
+        color: string;
+      };
+      charCount: {
+        value: number;
+        target: number;
+        color: string;
+      };
+      dependencyCount: {
+        value: number;
+        target: number;
+        color: string;
+      };
+      dependentCount: {
+        value: number;
+        target: number;
+        color: string;
+      };
+      cyclomaticComplexity: {
+        value: number;
+        target: number;
+        color: string;
+      };
     };
-    errors: string[];
-    warnings: string[];
+    alertMessage: string[];
     expanded: {
       label: string;
       width: number;
