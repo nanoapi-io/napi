@@ -16,6 +16,7 @@ export function extractCSharpSymbols(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   napiConfig: z.infer<typeof localConfigSchema>,
 ): ExtractedFilesMap {
+  console.time(`Extracted ${symbolsToExtract.size} symbol(s)`);
   const extractor = new CSharpExtractor(files, dependencyManifest);
   const symbols: string[] = [];
   const extractedFiles: ExtractedFile[] = [];
@@ -57,5 +58,6 @@ export function extractCSharpSymbols(
       });
     }
   }
+  console.timeEnd(`Extracted ${symbolsToExtract.size} symbol(s)`);
   return extractedFilesMap;
 }
