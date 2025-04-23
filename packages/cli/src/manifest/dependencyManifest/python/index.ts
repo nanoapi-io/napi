@@ -11,6 +11,7 @@ import {
   metricLinesCount,
   SymbolDependencyManifest,
   DependencyInfo,
+  DependentInfo,
 } from "@napi/shared";
 import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor/index.js";
 import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
@@ -23,6 +24,9 @@ import { localConfigSchema } from "../../../config/localConfig.js";
 import z from "zod";
 import { PythonMetricsAnalyzer } from "../../../languagePlugins/python/metricAnalyzer/index.js";
 
+/**
+ * Builds dependent relationships in the manifest by traversing all dependencies
+ */
 function generateDependentsForManifest(
   manifest: DependencyManifest,
 ): DependencyManifest {
@@ -38,10 +42,11 @@ function generateDependentsForManifest(
 
         // Add file-level dependent relationship
         if (!depFile.dependents[fileId]) {
-          depFile.dependents[fileId] = {
+          const dependent: DependentInfo = {
             id: fileId,
             symbols: {},
           };
+          depFile.dependents[fileId] = dependent;
         }
 
         // For each symbol name that we reference from the dependency at file level
@@ -91,10 +96,11 @@ function generateDependentsForManifest(
 
               // Ensure there's a record for the dependent file
               if (!targetSymbol.dependents[fileId]) {
-                targetSymbol.dependents[fileId] = {
+                const dependent: DependentInfo = {
                   id: fileId,
                   symbols: {},
                 };
+                targetSymbol.dependents[fileId] = dependent;
               }
 
               // Record that 'symbolId' in this file depends on 'usedSymbolName' in depFile
@@ -133,6 +139,9 @@ function generateDependentsForManifest(
   return manifest;
 }
 
+/**
+ * Generates a dependency manifest for Python files
+ */
 export function generatePythonDependencyManifest(
   files: Map<string, { path: string; content: string }>,
   napiConfig: z.infer<typeof localConfigSchema>,
@@ -204,20 +213,15 @@ export function generatePythonDependencyManifest(
 
   for (const [i, file] of files.entries()) {
     const fileDependencies = dependencyResolver.getFileDependencies(file.path);
-    if (!fileDependencies) {
-      throw new Error(
-        `File dependencies not found for ${file.path}. This is a bug. Please report it.`,
-      );
-    }
 
     const dependencies: Record<string, DependencyInfo> = {};
-    for (const [depId, dep] of fileDependencies.dependencies) {
+    for (const dep of fileDependencies.dependencies.values()) {
       const symbols: Record<string, string> = {};
-      for (const symbolName of Object.keys(dep.symbols)) {
-        symbols[symbolName] = symbolName;
-      }
+      dep.symbols.forEach((symbol) => {
+        symbols[symbol] = symbol;
+      });
 
-      dependencies[depId] = {
+      dependencies[dep.id] = {
         id: dep.id,
         isExternal: dep.isExternal,
         symbols,
@@ -225,26 +229,19 @@ export function generatePythonDependencyManifest(
     }
 
     const symbols: Record<string, SymbolDependencyManifest> = {};
-    for (const symbol of fileDependencies.symbols) {
+    for (const symbol of fileDependencies.symbols.values()) {
       const dependencies: Record<string, DependencyInfo> = {};
-      for (const depSymbol of Object.values(symbol.dependencies)) {
+      // Process symbol dependencies from all sources at once
+      for (const dep of symbol.dependencies.values()) {
         const symbols: Record<string, string> = {};
-        for (const depSymbolName of Object.keys(depSymbol.symbols)) {
-          symbol[depSymbolName] = depSymbol.symbols[depSymbolName];
-        }
+        dep.symbols.forEach((symbol) => {
+          symbols[symbol] = symbol;
+        });
 
-        dependencies[depSymbol.id] = {
-          id: depSymbol.id,
-          isExternal: depSymbol.isExternal,
-          symbols,
-        };
-      }
-
-      for (const [depId, dep] of symbol.dependencies) {
-        dependencies[depId] = {
+        dependencies[dep.id] = {
           id: dep.id,
           isExternal: dep.isExternal,
-          symbols: {},
+          symbols,
         };
       }
 
@@ -273,8 +270,7 @@ export function generatePythonDependencyManifest(
         [metricCodeLineCount]: fileDependencies.metrics.codeLineCount,
         [metricCharacterCount]: fileDependencies.metrics.characterCount,
         [metricCodeCharacterCount]: fileDependencies.metrics.codeCharacterCount,
-        [metricDependencyCount]: Object.keys(fileDependencies.dependencies)
-          .length,
+        [metricDependencyCount]: fileDependencies.dependencies.size,
         [metricDependentCount]: 0, // Will be computed later
         [metricCyclomaticComplexity]:
           fileDependencies.metrics.cyclomaticComplexity,
@@ -303,7 +299,6 @@ export function generatePythonDependencyManifest(
   console.timeEnd("generatePythonDependencyManifest:dependents");
 
   console.info("Python dependency manifest generated");
-
   console.timeEnd("generatePythonDependencyManifest");
 
   return manifest;

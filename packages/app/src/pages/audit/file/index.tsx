@@ -35,7 +35,11 @@ export default function AuditFilePage() {
   const [metric, setMetric] = useState<Metric | undefined>(metricFromUrl);
 
   function handleMetricChange(metric: Metric | undefined) {
-    setSearchParams({ metric: metric });
+    if (metric) {
+      setSearchParams({ metric: metric });
+    } else {
+      setSearchParams({});
+    }
     setMetric(metric);
   }
 
@@ -55,7 +59,13 @@ export default function AuditFilePage() {
 
   // On mount useEffect
   useEffect(() => {
-    if (!params.file) return;
+    if (
+      !params.file ||
+      context.busy ||
+      !context.dependencyManifest ||
+      !context.auditManifest
+    )
+      return;
 
     setBusy(true);
     const fileDependencyVisualizer = new FileDependencyVisualizer(

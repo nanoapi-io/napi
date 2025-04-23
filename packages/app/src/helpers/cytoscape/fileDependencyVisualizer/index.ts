@@ -11,6 +11,14 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricCyclomaticComplexity,
+  SymbolAuditManifest,
+  classSymbolType,
+  functionSymbolType,
+  variableSymbolType,
+  enumSymbolType,
+  structSymbolType,
+  FileDependencyManifest,
+  SymbolType,
 } from "@napi/shared";
 import {
   Core,
@@ -20,7 +28,12 @@ import {
   EventObjectNode,
 } from "cytoscape";
 import fcose, { FcoseLayoutOptions } from "cytoscape-fcose";
-import { NapiNodeData } from "./types.js";
+import {
+  NapiNodeData,
+  NapiEdgeData,
+  edgeTypeDependent,
+  edgeTypeDependency,
+} from "./types.js";
 import cytoscape from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config.js";
 import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition.js";
@@ -109,16 +122,6 @@ export class FileDependencyVisualizer {
     this.cy.add(elements);
 
     this.cy.style(this.getCyStyleSheet(this.theme));
-    this.cy.nodes().style({
-      "background-color": (node: NodeSingular) =>
-        node.data(
-          `customData.metricsColors.${this.targetMetric || "undefined"}`,
-        ),
-      "border-color": (node: NodeSingular) =>
-        node.data(
-          `customData.metricsColors.${this.targetMetric || "undefined"}`,
-        ),
-    });
 
     this.layoutGraph(this.cy);
 
@@ -142,7 +145,7 @@ export class FileDependencyVisualizer {
    */
   public highlightNode(nodeId: string) {
     this.highlightedNodeId = nodeId;
-    this.setNodesStyle();
+    this.cy.style(this.getCyStyleSheet(this.theme));
   }
 
   /**
@@ -150,7 +153,7 @@ export class FileDependencyVisualizer {
    */
   public unhighlightNodes() {
     this.highlightedNodeId = undefined;
-    this.setNodesStyle();
+    this.cy.style(this.getCyStyleSheet(this.theme));
   }
 
   /**
@@ -160,56 +163,7 @@ export class FileDependencyVisualizer {
    */
   public setTargetMetric(metric: Metric | undefined) {
     this.targetMetric = metric;
-    this.setNodesStyle();
-  }
-
-  /**
-   * Updates styles of nodes based on the current selection state
-   * and target metric for coloring.
-   */
-  private setNodesStyle() {
-    this.cy.batch(() => {
-      if (this.selectedNodeId) {
-        const closedNeighborhoodNodes = this.cy
-          .nodes(`node[id="${this.selectedNodeId}"]`)
-          .closedNeighborhood()
-          .nodes();
-        const backgroundElements = this.cy
-          .elements()
-          .difference(closedNeighborhoodNodes);
-
-        closedNeighborhoodNodes.removeStyle();
-        closedNeighborhoodNodes.style({
-          "border-color": (node: NodeSingular) =>
-            node.data(
-              `customData.metricsColors.${this.targetMetric || "undefined"}`,
-            ) || undefined,
-        });
-
-        backgroundElements.removeStyle();
-        backgroundElements.style({
-          "background-color": (node: NodeSingular) =>
-            node.data(
-              `customData.metricsColors.${this.targetMetric || "undefined"}`,
-            ) || undefined,
-          opacity: 0.2,
-        });
-      } else {
-        this.cy.nodes().removeStyle();
-        this.cy.nodes().style({
-          "background-color": (node: NodeSingular) =>
-            node.data(
-              `customData.metricsColors.${this.targetMetric || "undefined"}`,
-            ) || undefined,
-        });
-      }
-
-      if (this.highlightedNodeId) {
-        this.cy.nodes(`node[id="${this.highlightedNodeId}"]`).style({
-          "background-color": "#FF00FF", // Magenta/fuchsia color for highlighting
-        });
-      }
-    });
+    this.cy.style(this.getCyStyleSheet(this.theme));
   }
 
   /**
@@ -222,49 +176,62 @@ export class FileDependencyVisualizer {
     this.cy.on("onetap", "node", (evt: EventObjectNode) => {
       const nodeId = evt.target.id();
       const nodeData = evt.target.data() as NapiNodeData;
+      const isCurrentFileNode = nodeData.customData.fileName === this.fileId;
 
-      // If the node doesn't belong to the current file, ignore the click
-      if (nodeData.customData.fileName !== this.fileId) {
+      // If clicking on a node that's already selected, deselect it
+      const isAlreadySelected = this.selectedNodeId === nodeId;
+
+      if (isAlreadySelected) {
+        // Deselect the node
+        this.cy
+          .elements()
+          .removeClass([
+            "background",
+            "selected",
+            "connected",
+            "dependency",
+            "dependent",
+            "highlighted",
+          ]);
+        this.selectedNodeId = undefined;
+        this.cy.style(this.getCyStyleSheet(this.theme));
+        this.externalCallbacks.onAfterNodeClick();
         return;
       }
 
-      const isAlreadySelected = this.selectedNodeId === nodeId;
-
       this.selectedNodeId = nodeId;
+      const selectedNode = evt.target;
 
-      const allElements = this.cy.elements();
+      // For nodes in the current file, expand and show neighbors
+      if (isCurrentFileNode) {
+        const allElements = this.cy.elements();
+        const connectedNodes = selectedNode
+          .closedNeighborhood()
+          .nodes()
+          .difference(selectedNode);
 
-      const selectedNode = this.cy.nodes(`node[id="${this.selectedNodeId}"]`);
+        const dependentEdges = selectedNode
+          .connectedEdges()
+          .filter((edge) => edge.source().id() === this.selectedNodeId);
 
-      const connectedNodes = selectedNode
-        .closedNeighborhood()
-        .nodes()
-        .difference(selectedNode);
+        const dependencyEdges = selectedNode
+          .connectedEdges()
+          .filter((edge) => edge.target().id() === this.selectedNodeId);
 
-      const dependentEdges = selectedNode
-        .connectedEdges()
-        .filter((edge) => edge.source().id() === this.selectedNodeId);
+        const focusedElements = selectedNode.closedNeighborhood();
+        const backgroundElements = allElements.difference(focusedElements);
 
-      const dependencyEdges = selectedNode
-        .connectedEdges()
-        .filter((edge) => edge.target().id() === this.selectedNodeId);
+        this.cy.batch(() => {
+          // remove all, clean state
+          allElements.removeClass([
+            "background",
+            "selected",
+            "connected",
+            "dependency",
+            "dependent",
+            "highlighted",
+          ]);
 
-      const focusedElements = selectedNode.closedNeighborhood();
-
-      const backgroundElements = allElements.difference(focusedElements);
-
-      this.cy.batch(() => {
-        // remove all, clean state
-        allElements.removeClass([
-          "background",
-          "selected",
-          "connected",
-          "dependency",
-          "dependent",
-          "highlighted",
-        ]);
-
-        if (!isAlreadySelected) {
           // add relevant classes
           backgroundElements.addClass("background");
           connectedNodes.addClass("connected");
@@ -274,13 +241,19 @@ export class FileDependencyVisualizer {
 
           // layout the closed neighborhood
           focusedElements.layout(this.layout).run();
-        } else {
-          this.selectedNodeId = undefined;
-        }
+        });
 
-        this.setNodesStyle();
+        this.cy.style(this.getCyStyleSheet(this.theme));
+        this.externalCallbacks.onAfterNodeClick();
+        return;
+      }
+
+      // For nodes not in current file, just expand the node without affecting other nodes
+      this.cy.batch(() => {
+        // Just mark the clicked node as selected
+        selectedNode.addClass("selected");
       });
-
+      this.cy.style(this.getCyStyleSheet(this.theme));
       this.externalCallbacks.onAfterNodeClick();
     });
 
@@ -288,10 +261,8 @@ export class FileDependencyVisualizer {
       const node = evt.target;
       const data = node.data() as NapiNodeData;
 
-      // If the node doesn't belong to the current file, ignore the click
-      if (data.customData.fileName !== this.fileId) {
-        return;
-      }
+      // If the node is external, ignore it
+      if (data.customData.isExternal) return;
 
       this.externalCallbacks.onAfterNodeDblClick(data);
     });
@@ -300,10 +271,8 @@ export class FileDependencyVisualizer {
       const node = evt.target;
       const data = node.data() as NapiNodeData;
 
-      // If the node doesn't belong to the current file, ignore the click
-      if (data.customData.fileName !== this.fileId) {
-        return;
-      }
+      // If the node is external, ignore it
+      if (data.customData.isExternal) return;
 
       const { x, y } = node.renderedPosition();
       this.externalCallbacks.onAfterNodeRightClick({
@@ -324,98 +293,85 @@ export class FileDependencyVisualizer {
   }
 
   /**
-   * Generates the stylesheet for Cytoscape graph visualization based on theme
-   *
-   * @param theme - The current theme (light or dark)
-   * @returns StylesheetJson for Cytoscape
+   * Gets the color for a specific metric alert level based on theme
    */
-  private getCyStyleSheet(theme: "light" | "dark"): StylesheetJson {
-    return [
-      {
-        selector: "node",
-        style: {
-          "text-wrap": "wrap",
-          color: tailwindConfig.theme.extend.colors.text[theme],
-          "border-width": 1,
-          "border-color": tailwindConfig.theme.extend.colors.border[theme],
-          "text-valign": "center",
-          "text-halign": "center",
-          shape: "round-rectangle",
-          width: 20,
-          height: 20,
+  private getMetricLevelColor(level: number): string {
+    const levelToColor =
+      this.theme === "light"
+        ? {
+            0: "#22c55e", // green
+            1: "#eab308", // yellow
+            2: "#f97316", // orange
+            3: "#d97706", // amber
+            4: "#991b1b", // dark red
+            5: "#ef4444", // red
+          }
+        : {
+            0: "#4ade80", // lighter green for dark theme
+            1: "#facc15", // brighter yellow for dark theme
+            2: "#fb923c", // lighter orange for dark theme
+            3: "#fbbf24", // brighter amber for dark theme
+            4: "#b91c1c", // slightly brighter dark red for dark theme
+            5: "#f87171", // lighter red for dark theme
+          };
+
+    return levelToColor[level] || levelToColor[5];
+  }
+
+  private computeNodeId(fileId: string, symbolId: string) {
+    return `${fileId}:${symbolId}`;
+  }
+
+  /**
+   * Creates node data with all required properties
+   */
+  private createNodeData(params: {
+    id: string;
+    fileName: string;
+    symbolName: string;
+    symbolType: string;
+    isExternal: boolean;
+    metricsSeverity: {
+      [metricLinesCount]: number;
+      [metricCodeLineCount]: number;
+      [metricCodeCharacterCount]: number;
+      [metricCharacterCount]: number;
+      [metricDependencyCount]: number;
+      [metricDependentCount]: number;
+      [metricCyclomaticComplexity]: number;
+    };
+    expandedLabel: string;
+    collapsedLabel: string;
+  }): NapiNodeData {
+    // Calculate dimensions for expanded and collapsed views
+    const { width: expandedWidth, height: expandedHeight } =
+      getNodeWidthAndHeightFromLabel(params.expandedLabel);
+
+    const { width: collapsedWidth, height: collapsedHeight } =
+      getNodeWidthAndHeightFromLabel(params.collapsedLabel);
+
+    // Create the node data structure
+    return {
+      id: params.id,
+      position: { x: 0, y: 0 },
+      customData: {
+        fileName: params.fileName,
+        symbolName: params.symbolName,
+        symbolType: params.symbolType,
+        isExternal: params.isExternal,
+        metricsSeverity: params.metricsSeverity,
+        expanded: {
+          label: params.expandedLabel,
+          width: expandedWidth,
+          height: expandedHeight,
+        },
+        collapsed: {
+          label: params.collapsedLabel,
+          width: collapsedWidth,
+          height: collapsedHeight,
         },
       },
-      {
-        selector: "node.background",
-        style: {
-          opacity: 0.2,
-        },
-      },
-      {
-        selector: "node.selected",
-        style: {
-          label: "data(customData.expanded.label)",
-          "background-color":
-            tailwindConfig.theme.extend.colors.background[theme],
-          "border-width": 3,
-          "z-index": 2000,
-          width: "data(customData.expanded.width)",
-          height: "data(customData.expanded.height)",
-        },
-      },
-      {
-        selector: "node.connected",
-        style: {
-          label: "data(customData.collapsed.label)",
-          "background-color":
-            tailwindConfig.theme.extend.colors.background[theme],
-          "border-width": 3,
-          "z-index": 1000,
-          width: "data(customData.collapsed.width)",
-          height: "data(customData.collapsed.height)",
-        },
-      },
-      {
-        selector: "edge",
-        style: {
-          width: 1,
-          "line-color": tailwindConfig.theme.extend.colors.text[theme],
-          "line-opacity": 0.5,
-          "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
-          "target-arrow-shape": "triangle",
-          "curve-style": "straight",
-          "arrow-scale": 1,
-        },
-      },
-      {
-        selector: "edge.background",
-        style: {
-          "line-opacity": 0.1,
-        },
-      },
-      {
-        selector: "edge.dependency",
-        style: {
-          width: 2,
-          "line-opacity": 1,
-          "z-index": 1000,
-          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
-        },
-      },
-      {
-        selector: "edge.dependent",
-        style: {
-          width: 2,
-          "line-opacity": 1,
-          "z-index": 1000,
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
-        },
-      },
-    ] as StylesheetJson;
+    };
   }
 
   /**
@@ -443,108 +399,241 @@ export class FileDependencyVisualizer {
     const nodes = [];
     const edges = [];
 
-    // Create nodes for each symbol in the file
-    if (fileManifest.symbols) {
-      Object.values(fileManifest.symbols).forEach((symbol) => {
-        const symbolId = `${fileId}:${symbol.id}`;
+    // First pass: Create nodes for each symbol in the file
+    Object.values(fileManifest.symbols).forEach((symbol) => {
+      const symbolDependencyManifest = fileManifest.symbols[symbol.id];
+      const symbolAuditManifest = fileAuditManifest.symbols[symbol.id];
+      const symbolNodeId = this.computeNodeId(fileId, symbol.id);
 
-        // Create label for the symbol
-        const expandedLabel = this.getExpandedNodeLabel({
-          fileName: fileId,
-          symbolName: symbol.id,
-          symbolType: symbol.type,
-          fileAuditManifest,
-        });
-
-        const { width: expandedWidth, height: expandedHeight } =
-          getNodeWidthAndHeightFromLabel(expandedLabel);
-
-        const collapsedLabel = this.getCollapsedNodeLabel({
-          symbolName: symbol.id,
-          symbolType: symbol.type,
-        });
-
-        const { width: collapsedWidth, height: collapsedHeight } =
-          getNodeWidthAndHeightFromLabel(collapsedLabel);
-
-        // Get colors for the node based on metrics
-        const metricsColors = this.getMetricsColorsForNode(
-          this.theme,
-          fileAuditManifest,
-          symbol,
-        );
-
-        // Create the node element
-        const nodeElement = {
-          data: {
-            id: symbolId,
-            // initial node position - will be updated by layout
-            position: { x: 0, y: 0 },
-            customData: {
-              fileName: fileId,
-              symbolName: symbol.id,
-              metricsColors,
-              expanded: {
-                label: expandedLabel,
-                width: expandedWidth,
-                height: expandedHeight,
-              },
-              collapsed: {
-                label: collapsedLabel,
-                width: collapsedWidth,
-                height: collapsedHeight,
-              },
-            },
-          },
-        };
-
-        nodes.push(nodeElement);
-
-        // Create edges for symbol dependencies
-        if (symbol.dependencies) {
-          Object.values(symbol.dependencies).forEach((dep) => {
-            if (dep.isExternal) {
-              // Skip external dependencies for now
-              return;
-            }
-
-            // For each symbol this depends on, create an edge
-            Object.keys(dep.symbols).forEach((depSymbolName) => {
-              const depId = `${dep.id}:${depSymbolName}`;
-
-              // Add the edge
-              edges.push({
-                data: {
-                  source: depId,
-                  target: symbolId,
-                  id: `${depId}->${symbolId}`,
-                },
-              });
-            });
-          });
-        }
+      // Create labels for the symbol
+      const expandedLabel = this.getExpandedNodeLabel({
+        fileName: fileId,
+        symbolDependencyManifest,
+        symbolAuditManifest,
       });
-    }
+      const collapsedLabel = this.getCollapsedNodeLabel({
+        symbolName: symbol.id,
+      });
+
+      const metricsSeverity =
+        this.getMetricsSeverityForNode(symbolAuditManifest);
+
+      const nodeData = this.createNodeData({
+        id: symbolNodeId,
+        fileName: fileId,
+        symbolName: symbol.id,
+        symbolType: symbol.type,
+        isExternal: false,
+        metricsSeverity,
+        expandedLabel,
+        collapsedLabel,
+      });
+
+      nodes.push({ data: nodeData });
+    });
+
+    // Second pass: Create nodes and edges for dependencies and dependents
+    Object.values(fileManifest.symbols).forEach((symbol) => {
+      const symbolNodeId = this.computeNodeId(fileId, symbol.id);
+
+      // Process dependencies
+      this.processDependencies(
+        symbol,
+        symbolNodeId,
+        dependencyManifest,
+        auditManifest,
+        nodes,
+        edges,
+      );
+
+      // Process dependents
+      this.processDependents(
+        symbol,
+        symbolNodeId,
+        dependencyManifest,
+        auditManifest,
+        nodes,
+        edges,
+      );
+    });
 
     return [...nodes, ...edges];
   }
 
   /**
-   * Generates the expanded label for a node with detailed information
+   * Process dependencies of a symbol and create corresponding nodes and edges
    */
-  private getExpandedNodeLabel(data: {
-    fileName: string;
-    symbolName: string;
-    symbolType: string;
-    fileAuditManifest: FileAuditManifest;
-  }) {
-    let label = `${data.symbolName} (${data.symbolType})`;
-    label += `\nFile: ${data.fileName}`;
+  private processDependencies(
+    symbol: SymbolDependencyManifest,
+    symbolNodeId: string,
+    dependencyManifest: DependencyManifest,
+    auditManifest: AuditManifest,
+    nodes: { data: NapiNodeData }[],
+    edges: { data: NapiEdgeData }[],
+  ) {
+    Object.values(symbol.dependencies).forEach((dep) => {
+      let depDependencyManifest: FileDependencyManifest | undefined;
+      let depAuditManifest: FileAuditManifest | undefined;
 
-    const symbolAuditManifest = data.fileAuditManifest.symbols[data.symbolName];
+      if (!dep.isExternal) {
+        depDependencyManifest = dependencyManifest[dep.id];
+        depAuditManifest = auditManifest[dep.id];
+      }
 
-    if (symbolAuditManifest) {
-      Object.values(symbolAuditManifest.alerts).forEach((alert) => {
+      // For each symbol this depends on, create an edge
+      Object.keys(dep.symbols).forEach((depSymbolName) => {
+        const depSymbolNodeId = this.computeNodeId(dep.id, depSymbolName);
+
+        // Check if node already exists
+        const existingNode = nodes.find(
+          (node) => node.data.id === depSymbolNodeId,
+        );
+
+        if (!existingNode) {
+          let depSymbolType: SymbolType | "unknown" = "unknown";
+          if (depDependencyManifest) {
+            depSymbolType = depDependencyManifest.symbols[depSymbolName].type;
+          }
+
+          // Create label for dependency nodes
+          const expandedLabel = this.createDependencyExpandedLabel(
+            depSymbolName,
+            depSymbolType,
+            dep,
+          );
+
+          const metricsSeverity = this.getMetricsSeverityForNode(
+            depAuditManifest?.symbols[depSymbolName],
+          );
+
+          const nodeData = this.createNodeData({
+            id: depSymbolNodeId,
+            fileName: dep.id,
+            symbolName: depSymbolName,
+            symbolType: depSymbolType,
+            isExternal: dep.isExternal,
+            metricsSeverity,
+            expandedLabel,
+            collapsedLabel: depSymbolName,
+          });
+
+          nodes.push({ data: nodeData });
+        }
+
+        // Add the edge
+        const edgeId = `${depSymbolNodeId}->${symbolNodeId}`;
+        edges.push({
+          data: {
+            id: edgeId,
+            source: depSymbolNodeId,
+            target: symbolNodeId,
+            customData: {
+              type: edgeTypeDependency,
+            },
+          },
+        });
+      });
+    });
+  }
+
+  /**
+   * Process dependents of a symbol and create corresponding nodes and edges
+   */
+  private processDependents(
+    symbol: SymbolDependencyManifest,
+    symbolNodeId: string,
+    dependencyManifest: DependencyManifest,
+    auditManifest: AuditManifest,
+    nodes: { data: NapiNodeData }[],
+    edges: { data: NapiEdgeData }[],
+  ) {
+    Object.values(symbol.dependents).forEach((dep) => {
+      const depDependencyManifest = dependencyManifest[dep.id];
+      const depAuditManifest = auditManifest[dep.id];
+
+      Object.keys(dep.symbols).forEach((depSymbolName) => {
+        const depSymbolNodeId = this.computeNodeId(dep.id, depSymbolName);
+
+        // Check if node already exists
+        const existingNode = nodes.find(
+          (node) => node.data.id === depSymbolNodeId,
+        );
+
+        if (!existingNode) {
+          const depSymbolType =
+            depDependencyManifest.symbols[depSymbolName].type;
+
+          // Create label for dependent nodes
+          let expandedLabel = `${depSymbolName} (${depSymbolType})\nFile: ${dep.id}`;
+
+          // Add alerts for dependent nodes
+          if (depAuditManifest && depAuditManifest.symbols[depSymbolName]) {
+            expandedLabel = this.addAlertsToLabel(
+              expandedLabel,
+              depAuditManifest.symbols[depSymbolName].alerts,
+            );
+          }
+
+          const metricsSeverity = this.getMetricsSeverityForNode(
+            depAuditManifest?.symbols[depSymbolName],
+          );
+
+          const nodeData = this.createNodeData({
+            id: depSymbolNodeId,
+            fileName: dep.id,
+            symbolName: depSymbolName,
+            symbolType: depSymbolType,
+            isExternal: false,
+            metricsSeverity,
+            expandedLabel,
+            collapsedLabel: depSymbolName,
+          });
+
+          nodes.push({ data: nodeData });
+        }
+
+        // Add the edge
+        const edgeId = `${symbolNodeId}->${depSymbolNodeId}`;
+        edges.push({
+          data: {
+            id: edgeId,
+            source: symbolNodeId,
+            target: depSymbolNodeId,
+            customData: {
+              type: edgeTypeDependent,
+            },
+          },
+        });
+      });
+    });
+  }
+
+  /**
+   * Creates expanded label for dependency nodes
+   */
+  private createDependencyExpandedLabel(
+    symbolName: string,
+    symbolType: string | SymbolType,
+    dep: { id: string; isExternal: boolean },
+  ): string {
+    if (dep.isExternal) {
+      return `${symbolName} (${symbolType})\n(External Symbol)\nFrom: ${dep.id}`;
+    } else {
+      return `${symbolName} (${symbolType})\nFile: ${dep.id}`;
+    }
+  }
+
+  /**
+   * Adds alert information to a node label
+   */
+  private addAlertsToLabel(
+    label: string,
+    alerts: Record<string, { message: { short: string } }>,
+  ): string {
+    const alertList = Object.values(alerts);
+
+    if (alertList.length > 0) {
+      alertList.forEach((alert) => {
         label += `\n${this.errorChar} ${alert.message.short}`;
       });
     } else {
@@ -555,65 +644,230 @@ export class FileDependencyVisualizer {
   }
 
   /**
-   * Generates the collapsed label for a node with minimal information
+   * Generates the expanded label for a node with detailed information
    */
-  private getCollapsedNodeLabel(data: {
-    symbolName: string;
-    symbolType: string;
+  private getExpandedNodeLabel(data: {
+    fileName: string;
+    symbolDependencyManifest: SymbolDependencyManifest;
+    symbolAuditManifest: SymbolAuditManifest;
   }) {
-    return data.symbolName;
+    const symbolName = data.symbolDependencyManifest.id;
+    const symbolType = data.symbolDependencyManifest.type;
+    const isExternal = data.fileName !== this.fileId;
+
+    // Create the basic label
+    let label = `${symbolName} (${symbolType})`;
+
+    // Add file information
+    if (isExternal) {
+      if (data.fileName.includes("node_modules")) {
+        label += `\n(External Symbol)`;
+        label += `\nFrom: ${data.fileName}`;
+      } else {
+        label += `\nFile: ${data.fileName}`;
+      }
+    } else {
+      label += `\nFile: ${data.fileName}`;
+    }
+
+    // Add alerts information if available and not an external symbol
+    if (!data.fileName.includes("node_modules") && data.symbolAuditManifest) {
+      label = this.addAlertsToLabel(label, data.symbolAuditManifest.alerts);
+    }
+
+    return label;
   }
 
   /**
-   * Determines the colors for a node based on metrics and severity
+   * Generates the collapsed label for a node with minimal information
    */
-  private getMetricsColorsForNode(
-    theme: "light" | "dark",
-    fileAuditManifest: FileAuditManifest,
-    symbol: SymbolDependencyManifest,
-  ) {
-    const levelToColor =
-      theme === "light"
-        ? {
-            0: "#22c55e", // green
-            1: "#eab308", // yellow
-            2: "#f97316", // orange
-            3: "#d97706", // amber
-            4: "#991b1b", // dark red
-            5: "#ef4444", // red
-          }
-        : {
-            0: "#4ade80", // lighter green for dark theme
-            1: "#facc15", // brighter yellow for dark theme
-            2: "#fb923c", // lighter orange for dark theme
-            3: "#fbbf24", // brighter amber for dark theme
-            4: "#b91c1c", // slightly brighter dark red for dark theme
-            5: "#f87171", // lighter red for dark theme
-          };
+  private getCollapsedNodeLabel(data: { symbolName: string }) {
+    return data.symbolName;
+  }
 
-    // Initialize with default colors (level 0 - green)
-    const metrics = {
-      undefined: levelToColor[0],
-      [metricLinesCount]: levelToColor[0],
-      [metricCodeLineCount]: levelToColor[0],
-      [metricCodeCharacterCount]: levelToColor[0],
-      [metricCharacterCount]: levelToColor[0],
-      [metricDependencyCount]: levelToColor[0],
-      [metricDependentCount]: levelToColor[0],
-      [metricCyclomaticComplexity]: levelToColor[0],
+  private getMetricsSeverityForNode(
+    symbolAuditManifest: SymbolAuditManifest | undefined,
+  ) {
+    const metricsSeverity: Record<Metric, number> = {
+      [metricLinesCount]: 0,
+      [metricCodeLineCount]: 0,
+      [metricCodeCharacterCount]: 0,
+      [metricCharacterCount]: 0,
+      [metricDependencyCount]: 0,
+      [metricDependentCount]: 0,
+      [metricCyclomaticComplexity]: 0,
     };
 
-    const symbolAuditManifest = fileAuditManifest.symbols[symbol.id];
-
-    if (symbolAuditManifest) {
-      Object.keys(metrics).forEach((metricKey) => {
-        const alert = symbolAuditManifest.alerts[metricKey];
-        if (alert) {
-          metrics[metricKey] = levelToColor[alert.severity];
-        }
-      });
+    if (!symbolAuditManifest) {
+      return metricsSeverity;
     }
 
-    return metrics;
+    Object.entries(symbolAuditManifest.alerts).forEach(([metric, value]) => {
+      metricsSeverity[metric as Metric] = value.severity;
+    });
+
+    return metricsSeverity;
+  }
+
+  /**
+   * Generates the stylesheet for Cytoscape graph visualization based on theme
+   *
+   * @param theme - The current theme (light or dark)
+   * @returns StylesheetJson for Cytoscape
+   */
+  private getCyStyleSheet(theme: "light" | "dark"): StylesheetJson {
+    return [
+      {
+        selector: "node",
+        style: {
+          label: "data(customData.collapsed.label)",
+          "text-wrap": "wrap",
+          color: tailwindConfig.theme.extend.colors.text[theme],
+          "border-width": 4,
+          "border-color": (node: NodeSingular) => {
+            const data = node.data() as NapiNodeData;
+            if (data.customData.isExternal) {
+              return tailwindConfig.theme.extend.colors.border[theme];
+            } else if (data.customData.fileName === this.fileId) {
+              return tailwindConfig.theme.extend.colors.primary[theme];
+            } else {
+              return tailwindConfig.theme.extend.colors.secondary[theme];
+            }
+          },
+          "background-color":
+            tailwindConfig.theme.extend.colors.background[theme],
+          shape: (node: NodeSingular) => {
+            const symbolTypeToShape = {
+              [classSymbolType]: "hexagon",
+              [functionSymbolType]: "ellipse",
+              [variableSymbolType]: "diamond",
+              [structSymbolType]: "hexagon",
+              [enumSymbolType]: "triangle",
+            };
+
+            const fallbackShape = "octagon";
+
+            const data = node.data() as NapiNodeData;
+
+            return (
+              symbolTypeToShape[data.customData.symbolType] || fallbackShape
+            );
+          },
+          width: "data(customData.collapsed.width)",
+          height: "data(customData.collapsed.height)",
+          // Pie chart settings - always maintain the same size
+          "pie-size": "20px",
+          // Single full circle in metric color
+          "pie-1-background-color": (node: NodeSingular) => {
+            const data = node.data() as NapiNodeData;
+            if (!this.targetMetric) {
+              return "transparent"; // even with transparent, the pie chart is visible. Need to set opacity to 0
+            }
+
+            return this.getMetricLevelColor(
+              data.customData.metricsSeverity[this.targetMetric],
+            );
+          },
+          "pie-1-background-size": "100%",
+          "pie-1-background-opacity": (node: NodeSingular) => {
+            const data = node.data() as NapiNodeData;
+
+            if (!this.targetMetric) {
+              return 0;
+            }
+
+            if (data.customData.metricsSeverity[this.targetMetric] === 0) {
+              return 0;
+            }
+            return 1;
+          },
+          "text-valign": "center",
+          "text-halign": "center",
+        },
+      },
+      {
+        selector: "node.background",
+        style: {
+          opacity: 0.2,
+        },
+      },
+      {
+        selector: "node.selected",
+        style: {
+          label: "data(customData.expanded.label)",
+          "border-width": 5,
+          "z-index": 2000,
+          width: "data(customData.expanded.width)",
+          height: "data(customData.expanded.height)",
+        },
+      },
+      {
+        selector: "node.connected",
+        style: {
+          "border-width": 5,
+          "z-index": 1000,
+          width: "data(customData.collapsed.width)",
+          height: "data(customData.collapsed.height)",
+        },
+      },
+      {
+        selector: "edge",
+        style: {
+          width: 1,
+          "line-color": tailwindConfig.theme.extend.colors.text[theme],
+          "line-opacity": 1,
+          "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
+          "target-arrow-shape": "triangle",
+          "curve-style": "straight",
+          "arrow-scale": 1,
+        },
+      },
+      {
+        selector: `edge[customData.type = '${edgeTypeDependent}']`,
+        style: {
+          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
+          "target-arrow-color":
+            tailwindConfig.theme.extend.colors.secondary[theme],
+          "line-opacity": 1,
+        },
+      },
+      {
+        selector: `edge[customData.type = '${edgeTypeDependency}']`,
+        style: {
+          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
+          "target-arrow-color":
+            tailwindConfig.theme.extend.colors.primary[theme],
+          "line-opacity": 1,
+        },
+      },
+      {
+        selector: "edge.background",
+        style: {
+          "line-opacity": 0.1,
+        },
+      },
+      {
+        selector: "edge.dependency",
+        style: {
+          width: 2,
+          "line-opacity": 1,
+          "z-index": 1000,
+          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
+          "target-arrow-color":
+            tailwindConfig.theme.extend.colors.primary[theme],
+        },
+      },
+      {
+        selector: "edge.dependent",
+        style: {
+          width: 2,
+          "line-opacity": 1,
+          "z-index": 1000,
+          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
+          "target-arrow-color":
+            tailwindConfig.theme.extend.colors.secondary[theme],
+        },
+      },
+    ] as StylesheetJson;
   }
 }

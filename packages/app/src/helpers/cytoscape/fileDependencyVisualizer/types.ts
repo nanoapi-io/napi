@@ -14,14 +14,16 @@ export interface NapiNodeData {
   customData: {
     fileName: string;
     symbolName: string;
-    metricsColors: {
-      [metricLinesCount]: string;
-      [metricCodeLineCount]: string;
-      [metricCodeCharacterCount]: string;
-      [metricCharacterCount]: string;
-      [metricDependencyCount]: string;
-      [metricDependentCount]: string;
-      [metricCyclomaticComplexity]: string;
+    symbolType: string;
+    isExternal: boolean;
+    metricsSeverity: {
+      [metricLinesCount]: number;
+      [metricCodeLineCount]: number;
+      [metricCodeCharacterCount]: number;
+      [metricCharacterCount]: number;
+      [metricDependencyCount]: number;
+      [metricDependentCount]: number;
+      [metricCyclomaticComplexity]: number;
     };
     expanded: {
       label: string;
@@ -33,5 +35,17 @@ export interface NapiNodeData {
       width: number;
       height: number;
     };
+  };
+}
+
+export const edgeTypeDependency = "dependency";
+export const edgeTypeDependent = "dependent";
+
+export interface NapiEdgeData {
+  id: string;
+  source: string;
+  target: string;
+  customData: {
+    type: typeof edgeTypeDependency | typeof edgeTypeDependent;
   };
 }
