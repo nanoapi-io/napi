@@ -10,6 +10,7 @@
     "dev:app": "npm run dev --workspace packages/shared && npm run dev --workspace packages/app",
     "dev:cli": "npm run dev --workspace packages/shared && npm run dev --workspace packages/cli",
     "build": "npm run build --workspace packages/cli",
+    "build:shared": "npm run build --workspace packages/shared",
     "start": "npm run start --workspace packages/cli",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
