@@ -1,5 +1,7 @@
 import {
   DependencyManifest,
+  SymbolDependencyManifest,
+  SymbolType,
   metricCharacterCount,
   metricCodeCharacterCount,
   metricCodeLineCount,
@@ -58,6 +60,25 @@ export function generateCSharpDependencyManifest(
   for (const [, { path }] of parsedFiles) {
     console.info(`Processing ${path} (${++i}/${filecount})`);
     const fm = formatter.formatFile(path) as CSharpFile;
+    const csharpSyms = fm.symbols;
+    const symbols: Record<string, SymbolDependencyManifest> = {};
+    for (const [symbolName, symbol] of Object.entries(csharpSyms)) {
+      symbols[symbolName] = {
+        id: symbolName,
+        type: symbol.type as SymbolType,
+        metrics: {
+          [metricCharacterCount]: symbol.characterCount,
+          [metricCodeCharacterCount]: 0, // TODO: fix this
+          [metricLinesCount]: symbol.lineCount,
+          [metricCodeLineCount]: 0, // TODO: fix this
+          [metricDependencyCount]: 0, // TODO: fix this
+          [metricDependentCount]: 0, // TODO: fix this
+          [metricCyclomaticComplexity]: 0, // TODO: fix this
+        },
+        dependencies: symbol.dependencies,
+        dependents: {},
+      };
+    }
     manifest[path] = {
       id: fm.id,
       filePath: fm.filepath,
@@ -72,7 +93,7 @@ export function generateCSharpDependencyManifest(
         [metricCyclomaticComplexity]: 0, // TODO: fix this
       },
       dependencies: fm.dependencies,
-      symbols: {}, //TODO fix this
+      symbols,
       dependents: {}, //TODO fix this
     };
     // Delete isNamespace from dependencies
