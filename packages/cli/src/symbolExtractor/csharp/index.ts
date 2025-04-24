@@ -9,6 +9,14 @@ import {
 import { DependencyManifest } from "@nanoapi.io/shared";
 import { DotNetProject } from "../../languagePlugins/csharp/projectMapper/index.js";
 
+/**
+ * Extracts C# symbols from the given files.
+ * @param files - A map of file paths to their content.
+ * @param dependencyManifest - The dependency manifest.
+ * @param symbolsToExtract - A map of symbols to extract, where the key is the symbol name and the value is an object containing the file path and a set of symbols.
+ * @param napiConfig - The NAPI configuration.
+ * @returns - A map of extracted files, where the key is the file path and the value is an object containing the file path and content.
+ */
 export function extractCSharpSymbols(
   files: Map<string, { path: string; content: string }>,
   dependencyManifest: DependencyManifest,
@@ -20,9 +28,11 @@ export function extractCSharpSymbols(
   const extractor = new CSharpExtractor(files, dependencyManifest);
   const symbols: string[] = [];
   const extractedFiles: ExtractedFile[] = [];
+  // Flatten the symbolsToExtract map
   for (const symbolSet of symbolsToExtract.values()) {
     symbols.push(...Array.from(symbolSet.symbols));
   }
+  // Extract symbols from the files
   for (const symbol of symbols) {
     const extractedFile = extractor.extractSymbolByName(symbol);
     if (extractedFile) {
@@ -36,7 +46,17 @@ export function extractCSharpSymbols(
     if (!subprojects.includes(subproject)) {
       subprojects.push(subproject);
     }
-    const key = path.join(subproject.name, namespace, `${name}.cs`);
+    // File path for the extracted file
+    const fakeprojectpath = subproject.name.split(".").join(path.sep);
+    const spindex = namespace.split(".").indexOf(subproject.name);
+    const key = path.join(
+      namespace
+        .split(".")
+        .slice(spindex !== -1 ? spindex : 0)
+        .join(path.sep)
+        .replace(fakeprojectpath, subproject.name),
+      `${name}.cs`,
+    );
     if (!extractedFilesMap.has(key)) {
       extractedFilesMap.set(key, {
         path: key,
@@ -44,6 +64,7 @@ export function extractCSharpSymbols(
       });
     }
   }
+  // Add the .csproj and GlobalUsings.cs files for each subproject
   for (const subproject of subprojects) {
     const projectPath = path.join(subproject.name, `${subproject.name}.csproj`);
     const globalUsingPath = path.join(subproject.name, "GlobalUsings.cs");
