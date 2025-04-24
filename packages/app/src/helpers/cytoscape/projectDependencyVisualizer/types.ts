@@ -13,14 +13,14 @@ export interface NapiNodeData {
   position: { x: number; y: number };
   customData: {
     fileName: string;
-    metricsColors: {
-      [metricLinesCount]: string;
-      [metricCodeLineCount]: string;
-      [metricCodeCharacterCount]: string;
-      [metricCharacterCount]: string;
-      [metricDependencyCount]: string;
-      [metricDependentCount]: string;
-      [metricCyclomaticComplexity]: string;
+    metricsSeverity: {
+      [metricLinesCount]: number;
+      [metricCodeLineCount]: number;
+      [metricCodeCharacterCount]: number;
+      [metricCharacterCount]: number;
+      [metricDependencyCount]: number;
+      [metricDependentCount]: number;
+      [metricCyclomaticComplexity]: number;
     };
     expanded: {
       label: string;

@@ -9,50 +9,45 @@ import cytoscape, {
   StylesheetJson,
 } from "cytoscape";
 import { Core } from "cytoscape";
-import fcose, { FcoseLayoutOptions } from "cytoscape-fcose";
-import {
-  DependencyManifest,
-  AuditManifest,
-  FileAuditManifest,
-  metricLinesCount,
-  metricCodeCharacterCount,
-  metricCodeLineCount,
-  metricCharacterCount,
-  metricDependencyCount,
-  metricDependentCount,
-  metricCyclomaticComplexity,
-  Metric,
-} from "@napi/shared";
+import fcose from "cytoscape-fcose";
+import { DependencyManifest, AuditManifest, Metric } from "@napi/shared";
 import tailwindConfig from "../../../../tailwind.config.js";
-import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition.js";
+import {
+  getCollapsedFileNodeLabel,
+  getExpandedFileNodeLabel,
+  getNodeWidthAndHeightFromLabel,
+} from "../label/index.js";
 import { NapiNodeData } from "./types.js";
-
+import {
+  getMetricLevelColor,
+  getMetricsSeverityForNode,
+} from "../metrics/index.js";
+import { mainLayout } from "../layout/index.js";
 /**
- * CodeDependencyVisualizer handles the visualization of project dependencies using Cytoscape.
+ * ProjectDependencyVisualizer creates an interactive graph of project-level dependencies.
  *
- * This class creates an interactive graph visualization where:
- * - Nodes represent project files with size based on metrics (LOC, character count)
+ * This visualization provides a comprehensive view of the project's architecture where:
+ * - Nodes represent individual project files, sized according to complexity metrics
  * - Edges represent import/export relationships between files
- * - Nodes can be styled based on different metrics and audit results
- * - Interactive features include selecting, highlighting, and focusing on dependency relationships
- * - Audit information (errors/warnings) is visually integrated into nodes
+ * - Colors indicate metrics severity (code size, complexity, dependency count)
+ * - Interactive features allow exploration of dependency relationships
  *
- * The visualization dynamically responds to user interactions, supports different metrics
- * for node visualization, and adapts to light/dark themes.
+ * Key features:
+ * - Theme-aware visualization with optimized colors for light/dark modes
+ * - Selectable metric visualization (LOC, character count, cyclomatic complexity)
+ * - Interactive node selection with focus on direct dependencies
+ * - Automatic layout using F-COSE algorithm for optimal readability
+ * - Support for different node states (selected, connected, highlighted)
+ * - Visual representation of audit alerts and warnings
+ *
+ * The visualization is designed to help developers understand project structure,
+ * identify problematic dependencies, and analyze code complexity at the file level.
  */
 export class ProjectDependencyVisualizer {
   public cy: Core;
   private theme: "light" | "dark";
   /** Layout configuration for organizing the dependency graph */
-  private layout = {
-    name: "fcose",
-    quality: "proof",
-    nodeRepulsion: 1000000,
-    idealEdgeLength: 200,
-    gravity: 0.1,
-    packComponents: true,
-    nodeDimensionsIncludeLabels: true,
-  } as FcoseLayoutOptions;
+  private layout = mainLayout;
   /** Current metric used for node coloring */
   private targetMetric: Metric | undefined;
   /** Currently selected node in the graph */
@@ -125,16 +120,6 @@ export class ProjectDependencyVisualizer {
     this.cy.add(elements);
 
     this.cy.style(this.getCyStyleSheet(this.theme));
-    this.cy.nodes().style({
-      "background-color": (node: NodeSingular) =>
-        node.data(
-          `customData.metricsColors.${this.targetMetric || "undefined"}`,
-        ),
-      "border-color": (node: NodeSingular) =>
-        node.data(
-          `customData.metricsColors.${this.targetMetric || "undefined"}`,
-        ),
-    });
 
     this.layoutGraph(this.cy);
 
@@ -158,7 +143,7 @@ export class ProjectDependencyVisualizer {
    */
   public highlightNode(nodeId: string) {
     this.highlightedNodeId = nodeId;
-    this.setNodesStyle();
+    this.cy.style(this.getCyStyleSheet(this.theme));
   }
 
   /**
@@ -166,58 +151,7 @@ export class ProjectDependencyVisualizer {
    */
   public unhighlightNodes() {
     this.highlightedNodeId = undefined;
-    this.setNodesStyle();
-  }
-
-  /**
-   * Updates styles of nodes based on the current selection state
-   * and target metric for coloring.
-   *
-   * Handles different visual states: selected nodes, connected nodes,
-   * and background nodes based on relationships.
-   */
-  private setNodesStyle() {
-    this.cy.batch(() => {
-      if (this.selectedNodeId) {
-        const closedNeighborhoodNodes = this.cy
-          .nodes(`node[id="${this.selectedNodeId}"]`)
-          .closedNeighborhood()
-          .nodes();
-        const backgroundElements = this.cy
-          .elements()
-          .difference(closedNeighborhoodNodes);
-
-        closedNeighborhoodNodes.removeStyle();
-        closedNeighborhoodNodes.style({
-          "border-color": (node: NodeSingular) =>
-            node.data(
-              `customData.metricsColors.${this.targetMetric || "undefined"}`,
-            ) || undefined,
-        });
-
-        backgroundElements.removeStyle();
-        backgroundElements.style({
-          "background-color": (node: NodeSingular) =>
-            node.data(
-              `customData.metricsColors.${this.targetMetric || "undefined"}`,
-            ) || undefined,
-        });
-      } else {
-        this.cy.nodes().removeStyle();
-        this.cy.nodes().style({
-          "background-color": (node: NodeSingular) =>
-            node.data(
-              `customData.metricsColors.${this.targetMetric || "undefined"}`,
-            ) || undefined,
-        });
-      }
-
-      if (this.highlightedNodeId) {
-        this.cy.nodes(`node[id="${this.highlightedNodeId}"]`).style({
-          "background-color": "#FF00FF", // Magenta/fuchsia color not used elsewhere
-        });
-      }
-    });
+    this.cy.style(this.getCyStyleSheet(this.theme));
   }
 
   /**
@@ -282,7 +216,7 @@ export class ProjectDependencyVisualizer {
           this.selectedNodeId = undefined;
         }
 
-        this.setNodesStyle();
+        this.cy.style(this.getCyStyleSheet(this.theme));
       });
 
       this.externalCallbacks.onAfterNodeClick();
@@ -323,7 +257,7 @@ export class ProjectDependencyVisualizer {
   public setTargetMetric(metric: Metric | undefined) {
     this.targetMetric = metric;
 
-    this.setNodesStyle();
+    this.cy.style(this.getCyStyleSheet(this.theme));
   }
 
   /**
@@ -337,11 +271,7 @@ export class ProjectDependencyVisualizer {
     dependencyManifest: DependencyManifest,
     auditManifest: AuditManifest,
   ): ElementDefinition[] {
-    const nodes = this.createNodes(
-      dependencyManifest,
-      auditManifest,
-      this.theme,
-    );
+    const nodes = this.createNodes(dependencyManifest, auditManifest);
     const edges = this.createEdges(dependencyManifest);
 
     return [...nodes, ...edges];
@@ -366,13 +296,40 @@ export class ProjectDependencyVisualizer {
         style: {
           "text-wrap": "wrap",
           color: tailwindConfig.theme.extend.colors.text[theme],
-          "border-width": 1,
-          "border-color": tailwindConfig.theme.extend.colors.border[theme],
-          "text-valign": "center",
-          "text-halign": "center",
+          "border-width": 4,
+          "border-color": tailwindConfig.theme.extend.colors.secondary[theme],
+          "background-color":
+            tailwindConfig.theme.extend.colors.secondary[theme],
           shape: "round-rectangle",
           width: 20,
           height: 20,
+          "pie-size": "20px",
+          "pie-1-background-size": "100%",
+          "pie-1-background-color": (node: NodeSingular) => {
+            const data = node.data() as NapiNodeData;
+            if (!this.targetMetric) {
+              return "transparent"; // even with transparent, the pie chart is visible. Need to set opacity to 0
+            }
+
+            return getMetricLevelColor(
+              this.theme,
+              data.customData.metricsSeverity[this.targetMetric],
+            );
+          },
+          "pie-1-background-opacity": (node: NodeSingular) => {
+            const data = node.data() as NapiNodeData;
+
+            if (!this.targetMetric) {
+              return 0;
+            }
+
+            if (data.customData.metricsSeverity[this.targetMetric] === 0) {
+              return 0;
+            }
+            return 1;
+          },
+          "text-valign": "center",
+          "text-halign": "center",
         },
       },
       {
@@ -387,7 +344,7 @@ export class ProjectDependencyVisualizer {
           label: "data(customData.expanded.label)",
           "background-color":
             tailwindConfig.theme.extend.colors.background[theme],
-          "border-width": 3,
+          "border-color": tailwindConfig.theme.extend.colors.primary[theme],
           "z-index": 2000,
           width: "data(customData.expanded.width)",
           height: "data(customData.expanded.height)",
@@ -399,7 +356,6 @@ export class ProjectDependencyVisualizer {
           label: "data(customData.collapsed.label)",
           "background-color":
             tailwindConfig.theme.extend.colors.background[theme],
-          "border-width": 3,
           "z-index": 1000,
           width: "data(customData.collapsed.width)",
           height: "data(customData.collapsed.height)",
@@ -410,7 +366,7 @@ export class ProjectDependencyVisualizer {
         style: {
           width: 1,
           "line-color": tailwindConfig.theme.extend.colors.text[theme],
-          "line-opacity": 0.5,
+          "line-opacity": 1,
           "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
           "target-arrow-shape": "triangle",
           "curve-style": "straight",
@@ -418,17 +374,8 @@ export class ProjectDependencyVisualizer {
         },
       },
       {
-        selector: "edge.background",
-        style: {
-          "line-opacity": 0.1,
-        },
-      },
-      {
         selector: "edge.dependency",
         style: {
-          width: 2,
-          "line-opacity": 1,
-          "z-index": 1000,
           "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
           "target-arrow-color":
             tailwindConfig.theme.extend.colors.secondary[theme],
@@ -437,12 +384,15 @@ export class ProjectDependencyVisualizer {
       {
         selector: "edge.dependent",
         style: {
-          width: 2,
-          "line-opacity": 1,
-          "z-index": 1000,
           "line-color": tailwindConfig.theme.extend.colors.primary[theme],
           "target-arrow-color":
             tailwindConfig.theme.extend.colors.primary[theme],
+        },
+      },
+      {
+        selector: "edge.background",
+        style: {
+          "line-opacity": 0.1,
         },
       },
     ] as StylesheetJson;
@@ -459,13 +409,11 @@ export class ProjectDependencyVisualizer {
    *
    * @param dependencyManifest - Object containing dependency information for project files
    * @param auditManifest - Object containing audit information for project files
-   * @param theme - The current theme (light or dark)
    * @returns Array of node definitions for Cytoscape
    */
   private createNodes(
     dependencyManifest: DependencyManifest,
     auditManifest: AuditManifest,
-    theme: "light" | "dark",
   ) {
     interface CustomNodeDefinition extends NodeDefinition {
       data: NapiNodeData & object;
@@ -480,24 +428,21 @@ export class ProjectDependencyVisualizer {
         fileAuditManifest.alerts,
       ).map((alert) => alert.message.short);
 
-      const expandedLabel = this.getExpandedNodeLabel({
+      const expandedLabel = getExpandedFileNodeLabel({
         fileName: fileDependencyManifest.id,
         fileAuditManifest,
       });
       const { width: expandedWitdh, height: expandedHeight } =
         getNodeWidthAndHeightFromLabel(expandedLabel);
 
-      const collapsedLabel = this.getCollapsedNodeLabel({
+      const collapsedLabel = getCollapsedFileNodeLabel({
         fileName: fileDependencyManifest.id,
         fileAuditManifest,
       });
       const { width: collapsedWidth, height: collapsedHeight } =
         getNodeWidthAndHeightFromLabel(collapsedLabel);
 
-      const metricsColors = this.getMetricsColorsForNode(
-        theme,
-        fileAuditManifest,
-      );
+      const metricsColors = getMetricsSeverityForNode(fileAuditManifest);
 
       const nodeElement: CustomNodeDefinition = {
         data: {
@@ -506,7 +451,7 @@ export class ProjectDependencyVisualizer {
           position: { x: 0, y: 0 },
           customData: {
             fileName: fileDependencyManifest.id,
-            metricsColors,
+            metricsSeverity: metricsColors,
             expanded: {
               label: expandedLabel,
               width: expandedWitdh,
@@ -559,125 +504,5 @@ export class ProjectDependencyVisualizer {
     });
 
     return edges;
-  }
-
-  private errorChar = "⚠️";
-  private successChar = "🎉";
-
-  /**
-   * Generates the expanded label for a node with detailed audit information
-   *
-   * Shows the full file name and lists all errors and warnings with their icons,
-   * or a success message if no issues are found.
-   *
-   * @param data - Object containing file name and audit information
-   * @returns Formatted label string for expanded node view
-   */
-  private getExpandedNodeLabel(data: {
-    fileName: string;
-    fileAuditManifest: FileAuditManifest;
-  }) {
-    let label = data.fileName;
-
-    const alerts = Object.values(data.fileAuditManifest.alerts);
-
-    if (alerts.length > 0) {
-      alerts.forEach((alert) => {
-        label += `\n${this.errorChar} ${alert.message.short}`;
-      });
-    } else {
-      label += `\n${this.successChar} No issues found`;
-    }
-
-    return label;
-  }
-
-  /**
-   * Generates the collapsed label for a node with summarized audit information
-   *
-   * Shows a truncated file name and counts of errors and warnings with icons.
-   *
-   * @param data - Object containing file name and audit information
-   * @returns Formatted label string for collapsed node view
-   */
-  private getCollapsedNodeLabel(data: {
-    fileName: string;
-    fileAuditManifest: FileAuditManifest;
-  }) {
-    const fileNameMaxLength = 25;
-    const fileName =
-      data.fileName.length > fileNameMaxLength
-        ? `...${data.fileName.slice(-fileNameMaxLength)}`
-        : data.fileName;
-
-    let label = fileName;
-
-    const alerts = Object.values(data.fileAuditManifest.alerts);
-
-    if (alerts.length > 0) {
-      label += `\n${this.errorChar}(${alerts.length})`;
-    }
-
-    return label;
-  }
-
-  /**
-   * Determines the colors for a node based on audit metrics and severity
-   *
-   * Uses a color scale from green to red based on severity levels:
-   * - Green (0): No issues
-   * - Yellow (1): Minor issues
-   * - Orange (2): Moderate issues
-   * - Amber (3): Significant issues
-   * - Dark Red (4): Severe issues
-   * - Red (5): Critical issues
-   *
-   * @param fileAuditManifest - Audit information for the file
-   * @returns Object containing colors for different metrics
-   */
-  private getMetricsColorsForNode(
-    theme: "light" | "dark",
-    fileAuditManifest: FileAuditManifest,
-  ) {
-    const levelToColor =
-      theme === "light"
-        ? {
-            0: "#22c55e", // green
-            1: "#eab308", // yellow
-            2: "#f97316", // orange
-            3: "#d97706", // amber
-            4: "#991b1b", // dark red
-            5: "#ef4444", // red
-          }
-        : {
-            0: "#4ade80", // lighter green for dark theme
-            1: "#facc15", // brighter yellow for dark theme
-            2: "#fb923c", // lighter orange for dark theme
-            3: "#fbbf24", // brighter amber for dark theme
-            4: "#b91c1c", // slightly brighter dark red for dark theme
-            5: "#f87171", // lighter red for dark theme
-          };
-
-    const metrics = {
-      undefined: levelToColor[0],
-      [metricLinesCount]: levelToColor[0],
-      [metricCodeLineCount]: levelToColor[0],
-      [metricCodeCharacterCount]: levelToColor[0],
-      [metricCharacterCount]: levelToColor[0],
-      [metricDependencyCount]: levelToColor[0],
-      [metricDependentCount]: levelToColor[0],
-      [metricCyclomaticComplexity]: levelToColor[0],
-    };
-
-    // Check each metric for audit alerts
-    Object.keys(metrics).forEach((metricKey) => {
-      // Look for audit alert related to this metric
-      const alert = fileAuditManifest.alerts[metricKey];
-      if (alert) {
-        metrics[metricKey] = levelToColor[alert.severity];
-      }
-    });
-
-    return metrics;
   }
 }

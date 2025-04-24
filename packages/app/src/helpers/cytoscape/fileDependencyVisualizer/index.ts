@@ -11,7 +11,6 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricCyclomaticComplexity,
-  SymbolAuditManifest,
   classSymbolType,
   functionSymbolType,
   variableSymbolType,
@@ -27,7 +26,7 @@ import {
   Collection,
   EventObjectNode,
 } from "cytoscape";
-import fcose, { FcoseLayoutOptions } from "cytoscape-fcose";
+import fcose from "cytoscape-fcose";
 import {
   NapiNodeData,
   NapiEdgeData,
@@ -36,20 +35,43 @@ import {
 } from "./types.js";
 import cytoscape from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config.js";
-import { getNodeWidthAndHeightFromLabel } from "../sizeAndPosition.js";
+import {
+  getCollapsedSymbolNodeLabel,
+  getExpandedSymbolNodeLabel,
+  getNodeWidthAndHeightFromLabel,
+} from "../label/index.js";
+import {
+  getMetricLevelColor,
+  getMetricsSeverityForNode,
+} from "../metrics/index.js";
+import { mainLayout } from "../layout/index.js";
 
+/**
+ * FileDependencyVisualizer creates an interactive graph of symbol dependencies within a file.
+ *
+ * This visualization provides a detailed view of internal file structure where:
+ * - Nodes represent symbols (functions, classes, variables) within the file
+ * - Edges represent dependencies between symbols
+ * - Node shapes indicate symbol types (hexagon for classes, ellipse for functions, etc.)
+ * - Colors indicate metrics severity for each symbol
+ *
+ * Key features:
+ * - Focus on a single file's internal structure and external dependencies
+ * - Different node shapes for different symbol types (classes, functions, variables)
+ * - Theme-aware visualization with optimized colors for light/dark modes
+ * - Selectable metric visualization for symbol-level analysis
+ * - Interactive node selection with focus on direct dependencies
+ * - Visual distinction between internal and external symbols
+ * - Comprehensive display of audit information for each symbol
+ *
+ * The visualization is designed to help developers understand code organization
+ * at the symbol level, identify complex relationships, and analyze internal
+ * dependencies within files.
+ */
 export class FileDependencyVisualizer {
   public cy: Core;
   private theme: "light" | "dark";
-  private layout = {
-    name: "fcose",
-    quality: "proof",
-    nodeRepulsion: 1000000,
-    idealEdgeLength: 200,
-    gravity: 0.1,
-    packComponents: true,
-    nodeDimensionsIncludeLabels: true,
-  } as FcoseLayoutOptions;
+  private layout = mainLayout;
   private fileId: string;
   /** Current metric used for node coloring */
   private targetMetric: Metric | undefined;
@@ -292,32 +314,6 @@ export class FileDependencyVisualizer {
     collectionToLayout.layout(this.layout).run();
   }
 
-  /**
-   * Gets the color for a specific metric alert level based on theme
-   */
-  private getMetricLevelColor(level: number): string {
-    const levelToColor =
-      this.theme === "light"
-        ? {
-            0: "#22c55e", // green
-            1: "#eab308", // yellow
-            2: "#f97316", // orange
-            3: "#d97706", // amber
-            4: "#991b1b", // dark red
-            5: "#ef4444", // red
-          }
-        : {
-            0: "#4ade80", // lighter green for dark theme
-            1: "#facc15", // brighter yellow for dark theme
-            2: "#fb923c", // lighter orange for dark theme
-            3: "#fbbf24", // brighter amber for dark theme
-            4: "#b91c1c", // slightly brighter dark red for dark theme
-            5: "#f87171", // lighter red for dark theme
-          };
-
-    return levelToColor[level] || levelToColor[5];
-  }
-
   private computeNodeId(fileId: string, symbolId: string) {
     return `${fileId}:${symbolId}`;
   }
@@ -401,22 +397,22 @@ export class FileDependencyVisualizer {
 
     // First pass: Create nodes for each symbol in the file
     Object.values(fileManifest.symbols).forEach((symbol) => {
-      const symbolDependencyManifest = fileManifest.symbols[symbol.id];
       const symbolAuditManifest = fileAuditManifest.symbols[symbol.id];
       const symbolNodeId = this.computeNodeId(fileId, symbol.id);
 
       // Create labels for the symbol
-      const expandedLabel = this.getExpandedNodeLabel({
+      const expandedLabel = getExpandedSymbolNodeLabel({
+        currentFileId: fileId,
         fileName: fileId,
-        symbolDependencyManifest,
+        symbolName: symbol.id,
+        symbolType: symbol.type,
         symbolAuditManifest,
       });
-      const collapsedLabel = this.getCollapsedNodeLabel({
+      const collapsedLabel = getCollapsedSymbolNodeLabel({
         symbolName: symbol.id,
       });
 
-      const metricsSeverity =
-        this.getMetricsSeverityForNode(symbolAuditManifest);
+      const metricsSeverity = getMetricsSeverityForNode(symbolAuditManifest);
 
       const nodeData = this.createNodeData({
         id: symbolNodeId,
@@ -496,13 +492,15 @@ export class FileDependencyVisualizer {
           }
 
           // Create label for dependency nodes
-          const expandedLabel = this.createDependencyExpandedLabel(
-            depSymbolName,
-            depSymbolType,
-            dep,
-          );
+          const expandedLabel = getExpandedSymbolNodeLabel({
+            currentFileId: dep.id,
+            fileName: dep.id,
+            symbolName: depSymbolName,
+            symbolType: depSymbolType,
+            symbolAuditManifest: depAuditManifest?.symbols[depSymbolName],
+          });
 
-          const metricsSeverity = this.getMetricsSeverityForNode(
+          const metricsSeverity = getMetricsSeverityForNode(
             depAuditManifest?.symbols[depSymbolName],
           );
 
@@ -564,17 +562,15 @@ export class FileDependencyVisualizer {
             depDependencyManifest.symbols[depSymbolName].type;
 
           // Create label for dependent nodes
-          let expandedLabel = `${depSymbolName} (${depSymbolType})\nFile: ${dep.id}`;
+          const expandedLabel = getExpandedSymbolNodeLabel({
+            currentFileId: dep.id,
+            fileName: dep.id,
+            symbolName: depSymbolName,
+            symbolType: depSymbolType,
+            symbolAuditManifest: depAuditManifest?.symbols[depSymbolName],
+          });
 
-          // Add alerts for dependent nodes
-          if (depAuditManifest && depAuditManifest.symbols[depSymbolName]) {
-            expandedLabel = this.addAlertsToLabel(
-              expandedLabel,
-              depAuditManifest.symbols[depSymbolName].alerts,
-            );
-          }
-
-          const metricsSeverity = this.getMetricsSeverityForNode(
+          const metricsSeverity = getMetricsSeverityForNode(
             depAuditManifest?.symbols[depSymbolName],
           );
 
@@ -606,107 +602,6 @@ export class FileDependencyVisualizer {
         });
       });
     });
-  }
-
-  /**
-   * Creates expanded label for dependency nodes
-   */
-  private createDependencyExpandedLabel(
-    symbolName: string,
-    symbolType: string | SymbolType,
-    dep: { id: string; isExternal: boolean },
-  ): string {
-    if (dep.isExternal) {
-      return `${symbolName} (${symbolType})\n(External Symbol)\nFrom: ${dep.id}`;
-    } else {
-      return `${symbolName} (${symbolType})\nFile: ${dep.id}`;
-    }
-  }
-
-  /**
-   * Adds alert information to a node label
-   */
-  private addAlertsToLabel(
-    label: string,
-    alerts: Record<string, { message: { short: string } }>,
-  ): string {
-    const alertList = Object.values(alerts);
-
-    if (alertList.length > 0) {
-      alertList.forEach((alert) => {
-        label += `\n${this.errorChar} ${alert.message.short}`;
-      });
-    } else {
-      label += `\n${this.successChar} No issues`;
-    }
-
-    return label;
-  }
-
-  /**
-   * Generates the expanded label for a node with detailed information
-   */
-  private getExpandedNodeLabel(data: {
-    fileName: string;
-    symbolDependencyManifest: SymbolDependencyManifest;
-    symbolAuditManifest: SymbolAuditManifest;
-  }) {
-    const symbolName = data.symbolDependencyManifest.id;
-    const symbolType = data.symbolDependencyManifest.type;
-    const isExternal = data.fileName !== this.fileId;
-
-    // Create the basic label
-    let label = `${symbolName} (${symbolType})`;
-
-    // Add file information
-    if (isExternal) {
-      if (data.fileName.includes("node_modules")) {
-        label += `\n(External Symbol)`;
-        label += `\nFrom: ${data.fileName}`;
-      } else {
-        label += `\nFile: ${data.fileName}`;
-      }
-    } else {
-      label += `\nFile: ${data.fileName}`;
-    }
-
-    // Add alerts information if available and not an external symbol
-    if (!data.fileName.includes("node_modules") && data.symbolAuditManifest) {
-      label = this.addAlertsToLabel(label, data.symbolAuditManifest.alerts);
-    }
-
-    return label;
-  }
-
-  /**
-   * Generates the collapsed label for a node with minimal information
-   */
-  private getCollapsedNodeLabel(data: { symbolName: string }) {
-    return data.symbolName;
-  }
-
-  private getMetricsSeverityForNode(
-    symbolAuditManifest: SymbolAuditManifest | undefined,
-  ) {
-    const metricsSeverity: Record<Metric, number> = {
-      [metricLinesCount]: 0,
-      [metricCodeLineCount]: 0,
-      [metricCodeCharacterCount]: 0,
-      [metricCharacterCount]: 0,
-      [metricDependencyCount]: 0,
-      [metricDependentCount]: 0,
-      [metricCyclomaticComplexity]: 0,
-    };
-
-    if (!symbolAuditManifest) {
-      return metricsSeverity;
-    }
-
-    Object.entries(symbolAuditManifest.alerts).forEach(([metric, value]) => {
-      metricsSeverity[metric as Metric] = value.severity;
-    });
-
-    return metricsSeverity;
   }
 
   /**
@@ -755,16 +650,15 @@ export class FileDependencyVisualizer {
           },
           width: "data(customData.collapsed.width)",
           height: "data(customData.collapsed.height)",
-          // Pie chart settings - always maintain the same size
           "pie-size": "20px",
-          // Single full circle in metric color
           "pie-1-background-color": (node: NodeSingular) => {
             const data = node.data() as NapiNodeData;
             if (!this.targetMetric) {
               return "transparent"; // even with transparent, the pie chart is visible. Need to set opacity to 0
             }
 
-            return this.getMetricLevelColor(
+            return getMetricLevelColor(
+              this.theme,
               data.customData.metricsSeverity[this.targetMetric],
             );
           },
@@ -828,7 +722,6 @@ export class FileDependencyVisualizer {
           "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
           "target-arrow-color":
             tailwindConfig.theme.extend.colors.secondary[theme],
-          "line-opacity": 1,
         },
       },
       {
@@ -837,35 +730,12 @@ export class FileDependencyVisualizer {
           "line-color": tailwindConfig.theme.extend.colors.primary[theme],
           "target-arrow-color":
             tailwindConfig.theme.extend.colors.primary[theme],
-          "line-opacity": 1,
         },
       },
       {
         selector: "edge.background",
         style: {
           "line-opacity": 0.1,
-        },
-      },
-      {
-        selector: "edge.dependency",
-        style: {
-          width: 2,
-          "line-opacity": 1,
-          "z-index": 1000,
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
-        },
-      },
-      {
-        selector: "edge.dependent",
-        style: {
-          width: 2,
-          "line-opacity": 1,
-          "z-index": 1000,
-          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
         },
       },
     ] as StylesheetJson;
