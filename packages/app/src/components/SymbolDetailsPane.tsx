@@ -83,61 +83,38 @@ function AlertBadge({ count }: { count: number }) {
   );
 }
 
-// Symbol metrics and alerts component
-function SymbolSection({
-  symbol,
-  fileDependencyManifest,
-}: {
-  symbol: {
-    id: string;
-    alerts: Record<string, { message: { long: string }; metric: string }>;
-  };
+export default function SymbolDetailsPane(props: {
   fileDependencyManifest: FileDependencyManifest;
+  fileAuditManifest: FileAuditManifest;
+  symbolId: string;
+  open: boolean;
+  setOpen: (open: boolean) => void;
 }) {
-  const symbolData = fileDependencyManifest.symbols[symbol.id];
-  const alerts = Object.values(symbol.alerts);
-  const alertsByMetric = alerts.reduce(
+  const { fileDependencyManifest, fileAuditManifest, symbolId, open, setOpen } =
+    props;
+  const fileName = fileDependencyManifest.filePath.split("/").pop() || "";
+  const symbolData = fileDependencyManifest.symbols[symbolId];
+  const symbolName = symbolData?.id || symbolId;
+  const symbolType = symbolData?.type || "";
+
+  // Get alerts related to the current symbol only
+  const symbolAlertsObj = fileAuditManifest.symbols[symbolId]?.alerts || {};
+  const symbolAlerts = Object.values(symbolAlertsObj) as {
+    message: { long: string };
+    metric: string;
+  }[];
+
+  // Organize alerts by their metric for symbol metrics
+  const symbolAlertsByMetric = symbolAlerts.reduce(
     (acc, alert) => {
       if (alert.metric) {
         acc[alert.metric] = alert;
       }
       return acc;
     },
-    {} as Record<string, (typeof alerts)[0]>,
+    {} as Record<string, (typeof symbolAlerts)[0]>,
   );
 
-  return (
-    <div className="mb-4">
-      <div className="flex justify-between items-center">
-        <Text as="span" className="font-semibold">
-          {symbolData.type}: {symbol.id}
-        </Text>
-        <AlertBadge count={alerts.length} />
-      </div>
-
-      <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-3 mt-1">
-        {symbolData.metrics &&
-          Object.entries(symbolData.metrics).map(([metricKey, value]) => (
-            <MetricItem
-              key={metricKey}
-              label={metricKey.replace(/^metric/, "")}
-              value={value as number | string}
-              alert={alertsByMetric[metricKey]}
-            />
-          ))}
-      </div>
-    </div>
-  );
-}
-
-export default function FileDetailsPane(props: {
-  fileDependencyManifest: FileDependencyManifest;
-  fileAuditManifest: FileAuditManifest;
-  open: boolean;
-  setOpen: (open: boolean) => void;
-}) {
-  const { fileDependencyManifest, fileAuditManifest, open, setOpen } = props;
-  const fileName = fileDependencyManifest.filePath.split("/").pop() || "";
   const fileAlerts = Object.values(fileAuditManifest.alerts) as {
     message: { long: string };
     metric: string;
@@ -168,7 +145,7 @@ export default function FileDetailsPane(props: {
           <div className="flex flex-col gap-2">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold font-mono break-words text-wrap">
-                {fileName}
+                {symbolName} ({symbolType}) from {fileName}
               </h2>
               <Button
                 onClick={() => setOpen(false)}
@@ -229,46 +206,35 @@ export default function FileDetailsPane(props: {
             />
           </div>
 
-          {/* Symbols with their metrics and alerts */}
+          {/* Current Symbol with its metrics and alerts */}
           <SectionHeading>
-            <LuCode /> Symbols
+            <LuCode /> Symbol
           </SectionHeading>
 
-          {/* Total symbols count */}
-          <div className="mb-3">
-            <MetricItem
-              label="Total Symbols"
-              value={Object.keys(fileDependencyManifest.symbols).length}
-            />
-            <div className="mt-2">
-              <ul className="list-inside list-disc">
-                {Object.entries(
-                  Object.values(fileDependencyManifest.symbols).reduce(
-                    (acc, symbol) => {
-                      acc[symbol.type] = (acc[symbol.type] || 0) + 1;
-                      return acc;
-                    },
-                    {} as Record<string, number>,
-                  ),
-                ).map(([type, count]) => (
-                  <li key={type} className="text-sm">
-                    <span className="font-medium">{type}:</span> {count}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          {symbolData && fileAuditManifest.symbols[symbolId] && (
+            <div className="mb-4">
+              <div className="flex justify-between items-center">
+                <Text as="span" className="font-semibold">
+                  {symbolType}: {symbolName}
+                </Text>
+                <AlertBadge count={symbolAlerts.length} />
+              </div>
 
-          {/* Individual symbols with their metrics and alerts */}
-          <div className="mt-3">
-            {Object.values(fileAuditManifest.symbols).map((symbol) => (
-              <SymbolSection
-                key={symbol.id}
-                symbol={symbol}
-                fileDependencyManifest={fileDependencyManifest}
-              />
-            ))}
-          </div>
+              <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-3 mt-1">
+                {symbolData.metrics &&
+                  Object.entries(symbolData.metrics).map(
+                    ([metricKey, value]) => (
+                      <MetricItem
+                        key={metricKey}
+                        label={metricKey.replace(/^metric/, "")}
+                        value={value as number | string}
+                        alert={symbolAlertsByMetric[metricKey]}
+                      />
+                    ),
+                  )}
+              </div>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="mt-5 grow flex flex-col justify-end">

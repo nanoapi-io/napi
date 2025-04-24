@@ -13,7 +13,7 @@ import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDepende
 import { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualizer/types.js";
 import { Metric } from "@napi/shared";
 import FileActionMenu from "../../../components/FileActionMenu.js";
-import FileDetailsPane from "../../../components/FileDetailsPane.js";
+import SymbolDetailsPane from "../../../components/SymbolDetailsPane.js";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
@@ -171,9 +171,10 @@ export default function AuditFilePage() {
       )}
 
       {detailsPaneNodeId && (
-        <FileDetailsPane
+        <SymbolDetailsPane
           fileDependencyManifest={context.dependencyManifest[detailsPaneNodeId]}
           fileAuditManifest={context.auditManifest[detailsPaneNodeId]}
+          symbolId={detailsPaneNodeId}
           open={detailsPaneOpen}
           setOpen={setDetailsPaneOpen}
         />
