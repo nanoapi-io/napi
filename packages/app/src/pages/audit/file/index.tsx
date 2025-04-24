@@ -83,16 +83,20 @@ export default function AuditFilePage() {
           position: { x: number; y: number };
           data: NapiNodeData;
         }) => {
+          if (value.data.customData.fileName !== params.file) {
+            // ignore clicks on nodes from other files
+            return;
+          }
           setContextMenuPosition(value.position);
           setContextMenuOpen(true);
           setContextMenuSymbolId(value.data.customData.symbolName);
         },
         onAfterNodeDblClick: (data: NapiNodeData) => {
-          // Navigate to the file, we don't have instance data in this visualizer
-          const urlEncodedFileName = encodeURIComponent(
-            data.customData.fileName,
+          navigate(
+            `/audit/${encodeURIComponent(
+              data.customData.fileName,
+            )}/${encodeURIComponent(data.customData.symbolName)}`,
           );
-          navigate(`/audit/${urlEncodedFileName}`);
         },
       },
     );
