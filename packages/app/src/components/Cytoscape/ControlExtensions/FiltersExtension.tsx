@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useParams } from "react-router";
 import { Button, DropdownMenu, Checkbox } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
@@ -28,6 +29,7 @@ export default function FiltersExtension(props: {
     showFunctions: true,
     showClasses: true,
   });
+  const { file } = useParams();
 
   function checkFiltersSet() {
     if (!filters) return false;
@@ -83,7 +85,7 @@ export default function FiltersExtension(props: {
 
     // Grab only the external nodes
     const nodes = props.cy.nodes().filter((node) => {
-      return node.data("isExternal");
+      return node.data("customData").isExternal;
     });
 
     if (filters.showExternal) {
@@ -99,7 +101,10 @@ export default function FiltersExtension(props: {
 
     // Grab only the internal nodes
     const nodes = props.cy.nodes().filter((node) => {
-      return !node.data("isExternal") && !node.data("isCurrentFile");
+      return (
+        !node.data("customData").isExternal &&
+        node.data("customData").fileName !== file
+      );
     });
     if (filters.showInternal) {
       nodes.removeClass("hidden");
@@ -115,8 +120,8 @@ export default function FiltersExtension(props: {
     // Grab only the variable nodes
     const nodes = props.cy.nodes().filter((node) => {
       return (
-        node.data("customData").instance?.type === "variable" &&
-        node.data("isCurrentFile")
+        node.data("customData").symbolType === "variable" &&
+        node.data("customData").fileName === file
       );
     });
     if (filters.showVariables) {
@@ -133,8 +138,8 @@ export default function FiltersExtension(props: {
     // Grab only the function nodes
     const nodes = props.cy.nodes().filter((node) => {
       return (
-        node.data("customData").instance?.type === "function" &&
-        node.data("isCurrentFile")
+        node.data("customData").symbolType === "function" &&
+        node.data("customData").fileName === file
       );
     });
     if (filters.showFunctions) {
@@ -151,8 +156,8 @@ export default function FiltersExtension(props: {
     // Grab only the class nodes
     const nodes = props.cy.nodes().filter((node) => {
       return (
-        node.data("customData").instance?.type === "class" &&
-        node.data("isCurrentFile")
+        node.data("customData").symbolType === "class" &&
+        node.data("customData").fileName === file
       );
     });
 

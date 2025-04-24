@@ -395,6 +395,12 @@ export class ProjectDependencyVisualizer {
           "line-opacity": 0.1,
         },
       },
+      {
+        selector: ".hidden",
+        style: {
+          display: "none",
+        },
+      },
     ] as StylesheetJson;
   }
 
