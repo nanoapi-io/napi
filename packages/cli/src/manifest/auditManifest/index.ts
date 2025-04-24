@@ -10,12 +10,12 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 import {
   AuditManifest,
   FileAuditManifest,
   SymbolAuditManifest,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 
 function getNumberSeverityLevel(
   value: number,

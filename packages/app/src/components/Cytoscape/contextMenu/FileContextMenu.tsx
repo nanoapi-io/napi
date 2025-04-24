@@ -5,7 +5,7 @@ import {
   LuPanelRightOpen,
   LuSearchCode,
 } from "react-icons/lu";
-import { FileDependencyManifest } from "@napi/shared";
+import { FileDependencyManifest } from "@nanoapi.io/shared";
 
 export default function FileContextMenu(props: {
   position: { x: number; y: number };

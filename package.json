@@ -16,7 +16,9 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "test": "npm run build --workspace packages/shared && vitest",
-    "npm:publish": "npm run npm:publish --workspace packages/cli",
+    "npm:publish:shared": "npm run npm:publish --workspace packages/shared",
+    "npm:publish:cli": "npm run npm:publish --workspace packages/cli",
+    "release:shared": "npm run build:shared && npm run npm:publish:shared",
     "release": "npm run release --workspace packages/cli"
   },
   "devDependencies": {

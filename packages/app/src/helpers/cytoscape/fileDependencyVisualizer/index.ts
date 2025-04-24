@@ -18,7 +18,7 @@ import {
   structSymbolType,
   FileDependencyManifest,
   SymbolType,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 import {
   Core,
   NodeSingular,

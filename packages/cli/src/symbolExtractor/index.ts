@@ -3,7 +3,7 @@ import { extractPythonSymbols } from "./python/index.js";
 import { extractCSharpSymbols } from "./csharp/index.js";
 import { localConfigSchema } from "../config/localConfig.js";
 import z from "zod";
-import { DependencyManifest } from "@napi/shared";
+import { DependencyManifest } from "@nanoapi.io/shared";
 
 const handlerMap: Record<
   string,
