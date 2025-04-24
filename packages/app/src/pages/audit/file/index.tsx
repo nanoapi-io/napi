@@ -14,6 +14,7 @@ import { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualize
 import { Metric } from "@napi/shared";
 import FileActionMenu from "../../../components/FileActionMenu.js";
 import FileDetailsPane from "../../../components/FileDetailsPane.js";
+import FileViewExtension from "../../../components/Cytoscape/ControlExtensions/FileViewExtension.js";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
@@ -147,7 +148,13 @@ export default function AuditFilePage() {
             metric,
             setMetric: handleMetricChange,
           }}
-        />
+        >
+          <FileViewExtension
+            busy={false}
+            cy={fileVisualizer.cy}
+            onLayout={() => fileVisualizer.layoutGraph(fileVisualizer.cy)}
+          />
+        </Controls>
       )}
 
       {actionMenuNodeId && (

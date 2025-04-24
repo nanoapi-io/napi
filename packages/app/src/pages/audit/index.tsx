@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useOutletContext, useSearchParams, useNavigate } from "react-router";
 import Controls from "../../components/Cytoscape/Controls.js";
+import ProjectViewExtension from "../../components/Cytoscape/ControlExtensions/ProjectViewExtension.js";
 import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton.js";
 import FileActionMenu from "../../components/FileActionMenu.js";
 import { ThemeContext } from "../../contexts/ThemeContext.js";
@@ -130,11 +131,15 @@ export default function AuditPage() {
           busy={context.busy || busy}
           cy={projectVisualizer.cy}
           onLayout={() => projectVisualizer.layoutGraph(projectVisualizer.cy)}
-          metricState={{
-            metric,
-            setMetric: handleMetricChange,
-          }}
-        />
+        >
+          <ProjectViewExtension
+            busy={context.busy || busy}
+            metricState={{
+              metric,
+              setMetric: handleMetricChange,
+            }}
+          />
+        </Controls>
       )}
 
       {actionMenuNodeId && (
