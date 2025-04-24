@@ -12,8 +12,8 @@ import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
 import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.js";
 import { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualizer/types.js";
 import { Metric } from "@napi/shared";
-import FileActionMenu from "../../../components/FileActionMenu.js";
-import FileDetailsPane from "../../../components/FileDetailsPane.js";
+import SymbolContextMenu from "../../../components/Cytoscape/contextMenu/SymbolContextMenu.js";
+import SymbolDetailsPane from "../../../components/SymbolDetailsPane.js";
 import FiltersExtension from "../../../components/Cytoscape/ControlExtensions/FiltersExtension.js";
 import MetricsExtension from "../../../components/Cytoscape/ControlExtensions/MetricsExtension.js";
 
@@ -45,15 +45,16 @@ export default function AuditFilePage() {
     setMetric(metric);
   }
 
-  const [actionMenuOpen, setActionMenuOpen] = useState(false);
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
     y: 0,
   });
-  const [actionMenuNodeId, setActionMenuNodeId] = useState<string | undefined>(
-    undefined,
-  );
-  const [detailsPaneNodeId, setDetailsPaneNodeId] = useState<
+  const [contextMenuSymbolId, setContextMenuSymbolId] = useState<
+    string | undefined
+  >(undefined);
+
+  const [detailsPaneSymbolId, setDetailsPaneSymbolId] = useState<
     string | undefined
   >(undefined);
 
@@ -80,18 +81,22 @@ export default function AuditFilePage() {
         defaultMetric: metric,
         onAfterNodeRightClick: (value: {
           position: { x: number; y: number };
-          id: string;
+          data: NapiNodeData;
         }) => {
+          if (value.data.customData.fileName !== params.file) {
+            // ignore clicks on nodes from other files
+            return;
+          }
           setContextMenuPosition(value.position);
-          setActionMenuOpen(true);
-          setActionMenuNodeId(value.id);
+          setContextMenuOpen(true);
+          setContextMenuSymbolId(value.data.customData.symbolName);
         },
         onAfterNodeDblClick: (data: NapiNodeData) => {
-          // Navigate to the file, we don't have instance data in this visualizer
-          const urlEncodedFileName = encodeURIComponent(
-            data.customData.fileName,
+          navigate(
+            `/audit/${encodeURIComponent(
+              data.customData.fileName,
+            )}/${encodeURIComponent(data.customData.symbolName)}`,
           );
-          navigate(`/audit/${urlEncodedFileName}`);
         },
       },
     );
@@ -161,30 +166,27 @@ export default function AuditFilePage() {
         </Controls>
       )}
 
-      {actionMenuNodeId && (
-        <>
-          <FileActionMenu
-            position={contextMenuPosition}
-            fileDependencyManifest={
-              context.dependencyManifest[actionMenuNodeId]
+      {contextMenuSymbolId && (
+        <SymbolContextMenu
+          position={contextMenuPosition}
+          fileDependencyManifest={context.dependencyManifest[params.file]}
+          symbolId={contextMenuSymbolId}
+          open={contextMenuOpen}
+          onOpenChange={setContextMenuOpen}
+          setDetailsPaneOpen={(open) => {
+            setDetailsPaneOpen(open);
+            if (open) {
+              setDetailsPaneSymbolId(contextMenuSymbolId);
             }
-            open={actionMenuOpen}
-            onOpenChange={setActionMenuOpen}
-            showInSidebar={context.actions.showInSidebar}
-            setDetailsPaneOpen={(open) => {
-              setDetailsPaneOpen(open);
-              if (open) {
-                setDetailsPaneNodeId(actionMenuNodeId);
-              }
-            }}
-          />
-        </>
+          }}
+        />
       )}
 
-      {detailsPaneNodeId && (
-        <FileDetailsPane
-          fileDependencyManifest={context.dependencyManifest[detailsPaneNodeId]}
-          fileAuditManifest={context.auditManifest[detailsPaneNodeId]}
+      {detailsPaneSymbolId && (
+        <SymbolDetailsPane
+          fileDependencyManifest={context.dependencyManifest[params.file]}
+          fileAuditManifest={context.auditManifest[params.file]}
+          symbolId={detailsPaneSymbolId}
           open={detailsPaneOpen}
           setOpen={setDetailsPaneOpen}
         />

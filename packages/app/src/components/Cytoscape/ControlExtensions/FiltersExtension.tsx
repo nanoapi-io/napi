@@ -6,8 +6,6 @@ import { Core } from "cytoscape";
 import { toast } from "react-toastify";
 import { MdFilterAlt } from "react-icons/md";
 
-const INITIAL_ELEMENT_LIMIT = 75;
-
 interface FiltersType {
   showExternal: boolean;
   showInternal: boolean;
@@ -59,12 +57,11 @@ export default function FiltersExtension(props: {
     return false;
   }
 
-  // Check the number of elements on the file view
-  // if there are more than 50, show a toast
   useEffect(() => {
     if (!props.cy) return;
 
-    const elements = props.cy.elements();
+    const INITIAL_NODE_LIMIT = 50;
+    const nodeCount = props.cy.nodes().length;
 
     // Handle strict mode for dev
     if (!initialized.current) {
@@ -72,9 +69,9 @@ export default function FiltersExtension(props: {
       return;
     }
 
-    if (elements.length > INITIAL_ELEMENT_LIMIT) {
+    if (nodeCount > INITIAL_NODE_LIMIT) {
       toast.info(
-        "There are more than 75 elements on screen. We recommend using the filters in the control bar to get a better view of the graph.",
+        `There are more than ${INITIAL_NODE_LIMIT} elements on screen. We recommend using the filters in the control bar to get a better view of the graph.`,
       );
     }
   }, []);
