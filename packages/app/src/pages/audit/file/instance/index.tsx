@@ -155,6 +155,12 @@ export default function AuditInstancePage() {
         <CytoscapeSkeleton />
       ) : (
         <Controls busy={false} cy={cyInstance} onLayout={handleLayout}>
+          {/* TODO: Fix data shape for instane-level view and then uncomment */}
+          {/* <FiltersExtension
+            cy={cyInstance}
+            busy={context.busy}
+            onLayout={handleLayout}
+          /> */}
           <GraphDepthExtension
             cy={cyInstance}
             busy={context.busy}
