@@ -1,6 +1,6 @@
 {
   "name": "@nanoapi.io/shared",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "private": false,
   "publishConfig": {
@@ -16,4 +16,4 @@
   "devDependencies": {
     "typescript": "^5.7.2"
   }
-} 
+}
