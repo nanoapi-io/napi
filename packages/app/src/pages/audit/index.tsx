@@ -95,6 +95,7 @@ export default function AuditPage() {
 
   // Hook to update the target metric in the graph
   useEffect(() => {
+    console.log("Updating target metric", metric);
     if (projectVisualizer) {
       projectVisualizer.setTargetMetric(metric);
     }
