@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useOutletContext, useSearchParams, useNavigate } from "react-router";
 import Controls from "../../components/Cytoscape/Controls.js";
+import MetricsExtension from "../../components/Cytoscape/ControlExtensions/MetricsExtension.js";
 import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton.js";
 import FileActionMenu from "../../components/FileActionMenu.js";
 import { ThemeContext } from "../../contexts/ThemeContext.js";
@@ -93,6 +94,7 @@ export default function AuditPage() {
 
   // Hook to update the target metric in the graph
   useEffect(() => {
+    console.log("Updating target metric", metric);
     if (projectVisualizer) {
       projectVisualizer.setTargetMetric(metric);
     }
@@ -130,11 +132,15 @@ export default function AuditPage() {
           busy={context.busy || busy}
           cy={projectVisualizer.cy}
           onLayout={() => projectVisualizer.layoutGraph(projectVisualizer.cy)}
-          metricState={{
-            metric,
-            setMetric: handleMetricChange,
-          }}
-        />
+        >
+          <MetricsExtension
+            busy={context.busy || busy}
+            metricState={{
+              metric,
+              setMetric: handleMetricChange,
+            }}
+          />
+        </Controls>
       )}
 
       {actionMenuNodeId && (
