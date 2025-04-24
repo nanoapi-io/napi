@@ -3,7 +3,7 @@ import { useOutletContext, useSearchParams, useNavigate } from "react-router";
 import Controls from "../../components/Cytoscape/Controls.js";
 import MetricsExtension from "../../components/Cytoscape/ControlExtensions/MetricsExtension.js";
 import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton.js";
-import FileActionMenu from "../../components/FileActionMenu.js";
+import FileContextMenu from "../../components/Cytoscape/contextMenu/FileContextMenu.js";
 import { ThemeContext } from "../../contexts/ThemeContext.js";
 import { AuditContext } from "./base.js";
 import FileDetailsPane from "../../components/FileDetailsPane.js";
@@ -40,14 +40,15 @@ export default function AuditPage() {
     setMetric(metric);
   }
 
-  const [actionMenuOpen, setActionMenuOpen] = useState(false);
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
     y: 0,
   });
-  const [actionMenuNodeId, setActionMenuNodeId] = useState<string | undefined>(
-    undefined,
-  );
+  const [contextMenuNodeId, setContextMenuNodeId] = useState<
+    string | undefined
+  >(undefined);
+
   const [detailsPaneNodeId, setDetailsPaneNodeId] = useState<
     string | undefined
   >(undefined);
@@ -69,8 +70,8 @@ export default function AuditPage() {
           id: string;
         }) => {
           setContextMenuPosition(value.position);
-          setActionMenuOpen(true);
-          setActionMenuNodeId(value.id);
+          setContextMenuOpen(true);
+          setContextMenuNodeId(value.id);
         },
         onAfterNodeDblClick: (data: NapiNodeData) => {
           const urlEncodedFileName = encodeURIComponent(
@@ -142,24 +143,20 @@ export default function AuditPage() {
         </Controls>
       )}
 
-      {actionMenuNodeId && (
-        <>
-          <FileActionMenu
-            position={contextMenuPosition}
-            fileDependencyManifest={
-              context.dependencyManifest[actionMenuNodeId]
+      {contextMenuNodeId && (
+        <FileContextMenu
+          position={contextMenuPosition}
+          fileDependencyManifest={context.dependencyManifest[contextMenuNodeId]}
+          open={contextMenuOpen}
+          onOpenChange={setContextMenuOpen}
+          showInSidebar={context.actions.showInSidebar}
+          setDetailsPaneOpen={(open) => {
+            setDetailsPaneOpen(open);
+            if (open) {
+              setDetailsPaneNodeId(contextMenuNodeId);
             }
-            open={actionMenuOpen}
-            onOpenChange={setActionMenuOpen}
-            showInSidebar={context.actions.showInSidebar}
-            setDetailsPaneOpen={(open) => {
-              setDetailsPaneOpen(open);
-              if (open) {
-                setDetailsPaneNodeId(actionMenuNodeId);
-              }
-            }}
-          />
-        </>
+          }}
+        />
       )}
 
       {detailsPaneNodeId && (

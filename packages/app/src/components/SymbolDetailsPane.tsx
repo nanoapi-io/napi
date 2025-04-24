@@ -239,7 +239,7 @@ export default function SymbolDetailsPane(props: {
           {/* Action Buttons */}
           <div className="mt-5 grow flex flex-col justify-end">
             <Link
-              to={`/audit/${encodeURIComponent(fileDependencyManifest.filePath)}`}
+              to={`/audit/${encodeURIComponent(fileDependencyManifest.filePath)}/${encodeURIComponent(symbolId)}`}
               className="block"
             >
               <Button
@@ -248,7 +248,7 @@ export default function SymbolDetailsPane(props: {
                 className="flex justify-center gap-2 text-text-light dark:text-text-dark w-full"
               >
                 <LuSearchCode className="text-xl my-auto" />
-                <span className="my-auto">Inspect file interactions</span>
+                <span className="my-auto">Inspect symbol interactions</span>
               </Button>
             </Link>
           </div>

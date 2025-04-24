@@ -53,6 +53,10 @@ const config = {
           dark: "#695AF0",
           light: "#7B74FF",
         },
+        highlight: {
+          dark: "#FFB800",
+          light: "#FFB800",
+        },
       },
     },
   },

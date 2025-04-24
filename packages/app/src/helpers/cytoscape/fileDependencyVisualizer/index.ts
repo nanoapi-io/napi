@@ -85,7 +85,7 @@ export class FileDependencyVisualizer {
     onAfterNodeDblClick: (data: NapiNodeData) => void;
     onAfterNodeRightClick: (data: {
       position: { x: number; y: number };
-      id: string;
+      data: NapiNodeData;
     }) => void;
   };
   /** Error and success character symbols for node labels */
@@ -103,7 +103,7 @@ export class FileDependencyVisualizer {
       onAfterNodeClick?: () => void;
       onAfterNodeRightClick?: (data: {
         position: { x: number; y: number };
-        id: string;
+        data: NapiNodeData;
       }) => void;
       onAfterNodeDblClick?: (data: NapiNodeData) => void;
     },
@@ -299,7 +299,7 @@ export class FileDependencyVisualizer {
       const { x, y } = node.renderedPosition();
       this.externalCallbacks.onAfterNodeRightClick({
         position: { x, y },
-        id: node.id(),
+        data,
       });
     });
   }
