@@ -1,131 +1,183 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import cytoscape, { Core } from "cytoscape";
-import Controls from "../../../components/Cytoscape/Controls.js";
-import { useOutletContext, useParams, useNavigate } from "react-router";
-import fcose from "cytoscape-fcose";
-import { ThemeContext } from "../../../contexts/ThemeContext.js";
 import {
-  getCyElements,
-  layout,
-  getCyStyle,
-  NodeElementDefinition,
-  getNodeLabel,
-} from "../../../helpers/cytoscape/views/auditFile.js";
-import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
+  useOutletContext,
+  useParams,
+  useNavigate,
+  useSearchParams,
+} from "react-router";
+import Controls from "../../../components/Cytoscape/Controls.js";
+import { ThemeContext } from "../../../contexts/ThemeContext.js";
 import { AuditContext } from "../base.js";
+import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
+import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.js";
+import { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualizer/types.js";
+import { Metric } from "@napi/shared";
+import FileActionMenu from "../../../components/FileActionMenu.js";
+import FileDetailsPane from "../../../components/FileDetailsPane.js";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
   const params = useParams<{ file: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const context = useOutletContext<AuditContext>();
   const themeContext = useContext(ThemeContext);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
+  const [busy, setBusy] = useState<boolean>(true);
+  const [fileVisualizer, setFileVisualizer] = useState<
+    FileDependencyVisualizer | undefined
+  >(undefined);
 
-  // Initialize and cleanup Cytoscape
-  useEffect(() => {
-    if (context.busy) return;
+  const metricFromUrl = (searchParams.get("metric") || undefined) as
+    | Metric
+    | undefined;
 
-    if (cyInstance) {
-      cyInstance.destroy();
-      setCyInstance(undefined);
+  const [metric, setMetric] = useState<Metric | undefined>(metricFromUrl);
+
+  function handleMetricChange(metric: Metric | undefined) {
+    if (metric) {
+      setSearchParams({ metric: metric });
+    } else {
+      setSearchParams({});
     }
+    setMetric(metric);
+  }
 
-    const cy = initializeCytoscape();
-    setCyInstance(cy);
+  const [actionMenuOpen, setActionMenuOpen] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [actionMenuNodeId, setActionMenuNodeId] = useState<string | undefined>(
+    undefined,
+  );
+  const [detailsPaneNodeId, setDetailsPaneNodeId] = useState<
+    string | undefined
+  >(undefined);
 
-    return () => {
-      cy.destroy();
-      setCyInstance(undefined);
-    };
-  }, [context.busy, params.file]);
+  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
 
-  // Update style when theme changes
+  // On mount useEffect
   useEffect(() => {
-    cyInstance?.style(getCyStyle(themeContext.theme));
-  }, [themeContext.changeTheme]);
+    if (
+      !params.file ||
+      context.busy ||
+      !context.dependencyManifest ||
+      !context.auditManifest
+    )
+      return;
 
-  function initializeCytoscape() {
-    cytoscape.use(fcose);
-    const cy = cytoscape();
-    cy.mount(containerRef.current as Element);
-
-    // Apply style
-    cy.style(getCyStyle(themeContext.theme));
-
-    // Add elements
-    const elements = getCyElements(
+    setBusy(true);
+    const fileDependencyVisualizer = new FileDependencyVisualizer(
+      containerRef.current as HTMLElement,
+      params.file,
       context.dependencyManifest,
       context.auditManifest,
-      params.file as string,
+      {
+        theme: themeContext.theme,
+        defaultMetric: metric,
+        onAfterNodeRightClick: (value: {
+          position: { x: number; y: number };
+          id: string;
+        }) => {
+          setContextMenuPosition(value.position);
+          setActionMenuOpen(true);
+          setActionMenuNodeId(value.id);
+        },
+        onAfterNodeDblClick: (data: NapiNodeData) => {
+          // Navigate to the file, we don't have instance data in this visualizer
+          const urlEncodedFileName = encodeURIComponent(
+            data.customData.fileName,
+          );
+          navigate(`/audit/${urlEncodedFileName}`);
+        },
+      },
     );
-    cy.add(elements);
 
-    // Apply layout
-    cy.layout(layout).run();
+    setFileVisualizer(fileDependencyVisualizer);
+    setBusy(false);
 
-    // Add event listeners
-    addEventListeners(cy);
+    // Cleanup on unmount
+    return () => {
+      fileDependencyVisualizer?.cy.destroy();
+      setFileVisualizer(undefined);
+    };
+  }, [context.dependencyManifest, context.auditManifest, params.file]);
 
-    return cy;
-  }
+  // Hook to update the target metric in the graph
+  useEffect(() => {
+    if (fileVisualizer) {
+      fileVisualizer.setTargetMetric(metric);
+    }
+  }, [metric]);
 
-  function addEventListeners(cy: Core) {
-    // Toggle node expansion on tap
-    cy.on("tap", "node", (evt) => {
-      const node = evt.target;
-      const data = node.data() as NodeElementDefinition["data"];
-
-      const isExpanded = !data.isExpanded;
-
-      const label = getNodeLabel({
-        isExpanded,
-        isExternal: data.isExternal,
-        type: data.type,
-        fileName: data.customData.fileName,
-        instance: data.customData.instance,
-        errorMessages: data.customData.errorMessages,
-        warningMessages: data.customData.warningMessages,
-      });
-
-      node.data({ label, isExpanded });
-    });
-
-    // Navigate to file/instance on double tap
-    cy.on("dbltap", "node", (evt) => {
-      const node = evt.target;
-      const data = node.data() as NodeElementDefinition["data"];
-
-      if (data.isExternal) return;
-
-      const urlEncodedFileName = encodeURIComponent(data.customData.fileName);
-      let url = `/audit/${urlEncodedFileName}`;
-
-      if (data.type === "instance" && data.customData.instance) {
-        const urlEncodedInstance = encodeURIComponent(
-          data.customData.instance.name,
-        );
-        url += `/${urlEncodedInstance}`;
+  // Hook to update highlight node in the graph
+  useEffect(() => {
+    if (fileVisualizer) {
+      if (context.highlightedNodeId) {
+        fileVisualizer.highlightNode(context.highlightedNodeId);
+      } else {
+        fileVisualizer.unhighlightNodes();
       }
+    }
+  }, [context.highlightedNodeId]);
 
-      navigate(url);
-    });
-
-    return cy;
-  }
-
-  function handleLayout() {
-    cyInstance?.makeLayout(layout).run();
-  }
+  // Hook to update the theme in the graph
+  useEffect(() => {
+    if (fileVisualizer) {
+      fileVisualizer.updateTheme(themeContext.theme);
+    }
+  }, [themeContext.theme]);
 
   return (
     <div className="relative w-full h-full">
-      {context.busy || !cyInstance ? (
-        <CytoscapeSkeleton />
-      ) : (
-        <Controls busy={false} cy={cyInstance} onLayout={handleLayout} />
+      {/* This is the container for Cytoscape */}
+      {/* It is important to set the width and height to 100% */}
+      {/* Otherwise, Cytoscape will not render correctly */}
+      <div ref={containerRef} className="absolute w-full h-full z-10" />
+
+      {(context.busy || busy || !fileVisualizer) && <CytoscapeSkeleton />}
+
+      {fileVisualizer && (
+        <Controls
+          busy={context.busy || busy}
+          cy={fileVisualizer.cy}
+          onLayout={() => fileVisualizer.layoutGraph(fileVisualizer.cy)}
+          metricState={{
+            metric,
+            setMetric: handleMetricChange,
+          }}
+        />
       )}
-      <div ref={containerRef} className="relative w-full h-full z-1" />
+
+      {actionMenuNodeId && (
+        <>
+          <FileActionMenu
+            position={contextMenuPosition}
+            fileDependencyManifest={
+              context.dependencyManifest[actionMenuNodeId]
+            }
+            open={actionMenuOpen}
+            onOpenChange={setActionMenuOpen}
+            showInSidebar={context.actions.showInSidebar}
+            setDetailsPaneOpen={(open) => {
+              setDetailsPaneOpen(open);
+              if (open) {
+                setDetailsPaneNodeId(actionMenuNodeId);
+              }
+            }}
+          />
+        </>
+      )}
+
+      {detailsPaneNodeId && (
+        <FileDetailsPane
+          fileDependencyManifest={context.dependencyManifest[detailsPaneNodeId]}
+          fileAuditManifest={context.auditManifest[detailsPaneNodeId]}
+          open={detailsPaneOpen}
+          setOpen={setDetailsPaneOpen}
+        />
+      )}
     </div>
   );
 }

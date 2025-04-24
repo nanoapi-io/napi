@@ -31,8 +31,14 @@ export interface SymbolDependency {
   metrics: {
     /** Total character count in the symbol */
     characterCount: number;
+    /** Total character count in the symbol */
+    codeCharacterCount: number;
     /** Total line count in the symbol */
-    lineCount: number;
+    linesCount: number;
+    /** Total line count in the symbol */
+    codeLineCount: number;
+    /** Total cyclomatic complexity of the symbol */
+    cyclomaticComplexity: number;
   };
   /** Map of modules this symbol depends on */
   dependencies: Map<string, ModuleDependency>;
@@ -46,10 +52,16 @@ export interface FileDependencies {
   filePath: string;
   /** File size metrics */
   metrics: {
-    /** Total character count in the file */
+    /** Total character count in the symbol */
     characterCount: number;
-    /** Total line count in the file */
-    lineCount: number;
+    /** Total character count in the symbol */
+    codeCharacterCount: number;
+    /** Total line count in the symbol */
+    linesCount: number;
+    /** Total line count in the symbol */
+    codeLineCount: number;
+    /** Total cyclomatic complexity of the symbol */
+    cyclomaticComplexity: number;
   };
   /** Module-level dependencies for the entire file */
   dependencies: Map<string, ModuleDependency>;

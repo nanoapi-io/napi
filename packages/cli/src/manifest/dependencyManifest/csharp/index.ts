@@ -1,4 +1,15 @@
-import { DependencyManifest, Symbol } from "../types.js";
+import {
+  DependencyManifest,
+  SymbolDependencyManifest,
+  SymbolType,
+  metricCharacterCount,
+  metricCodeCharacterCount,
+  metricCodeLineCount,
+  metricCyclomaticComplexity,
+  metricDependencyCount,
+  metricDependentCount,
+  metricLinesCount,
+} from "@napi/shared";
 import {
   CSharpDependencyFormatter,
   CSharpFile,
@@ -49,14 +60,41 @@ export function generateCSharpDependencyManifest(
   for (const [, { path }] of parsedFiles) {
     console.info(`Processing ${path} (${++i}/${filecount})`);
     const fm = formatter.formatFile(path) as CSharpFile;
+    const csharpSyms = fm.symbols;
+    const symbols: Record<string, SymbolDependencyManifest> = {};
+    for (const [symbolName, symbol] of Object.entries(csharpSyms)) {
+      symbols[symbolName] = {
+        id: symbolName,
+        type: symbol.type as SymbolType,
+        metrics: {
+          [metricCharacterCount]: symbol.characterCount,
+          [metricCodeCharacterCount]: 0, // TODO: fix this
+          [metricLinesCount]: symbol.lineCount,
+          [metricCodeLineCount]: 0, // TODO: fix this
+          [metricDependencyCount]: 0, // TODO: fix this
+          [metricDependentCount]: 0, // TODO: fix this
+          [metricCyclomaticComplexity]: 0, // TODO: fix this
+        },
+        dependencies: symbol.dependencies,
+        dependents: {},
+      };
+    }
     manifest[path] = {
       id: fm.id,
       filePath: fm.filepath,
       language: csharpLanguage,
-      characterCount: fm.characterCount,
-      lineCount: fm.lineCount,
+      metrics: {
+        [metricCharacterCount]: fm.characterCount,
+        [metricCodeCharacterCount]: 0, // TODO: fix this
+        [metricLinesCount]: fm.lineCount,
+        [metricCodeLineCount]: 0, // TODO: fix this
+        [metricDependencyCount]: 0, // TODO: fix this
+        [metricDependentCount]: 0, // TODO: fix this
+        [metricCyclomaticComplexity]: 0, // TODO: fix this
+      },
       dependencies: fm.dependencies,
-      symbols: fm.symbols as unknown as Record<string, Symbol>,
+      symbols,
+      dependents: {}, //TODO fix this
     };
     // Delete isNamespace from dependencies
     for (const dep of Object.values(fm.dependencies)) {

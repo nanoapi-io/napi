@@ -3,16 +3,19 @@
   "type": "module",
   "workspaces": [
     "packages/app",
-    "packages/cli"
+    "packages/cli",
+    "packages/shared"
   ],
   "scripts": {
+    "dev:shared": "npm run dev --workspace packages/shared",
     "dev:app": "npm run dev --workspace packages/app",
     "dev:cli": "npm run dev --workspace packages/cli",
     "build": "npm run build --workspace packages/cli",
+    "build:shared": "npm run build --workspace packages/shared",
     "start": "npm run start --workspace packages/cli",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
-    "test": "vitest",
+    "test": "npm run build --workspace packages/shared && vitest",
     "npm:publish": "npm run npm:publish --workspace packages/cli",
     "release": "npm run release --workspace packages/cli"
   },

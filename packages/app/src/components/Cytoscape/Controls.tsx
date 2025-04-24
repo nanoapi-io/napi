@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button, DropdownMenu, Checkbox } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
-import { toast } from "react-toastify";
 import {
   MdFilterCenterFocus,
   MdOutlineAccountTree,
@@ -11,14 +10,15 @@ import {
   MdFilterAlt,
 } from "react-icons/md";
 import {
-  charactersMetric,
-  dependenciesMetric,
-  linesOfCodeMetric,
-  noMetric,
-  TargetMetric,
-} from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
-
-const INITIAL_ELEMENT_LIMIT = 75;
+  Metric,
+  metricCharacterCount,
+  metricCodeCharacterCount,
+  metricCodeLineCount,
+  metricCyclomaticComplexity,
+  metricDependencyCount,
+  metricDependentCount,
+  metricLinesCount,
+} from "@napi/shared";
 
 interface FiltersType {
   showExternal: boolean;
@@ -32,10 +32,12 @@ export default function Controls(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
-  metricType?: TargetMetric;
-  setMetricType?: (metricType: TargetMetric) => void;
+  showFilters?: boolean;
+  metricState?: {
+    metric: Metric;
+    setMetric: (metricType: Metric | undefined) => void;
+  };
 }) {
-  const initialized = useRef(false);
   const [filters, setFilters] = useState<FiltersType>({
     showExternal: true,
     showInternal: true,
@@ -89,26 +91,6 @@ export default function Controls(props: {
       renderedPosition,
     });
   }
-
-  // Check the number of elements on the file view
-  // if there are more than 50, add some filters
-  useEffect(() => {
-    if (!props.cy || props.metricType) return;
-
-    const elements = props.cy.elements();
-
-    // Handle strict mode for dev
-    if (!initialized.current) {
-      initialized.current = true;
-      return;
-    }
-
-    if (elements.length > INITIAL_ELEMENT_LIMIT) {
-      toast.info(
-        "There are more than 75 elements on screen. We recommend using the filters in the control bar to get a better view of the graph.",
-      );
-    }
-  }, []);
 
   // Show and hide external nodes and edges
   useEffect(() => {
@@ -196,60 +178,89 @@ export default function Controls(props: {
     }
   }, [filters.showClasses]);
 
-  function showNodeViewControls() {
-    if (props.metricType && props.setMetricType) {
-      const metricType = props.metricType;
-
-      return (
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger>
-            <Button
-              size="1"
-              variant="ghost"
-              color="violet"
-              highContrast
-              disabled={props.busy}
-              className="py-1.5"
-            >
-              {metricType === "linesOfCode"
-                ? "LoC"
-                : metricType === "characters"
-                  ? "Chars"
-                  : metricType === "dependencies"
-                    ? "Deps"
-                    : "None"}
-              <LuChevronUp />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content color="violet" variant="soft">
-            <DropdownMenu.Item onClick={() => props.setMetricType?.(noMetric)}>
-              No Metric
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onClick={() => props.setMetricType?.(linesOfCodeMetric)}
-            >
-              Lines of Code
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onClick={() => props.setMetricType?.(charactersMetric)}
-            >
-              File Characters
-            </DropdownMenu.Item>
-            <DropdownMenu.Item
-              onClick={() => props.setMetricType?.(dependenciesMetric)}
-            >
-              Dependencies
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
-      );
-    } else {
+  function showMetricsControls() {
+    if (!props.metricState) {
       return <></>;
     }
+
+    const metric = props.metricState.metric;
+
+    function getMetricLabel(metric: Metric) {
+      if (metric === metricLinesCount) {
+        return "Lines";
+      }
+      if (metric === metricCodeLineCount) {
+        return "Code Lines";
+      }
+      if (metric === metricCharacterCount) {
+        return "Chars";
+      }
+      if (metric === metricCodeCharacterCount) {
+        return "Code Chars";
+      }
+      if (metric === metricDependencyCount) {
+        return "Dependencies";
+      }
+      if (metric === metricDependentCount) {
+        return "Dependents";
+      }
+      if (metric === metricCyclomaticComplexity) {
+        return "Complexity";
+      } else {
+        return "No Metric";
+      }
+    }
+
+    return (
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          <Button
+            size="1"
+            variant="ghost"
+            color="violet"
+            highContrast
+            disabled={props.busy}
+            className="py-1.5"
+          >
+            {getMetricLabel(metric)}
+            <LuChevronUp />
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content color="violet" variant="soft">
+          <DropdownMenu.Item
+            onClick={() => props.metricState?.setMetric?.(undefined)}
+            disabled={props.busy}
+          >
+            No Metric
+          </DropdownMenu.Item>
+          {(
+            [
+              { metric: metricLinesCount, label: "Total Lines" },
+              { metric: metricCodeLineCount, label: "Code Lines" },
+              { metric: metricCharacterCount, label: "Total Characters" },
+              { metric: metricCodeCharacterCount, label: "Code Characters" },
+              { metric: metricDependencyCount, label: "Dependencies Count" },
+              { metric: metricDependentCount, label: "Dependents Count" },
+              {
+                metric: metricCyclomaticComplexity,
+                label: "Cyclomatic Complexity",
+              },
+            ] as { metric: Metric; label: string }[]
+          ).map(({ metric, label }) => (
+            <DropdownMenu.Item
+              key={metric}
+              onClick={() => props.metricState?.setMetric?.(metric)}
+            >
+              {label}
+            </DropdownMenu.Item>
+          ))}
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
+    );
   }
 
-  function showFileViewControls() {
-    if (props.metricType) {
+  function showFilters() {
+    if (!props.showFilters) {
       return <></>;
     }
 
@@ -261,7 +272,7 @@ export default function Controls(props: {
             variant="ghost"
             color="violet"
             highContrast
-            className={`${checkFiltersSet() ? "bg-primary-light/20 dark:bg-primary-dark/20" : ""}`}
+            className={`${checkFiltersSet() && "bg-primary-light/20 dark:bg-primary-dark/20"}`}
             disabled={props.busy}
             onClick={() => props.onLayout()}
           >
@@ -431,8 +442,8 @@ export default function Controls(props: {
           >
             <MdOutlineZoomIn className="text-2xl h-5 w-5" />
           </Button>
-          {showNodeViewControls()}
-          {showFileViewControls()}
+          {showMetricsControls()}
+          {showFilters()}
         </div>
       </div>
     </div>

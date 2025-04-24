@@ -13,6 +13,9 @@ export interface NapiNodeData {
   position: { x: number; y: number };
   customData: {
     fileName: string;
+    symbolName: string;
+    symbolType: string;
+    isExternal: boolean;
     metricsSeverity: {
       [metricLinesCount]: number;
       [metricCodeLineCount]: number;
@@ -32,5 +35,17 @@ export interface NapiNodeData {
       width: number;
       height: number;
     };
+  };
+}
+
+export const edgeTypeDependency = "dependency";
+export const edgeTypeDependent = "dependent";
+
+export interface NapiEdgeData {
+  id: string;
+  source: string;
+  target: string;
+  customData: {
+    type: typeof edgeTypeDependency | typeof edgeTypeDependent;
   };
 }

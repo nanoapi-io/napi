@@ -9,8 +9,7 @@ import GraphLayout from "../../layout/GraphLayout.js";
 import FileExplorer, {
   FileExplorerFile,
 } from "../../components/FileExplorer/FileExplorer.js";
-import { DependencyManifest } from "../../service/api/types/dependencyManifest.js";
-import { AuditManifest } from "../../service/api/types/auditManifest.js";
+import { DependencyManifest, AuditManifest } from "@napi/shared";
 
 export interface AuditContext {
   busy: boolean;

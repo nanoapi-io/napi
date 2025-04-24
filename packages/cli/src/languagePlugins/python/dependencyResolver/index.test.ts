@@ -9,7 +9,7 @@ import { PythonItemResolver } from "../itemResolver/index.js";
 import { PythonDependencyResolver } from "../dependencyResolver/index.js";
 import { FileDependencies } from "./types.js";
 import { PYTHON_VARIABLE_TYPE } from "../exportExtractor/types.js";
-
+import { PythonMetricsAnalyzer } from "../metricAnalyzer/index.js";
 describe("DependencyResolver", () => {
   let parser: Parser;
   let exportExtractor: PythonExportExtractor;
@@ -17,6 +17,7 @@ describe("DependencyResolver", () => {
   let usageResolver: PythonUsageResolver;
   let moduleResolver: PythonModuleResolver;
   let itemResolver: PythonItemResolver;
+  let metricsAnalyzer: PythonMetricsAnalyzer;
   let dependencyResolver: PythonDependencyResolver;
   let files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
 
@@ -219,6 +220,7 @@ my_list = [original_func(), another_func()]
       importExtractor,
       moduleResolver,
     );
+    metricsAnalyzer = new PythonMetricsAnalyzer(parser);
     dependencyResolver = new PythonDependencyResolver(
       files,
       exportExtractor,
@@ -226,6 +228,7 @@ my_list = [original_func(), another_func()]
       itemResolver,
       usageResolver,
       moduleResolver,
+      metricsAnalyzer,
     );
   });
 

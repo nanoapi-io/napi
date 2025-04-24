@@ -603,21 +603,29 @@ Files or symbols exceeding these limits may benefit from refactoring
   });
 
   // Default metrics values
-  const defaultMetrics = {
+  const defaultMetrics: z.infer<typeof localConfigSchema>["metrics"] = {
     file: {
+      maxCodeChar: 100000,
       maxChar: 100000,
+      maxCodeLine: 1000,
       maxLine: 1000,
-      maxDep: 10,
+      maxDependency: 10,
+      maxDependent: 10,
+      maxCyclomaticComplexity: 100,
     },
     symbol: {
+      maxCodeChar: 50000,
       maxChar: 50000,
+      maxCodeLine: 500,
       maxLine: 500,
-      maxDep: 5,
+      maxDependency: 5,
+      maxDependent: 5,
+      maxCyclomaticComplexity: 50,
     },
   };
 
   // Metrics configuration
-  let metrics = undefined;
+  let metrics: z.infer<typeof localConfigSchema>["metrics"] | undefined;
 
   if (configureMetrics) {
     console.info(`
@@ -646,9 +654,31 @@ RECOMMENDATIONS:
 • For standardization: Align these metrics with your team's coding standards
       `);
 
+    const fileMaxCodeChar = await number({
+      message: "Enter maximum characters per file",
+      default: defaultMetrics.file.maxCodeChar,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
     const fileMaxChar = await number({
       message: "Enter maximum characters per file",
       default: defaultMetrics.file.maxChar,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
+    const fileMaxCodeLine = await number({
+      message: "Enter maximum lines per file",
+      default: defaultMetrics.file.maxCodeLine,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -668,9 +698,42 @@ RECOMMENDATIONS:
       },
     });
 
-    const fileMaxDep = await number({
+    const fileMaxDependency = await number({
       message: "Enter maximum dependencies per file",
-      default: defaultMetrics.file.maxDep,
+      default: defaultMetrics.file.maxDependency,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
+    const fileMaxDependent = await number({
+      message: "Enter maximum dependents per file",
+      default: defaultMetrics.file.maxDependent,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
+    const fileMaxCyclomaticComplexity = await number({
+      message: "Enter maximum cyclomatic complexity per file",
+      default: defaultMetrics.file.maxCyclomaticComplexity,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
+    const symbolMaxCodeChar = await number({
+      message: "Enter maximum characters per symbol",
+      default: defaultMetrics.symbol.maxCodeChar,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -690,6 +753,17 @@ RECOMMENDATIONS:
       },
     });
 
+    const symbolMaxCodeLine = await number({
+      message: "Enter maximum lines per symbol",
+      default: defaultMetrics.symbol.maxCodeLine,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
     const symbolMaxLine = await number({
       message: "Enter maximum lines per symbol",
       default: defaultMetrics.symbol.maxLine,
@@ -701,9 +775,31 @@ RECOMMENDATIONS:
       },
     });
 
-    const symbolMaxDep = await number({
+    const symbolMaxDependency = await number({
       message: "Enter maximum dependencies per symbol",
-      default: defaultMetrics.symbol.maxDep,
+      default: defaultMetrics.symbol.maxDependency,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
+    const symbolMaxDependent = await number({
+      message: "Enter maximum dependents per symbol",
+      default: defaultMetrics.symbol.maxDependent,
+      validate: (value: number | undefined) => {
+        if (typeof value !== "number" || value <= 0) {
+          return "Value must be greater than 0";
+        }
+        return true;
+      },
+    });
+
+    const symbolMaxCyclomaticComplexity = await number({
+      message: "Enter maximum cyclomatic complexity per symbol",
+      default: defaultMetrics.symbol.maxCyclomaticComplexity,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -714,14 +810,22 @@ RECOMMENDATIONS:
 
     metrics = {
       file: {
+        maxCodeChar: fileMaxCodeChar,
         maxChar: fileMaxChar,
+        maxCodeLine: fileMaxCodeLine,
         maxLine: fileMaxLine,
-        maxDep: fileMaxDep,
+        maxDependency: fileMaxDependency,
+        maxDependent: fileMaxDependent,
+        maxCyclomaticComplexity: fileMaxCyclomaticComplexity,
       },
       symbol: {
+        maxCodeChar: symbolMaxCodeChar,
         maxChar: symbolMaxChar,
+        maxCodeLine: symbolMaxCodeLine,
         maxLine: symbolMaxLine,
-        maxDep: symbolMaxDep,
+        maxDependency: symbolMaxDependency,
+        maxDependent: symbolMaxDependent,
+        maxCyclomaticComplexity: symbolMaxCyclomaticComplexity,
       },
     };
   }

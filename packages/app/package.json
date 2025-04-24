@@ -17,6 +17,7 @@
     "vite": "^6.0.3"
   },
   "dependencies": {
+    "@napi/shared": "1.0.0",
     "@radix-ui/themes": "^3.1.6",
     "cytoscape": "^3.31.1",
     "cytoscape-fcose": "^2.2.0",
