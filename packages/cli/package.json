@@ -37,7 +37,7 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon --no-stdin --exec \"node --loader ts-node/esm src/index.ts\"",
+    "dev": "cross-env NODE_ENV=development nodemon --no-stdin --exec \"node --loader ts-node/esm\" src/index.ts",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
     "build:shared": "npm run build --prefix ../shared",
     "build:app": "npm run build --prefix ../app",
