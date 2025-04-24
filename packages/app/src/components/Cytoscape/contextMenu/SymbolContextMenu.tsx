@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { DropdownMenu } from "@radix-ui/themes";
 import { LuPanelRightOpen, LuSearchCode, LuGitGraph } from "react-icons/lu";
-import { FileDependencyManifest } from "@napi/shared";
+import { FileDependencyManifest } from "@nanoapi.io/shared";
 import { toast } from "react-toastify";
 
 export default function SymbolContextMenu(props: {

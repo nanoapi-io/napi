@@ -2,7 +2,7 @@ import {
   DependencyManifest,
   FileDependencyManifest,
   AuditManifest,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 import {
   NodeElementDefinition,
   EdgeElementDefinition,

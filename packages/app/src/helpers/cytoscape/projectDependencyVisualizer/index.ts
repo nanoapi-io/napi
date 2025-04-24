@@ -10,7 +10,7 @@ import cytoscape, {
 } from "cytoscape";
 import { Core } from "cytoscape";
 import fcose from "cytoscape-fcose";
-import { DependencyManifest, AuditManifest, Metric } from "@napi/shared";
+import { DependencyManifest, AuditManifest, Metric } from "@nanoapi.io/shared";
 import tailwindConfig from "../../../../tailwind.config.js";
 import {
   getCollapsedFileNodeLabel,

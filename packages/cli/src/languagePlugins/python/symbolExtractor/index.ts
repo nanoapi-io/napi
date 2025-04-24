@@ -4,7 +4,7 @@ import { PythonModuleResolver } from "../moduleResolver/index.js";
 import { PythonItemResolver } from "../itemResolver/index.js";
 import { PythonImportExtractor } from "../importExtractor/index.js";
 import { PythonUsageResolver } from "../usageResolver/index.js";
-import { DependencyManifest } from "@napi/shared";
+import { DependencyManifest } from "@nanoapi.io/shared";
 import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode/index.js";
 import {
   FROM_IMPORT_STATEMENT_TYPE,

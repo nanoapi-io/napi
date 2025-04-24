@@ -8,9 +8,9 @@ import {
   metricDependentCount,
   FileAuditManifest,
   SymbolAuditManifest,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 
-import { Metric } from "@napi/shared";
+import { Metric } from "@nanoapi.io/shared";
 
 /**
  * Returns a color for a specific metric severity level based on theme.

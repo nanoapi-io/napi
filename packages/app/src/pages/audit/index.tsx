@@ -9,7 +9,7 @@ import { AuditContext } from "./base.js";
 import FileDetailsPane from "../../components/FileDetailsPane.js";
 import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.js";
 import { NapiNodeData } from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
-import { Metric } from "@napi/shared";
+import { Metric } from "@nanoapi.io/shared";
 
 export default function AuditPage() {
   const navigate = useNavigate();

@@ -12,7 +12,7 @@ import {
   SymbolDependencyManifest,
   DependencyInfo,
   DependentInfo,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor/index.js";
 import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
 import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver/index.js";

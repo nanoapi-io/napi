@@ -11,7 +11,7 @@ import { AuditContext } from "../base.js";
 import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
 import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.js";
 import { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualizer/types.js";
-import { Metric } from "@napi/shared";
+import { Metric } from "@nanoapi.io/shared";
 import SymbolContextMenu from "../../../components/Cytoscape/contextMenu/SymbolContextMenu.js";
 import SymbolDetailsPane from "../../../components/SymbolDetailsPane.js";
 import FiltersExtension from "../../../components/Cytoscape/ControlExtensions/FiltersExtension.js";

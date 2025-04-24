@@ -25,7 +25,7 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 
 // Subcomponent for section headings
 function SectionHeading({ children }: { children: React.ReactNode }) {

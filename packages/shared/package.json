@@ -1,13 +1,17 @@
 {
-  "name": "@napi/shared",
+  "name": "@nanoapi.io/shared",
   "version": "1.0.0",
   "type": "module",
-  "private": true,
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsc --watch",
-    "build": "tsc"
+    "build": "tsc",
+    "npm:publish": "npm publish"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

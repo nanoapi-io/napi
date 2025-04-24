@@ -6,7 +6,7 @@ import {
   CSharpExtractor,
   ExtractedFile,
 } from "../../languagePlugins/csharp/extractor/index.js";
-import { DependencyManifest } from "@napi/shared";
+import { DependencyManifest } from "@nanoapi.io/shared";
 import { DotNetProject } from "../../languagePlugins/csharp/projectMapper/index.js";
 
 export function extractCSharpSymbols(
