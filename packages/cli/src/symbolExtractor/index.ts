@@ -3,7 +3,7 @@ import { extractPythonSymbols } from "./python/index.js";
 import { extractCSharpSymbols } from "./csharp/index.js";
 import { localConfigSchema } from "../config/localConfig.js";
 import z from "zod";
-import { DependencyManifest } from "../manifest/dependencyManifest/types.js";
+import { DependencyManifest } from "@napi/shared";
 
 const handlerMap: Record<
   string,

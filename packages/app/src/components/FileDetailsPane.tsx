@@ -1,18 +1,20 @@
 import { Link } from "react-router";
 import { Button, Callout, Separator } from "@radix-ui/themes";
+import { LuX, LuMessageSquareX, LuCircleX, LuSearchCode } from "react-icons/lu";
 import {
-  LuX,
-  LuMessageSquareWarning,
-  LuMessageSquareX,
-  LuCircleAlert,
-  LuCircleX,
-  LuSearchCode,
-} from "react-icons/lu";
-import { FileManifest } from "../service/api/types/dependencyManifest.js";
-import { FileAuditManifest } from "../service/api/types/auditManifest.js";
+  FileAuditManifest,
+  FileDependencyManifest,
+  metricCharacterCount,
+  metricCodeCharacterCount,
+  metricCodeLineCount,
+  metricCyclomaticComplexity,
+  metricDependencyCount,
+  metricDependentCount,
+  metricLinesCount,
+} from "@napi/shared";
 
 export default function FileDetailsPane(props: {
-  fileDependencyManifest: FileManifest;
+  fileDependencyManifest: FileDependencyManifest;
   fileAuditManifest: FileAuditManifest;
   open: boolean;
   setOpen: (open: boolean) => void;
@@ -44,13 +46,38 @@ export default function FileDetailsPane(props: {
         </div>
 
         <div>
+          <strong>Total Lines:</strong>{" "}
+          {props.fileDependencyManifest.metrics[metricLinesCount]}
+        </div>
+
+        <div>
           <strong>Total Lines of Code:</strong>{" "}
-          {props.fileDependencyManifest.lineCount}
+          {props.fileDependencyManifest.metrics[metricCodeLineCount]}
+        </div>
+
+        <div>
+          <strong>Total Characters:</strong>{" "}
+          {props.fileDependencyManifest.metrics[metricCharacterCount]}
+        </div>
+
+        <div>
+          <strong>Total Characters of Code:</strong>{" "}
+          {props.fileDependencyManifest.metrics[metricCodeCharacterCount]}
         </div>
 
         <div>
           <strong>Total dependencies:</strong>{" "}
-          {Object.keys(props.fileDependencyManifest.dependencies).length}
+          {props.fileDependencyManifest.metrics[metricDependencyCount]}
+        </div>
+
+        <div>
+          <strong>Total dependents:</strong>{" "}
+          {props.fileDependencyManifest.metrics[metricDependentCount]}
+        </div>
+
+        <div>
+          <strong>Cyclomatic Complexity:</strong>{" "}
+          {props.fileDependencyManifest.metrics[metricCyclomaticComplexity]}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -78,42 +105,22 @@ export default function FileDetailsPane(props: {
         <div className="flex flex-col gap-2">
           <div className="flex justify-between">
             <div>
-              <strong>Errors:</strong> {props.fileAuditManifest.errors.length}
+              <strong>Errors:</strong>{" "}
+              {Object.values(props.fileAuditManifest.alerts).length}
             </div>
             <LuMessageSquareX
               className={`text-2xl ${
-                props.fileAuditManifest.errors.length > 0 && "text-red-500"
+                Object.values(props.fileAuditManifest.alerts).length > 0 &&
+                "text-red-500"
               }`}
             />
           </div>
-          {props.fileAuditManifest.errors.map((error, index) => (
+          {Object.values(props.fileAuditManifest.alerts).map((alert, index) => (
             <Callout.Root key={index} color="red">
               <Callout.Icon>
                 <LuCircleX />
               </Callout.Icon>
-              <Callout.Text>{error.longMessage}</Callout.Text>
-            </Callout.Root>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between">
-            <div>
-              <strong>Warnings:</strong>{" "}
-              {props.fileAuditManifest.warnings.length}
-            </div>
-            <LuMessageSquareWarning
-              className={`text-2xl ${
-                props.fileAuditManifest.warnings.length > 0 && "text-yellow"
-              }`}
-            />
-          </div>
-          {props.fileAuditManifest.warnings.map((warning, index) => (
-            <Callout.Root key={index} color="yellow">
-              <Callout.Icon>
-                <LuCircleAlert />
-              </Callout.Icon>
-              <Callout.Text>{warning.longMessage}</Callout.Text>
+              <Callout.Text>{alert.message.long}</Callout.Text>
             </Callout.Root>
           ))}
         </div>

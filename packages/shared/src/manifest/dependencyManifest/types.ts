@@ -1,6 +1,12 @@
 /** Identifies the "class" instance type. */
 export const classSymbolType = "class";
 
+/** Identifies the "struct" instance type. */
+export const structSymbolType = "struct";
+
+/** Identifies the "enum" instance type. */
+export const enumSymbolType = "enum";
+
 /** Identifies the "function" instance type. */
 export const functionSymbolType = "function";
 
@@ -9,12 +15,33 @@ export const variableSymbolType = "variable";
 
 /** Possible categories of an instance (symbol) within a file:
  * - class
+ * - struct
+ * - enum
  * - function
  * - variable */
 export type SymbolType =
   | typeof classSymbolType
   | typeof functionSymbolType
-  | typeof variableSymbolType;
+  | typeof variableSymbolType
+  | typeof structSymbolType
+  | typeof enumSymbolType;
+
+export const metricLinesCount = "linesCount";
+export const metricCodeLineCount = "codeLineCount";
+export const metricCharacterCount = "characterCount";
+export const metricCodeCharacterCount = "codeCharacterCount";
+export const metricDependencyCount = "dependencyCount";
+export const metricDependentCount = "dependentCount";
+export const metricCyclomaticComplexity = "cyclomaticComplexity";
+
+export type Metric =
+  | typeof metricLinesCount
+  | typeof metricCodeLineCount
+  | typeof metricCharacterCount
+  | typeof metricCodeCharacterCount
+  | typeof metricDependencyCount
+  | typeof metricDependentCount
+  | typeof metricCyclomaticComplexity;
 
 /** Represents a single dependency. For example, if File A depends on
 File B, `DependencyInfo` captures how A uses B's symbols. */
@@ -52,15 +79,28 @@ export interface DependentInfo {
 
 /** Represents a single named symbol (class, function, or variable) declared in a file.
  * Symbols can have their own dependencies and also be depended upon by others. */
-export interface Symbol {
+export interface SymbolDependencyManifest {
   /** Unique name for this symbol (e.g., the class name or function name). */
   id: string;
   /** The type of this symbol: "class", "function", or "variable". */
   type: SymbolType;
-  /** The number of lines in the symbol. */
-  lineCount: number;
-  /** The number of characters in the symbol. */
-  characterCount: number;
+  /** Metrics for the symbol. */
+  metrics: {
+    /** The number of lines in the symbol. */
+    [metricLinesCount]: number;
+    /** The number of lines in the symbol. */
+    [metricCodeLineCount]: number;
+    /** The number of characters in the symbol. */
+    [metricCharacterCount]: number;
+    /** The number of characters in the symbol. */
+    [metricCodeCharacterCount]: number;
+    /** The number of dependencies on the symbol. */
+    [metricDependencyCount]: number;
+    /** The number of dependents on the symbol. */
+    [metricDependentCount]: number;
+    /** The cyclomatic complexity of the symbol. */
+    [metricCyclomaticComplexity]: number;
+  };
   /** Other modules/files on which this symbol depends.
    * Keyed by the dependency's unique ID (often a file path). */
   dependencies: Record<string, DependencyInfo>;
@@ -72,26 +112,42 @@ export interface Symbol {
  * - file-level dependencies
  * - file-level dependents
  * - symbols declared in the file */
-export interface FileManifest {
+export interface FileDependencyManifest {
   /** A unique identifier for the file, often the file path. */
   id: string;
   /** The path or name of the file (e.g. "src/app/main.py"). */
   filePath: string;
   /** The programming language of the file. It may be extended in the future to handle other languages. */
   language: string;
-  /** The number of lines in the file. */
-  lineCount: number;
-  /** The number of characters in the file. */
-  characterCount: number;
+  /** The metrics for the file. */
+  metrics: {
+    /** The number of lines in the symbol. */
+    [metricLinesCount]: number;
+    /** The number of lines in the symbol. */
+    [metricCodeLineCount]: number;
+    /** The number of characters in the symbol. */
+    [metricCharacterCount]: number;
+    /** The number of characters in the symbol. */
+    [metricCodeCharacterCount]: number;
+    /** The number of dependencies on the symbol. */
+    [metricDependencyCount]: number;
+    /** The number of dependents on the symbol. */
+    [metricDependentCount]: number;
+    /** The cyclomatic complexity of the symbol. */
+    [metricCyclomaticComplexity]: number;
+  };
   /** Dependencies at the file level. If this file imports other files/packages,
    * each one appears here (with the associated symbols used). */
   dependencies: Record<string, DependencyInfo>;
+  /** Dependents at the file level. If this file is used by other files/packages,
+   * each one appears here (with the associated symbols used). */
+  dependents: Record<string, DependentInfo>;
   /** Symbols (classes, functions, variables) declared in this file, keyed by symbol name (ID).
    * Each symbol may also have dependencies and dependents of its own. */
-  symbols: Record<string, Symbol>;
+  symbols: Record<string, SymbolDependencyManifest>;
 }
 
 /** A global structure mapping each file's unique ID (often its file path)
  * to its `FileManifest`. This collectively represents the project's
  * dependency graph or manifest. */
-export type DependencyManifest = Record<string, FileManifest>;
+export type DependencyManifest = Record<string, FileDependencyManifest>;

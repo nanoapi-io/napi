@@ -3,7 +3,7 @@ import { localConfigSchema } from "../../config/localConfig.js";
 import { ExtractedFilesMap } from "../types.js";
 import Parser from "tree-sitter";
 import { pythonParser } from "../../helpers/treeSitter/parsers.js";
-import { DependencyManifest } from "../../manifest/dependencyManifest/types.js";
+import { DependencyManifest } from "@napi/shared";
 import { PythonExportExtractor } from "../../languagePlugins/python/exportExtractor/index.js";
 import { PythonImportExtractor } from "../../languagePlugins/python/importExtractor/index.js";
 import { PythonModuleResolver } from "../../languagePlugins/python/moduleResolver/index.js";

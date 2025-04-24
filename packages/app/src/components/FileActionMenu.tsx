@@ -6,12 +6,12 @@ import {
   LuSearchCode,
   LuGitGraph,
 } from "react-icons/lu";
-import { FileManifest } from "../service/api/types/dependencyManifest.js";
+import { FileDependencyManifest } from "@napi/shared";
 import { toast } from "react-toastify";
 
 export default function FileActionMenu(props: {
   position: { x: number; y: number };
-  fileDependencyManifest: FileManifest;
+  fileDependencyManifest: FileDependencyManifest;
   open: boolean;
   showInSidebar: (filename: string) => void;
   onOpenChange: (open: boolean) => void;

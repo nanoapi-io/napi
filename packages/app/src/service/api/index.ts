@@ -1,5 +1,4 @@
-import { AuditManifest } from "./types/auditManifest.js";
-import { DependencyManifest } from "./types/dependencyManifest.js";
+import { DependencyManifest, AuditManifest } from "@napi/shared";
 
 export async function getDependencyManifest() {
   const response = await fetch("/api/dependency-manifest/", {

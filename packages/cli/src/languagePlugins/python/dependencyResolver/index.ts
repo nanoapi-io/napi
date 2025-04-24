@@ -26,7 +26,7 @@ import {
   ImportStatement,
   NORMAL_IMPORT_STATEMENT_TYPE,
 } from "../importExtractor/types.js";
-
+import { PythonMetricsAnalyzer } from "../metricAnalyzer/index.js";
 /**
  * PythonDependencyResolver analyzes a Python file's AST to build a dependency manifest.
  * It uses the PythonExportExtractor to determine exported symbols and the PythonUsageResolver
@@ -49,6 +49,7 @@ export class PythonDependencyResolver {
   private itemResolver: PythonItemResolver;
   private usageResolver: PythonUsageResolver;
   private moduleResolver: PythonModuleResolver;
+  private metricsAnalyzer: PythonMetricsAnalyzer;
   private fileDependenciesCache = new Map<string, FileDependencies>();
 
   constructor(
@@ -58,6 +59,7 @@ export class PythonDependencyResolver {
     itemResolver: PythonItemResolver,
     usageResolver: PythonUsageResolver,
     moduleResolver: PythonModuleResolver,
+    metricsAnalyzer: PythonMetricsAnalyzer,
   ) {
     this.files = files;
     this.exportExtractor = exportExtractor;
@@ -65,6 +67,7 @@ export class PythonDependencyResolver {
     this.itemResolver = itemResolver;
     this.usageResolver = usageResolver;
     this.moduleResolver = moduleResolver;
+    this.metricsAnalyzer = metricsAnalyzer;
   }
 
   public getFileDependencies(path: string) {
@@ -76,12 +79,18 @@ export class PythonDependencyResolver {
     if (!file) {
       throw new Error(`File not found: ${path}`);
     }
+    const complexityMetrics = this.metricsAnalyzer.analyzeNodes([
+      file.rootNode,
+    ]);
 
     const fileDependencies: FileDependencies = {
       filePath: file.path,
       metrics: {
-        characterCount: file.rootNode.text.length,
-        lineCount: file.rootNode.endPosition.row + 1,
+        characterCount: complexityMetrics.characterCount,
+        codeCharacterCount: complexityMetrics.codeCharacterCount,
+        linesCount: complexityMetrics.linesCount,
+        codeLineCount: complexityMetrics.codeLinesCount,
+        cyclomaticComplexity: complexityMetrics.cyclomaticComplexity,
       },
       dependencies: new Map<string, ModuleDependency>(),
       symbols: [],
@@ -108,20 +117,17 @@ export class PythonDependencyResolver {
 
     // For each symbol, resolve its dependencies
     for (const symbol of symbols) {
-      // Calculate total metrics across all nodes
-      let totalCharCount = 0;
-      let totalLineCount = 0;
-      for (const node of symbol.nodes) {
-        totalCharCount += node.text.length;
-        totalLineCount += node.endPosition.row - node.startPosition.row;
-      }
+      const complexityMetrics = this.metricsAnalyzer.analyzeNodes(symbol.nodes);
 
       const symbolDependencies: SymbolDependency = {
         id: symbol.id,
         type: symbol.type,
         metrics: {
-          characterCount: totalCharCount,
-          lineCount: totalLineCount,
+          characterCount: complexityMetrics.characterCount,
+          codeCharacterCount: complexityMetrics.codeCharacterCount,
+          linesCount: complexityMetrics.linesCount,
+          codeLineCount: complexityMetrics.codeLinesCount,
+          cyclomaticComplexity: complexityMetrics.cyclomaticComplexity,
         },
         dependencies: new Map<string, ModuleDependency>(),
       };
