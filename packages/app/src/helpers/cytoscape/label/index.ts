@@ -1,4 +1,4 @@
-import { FileAuditManifest, SymbolAuditManifest } from "@napi/shared";
+import { FileAuditManifest, SymbolAuditManifest } from "@nanoapi.io/shared";
 
 /**
  * Calculates the optimal width and height for a node based on its label text.

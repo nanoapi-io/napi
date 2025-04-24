@@ -1,6 +1,6 @@
 {
   "name": "@nanoapi.io/napi",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -52,6 +52,9 @@
   "devDependencies": {
     "@release-it/bumper": "^6.0.1",
     "@release-it/keep-a-changelog": "^5.0.0",
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.2",
     "@types/prompts": "^2.4.9",
@@ -60,11 +63,13 @@
     "cross-env": "^7.0.3",
     "nodemon": "^3.1.9",
     "release-it": "^17.10.0",
+    "rollup": "^4.40.0",
+    "rollup-plugin-preserve-shebang": "^1.0.1",
     "ts-node": "^10.9.2"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",
-    "@napi/shared": "1.0.0",
+    "@nanoapi.io/shared": "^1.0.1",
     "express": "^4.21.2",
     "glob": "^11.0.1",
     "http-proxy-middleware": "^3.0.3",

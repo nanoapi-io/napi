@@ -10,7 +10,7 @@ import cytoscape, {
 } from "cytoscape";
 import { Core } from "cytoscape";
 import fcose from "cytoscape-fcose";
-import { DependencyManifest, AuditManifest, Metric } from "@napi/shared";
+import { DependencyManifest, AuditManifest, Metric } from "@nanoapi.io/shared";
 import tailwindConfig from "../../../../tailwind.config.js";
 import {
   getCollapsedFileNodeLabel,
@@ -296,10 +296,19 @@ export class ProjectDependencyVisualizer {
         style: {
           "text-wrap": "wrap",
           color: tailwindConfig.theme.extend.colors.text[theme],
-          "border-width": 4,
-          "border-color": tailwindConfig.theme.extend.colors.secondary[theme],
+          "border-width": (node: NodeSingular) => {
+            return this.highlightedNodeId === node.id() ? 10 : 4;
+          },
+          "border-color": (node: NodeSingular) => {
+            return this.highlightedNodeId === node.id()
+              ? "yellow"
+              : tailwindConfig.theme.extend.colors.secondary[theme];
+          },
           "background-color":
             tailwindConfig.theme.extend.colors.secondary[theme],
+          "z-index": (node: NodeSingular) => {
+            return this.highlightedNodeId === node.id() ? 3000 : 0;
+          },
           shape: "round-rectangle",
           width: 20,
           height: 20,

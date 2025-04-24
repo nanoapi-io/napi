@@ -9,7 +9,7 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 
 // Extension for the controls in the project view
 export default function MetricsExtension(props: {

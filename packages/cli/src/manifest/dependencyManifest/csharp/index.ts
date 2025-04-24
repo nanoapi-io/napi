@@ -9,7 +9,7 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 import {
   CSharpDependencyFormatter,
   CSharpFile,

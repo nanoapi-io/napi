@@ -6,7 +6,7 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@napi/shared";
+} from "@nanoapi.io/shared";
 
 export interface NapiNodeData {
   id: string;

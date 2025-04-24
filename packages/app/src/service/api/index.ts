@@ -1,4 +1,4 @@
-import { DependencyManifest, AuditManifest } from "@napi/shared";
+import { DependencyManifest, AuditManifest } from "@nanoapi.io/shared";
 
 export async function getDependencyManifest() {
   const response = await fetch("/api/dependency-manifest/", {

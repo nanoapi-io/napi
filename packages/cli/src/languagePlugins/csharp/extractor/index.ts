@@ -2,7 +2,7 @@ import Parser from "tree-sitter";
 import { CSharpProjectMapper, DotNetProject } from "../projectMapper/index.js";
 import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
 import { CSharpUsingResolver, UsingDirective } from "../usingResolver/index.js";
-import { DependencyManifest } from "@napi/shared";
+import { DependencyManifest } from "@nanoapi.io/shared";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 
 /**

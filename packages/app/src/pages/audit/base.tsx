@@ -9,7 +9,7 @@ import GraphLayout from "../../layout/GraphLayout.js";
 import FileExplorer, {
   FileExplorerFile,
 } from "../../components/FileExplorer/FileExplorer.js";
-import { DependencyManifest, AuditManifest } from "@napi/shared";
+import { DependencyManifest, AuditManifest } from "@nanoapi.io/shared";
 
 export interface AuditContext {
   busy: boolean;

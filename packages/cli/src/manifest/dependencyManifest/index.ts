@@ -2,7 +2,10 @@ import { generatePythonDependencyManifest } from "./python/index.js";
 import { generateCSharpDependencyManifest } from "./csharp/index.js";
 import { localConfigSchema } from "../../config/localConfig.js";
 import z from "zod";
-import { DependencyManifest, SymbolDependencyManifest } from "@napi/shared";
+import {
+  DependencyManifest,
+  SymbolDependencyManifest,
+} from "@nanoapi.io/shared";
 import {
   pythonLanguage,
   csharpLanguage,
