@@ -62,16 +62,6 @@ export function extractCSharpSymbols(
         path: globalUsingPath,
         content: extractor.generateGlobalUsings(subproject),
       });
-      if (subproject.assemblyInfoPath) {
-        const assemblyInfoPath = path.join(
-          subproject.name,
-          subproject.assemblyInfoPath,
-        );
-        extractedFilesMap.set(assemblyInfoPath, {
-          path: assemblyInfoPath,
-          content: subproject.assemblyInfoContent,
-        });
-      }
     }
   }
   console.timeEnd(`Extracted ${symbolsToExtract.size} symbol(s)`);

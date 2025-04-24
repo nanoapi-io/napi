@@ -5,7 +5,6 @@ import {
   ResolvedImports,
   UsingDirective,
 } from "../usingResolver/index.js";
-import Parser from "tree-sitter";
 
 /**
  * Represents a .NET project.
@@ -30,15 +29,6 @@ export interface DotNetProject {
    * The content of the .csproj file of the project
    */
   csprojContent: string;
-
-  /**
-   * The path to the assembly info file of the project.
-   */
-  assemblyInfoPath?: string;
-  /**
-   * The content of the assembly info file of the project
-   */
-  assemblyInfoContent?: string;
 
   /**
    * The global usings resolved for the project.
@@ -95,20 +85,6 @@ export class CSharpProjectMapper {
       subprojects.push(subproject);
     }
     return subprojects;
-  }
-
-  findAssemblyInfo(
-    parsedFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
-  ) {
-    for (const [filepath, file] of parsedFiles) {
-      if (filepath.endsWith("AssemblyInfo.cs")) {
-        const subproject = this.findSubprojectForFile(filepath);
-        if (subproject) {
-          subproject.assemblyInfoPath = filepath;
-          subproject.assemblyInfoContent = file.rootNode.text;
-        }
-      }
-    }
   }
 
   /**
