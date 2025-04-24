@@ -253,9 +253,9 @@ export function generateAuditManifest(
       }
 
       // Check #3: Dependencies per Symbol
-      if (napiConfig.metrics?.symbol?.[metricDependencyCount]) {
+      if (napiConfig.metrics?.symbol?.maxDependency) {
         const value = symbol.metrics[metricDependencyCount];
-        const target = napiConfig.metrics.symbol[metricDependencyCount];
+        const target = napiConfig.metrics.symbol.maxDependency;
         if (value > target) {
           const alert: AuditAlert = {
             metric: metricDependencyCount,
@@ -270,9 +270,9 @@ export function generateAuditManifest(
           symbolAuditManifest.alerts[metricDependencyCount] = alert;
         }
       }
-      if (napiConfig.metrics?.symbol?.[metricDependentCount]) {
+      if (napiConfig.metrics?.symbol?.maxDependent) {
         const value = symbol.metrics[metricDependentCount];
-        const target = napiConfig.metrics.symbol[metricDependentCount];
+        const target = napiConfig.metrics.symbol.maxDependent;
         if (value > target) {
           const alert: AuditAlert = {
             metric: metricDependentCount,
@@ -289,9 +289,9 @@ export function generateAuditManifest(
       }
 
       // Check #4: Cyclomatic Complexity
-      if (napiConfig.metrics?.symbol?.[metricCyclomaticComplexity]) {
+      if (napiConfig.metrics?.symbol?.maxCyclomaticComplexity) {
         const value = symbol.metrics[metricCyclomaticComplexity];
-        const target = napiConfig.metrics.symbol[metricCyclomaticComplexity];
+        const target = napiConfig.metrics.symbol.maxCyclomaticComplexity;
         if (value > target) {
           const alert: AuditAlert = {
             metric: metricCyclomaticComplexity,
