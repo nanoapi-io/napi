@@ -1,8 +1,7 @@
 import { ElementDefinition, StylesheetJson } from "cytoscape";
 import tailwindConfig from "../../../../tailwind.config.js";
 import { FcoseLayoutOptions } from "cytoscape-fcose";
-import { DependencyManifest } from "../../../service/api/types/dependencyManifest.js";
-import { AuditManifest } from "../../../service/api/types/auditManifest.js";
+import { DependencyManifest, AuditManifest } from "@napi/shared";
 import { Theme } from "../../../contexts/ThemeContext.js";
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
@@ -27,13 +26,12 @@ export interface NodeElementDefinition extends ElementDefinition {
 }
 
 export type NodeMap = Record<
-string,
-{
-  element: NodeElementDefinition;
-  children: NodeMap;
-}
+  string,
+  {
+    element: NodeElementDefinition;
+    children: NodeMap;
+  }
 >;
-  
 
 export interface EdgeElementDefinition extends ElementDefinition {
   data: {
@@ -77,11 +75,8 @@ export function getCyElements(
 
   const fileAuditManifest = auditManifest[currentFile.id];
   if (fileAuditManifest) {
-    Object.values(fileAuditManifest.errors).forEach((auditMessage) => {
-      errorMessages.push(auditMessage.shortMessage);
-    });
-    Object.values(fileAuditManifest.warnings).forEach((auditMessage) => {
-      warningMessages.push(auditMessage.shortMessage);
+    Object.values(fileAuditManifest.alerts).forEach((auditMessage) => {
+      errorMessages.push(auditMessage.message.short);
     });
   }
 
@@ -122,11 +117,8 @@ export function getCyElements(
     if (fileAuditManifest) {
       const SymbolAuditManifest = fileAuditManifest.symbols[currentSymbol.id];
       if (SymbolAuditManifest) {
-        Object.values(SymbolAuditManifest.errors).forEach((auditMessage) => {
-          errorMessages.push(auditMessage.shortMessage);
-        });
-        Object.values(SymbolAuditManifest.warnings).forEach((auditMessage) => {
-          warningMessages.push(auditMessage.shortMessage);
+        Object.values(SymbolAuditManifest.alerts).forEach((auditMessage) => {
+          errorMessages.push(auditMessage.message.short);
         });
       }
     }

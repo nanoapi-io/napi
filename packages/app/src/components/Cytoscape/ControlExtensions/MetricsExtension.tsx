@@ -12,15 +12,15 @@ import {
 } from "@napi/shared";
 
 // Extension for the controls in the project view
-export default function ProjectViewExtension(props: {
+export default function MetricsExtension(props: {
   busy: boolean;
   metricState: {
-    metric: string;
+    metric: Metric;
     setMetric: (metric: string) => void;
-  }
+  };
 }) {
   const metric = props.metricState.metric;
-  
+
   function getMetricLabel(metric: Metric) {
     if (metric === metricLinesCount) {
       return "Lines";

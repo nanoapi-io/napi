@@ -1,11 +1,16 @@
-import { DependencyInfo, DependencyManifest, FileManifest } from "../../../service/api/types/dependencyManifest.js";
-import { AuditManifest } from "../../../service/api/types/auditManifest.js";
-import { NodeElementDefinition, EdgeElementDefinition, NodeMap, getNodeLabel } from "./auditFile.js";
+import {
+  DependencyManifest,
+  FileDependencyManifest,
+  AuditManifest,
+} from "@napi/shared";
+import {
+  NodeElementDefinition,
+  EdgeElementDefinition,
+  NodeMap,
+  getNodeLabel,
+} from "./auditFile.js";
 
-function getNodeId(
-  filePath: string,
-  symbolName: string,
-): string {
+function getNodeId(filePath: string, symbolName: string): string {
   const joinChar = "|";
   return `${filePath}${joinChar}${symbolName}`;
 }
@@ -62,82 +67,14 @@ function createNodeElement(params: {
   };
 }
 
-function traverseGraphRecursively(
-  manifest: DependencyManifest,
-  file: FileManifest,
-  symbolName: string,
-  direction: "dependencies" | "dependents",
-  depth: number,
-  visited: Set<string>
-): {
-  localNodeMap: NodeMap;
-  localEdges: EdgeElementDefinition[];
-} {
-  const nodeMap: NodeMap = {};
-  const edges: EdgeElementDefinition[] = [];
-
-  const currentSymbol = file.symbols[symbolName];
-  const currentId = getNodeId(file.id, symbolName);
-
-  const mapToTraverse = direction === "dependencies"
-    ? currentSymbol.dependencies
-    : currentSymbol.dependents;
-
-  for (const targetFileId in mapToTraverse) {
-    const connectionInfo = mapToTraverse[targetFileId];
-    for (const targetSymbolName in connectionInfo.symbols) {
-      const targetId = getNodeId(targetFileId, targetSymbolName);
-
-      if (visited.has(targetId)) continue;
-      visited.add(targetId);
-
-      const targetFile = manifest[targetFileId];
-      const targetSymbol = targetFile?.symbols[targetSymbolName];
-
-      let isExternal = false;
-      if (direction === 'dependencies' && (mapToTraverse[targetFileId] as DependencyInfo).isExternal) {
-        isExternal = true;
-      }
-
-      const element = createNodeElement({
-        fileId: targetFileId,
-        filePath: targetFile?.filePath ?? targetFileId,
-        symbolName: targetSymbolName,
-        symbolType: targetSymbol?.type,
-        isExternal,
-        isCurrentFile: false,
-      });
-
-      nodeMap[targetId] = { element, children: {} };
-
-      edges.push({
-        data: {
-          source: direction === "dependencies" ? currentId : targetId,
-          target: direction === "dependencies" ? targetId : currentId,
-          type: direction === "dependencies" ? "dependency" : "dependent",
-        },
-      });
-
-      if (depth > 1 && !isExternal && targetFile) {
-        const subDeps = traverseGraphRecursively(manifest, targetFile, targetSymbolName, direction, depth - 1, visited);
-
-        Object.assign(nodeMap, subDeps.localNodeMap);
-        edges.push(...subDeps.localEdges);
-      }
-    }
-  }
-
-  return { localNodeMap: nodeMap, localEdges: edges };
-}
-
 function traverseGraphAdaptive(
   manifest: DependencyManifest,
-  file: FileManifest,
+  file: FileDependencyManifest,
   symbolName: string,
   currentDepth: number,
   maxDepsDepth: number,
   maxDependentsDepth: number,
-  visited: Set<string>
+  visited: Set<string>,
 ): {
   localNodeMap: NodeMap;
   localEdges: EdgeElementDefinition[];
@@ -156,15 +93,7 @@ function traverseGraphAdaptive(
 
       for (const depSymbolName in depInfo.symbols) {
         const depId = getNodeId(depFileId, depSymbolName);
-        if (visited.has(depId)) {
-          // Add an edge to this node if the inverse direction is not already present
-          // if (!edges.some(edge => edge.data.source === depId && edge.data.target === currentId)) {
-          //   edges.push({
-          //     data: { source: currentId, target: depId, type: "dependency" },
-          //   });
-          // }
-          // continue;
-        }
+        if (visited.has(depId)) continue;
         visited.add(depId);
 
         const depSymbol = depFile?.symbols?.[depSymbolName];
@@ -190,7 +119,7 @@ function traverseGraphAdaptive(
             currentDepth + 1,
             maxDepsDepth,
             maxDependentsDepth,
-            visited
+            visited,
           );
           Object.assign(nodeMap, sub.localNodeMap);
           edges.push(...sub.localEdges);
@@ -207,15 +136,7 @@ function traverseGraphAdaptive(
 
       for (const depSymbolName in depInfo.symbols) {
         const depId = getNodeId(depFileId, depSymbolName);
-        if (visited.has(depId)) {
-          // Add an edge to this node if the inverse direction is not already present
-          // if (!edges.some(edge => edge.data.source === depId && edge.data.target === currentId)) {
-          //   edges.push({
-          //     data: { source: depId, target: currentId, type: "dependent" },
-          //   });
-          // }
-          // continue;
-        }
+        if (visited.has(depId)) continue;
         visited.add(depId);
 
         const depSymbol = depFile?.symbols?.[depSymbolName];
@@ -241,7 +162,7 @@ function traverseGraphAdaptive(
             currentDepth + 1,
             maxDepsDepth,
             maxDependentsDepth,
-            visited
+            visited,
           );
           Object.assign(nodeMap, sub.localNodeMap);
           edges.push(...sub.localEdges);
@@ -253,14 +174,13 @@ function traverseGraphAdaptive(
   return { localNodeMap: nodeMap, localEdges: edges };
 }
 
-
 export function getInstanceCyElements(
   dependencyManifest: DependencyManifest,
   auditManifest: AuditManifest,
   currentFilePath: string,
   currentSymbolName: string,
-  dependencyDepth: number = 1,
-  dependentDepth: number = 1,
+  dependencyDepth = 1,
+  dependentDepth = 1,
 ) {
   const currentFile = dependencyManifest[currentFilePath];
   if (!currentFile) throw new Error(`File not found: ${currentFilePath}`);
@@ -292,7 +212,7 @@ export function getInstanceCyElements(
     0,
     dependencyDepth,
     dependentDepth,
-    visited
+    visited,
   );
 
   Object.assign(nodeMap, results.localNodeMap);
@@ -300,7 +220,7 @@ export function getInstanceCyElements(
 
   const traverse = (
     nodeMap: NodeMap,
-    nodeElements: NodeElementDefinition[] = []
+    nodeElements: NodeElementDefinition[] = [],
   ): NodeElementDefinition[] => {
     for (const node of Object.values(nodeMap)) {
       nodeElements.push(node.element);

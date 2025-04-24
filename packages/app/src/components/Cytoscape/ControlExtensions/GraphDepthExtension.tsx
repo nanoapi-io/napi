@@ -4,26 +4,34 @@ import { Button, DropdownMenu, Slider, TextField } from "@radix-ui/themes";
 import { MdTune } from "react-icons/md";
 import { LuChevronUp } from "react-icons/lu";
 
-export default function SymbolViewExtension(props: {
+export default function GraphDepthExtension(props: {
   busy: boolean;
   cy: Core;
-  dependencyDepth: number;
-  dependentDepth: number;
-  setDependencyDepth: (depth: number) => void;
-  setDependentDepth: (depth: number) => void;
+  dependencyState: {
+    depth: number;
+    setDepth: (depth: number) => void;
+  };
+  dependentState: {
+    depth: number;
+    setDepth: (depth: number) => void;
+  };
 }) {
-  const { dependencyDepth, dependentDepth, setDependencyDepth, setDependentDepth } = props;
-  const [tempDependencyDepth, setTempDependencyDepth] = useState(dependencyDepth);
-  const [tempDependentDepth, setTempDependentDepth] = useState(dependentDepth);
+  const { dependencyState, dependentState } = props;
+  const [tempDependencyDepth, setTempDependencyDepth] = useState(
+    dependencyState.depth,
+  );
+  const [tempDependentDepth, setTempDependentDepth] = useState(
+    dependentState.depth,
+  );
 
   function checkFiltersSet() {
     if (!props.cy) return false;
 
     if (
-      dependencyDepth > 1 || 
-      dependentDepth > 1 ||
-      dependencyDepth < 1 ||
-      dependentDepth < 1
+      tempDependencyDepth > 1 ||
+      tempDependentDepth > 1 ||
+      tempDependencyDepth < 1 ||
+      tempDependentDepth < 1
     ) {
       return true;
     }
@@ -32,18 +40,18 @@ export default function SymbolViewExtension(props: {
   }
 
   function applyChanges() {
-    if (tempDependencyDepth !== dependencyDepth) {
-      setDependencyDepth(tempDependencyDepth);
+    if (tempDependencyDepth !== dependencyState.depth) {
+      dependencyState.setDepth(tempDependencyDepth);
     }
-    if (tempDependentDepth !== dependentDepth) {
-      setDependentDepth(tempDependentDepth);
+    if (tempDependentDepth !== dependentState.depth) {
+      dependentState.setDepth(tempDependentDepth);
     }
   }
 
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-      <Button
+        <Button
           size="1"
           variant="ghost"
           color="violet"
@@ -73,7 +81,7 @@ export default function SymbolViewExtension(props: {
             }}
             className="grow"
           />
-          <TextField.Root 
+          <TextField.Root
             value={String(tempDependencyDepth)}
             onChange={(e) => {
               const parsedValue = parseInt(e.target.value, 10);
@@ -85,7 +93,9 @@ export default function SymbolViewExtension(props: {
               if (e.key === "Up" || e.key === "ArrowUp") {
                 setTempDependencyDepth(tempDependencyDepth + 1);
               } else if (e.key === "Down" || e.key === "ArrowDown") {
-                setTempDependencyDepth(tempDependencyDepth === 0 ? 0 : tempDependencyDepth - 1);
+                setTempDependencyDepth(
+                  tempDependencyDepth === 0 ? 0 : tempDependencyDepth - 1,
+                );
               }
             }}
             className="max-w-10"
@@ -103,7 +113,7 @@ export default function SymbolViewExtension(props: {
             }}
             className="grow"
           />
-          <TextField.Root 
+          <TextField.Root
             value={String(tempDependentDepth)}
             onChange={(e) => {
               const parsedValue = parseInt(e.target.value, 10);
@@ -115,7 +125,9 @@ export default function SymbolViewExtension(props: {
               if (e.key === "Up" || e.key === "ArrowUp") {
                 setTempDependentDepth(tempDependentDepth + 1);
               } else if (e.key === "Down" || e.key === "ArrowDown") {
-                setTempDependentDepth(tempDependentDepth === 0 ? 0 : tempDependentDepth - 1);
+                setTempDependentDepth(
+                  tempDependentDepth === 0 ? 0 : tempDependentDepth - 1,
+                );
               }
             }}
             className="max-w-10"
@@ -123,7 +135,10 @@ export default function SymbolViewExtension(props: {
         </div>
         <Button
           color="violet"
-          disabled={tempDependencyDepth === dependencyDepth && tempDependentDepth === dependentDepth}
+          disabled={
+            tempDependencyDepth === dependencyState.depth &&
+            tempDependentDepth === dependentState.depth
+          }
           onClick={() => applyChanges()}
           className="mx-3 mt-2"
         >
@@ -135,8 +150,10 @@ export default function SymbolViewExtension(props: {
           color="violet"
           disabled={!checkFiltersSet()}
           onClick={() => {
-            setDependencyDepth(1);
-            setDependentDepth(1);
+            setTempDependencyDepth(1);
+            dependencyState.setDepth(1);
+            setTempDependentDepth(1);
+            dependentState.setDepth(1);
           }}
           className="mx-3"
         >
@@ -144,5 +161,5 @@ export default function SymbolViewExtension(props: {
         </Button>
       </DropdownMenu.Content>
     </DropdownMenu.Root>
-  )
+  );
 }

@@ -3,9 +3,7 @@ import { Button, DropdownMenu, Checkbox } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
 import { toast } from "react-toastify";
-import {
-  MdFilterAlt,
-} from "react-icons/md";
+import { MdFilterAlt } from "react-icons/md";
 
 const INITIAL_ELEMENT_LIMIT = 75;
 
@@ -17,7 +15,7 @@ interface FiltersType {
   showClasses: boolean;
 }
 
-export default function FileViewExtension(props: {
+export default function FiltersExtension(props: {
   busy: boolean;
   cy: Core;
   onLayout: () => void;
@@ -32,53 +30,53 @@ export default function FileViewExtension(props: {
   });
 
   function checkFiltersSet() {
-      if (!filters) return false;
-  
-      // For boolean filters, assuming they take the form "show X"
-      // then we need to return false if they are set to their default value
-      if (!filters.showExternal) {
-        return true;
-      }
-  
-      if (!filters.showInternal) {
-        return true;
-      }
-  
-      if (!filters.showVariables) {
-        return true;
-      }
-  
-      if (!filters.showFunctions) {
-        return true;
-      }
-  
-      if (!filters.showClasses) {
-        return true;
-      }
-  
-      return false;
+    if (!filters) return false;
+
+    // For boolean filters, assuming they take the form "show X"
+    // then we need to return false if they are set to their default value
+    if (!filters.showExternal) {
+      return true;
     }
-  
-    // Check the number of elements on the file view
-    // if there are more than 50, show a toast
-    useEffect(() => {
-      if (!props.cy) return;
-  
-      const elements = props.cy.elements();
-  
-      // Handle strict mode for dev
-      if (!initialized.current) {
-        initialized.current = true;
-        return;
-      }
-  
-      if (elements.length > INITIAL_ELEMENT_LIMIT) {
-        toast.info(
-          "There are more than 75 elements on screen. We recommend using the filters in the control bar to get a better view of the graph.",
-        );
-      }
-    }, []);
-  
+
+    if (!filters.showInternal) {
+      return true;
+    }
+
+    if (!filters.showVariables) {
+      return true;
+    }
+
+    if (!filters.showFunctions) {
+      return true;
+    }
+
+    if (!filters.showClasses) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Check the number of elements on the file view
+  // if there are more than 50, show a toast
+  useEffect(() => {
+    if (!props.cy) return;
+
+    const elements = props.cy.elements();
+
+    // Handle strict mode for dev
+    if (!initialized.current) {
+      initialized.current = true;
+      return;
+    }
+
+    if (elements.length > INITIAL_ELEMENT_LIMIT) {
+      toast.info(
+        "There are more than 75 elements on screen. We recommend using the filters in the control bar to get a better view of the graph.",
+      );
+    }
+  }, []);
+
   // Show and hide external nodes and edges
   useEffect(() => {
     if (!props.cy) return;

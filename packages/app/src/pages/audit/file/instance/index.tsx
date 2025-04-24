@@ -1,7 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import cytoscape, { Core } from "cytoscape";
 import Controls from "../../../../components/Cytoscape/Controls.js";
-import SymbolViewExtension from "../../../../components/Cytoscape/ControlExtensions/SymbolViewExtension.js";
+import GraphDepthExtension from "../../../../components/Cytoscape/ControlExtensions/GraphDepthExtension.js";
 import { useOutletContext, useParams, useNavigate } from "react-router";
 import fcose from "cytoscape-fcose";
 import { ThemeContext } from "../../../../contexts/ThemeContext.js";
@@ -11,9 +11,7 @@ import {
   NodeElementDefinition,
   getNodeLabel,
 } from "../../../../helpers/cytoscape/views/auditFile.js";
-import {
-  getInstanceCyElements, 
-} from "../../../../helpers/cytoscape/views/auditInstance.js";
+import { getInstanceCyElements } from "../../../../helpers/cytoscape/views/auditInstance.js";
 import { CytoscapeSkeleton } from "../../../../components/Cytoscape/Skeleton.js";
 import { AuditContext } from "../../base.js";
 
@@ -32,49 +30,48 @@ export default function AuditInstancePage() {
   const [dependentDepth, setDependentDepth] = useState(1);
 
   // Initialize and cleanup Cytoscape
-    useEffect(() => {
-      if (context.busy) return;
-  
-      if (cyInstance) {
-        cyInstance.destroy();
-        setCyInstance(undefined);
-      }
-  
-      const cy = initializeCytoscape();
-      setCyInstance(cy);
-  
-      return () => {
-        cy.destroy();
-        setCyInstance(undefined);
-      };
-    }, [context.busy, params.file]);
+  useEffect(() => {
+    if (context.busy) return;
 
-    // Update style when theme changes
-    useEffect(() => {
-      cyInstance?.style(getCyStyle(themeContext.theme));
-    }, [themeContext.changeTheme]);
+    if (cyInstance) {
+      cyInstance.destroy();
+      setCyInstance(undefined);
+    }
 
-    // Update elements when dependency depth or dependent depth changes
-    useEffect(() => {
-      if (cyInstance) {
-        // Remove existing elements
-        cyInstance.elements().remove();
+    const cy = initializeCytoscape();
+    setCyInstance(cy);
 
-        // Add new elements
-        const elements = getInstanceCyElements(
-          context.dependencyManifest,
-          context.auditManifest,
-          params.file as string,
-          params.instance as string,
-          dependencyDepth,
-          dependentDepth
-        );
-        cyInstance.add(elements);
+    return () => {
+      cy.destroy();
+      setCyInstance(undefined);
+    };
+  }, [context.busy, params.file]);
 
-        cyInstance.layout(layout).run();
-      }
-    }, [dependencyDepth, dependentDepth]);
+  // Update style when theme changes
+  useEffect(() => {
+    cyInstance?.style(getCyStyle(themeContext.theme));
+  }, [themeContext.changeTheme]);
 
+  // Update elements when dependency depth or dependent depth changes
+  useEffect(() => {
+    if (cyInstance) {
+      // Remove existing elements
+      cyInstance.elements().remove();
+
+      // Add new elements
+      const elements = getInstanceCyElements(
+        context.dependencyManifest,
+        context.auditManifest,
+        params.file as string,
+        params.instance as string,
+        dependencyDepth,
+        dependentDepth,
+      );
+      cyInstance.add(elements);
+
+      cyInstance.layout(layout).run();
+    }
+  }, [dependencyDepth, dependentDepth]);
 
   function initializeCytoscape() {
     cytoscape.use(fcose);
@@ -158,13 +155,17 @@ export default function AuditInstancePage() {
         <CytoscapeSkeleton />
       ) : (
         <Controls busy={false} cy={cyInstance} onLayout={handleLayout}>
-          <SymbolViewExtension
+          <GraphDepthExtension
             cy={cyInstance}
             busy={context.busy}
-            dependencyDepth={dependencyDepth}
-            dependentDepth={dependentDepth}
-            setDependencyDepth={setDependencyDepth}
-            setDependentDepth={setDependentDepth}
+            dependencyState={{
+              depth: dependencyDepth,
+              setDepth: setDependencyDepth,
+            }}
+            dependentState={{
+              depth: dependentDepth,
+              setDepth: setDependentDepth,
+            }}
           />
         </Controls>
       )}

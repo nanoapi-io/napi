@@ -7,14 +7,6 @@ import {
   MdOutlineZoomOut,
 } from "react-icons/md";
 
-interface FiltersType {
-  showExternal: boolean;
-  showInternal: boolean;
-  showVariables: boolean;
-  showFunctions: boolean;
-  showClasses: boolean;
-}
-
 export default function Controls(props: {
   busy: boolean;
   cy: Core;
@@ -22,7 +14,6 @@ export default function Controls(props: {
   showFilters?: boolean;
   children?: React.ReactNode;
 }) {
-
   function handleFit() {
     const elements = props.cy.elements();
     const padding = 10;
