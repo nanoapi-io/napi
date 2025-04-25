@@ -1,5 +1,6 @@
 {
   "name": "napi",
+  "private": true,
   "type": "module",
   "workspaces": [
     "packages/app",
@@ -7,11 +8,9 @@
     "packages/shared"
   ],
   "scripts": {
-    "dev:shared": "npm run dev --workspace packages/shared",
     "dev:app": "npm run dev --workspace packages/app",
     "dev:cli": "npm run dev --workspace packages/cli",
     "build": "npm run build --workspace packages/cli",
-    "build:shared": "npm run build --workspace packages/shared",
     "start": "npm run start --workspace packages/cli",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
@@ -26,6 +25,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "prettier": "^3.4.2",
+    "tsup": "^8.4.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.1",
     "vitest": "^2.1.8"

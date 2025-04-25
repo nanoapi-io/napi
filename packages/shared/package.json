@@ -1,17 +1,14 @@
 {
   "name": "@nanoapi.io/shared",
-  "version": "1.0.1",
+  "version": "0.0.0",
+  "private": true,
   "type": "module",
-  "private": false,
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "scripts": {
-    "dev": "tsc --watch",
-    "build": "tsc",
-    "npm:publish": "npm publish"
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

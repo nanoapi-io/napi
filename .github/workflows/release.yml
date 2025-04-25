@@ -44,24 +44,6 @@ jobs:
       - name: Login to npm registry
         run: npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
 
-      - name: Build and publish shared package
-        run: |
-          cd packages/shared
-          npm version ${{ github.event.inputs.release_type }} --no-git-tag-version
-          npm run build
-          npm publish --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Update CLI to use latest shared version
-        run: |
-          SHARED_VERSION=$(node -p "require('./packages/shared/package.json').version")
-          cd packages/cli
-          # Update dependency version in package.json
-          sed -i "s/\"@nanoapi.io\/shared\": \".*\"/\"@nanoapi.io\/shared\": \"^$SHARED_VERSION\"/" package.json
-          git add ../shared/package.json package.json
-          git commit -m "[skip ci] chore: update shared to v$SHARED_VERSION"
-
       - name: Run release-it for CLI
         run: npm run release -- ${{ github.event.inputs.release_type }} --ci
         env:

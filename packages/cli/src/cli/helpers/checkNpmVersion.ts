@@ -24,9 +24,19 @@ export async function checkVersionMiddleware() {
   }
 
   if (currentVersion !== latestVersion) {
-    console.warn(
-      `You are using version ${currentVersion} of ${localPackageJson.name}. ` +
-        `The latest version is ${latestVersion}. Please update to the latest version.`,
+    console.error(
+      `
+You are using version ${currentVersion} of ${localPackageJson.name}. 
+The latest version is ${latestVersion}. 
+Please update to the latest version.
+
+You can update the version by running one of the following commands:
+
+npm:   npm install -g ${localPackageJson.name}@latest
+npx:   npx ${localPackageJson.name}@latest
+yarn:  yarn global add ${localPackageJson.name}@latest
+pnpm:  pnpm add -g ${localPackageJson.name}@latest
+      `,
     );
     process.exit(1);
   }
