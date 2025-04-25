@@ -6,7 +6,7 @@
     "access": "public"
   },
   "bin": {
-    "napi": "dist/src/index.js"
+    "napi": "dist/index.js"
   },
   "release-it": {
     "$schema": "https://unpkg.com/release-it/schema/release-it.json",
@@ -65,7 +65,7 @@
     "rollup": "^4.40.0",
     "rollup-plugin-preserve-shebang": "^1.0.1",
     "ts-node": "^10.9.2",
-    "@nanoapi.io/shared": "workspace:*"
+    "@nanoapi.io/shared": "0.0.0"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",
