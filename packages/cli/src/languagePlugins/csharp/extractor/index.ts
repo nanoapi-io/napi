@@ -172,22 +172,10 @@ export class CSharpExtractor {
     symbolName: string,
   ): ExtractedFile[] | undefined {
     const fileExports = this.nsMapper.getFileExports(filePath);
-    const symbol = fileExports.find((symbol) => symbol.name === symbolName);
-    if (symbol) {
-      return this.extractSymbol(symbol);
-    }
-    return undefined;
-  }
-
-  /**
-   * Extracts a symbol by its name.
-   * @param symbolName - The name of the symbol to extract.
-   * @returns An array of extracted files or undefined if the symbol is not found.
-   */
-  public extractSymbolByName(symbolName: string): ExtractedFile[] | undefined {
-    const symbol = this.nsMapper.findClassInTree(
-      this.nsMapper.nsTree,
-      symbolName,
+    const symbol = fileExports.find(
+      (symbol) =>
+        symbol.name === symbolName ||
+        symbol.namespace + "." + symbol.name === symbolName,
     );
     if (symbol) {
       return this.extractSymbol(symbol);
