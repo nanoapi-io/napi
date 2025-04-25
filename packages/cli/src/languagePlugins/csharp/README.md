@@ -192,7 +192,7 @@ classDiagram
         + extractSymbol(symbol: SymbolNode): ExtractedFile[]
         + extractAndSaveSymbol(symbol: SymbolNode): void
         + extractSymbolByName(symbolName: string): ExtractedFile[] | undefined
-        + extractAndSaveSymbolByName(symbolName: string): void
+        + extractAndSaveSymbolFromFile(filePath:string, symbolName: string): void
         + getContent(file: ExtractedFile): string
     }
 
