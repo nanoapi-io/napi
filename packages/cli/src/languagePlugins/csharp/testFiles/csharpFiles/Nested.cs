@@ -5,6 +5,10 @@ namespace OuterNamespace
         public void OuterMethod()
         {
             Console.WriteLine("OuterMethod");
+            if (true)
+            {
+                Console.WriteLine("This is an if statement");
+            }
         }
         public class OuterInnerClass
         {

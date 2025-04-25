@@ -10,8 +10,15 @@ class Usage
     {
         using (var reader = new System.IO.StreamReader("file.txt"))
         {
-            string content = reader.ReadToEnd();
-            Console.WriteLine(content);
+            try
+            {
+                string content = reader.ReadToEnd();
+                Console.WriteLine(content);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reading file: {ex.Message}");
+            }
         }
     }
 }
