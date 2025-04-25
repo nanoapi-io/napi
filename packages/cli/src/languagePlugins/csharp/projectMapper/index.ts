@@ -94,7 +94,9 @@ export class CSharpProjectMapper {
    */
   #getRootFolder(filepaths: string[]): string {
     if (filepaths.length === 0) {
-      throw new Error("No file paths provided");
+      throw new Error(
+        "No .csproj files found. Make sure to include .csproj files along with .cs files in .napirc and that such files exist in your project.",
+      );
     }
     const splitPaths = filepaths.map((filepath) => filepath.split(path.sep));
     const commonPath = splitPaths[0].slice();
