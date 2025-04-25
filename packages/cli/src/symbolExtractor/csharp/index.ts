@@ -26,17 +26,17 @@ export function extractCSharpSymbols(
 ): ExtractedFilesMap {
   console.time(`Extracted ${symbolsToExtract.size} symbol(s)`);
   const extractor = new CSharpExtractor(files, dependencyManifest);
-  const symbols: string[] = [];
   const extractedFiles: ExtractedFile[] = [];
-  // Flatten the symbolsToExtract map
-  for (const symbolSet of symbolsToExtract.values()) {
-    symbols.push(...Array.from(symbolSet.symbols));
-  }
   // Extract symbols from the files
-  for (const symbol of symbols) {
-    const extractedFile = extractor.extractSymbolByName(symbol);
-    if (extractedFile) {
-      extractedFiles.push(...extractedFile);
+  for (const symbolSet of symbolsToExtract.values()) {
+    for (const symbol of symbolSet.symbols) {
+      const extractedFile = extractor.extractSymbolFromFile(
+        symbolSet.filePath,
+        symbol,
+      );
+      if (extractedFile) {
+        extractedFiles.push(...extractedFile);
+      }
     }
   }
   const subprojects: DotNetProject[] = [];
