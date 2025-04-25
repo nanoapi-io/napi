@@ -36,9 +36,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build shared
-        run: npm run build:shared
-
       - name: Tests
         run: npm run test
 

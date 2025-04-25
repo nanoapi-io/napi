@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Fix release flow, bundling packages/shared into the CLI instead of using published version.
+
 ## [1.0.3] - 2025-04-24
 
 Fix release flow
