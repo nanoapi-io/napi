@@ -68,6 +68,10 @@ export interface CSharpSymbol {
    */
   characterCount: number;
   /**
+   * The syntax node representing the symbol.
+   */
+  node: Parser.SyntaxNode;
+  /**
    * A record of dependents associated with the symbol.
    */
   dependents: Record<string, CSharpDependent>;
@@ -89,6 +93,10 @@ export interface CSharpFile {
    * The file path of the C# file.
    */
   filepath: string;
+  /**
+   * The root syntax node of the file.
+   */
+  rootNode: Parser.SyntaxNode;
   /**
    * The number of lines in the file.
    */
@@ -158,6 +166,7 @@ export class CSharpDependencyFormatter {
       symbols[fullname] = {
         id: fullname,
         type: symbol.type,
+        node: symbol.node,
         lineCount: symbol.node.endPosition.row - symbol.node.startPosition.row,
         characterCount: symbol.node.endIndex - symbol.node.startIndex,
         dependencies: this.formatDependencies(dependencies),
@@ -242,6 +251,7 @@ export class CSharpDependencyFormatter {
     const formattedFile: CSharpFile = {
       id: file.path,
       filepath: file.path,
+      rootNode: file.rootNode,
       lineCount: file.rootNode.endPosition.row,
       characterCount: file.rootNode.endIndex - file.rootNode.startIndex,
       dependencies: this.formatDependencies(fileDependencies),
