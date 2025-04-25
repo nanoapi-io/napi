@@ -85,15 +85,20 @@ export class CSharpNamespaceMapper {
   }
 
   /**
-   * Adds a symbol to the file exports map.
-   * @param symbol - the node to add.
+   * Builds the fileExports map from the namespace tree.
+   * @param tree - The root of the namespace tree.
    */
-  #addFileExport(symbol: SymbolNode) {
-    const filepath = symbol.filepath;
-    if (!this.fileExports.has(filepath)) {
-      this.fileExports.set(filepath, []);
-    }
-    this.fileExports.get(filepath)?.push(symbol);
+  #buildFileExports(tree: NamespaceNode) {
+    tree.exports.forEach((symbol) => {
+      if (!this.fileExports.has(symbol.filepath)) {
+        this.fileExports.set(symbol.filepath, []);
+      }
+      this.fileExports.get(symbol.filepath)?.push(symbol);
+    });
+
+    tree.childrenNamespaces.forEach((ns) => {
+      this.#buildFileExports(ns);
+    });
   }
 
   /**
@@ -184,18 +189,15 @@ export class CSharpNamespaceMapper {
       namespaces.forEach((namespace) => {
         this.#assignParentNamespaces(namespace);
         this.#addNamespaceToTree(namespace, namespaceTree);
-        // Add the file path to the exports
-        namespace.exports.forEach((symbol) => {
-          symbol.filepath = file.path;
-          this.#addFileExport(symbol);
-        });
       });
     });
 
     // Assign namespaces to classes.
     this.#assignNamespacesToClasses(namespaceTree);
 
-    // I don't understand why, but the root element is always empty
+    // Build the file exports map.
+    this.#buildFileExports(namespaceTree);
+
     return namespaceTree;
   }
 
