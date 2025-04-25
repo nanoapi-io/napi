@@ -19,6 +19,7 @@ import {
   csharpLanguage,
   csharpParser,
 } from "../../../helpers/treeSitter/parsers.js";
+import { CSharpMetricsAnalyzer } from "../../../languagePlugins/csharp/metricsAnalyzer/index.js";
 
 /**
  * Generates a dependency manifest for C# files.
@@ -54,6 +55,7 @@ export function generateCSharpDependencyManifest(
   }
 
   const formatter = new CSharpDependencyFormatter(parsedFiles, csprojFiles);
+  const analyzer = new CSharpMetricsAnalyzer();
   const manifest: DependencyManifest = {};
   const filecount = parsedFiles.size;
   let i = 0;
@@ -63,34 +65,36 @@ export function generateCSharpDependencyManifest(
     const csharpSyms = fm.symbols;
     const symbols: Record<string, SymbolDependencyManifest> = {};
     for (const [symbolName, symbol] of Object.entries(csharpSyms)) {
+      const metrics = analyzer.analyzeNode(symbol.node);
       symbols[symbolName] = {
         id: symbolName,
         type: symbol.type as SymbolType,
         metrics: {
           [metricCharacterCount]: symbol.characterCount,
-          [metricCodeCharacterCount]: 0, // TODO: fix this
+          [metricCodeCharacterCount]: metrics.codeCharacterCount,
           [metricLinesCount]: symbol.lineCount,
-          [metricCodeLineCount]: 0, // TODO: fix this
-          [metricDependencyCount]: 0, // TODO: fix this
+          [metricCodeLineCount]: metrics.codeLinesCount,
+          [metricDependencyCount]: Object.keys(symbol.dependencies).length,
           [metricDependentCount]: 0, // TODO: fix this
-          [metricCyclomaticComplexity]: 0, // TODO: fix this
+          [metricCyclomaticComplexity]: metrics.cyclomaticComplexity,
         },
         dependencies: symbol.dependencies,
         dependents: {},
       };
     }
+    const filemetrics = analyzer.analyzeNode(fm.rootNode);
     manifest[path] = {
       id: fm.id,
       filePath: fm.filepath,
       language: csharpLanguage,
       metrics: {
         [metricCharacterCount]: fm.characterCount,
-        [metricCodeCharacterCount]: 0, // TODO: fix this
+        [metricCodeCharacterCount]: filemetrics.codeCharacterCount,
         [metricLinesCount]: fm.lineCount,
-        [metricCodeLineCount]: 0, // TODO: fix this
-        [metricDependencyCount]: 0, // TODO: fix this
+        [metricCodeLineCount]: filemetrics.codeLinesCount,
+        [metricDependencyCount]: Object.keys(fm.dependencies).length,
         [metricDependentCount]: 0, // TODO: fix this
-        [metricCyclomaticComplexity]: 0, // TODO: fix this
+        [metricCyclomaticComplexity]: filemetrics.cyclomaticComplexity,
       },
       dependencies: fm.dependencies,
       symbols,
@@ -119,6 +123,8 @@ export function generateCSharpDependencyManifest(
             };
           }
           otherSymbol.dependents[fm.id].symbols[symbol.id] = symbol.id;
+          fm.metrics[metricDependentCount]++;
+          symbol.metrics[metricDependentCount]++;
         }
       }
     }
