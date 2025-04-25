@@ -162,14 +162,20 @@ export class CSharpExtractor {
   }
 
   /**
-   * Extracts a symbol by its name.
-   * @param symbolName - The name of the symbol to extract.
-   * @returns An array of extracted files or undefined if the symbol is not found.
+   * Extracts a symbol from a file by its name.
+   * @param filePath - The path to file that contains the symbol to extract
+   * @param symbolName - The name of the symbol to extract
+   * @returns A list of extracted files or undefined if the symbol is not found
    */
-  public extractSymbolByName(symbolName: string): ExtractedFile[] | undefined {
-    const symbol = this.nsMapper.findClassInTree(
-      this.nsMapper.nsTree,
-      symbolName,
+  public extractSymbolFromFile(
+    filePath: string,
+    symbolName: string,
+  ): ExtractedFile[] | undefined {
+    const fileExports = this.nsMapper.getFileExports(filePath);
+    const symbol = fileExports.find(
+      (symbol) =>
+        symbol.name === symbolName ||
+        symbol.namespace + "." + symbol.name === symbolName,
     );
     if (symbol) {
       return this.extractSymbol(symbol);

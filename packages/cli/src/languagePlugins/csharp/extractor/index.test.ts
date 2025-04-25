@@ -21,15 +21,32 @@ describe("CSharpExtractor", () => {
   const manifest = generateCSharpDependencyManifest(files);
   const extractor = new CSharpExtractor(files, manifest);
 
+  const programpath = path.join(csharpFilesFolder, "Program.cs");
+  const twonamespacesonefilepath = path.join(
+    csharpFilesFolder,
+    "2Namespaces1File.cs",
+  );
+  const seminamespacedpath = path.join(csharpFilesFolder, "SemiNamespaced.cs");
+
   test("should extract symbols correctly", () => {
-    expect(extractor.extractSymbolByName("Program")?.length).toBe(9);
-    expect(extractor.extractSymbolByName("ChickenBurger.Salad")?.length).toBe(
-      1,
-    );
     expect(
-      extractor.extractSymbolByName("MyApp.BeefBurger.Steak")?.length,
+      extractor.extractSymbolFromFile(programpath, "Program")?.length,
+    ).toBe(9);
+    expect(
+      extractor.extractSymbolFromFile(
+        twonamespacesonefilepath,
+        "ChickenBurger.Salad",
+      )?.length,
     ).toBe(1);
-    expect(extractor.extractSymbolByName("HeadCrab")?.length).toBe(2);
+    expect(
+      extractor.extractSymbolFromFile(
+        twonamespacesonefilepath,
+        "MyApp.BeefBurger.Steak",
+      )?.length,
+    ).toBe(1);
+    expect(
+      extractor.extractSymbolFromFile(seminamespacedpath, "HeadCrab")?.length,
+    ).toBe(2);
   });
 
   test("should extract global using directives", () => {

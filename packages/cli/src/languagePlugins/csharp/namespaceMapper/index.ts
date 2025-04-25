@@ -85,15 +85,20 @@ export class CSharpNamespaceMapper {
   }
 
   /**
-   * Adds a symbol to the file exports map.
-   * @param symbol - the node to add.
+   * Builds the fileExports map from the namespace tree.
+   * @param tree - The root of the namespace tree.
    */
-  #addFileExport(symbol: SymbolNode) {
-    const filepath = symbol.filepath;
-    if (!this.fileExports.has(filepath)) {
-      this.fileExports.set(filepath, []);
-    }
-    this.fileExports.get(filepath)?.push(symbol);
+  #buildFileExports(tree: NamespaceNode) {
+    tree.exports.forEach((symbol) => {
+      if (!this.fileExports.has(symbol.filepath)) {
+        this.fileExports.set(symbol.filepath, []);
+      }
+      this.fileExports.get(symbol.filepath)?.push(symbol);
+    });
+
+    tree.childrenNamespaces.forEach((ns) => {
+      this.#buildFileExports(ns);
+    });
   }
 
   /**
@@ -184,18 +189,15 @@ export class CSharpNamespaceMapper {
       namespaces.forEach((namespace) => {
         this.#assignParentNamespaces(namespace);
         this.#addNamespaceToTree(namespace, namespaceTree);
-        // Add the file path to the exports
-        namespace.exports.forEach((symbol) => {
-          symbol.filepath = file.path;
-          this.#addFileExport(symbol);
-        });
       });
     });
 
     // Assign namespaces to classes.
     this.#assignNamespacesToClasses(namespaceTree);
 
-    // I don't understand why, but the root element is always empty
+    // Build the file exports map.
+    this.#buildFileExports(namespaceTree);
+
     return namespaceTree;
   }
 
@@ -295,20 +297,44 @@ export class CSharpNamespaceMapper {
     // Management of qualified names
     if (className.includes(".")) {
       const parts = className.split(".");
-      const namespaceName = parts.slice(0, -1).join(".");
       const simpleClassName = parts[parts.length - 1];
+      const namespaceParts = parts.slice(0, -1).reverse();
 
-      const namespace = this.findNamespaceInTree(tree, namespaceName);
-      if (namespace) {
-        return (
-          namespace.exports.find((cls) => cls.name === simpleClassName) ?? null
-        );
-      } else {
-        // In case the qualifier is actually not a namespace but a class
-        // Check OuterInnerClass in the tests.
-        return this.findClassInTree(this.nsTree, namespaceName);
+      // Find all classes with the same name
+      const matchingClasses: SymbolNode[] = [];
+      const searchClasses = (namespace: NamespaceNode) => {
+        namespace.exports.forEach((cls) => {
+          if (cls.name === simpleClassName) {
+            matchingClasses.push(cls);
+          }
+        });
+
+        namespace.childrenNamespaces.forEach((childNamespace) => {
+          searchClasses(childNamespace);
+        });
+      };
+      searchClasses(tree);
+
+      // Filter classes by walking through the namespace parts backwards
+      for (const cls of matchingClasses) {
+        const currentNamespace = cls.namespace.split(".").reverse();
+        let matches = true;
+
+        for (let i = 0; i < namespaceParts.length; i++) {
+          if (namespaceParts[i] !== currentNamespace[i]) {
+            matches = false;
+            break;
+          }
+        }
+
+        if (matches) {
+          return cls;
+        }
       }
+
+      return null;
     }
+
     // Find the class in the current node's classes.
     if (tree.exports.some((cls) => cls.name === className)) {
       return tree.exports.find((cls) => cls.name === className) ?? null;
