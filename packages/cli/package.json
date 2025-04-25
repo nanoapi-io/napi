@@ -1,12 +1,12 @@
 {
   "name": "@nanoapi.io/napi",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "publishConfig": {
     "access": "public"
   },
   "bin": {
-    "napi": "dist/src/index.js"
+    "napi": "dist/index.js"
   },
   "release-it": {
     "$schema": "https://unpkg.com/release-it/schema/release-it.json",
@@ -39,13 +39,12 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon --no-stdin --exec \"node --loader ts-node/esm\" src/index.ts",
     "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
-    "build:shared": "npm run build --prefix ../shared",
     "build:app": "npm run build --prefix ../app",
     "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
-    "build:cli": "tsc",
-    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - ./dist/src/index.js > temp && mv temp ./dist/src/index.js && chmod +x ./dist/src/index.js",
-    "build": "npm run build:cleanup && npm run build:shared && npm run build:app && npm run build:cli && npm run build:copy-app-dist && npm run build:add-shebang",
-    "start": "node dist/src/index.js",
+    "build:cli": "tsup",
+    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - ./dist/index.js > temp && mv temp ./dist/index.js && chmod +x ./dist/index.js",
+    "build": "npm run build:cleanup && npm run build:app && npm run build:cli && npm run build:copy-app-dist && npm run build:add-shebang",
+    "start": "node dist/index.js",
     "npm:publish": "npm publish",
     "release": "npx release-it"
   },
@@ -65,11 +64,11 @@
     "release-it": "^17.10.0",
     "rollup": "^4.40.0",
     "rollup-plugin-preserve-shebang": "^1.0.1",
-    "ts-node": "^10.9.2"
+    "ts-node": "^10.9.2",
+    "@nanoapi.io/shared": "0.0.0"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",
-    "@nanoapi.io/shared": "^1.0.1",
     "express": "^4.21.2",
     "glob": "^11.0.1",
     "http-proxy-middleware": "^3.0.3",

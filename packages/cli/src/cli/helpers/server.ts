@@ -5,6 +5,7 @@ import { localConfigSchema } from "../../config/localConfig.js";
 import { getApi } from "../../api/index.js";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import path from "path";
+import { entryPointDirname } from "../../index.js";
 
 async function findAvailablePort(port: number): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -56,9 +57,7 @@ export async function runServer(
       }),
     );
   } else {
-    app.use(
-      express.static(path.join(import.meta.dirname, "../../../app_dist")),
-    );
+    app.use(express.static(path.join(entryPointDirname, "app_dist")));
   }
 
   const port = await findAvailablePort(3000);

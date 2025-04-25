@@ -8,3 +8,5 @@ if (process.env.NODE_ENV !== "development") {
 }
 
 initCli();
+
+export const entryPointDirname = import.meta.dirname;
