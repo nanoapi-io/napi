@@ -216,7 +216,7 @@ export default function AuditInstancePage() {
               setDetailsPaneSymbolId(contextMenuSymbolId);
             }
           }}
-          setExtractionNodes={context.actions.setExtractionNodes}
+          setExtractionNodes={context.actions.updateExtractionNodes}
         />
       )}
 

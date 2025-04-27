@@ -24,7 +24,7 @@ export interface AuditContext {
   actions: {
     setHighlightedNodeId: (nodeId: string | null) => void;
     showInSidebar: (filename: string) => void;
-    setExtractionNodes: (
+    updateExtractionNodes: (
       filePath: string,
       symbols: string[],
       action: "add" | "remove",
@@ -151,7 +151,7 @@ export default function BaseAuditPage() {
           setHighlightedNodeId={setHighlightedNodeId}
           extractionState={{
             extractionNodes,
-            setExtractionNodes: updateExtractionNodes,
+            updateExtractionNodes,
           }}
         />
       }
@@ -166,7 +166,7 @@ export default function BaseAuditPage() {
             actions: {
               setHighlightedNodeId,
               showInSidebar,
-              setExtractionNodes: updateExtractionNodes,
+              updateExtractionNodes,
             },
           }}
         />

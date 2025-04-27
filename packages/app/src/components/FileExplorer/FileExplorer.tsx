@@ -57,7 +57,7 @@ export default function FileExplorer(props: {
   setHighlightedNodeId: (node: string | null) => void;
   extractionState: {
     extractionNodes: Record<string, ExtractionNode>;
-    setExtractionNodes: (
+    updateExtractionNodes: (
       filePath: string,
       symbols: string[],
       action: "add" | "remove",
@@ -332,7 +332,9 @@ export default function FileExplorer(props: {
           >
             <ExtractionPanel
               extractionNodes={props.extractionState.extractionNodes}
-              setExtractionNodes={props.extractionState.setExtractionNodes}
+              updateExtractionNodes={
+                props.extractionState.updateExtractionNodes
+              }
             />
           </Panel>
         </>
@@ -530,7 +532,7 @@ enum EditMode {
 
 function ExtractionPanel(props: {
   extractionNodes: Record<string, ExtractionNode>;
-  setExtractionNodes: (
+  updateExtractionNodes: (
     filePath: string,
     symbols: string[],
     action: "add" | "remove",
@@ -560,7 +562,7 @@ function ExtractionPanel(props: {
             <ExtractionElement
               key={key}
               node={node}
-              setExtractionNodes={props.setExtractionNodes}
+              updateExtractionNodes={props.updateExtractionNodes}
               editMode={editMode}
             />
           );
@@ -620,7 +622,7 @@ function ExtractionPanel(props: {
 
 function ExtractionElement(props: {
   node: ExtractionNode;
-  setExtractionNodes: (
+  updateExtractionNodes: (
     filePath: string,
     symbols: string[],
     action: "add" | "remove",
@@ -685,7 +687,7 @@ function ExtractionElement(props: {
         .filter(([, checked]) => !checked)
         .map(([symbol]) => symbol);
       if (uncheckedSymbols.length > 0) {
-        props.setExtractionNodes(
+        props.updateExtractionNodes(
           props.node.filePath,
           uncheckedSymbols,
           "remove",
