@@ -10,6 +10,7 @@ import {
   FROM_IMPORT_STATEMENT_TYPE,
   NORMAL_IMPORT_STATEMENT_TYPE,
 } from "../importExtractor/types.js";
+import { InternalUsage } from "../usageResolver/types.js";
 
 /**
  * Python Symbol Extractor
@@ -78,6 +79,14 @@ export class PythonSymbolExtractor {
     console.info("Finding dependencies for all symbols to extract...");
     const symbolsToKeep = this.identifySymbolsAndDependencies(symbolsMap);
 
+    let totalSymbols = 0;
+    for (const { symbols } of symbolsToKeep.values()) {
+      totalSymbols += symbols.size;
+    }
+    console.info(
+      `Found ${totalSymbols} symbols to keep across ${symbolsToKeep.size} files`,
+    );
+
     // 2. Extract all the symbols
     console.info(`Extracting files in-memory...`);
     const extractedFiles = this.extractFilesInMemory(symbolsToKeep);
@@ -91,6 +100,14 @@ export class PythonSymbolExtractor {
     this.removeInvalidImports(extractedFiles);
 
     // 5. Clean error nodes
+    console.info("Cleaning error nodes from files...");
+    this.cleanErrorNodes(extractedFiles);
+
+    // 6. Remove unused imports
+    console.info("Removing unused imports...");
+    this.removeUnusedImports(extractedFiles);
+
+    // 7. Clean error nodes
     console.info("Cleaning error nodes from files...");
     this.cleanErrorNodes(extractedFiles);
 
@@ -368,9 +385,17 @@ export class PythonSymbolExtractor {
 
             if (!resolvedExtractedFileModule) {
               // the module does not resolve anymore, we remove it
+              const startIndex = importStatement.node.startIndex;
+              let endIndex = importStatement.node.endIndex;
+              if (
+                importStatement.node.nextSibling &&
+                importStatement.node.nextSibling.type === ","
+              ) {
+                endIndex = importStatement.node.nextSibling.endIndex;
+              }
               indexesToRemoveForImport.push({
-                startIndex: importStatement.node.startIndex,
-                endIndex: importStatement.node.endIndex,
+                startIndex,
+                endIndex,
               });
               continue;
             }
@@ -461,9 +486,14 @@ export class PythonSymbolExtractor {
 
             if (!extractedItem) {
               // if the item doesn't resolve we need to remove it
+              const startIndex = item.node.startIndex;
+              let endIndex = item.node.endIndex;
+              if (item.node.nextSibling && item.node.nextSibling.type === ",") {
+                endIndex = item.node.nextSibling.endIndex;
+              }
               indexesToRemoveForImport.push({
-                startIndex: item.node.startIndex,
-                endIndex: item.node.endIndex,
+                startIndex,
+                endIndex,
               });
             }
           }
@@ -489,6 +519,358 @@ export class PythonSymbolExtractor {
           content,
           indexesToRemove,
         );
+        // Update the file in the map
+        extractedFiles.set(path, { path, content: newContent });
+      }
+    }
+  }
+
+  /**
+   * Removes unused imports from the extracted files
+   * Unused imports are those that used to be used in the original files
+   * but are not used in the extracted files
+   */
+  private removeUnusedImports(
+    extractedFiles: Map<string, { path: string; content: string }>,
+  ) {
+    const extractedParsedFiles = new Map<
+      string,
+      { path: string; rootNode: Parser.SyntaxNode }
+    >();
+
+    // Parse all extracted files
+    for (const { path, content } of extractedFiles.values()) {
+      const tree = this.parser.parse(content, undefined, {
+        bufferSize: content.length + 10,
+      });
+      extractedParsedFiles.set(path, { path, rootNode: tree.rootNode });
+    }
+
+    // Create new instances of needed extractors/resolvers for the extracted files
+    const extractedExportExtractor = new PythonExportExtractor(
+      this.parser,
+      extractedParsedFiles,
+    );
+    const extractedFilesImportExtractor = new PythonImportExtractor(
+      this.parser,
+      extractedParsedFiles,
+    );
+    const extractedFilesModuleResolver = new PythonModuleResolver(
+      new Set(extractedParsedFiles.keys()),
+      this.moduleResolver.pythonVersion,
+    );
+
+    // Create a usage resolver for the extracted files to detect import usage
+    const extractedFilesUsageResolver = new PythonUsageResolver(
+      this.parser,
+      extractedExportExtractor,
+    );
+
+    // Process each file to remove unused imports
+    for (const { path, content } of extractedFiles.values()) {
+      // Get all import statements in the file
+      const importStatements =
+        extractedFilesImportExtractor.getImportStatements(path);
+
+      // Skip if no imports found
+      if (importStatements.length === 0) {
+        continue;
+      }
+
+      // Get the file's root node for analysis
+      const fileData = extractedParsedFiles.get(path);
+      if (!fileData) {
+        throw new Error(`Could not find parsed file data for ${path}`);
+      }
+
+      // Find nodes to exclude from usage analysis (typically the import statements themselves)
+      const nodesToExclude = importStatements.map(
+        (statement) => statement.node,
+      );
+
+      // Maps to track what's actually used
+      const internalUsageMap = new Map<string, InternalUsage>();
+      const externalUsageMap = new Map<
+        string,
+        {
+          moduleName: string;
+          itemNames: Set<string>;
+        }
+      >();
+
+      // Track indexes of unused imports to remove
+      const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
+
+      // Check each import statement to see if it's used
+      for (const importStatement of importStatements) {
+        if (importStatement.type === NORMAL_IMPORT_STATEMENT_TYPE) {
+          // Handle normal imports (import foo, import foo.bar)
+          const indexesToRemoveForImport: {
+            startIndex: number;
+            endIndex: number;
+          }[] = [];
+
+          for (const member of importStatement.members) {
+            const importName = member.identifierNode.text;
+            const lookupRef = member.aliasNode?.text || importName;
+
+            // Try to resolve as internal module first
+            const fileModule =
+              extractedFilesModuleResolver.getModuleFromFilePath(path);
+            const resolvedModule = extractedFilesModuleResolver.resolveModule(
+              fileModule,
+              importName,
+            );
+
+            if (resolvedModule) {
+              // It's an internal module, check if it's used
+              extractedFilesUsageResolver.resolveInternalUsageForModule(
+                fileData.rootNode,
+                nodesToExclude,
+                resolvedModule,
+                lookupRef,
+                internalUsageMap,
+              );
+
+              // If no usage found, mark for removal
+              if (!internalUsageMap.has(resolvedModule.path)) {
+                // This member is unused, mark it for removal
+                const startIndex = member.node.startIndex;
+                let endIndex = member.node.endIndex;
+                if (
+                  member.node.nextSibling &&
+                  member.node.nextSibling.type === ","
+                ) {
+                  endIndex = member.node.nextSibling.endIndex;
+                }
+                indexesToRemoveForImport.push({
+                  startIndex,
+                  endIndex,
+                });
+              }
+            } else {
+              // It's an external module, check if it's used
+              extractedFilesUsageResolver.resolveExternalUsageForItem(
+                fileData.rootNode,
+                nodesToExclude,
+                { moduleName: importName },
+                lookupRef,
+                externalUsageMap,
+              );
+
+              // If no usage found, mark for removal
+              if (!externalUsageMap.has(importName)) {
+                // This member is unused, mark it for removal
+                const startIndex = member.node.startIndex;
+                let endIndex = member.node.endIndex;
+                if (
+                  member.node.nextSibling &&
+                  member.node.nextSibling.type === ","
+                ) {
+                  endIndex = member.node.nextSibling.endIndex;
+                }
+                indexesToRemoveForImport.push({
+                  startIndex,
+                  endIndex,
+                });
+              }
+            }
+          }
+
+          // Handle removals for normal imports
+          if (indexesToRemoveForImport.length > 0) {
+            if (
+              indexesToRemoveForImport.length === importStatement.members.length
+            ) {
+              // Remove the whole import statement if all members are unused
+              indexesToRemove.push({
+                startIndex: importStatement.node.startIndex,
+                endIndex: importStatement.node.endIndex,
+              });
+            } else {
+              // Remove only the unused members
+              indexesToRemove.push(...indexesToRemoveForImport);
+            }
+          }
+        } else if (importStatement.type === FROM_IMPORT_STATEMENT_TYPE) {
+          // Handle from imports (from foo import bar)
+          const member = importStatement.members[0];
+          const moduleName = member.identifierNode.text;
+          const fileModule =
+            extractedFilesModuleResolver.getModuleFromFilePath(path);
+          const resolvedModule = extractedFilesModuleResolver.resolveModule(
+            fileModule,
+            moduleName,
+          );
+
+          if (resolvedModule) {
+            // It's an internal module
+
+            // Handle wildcard imports - we keep these for simplicity
+            if (member.isWildcardImport) {
+              continue;
+            }
+
+            // Check each imported item
+            if (!member.items) {
+              throw new Error(
+                `Could not find items for import ${moduleName} in ${path}`,
+              );
+            }
+
+            const indexesToRemoveForImport: {
+              startIndex: number;
+              endIndex: number;
+            }[] = [];
+
+            for (const item of member.items) {
+              const itemName = item.identifierNode.text;
+              const lookupRef = item.aliasNode?.text || itemName;
+
+              // Get all symbols from the module
+              const exports = extractedExportExtractor.getSymbols(
+                resolvedModule.path,
+              );
+              // Find the specific symbol
+              const currentSymbol = exports.symbols.find(
+                (s) => s.id === itemName,
+              );
+
+              if (currentSymbol) {
+                extractedFilesUsageResolver.resolveInternalUsageForSymbol(
+                  fileData.rootNode,
+                  nodesToExclude,
+                  resolvedModule,
+                  currentSymbol,
+                  lookupRef,
+                  internalUsageMap,
+                );
+
+                // Check if this symbol was found in usage
+                const moduleUsage = internalUsageMap.get(resolvedModule.path);
+                if (
+                  !moduleUsage ||
+                  !moduleUsage.symbols.has(currentSymbol.id)
+                ) {
+                  // Mark unused item for removal
+                  const startIndex = item.node.startIndex;
+                  let endIndex = item.node.endIndex;
+                  if (
+                    item.node.nextSibling &&
+                    item.node.nextSibling.type === ","
+                  ) {
+                    endIndex = item.node.nextSibling.endIndex;
+                  }
+                  indexesToRemoveForImport.push({
+                    startIndex,
+                    endIndex,
+                  });
+                }
+              } else {
+                // Symbol not found, consider it unused
+                const startIndex = item.node.startIndex;
+                let endIndex = item.node.endIndex;
+                if (
+                  item.node.nextSibling &&
+                  item.node.nextSibling.type === ","
+                ) {
+                  endIndex = item.node.nextSibling.endIndex;
+                }
+                indexesToRemoveForImport.push({
+                  startIndex,
+                  endIndex,
+                });
+              }
+            }
+
+            // Handle removals for from imports
+            if (indexesToRemoveForImport.length > 0) {
+              if (indexesToRemoveForImport.length === member.items.length) {
+                // Remove the entire import statement if all items are unused
+                indexesToRemove.push({
+                  startIndex: importStatement.node.startIndex,
+                  endIndex: importStatement.node.endIndex,
+                });
+              } else {
+                // Remove only the unused items
+                indexesToRemove.push(...indexesToRemoveForImport);
+              }
+            }
+          } else {
+            // It's an external module
+
+            // Handle wildcard imports - we keep these for simplicity
+            if (member.isWildcardImport) {
+              continue;
+            }
+
+            // Check each imported item
+            if (!member.items) {
+              throw new Error(
+                `Could not find items for import ${moduleName} in ${path}`,
+              );
+            }
+
+            const indexesToRemoveForImport: {
+              startIndex: number;
+              endIndex: number;
+            }[] = [];
+
+            for (const item of member.items) {
+              const itemName = item.identifierNode.text;
+              const lookupRef = item.aliasNode?.text || itemName;
+
+              extractedFilesUsageResolver.resolveExternalUsageForItem(
+                fileData.rootNode,
+                nodesToExclude,
+                { moduleName, itemName },
+                lookupRef,
+                externalUsageMap,
+              );
+
+              // Check if this item is used
+              const moduleUsage = externalUsageMap.get(moduleName);
+              if (!moduleUsage || !moduleUsage.itemNames.has(itemName)) {
+                // Mark unused item for removal
+                const startIndex = item.node.startIndex;
+                let endIndex = item.node.endIndex;
+                if (
+                  item.node.nextSibling &&
+                  item.node.nextSibling.type === ","
+                ) {
+                  endIndex = item.node.nextSibling.endIndex;
+                }
+                indexesToRemoveForImport.push({
+                  startIndex,
+                  endIndex,
+                });
+              }
+            }
+
+            // Handle removals for from imports
+            if (indexesToRemoveForImport.length > 0) {
+              if (indexesToRemoveForImport.length === member.items.length) {
+                // Remove the entire import if all items are unused
+                indexesToRemove.push({
+                  startIndex: importStatement.node.startIndex,
+                  endIndex: importStatement.node.endIndex,
+                });
+              } else {
+                // Remove only the unused items
+                indexesToRemove.push(...indexesToRemoveForImport);
+              }
+            }
+          }
+        }
+      }
+
+      // Apply the removals to the file content
+      if (indexesToRemove.length > 0) {
+        const newContent = removeIndexesFromSourceCode(
+          content,
+          indexesToRemove,
+        );
+
         // Update the file in the map
         extractedFiles.set(path, { path, content: newContent });
       }
