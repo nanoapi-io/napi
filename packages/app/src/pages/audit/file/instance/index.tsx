@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import cytoscape, { Core } from "cytoscape";
 import Controls from "../../../../components/Cytoscape/Controls.js";
 import GraphDepthExtension from "../../../../components/Cytoscape/ControlExtensions/GraphDepthExtension.js";
+import SymbolContextMenu from "../../../../components/Cytoscape/contextMenu/SymbolContextMenu.js";
 import { useOutletContext, useParams, useNavigate } from "react-router";
 import fcose from "cytoscape-fcose";
 import { ThemeContext } from "../../../../contexts/ThemeContext.js";
@@ -28,6 +29,21 @@ export default function AuditInstancePage() {
 
   const [dependencyDepth, setDependencyDepth] = useState(1);
   const [dependentDepth, setDependentDepth] = useState(1);
+
+  const [contextMenuOpen, setContextMenuOpen] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [contextMenuSymbolId, setContextMenuSymbolId] = useState<
+    string | undefined
+  >(undefined);
+
+  const [detailsPaneSymbolId, setDetailsPaneSymbolId] = useState<
+    string | undefined
+  >(undefined);
+
+  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
 
   // Initialize and cleanup Cytoscape
   useEffect(() => {
@@ -142,6 +158,19 @@ export default function AuditInstancePage() {
       navigate(url);
     });
 
+    // Show context menu on right click
+    cy.on("cxttap", "node", (evt) => {
+      const node = evt.target;
+      const data = node.data() as NodeElementDefinition["data"];
+      console.log("Cxttap", data);
+
+      if (data.isExternal) return;
+
+      setContextMenuPosition(node.renderedPosition());
+      setContextMenuOpen(true);
+      setContextMenuSymbolId(data.customData.instance.name);
+    });
+
     return cy;
   }
 
@@ -175,6 +204,24 @@ export default function AuditInstancePage() {
           />
         </Controls>
       )}
+
+      {contextMenuSymbolId && (
+        <SymbolContextMenu
+          position={contextMenuPosition}
+          fileDependencyManifest={context.dependencyManifest[params.file]}
+          symbolId={contextMenuSymbolId}
+          open={contextMenuOpen}
+          onOpenChange={setContextMenuOpen}
+          setDetailsPaneOpen={(open) => {
+            setDetailsPaneOpen(open);
+            if (open) {
+              setDetailsPaneSymbolId(contextMenuSymbolId);
+            }
+          }}
+          setExtractionNodes={context.actions.setExtractionNodes}
+        />
+      )}
+
       <div ref={containerRef} className="relative w-full h-full z-1" />
     </div>
   );
