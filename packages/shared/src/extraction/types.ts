@@ -1,4 +1,4 @@
-export type ExtractionNode = {
+export interface ExtractionNode {
   filePath: string;
   symbols: string[];
 }

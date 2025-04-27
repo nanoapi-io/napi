@@ -8,7 +8,12 @@ import {
 } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
-import { PanelGroup, Panel, PanelResizeHandle, ImperativePanelHandle } from "react-resizable-panels";
+import {
+  PanelGroup,
+  Panel,
+  PanelResizeHandle,
+  ImperativePanelHandle,
+} from "react-resizable-panels";
 import { ExtractionNode } from "@nanoapi.io/shared";
 import { FileExplorerSkeleton } from "./Skeleton.js";
 import { LuPanelRightOpen, LuX } from "react-icons/lu";
@@ -22,7 +27,7 @@ import {
   MdSubdirectoryArrowRight,
   MdDragHandle,
   MdVerticalAlignTop,
-  MdVerticalAlignBottom
+  MdVerticalAlignBottom,
 } from "react-icons/md";
 import { runExtraction } from "../../service/api/index.js";
 import { toast } from "react-toastify";
@@ -52,8 +57,12 @@ export default function FileExplorer(props: {
   setHighlightedNodeId: (node: string | null) => void;
   extractionState: {
     extractionNodes: Record<string, ExtractionNode>;
-    setExtractionNodes: (filePath: string, symbols: string[], action: 'add' | 'remove') => void;
-  }
+    setExtractionNodes: (
+      filePath: string,
+      symbols: string[],
+      action: "add" | "remove",
+    ) => void;
+  };
 }) {
   const [treeData, setTreeData] = useState<TreeData[]>([]);
   const [extractionPanelSize, setExtractionPanelSize] = useState(0);
@@ -293,33 +302,41 @@ export default function FileExplorer(props: {
           </div>
         </div>
       </Panel>
-      {props.isOpen && <>
-        <div className="flex w-full items-center space-x-2 cursor-pointer">
-          {extractionPanelSize > 0 
-          ? <MdVerticalAlignBottom 
-              onClick={() => handleExpandAndCollapse()}
-              className="text-xl text-gray-light dark:text-gray-dark" /> 
-          : <MdVerticalAlignTop 
-              onClick={() => handleExpandAndCollapse()}
-              className="text-xl text-gray-light dark:text-gray-dark" />}
-          <PanelResizeHandle className="grow flex justify-between bg-surface-light dark:bg-surface-dark rounded-sm px-1">
-            <span>Symbol Extraction</span>
-          <MdDragHandle className="text-2xl text-gray-light dark:text-gray-dark" />
-        </PanelResizeHandle>
-      </div>
-      <Panel 
-        id="extraction" 
-        collapsible
-        order={2} 
-        minSize={0} 
-        defaultSize={0} 
-        onResize={handleResize}
-        ref={extractionPanelRef}>
-        <ExtractionPanel
-          extractionNodes={props.extractionState.extractionNodes}
-          setExtractionNodes={props.extractionState.setExtractionNodes}
-        />
-      </Panel></>}
+      {props.isOpen && (
+        <>
+          <div className="flex w-full items-center space-x-2 cursor-pointer">
+            {extractionPanelSize > 0 ? (
+              <MdVerticalAlignBottom
+                onClick={() => handleExpandAndCollapse()}
+                className="text-xl text-gray-light dark:text-gray-dark"
+              />
+            ) : (
+              <MdVerticalAlignTop
+                onClick={() => handleExpandAndCollapse()}
+                className="text-xl text-gray-light dark:text-gray-dark"
+              />
+            )}
+            <PanelResizeHandle className="grow flex justify-between bg-surface-light dark:bg-surface-dark rounded-sm px-1">
+              <span>Symbol Extraction</span>
+              <MdDragHandle className="text-2xl text-gray-light dark:text-gray-dark" />
+            </PanelResizeHandle>
+          </div>
+          <Panel
+            id="extraction"
+            collapsible
+            order={2}
+            minSize={0}
+            defaultSize={0}
+            onResize={handleResize}
+            ref={extractionPanelRef}
+          >
+            <ExtractionPanel
+              extractionNodes={props.extractionState.extractionNodes}
+              setExtractionNodes={props.extractionState.setExtractionNodes}
+            />
+          </Panel>
+        </>
+      )}
     </PanelGroup>
   );
 }
@@ -513,7 +530,11 @@ enum EditMode {
 
 function ExtractionPanel(props: {
   extractionNodes: Record<string, ExtractionNode>;
-  setExtractionNodes: (filePath: string, symbols: string[], action: 'add' | 'remove') => void;
+  setExtractionNodes: (
+    filePath: string,
+    symbols: string[],
+    action: "add" | "remove",
+  ) => void;
 }) {
   const [editMode, setEditMode] = useState<EditMode>(EditMode.NONE);
 
@@ -522,12 +543,13 @@ function ExtractionPanel(props: {
     const response = await runExtraction(extractionNodes);
 
     if (response && response.success) {
-      toast.success("Extraction completed successfully. You'll find the extracted files in the output directory.");
+      toast.success(
+        "Extraction completed successfully. You'll find the extracted files in the output directory.",
+      );
     } else {
       toast.error("Extraction failed. Please check the logs for more details.");
     }
   }
-
 
   return (
     <div className="flex flex-col h-full justify-between">
@@ -546,29 +568,30 @@ function ExtractionPanel(props: {
       </ScrollArea>
       <div className="w-full flex justify-between items-center space-x-2">
         {editMode !== EditMode.EDITING && (
-        <>
-          <Tooltip content="Remove elements from the current extraction">
-            <Button
-              variant="ghost"
-              color="violet"
-              className="w-[48%]"
-              onClick={() => {
-                setEditMode(EditMode.EDITING);
-              }}
-            >
-              Edit
-            </Button>
-          </Tooltip>
-          <Tooltip content="Extract the above symbols into a separate codebase">
-            <Button
-              color="violet"
-              className="w-[48%]"
-              onClick={runExtractionViaAPI}
-            >
-              Extract
-            </Button>
-          </Tooltip>
-        </>)}
+          <>
+            <Tooltip content="Remove elements from the current extraction">
+              <Button
+                variant="ghost"
+                color="violet"
+                className="w-[48%]"
+                onClick={() => {
+                  setEditMode(EditMode.EDITING);
+                }}
+              >
+                Edit
+              </Button>
+            </Tooltip>
+            <Tooltip content="Extract the above symbols into a separate codebase">
+              <Button
+                color="violet"
+                className="w-[48%]"
+                onClick={runExtractionViaAPI}
+              >
+                Extract
+              </Button>
+            </Tooltip>
+          </>
+        )}
         {editMode === EditMode.EDITING && (
           <>
             <Button
@@ -584,8 +607,9 @@ function ExtractionPanel(props: {
             <Button
               color="violet"
               className="w-[48%]"
-              onClick={() => setEditMode(EditMode.COMPLETED)}>
-                Update
+              onClick={() => setEditMode(EditMode.COMPLETED)}
+            >
+              Update
             </Button>
           </>
         )}
@@ -596,12 +620,16 @@ function ExtractionPanel(props: {
 
 function ExtractionElement(props: {
   node: ExtractionNode;
-  setExtractionNodes: (filePath: string, symbols: string[], action: 'add' | 'remove') => void;
+  setExtractionNodes: (
+    filePath: string,
+    symbols: string[],
+    action: "add" | "remove",
+  ) => void;
   editMode?: EditMode;
 }) {
   type CheckedState = boolean | "indeterminate";
-  
-  let symbolMap = new Map<string, boolean>();
+
+  const symbolMap = new Map<string, boolean>();
   props.node.symbols.forEach((symbol) => {
     symbolMap.set(symbol, true);
   });
@@ -618,13 +646,9 @@ function ExtractionElement(props: {
             -maxPathLength,
           )}`}</div>
         </Tooltip>
-      )
+      );
     }
-    return (
-      <div>
-        {name}
-      </div>
-    );
+    return <div>{name}</div>;
   }
 
   function resolveFileCheckedState(symbolMap: Map<string, boolean>) {
@@ -643,10 +667,7 @@ function ExtractionElement(props: {
     return "indeterminate";
   }
 
-  function handleSymbolCheck(
-    symbol: string,
-    checked: boolean,
-  ) {
+  function handleSymbolCheck(symbol: string, checked: boolean) {
     let newMap: Map<string, boolean>;
     setCheckedSymbols((prev) => {
       newMap = new Map(prev);
@@ -661,10 +682,14 @@ function ExtractionElement(props: {
     if (props.editMode === EditMode.COMPLETED) {
       // Check if any of the symbols are unchecked, and remove them from the extraction
       const uncheckedSymbols = Array.from(checkedSymbols.entries())
-        .filter(([_, checked]) => !checked)
+        .filter(([, checked]) => !checked)
         .map(([symbol]) => symbol);
       if (uncheckedSymbols.length > 0) {
-        props.setExtractionNodes(props.node.filePath, uncheckedSymbols, 'remove');
+        props.setExtractionNodes(
+          props.node.filePath,
+          uncheckedSymbols,
+          "remove",
+        );
       }
 
       //Finally, update the checkedSymbols to remove the unchecked symbols
@@ -684,7 +709,7 @@ function ExtractionElement(props: {
       // Reset the checked state to the original state
       // by setting everything to true
       setFileChecked(true);
-      setCheckedSymbols((prev) => {
+      setCheckedSymbols(() => {
         const newMap = new Map<string, boolean>();
         props.node.symbols.forEach((symbol) => {
           newMap.set(symbol, true);
@@ -692,7 +717,6 @@ function ExtractionElement(props: {
         return newMap;
       });
     }
-
   }, [props.editMode]);
 
   return (
@@ -705,31 +729,34 @@ function ExtractionElement(props: {
         {props.editMode === EditMode.EDITING && (
           <Tooltip content="Include this file in the extraction?">
             <div>
-              <Checkbox 
+              <Checkbox
                 variant="surface"
-                checked={fileChecked} 
+                checked={fileChecked}
                 className="border-[1px] border-gray-light dark:border-gray-dark"
                 onCheckedChange={(checked) => {
-                setFileChecked(Boolean(checked));
-                for (const symbol of props.node.symbols) {
-                  if (checked) {
-                    checkedSymbols.set(symbol, true);
-                  } else {
-                    checkedSymbols.set(symbol, false);
+                  setFileChecked(Boolean(checked));
+                  for (const symbol of props.node.symbols) {
+                    if (checked) {
+                      checkedSymbols.set(symbol, true);
+                    } else {
+                      checkedSymbols.set(symbol, false);
+                    }
                   }
-                }
-              }}>
-              </Checkbox>
+                }}
+              ></Checkbox>
             </div>
-          </Tooltip>)}
+          </Tooltip>
+        )}
       </div>
       {props.node.symbols.map((symbol) => (
-        <div key={symbol} className="flex items-center justify-between space-x-2 ml-8">
+        <div
+          key={symbol}
+          className="flex items-center justify-between space-x-2 ml-8"
+        >
           <div className="flex items-center space-x-2">
-            <MdSubdirectoryArrowRight 
-              className="text-gray-light dark:text-gray-dark" />
+            <MdSubdirectoryArrowRight className="text-gray-light dark:text-gray-dark" />
             {getDisplayedPath(symbol)}
-            </div>
+          </div>
           {props.editMode === EditMode.EDITING && (
             <Tooltip content="Include this symbol in the extraction?">
               <div>
@@ -743,8 +770,8 @@ function ExtractionElement(props: {
               </div>
             </Tooltip>
           )}
-          </div>
-        ))}
+        </div>
+      ))}
     </div>
   );
 }

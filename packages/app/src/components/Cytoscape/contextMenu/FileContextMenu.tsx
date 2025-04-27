@@ -4,7 +4,7 @@ import {
   LuFolderSearch2,
   LuPanelRightOpen,
   LuSearchCode,
-  LuGitGraph
+  LuGitGraph,
 } from "react-icons/lu";
 import { FileDependencyManifest } from "@nanoapi.io/shared";
 
