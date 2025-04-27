@@ -9,16 +9,22 @@ import GraphLayout from "../../layout/GraphLayout.js";
 import FileExplorer, {
   FileExplorerFile,
 } from "../../components/FileExplorer/FileExplorer.js";
-import { DependencyManifest, AuditManifest } from "@nanoapi.io/shared";
+import { DependencyManifest, AuditManifest, ExtractionNode } from "@nanoapi.io/shared";
 
 export interface AuditContext {
   busy: boolean;
   dependencyManifest: DependencyManifest;
   auditManifest: AuditManifest;
   highlightedNodeId: string | null;
+  extractionNodes: Record<string, ExtractionNode>;
   actions: {
     setHighlightedNodeId: (nodeId: string | null) => void;
     showInSidebar: (filename: string) => void;
+    setExtractionNodes: (
+      filePath: string,
+      symbols: string[],
+      action: "add" | "remove",
+    ) => void;
   };
 }
 
@@ -38,10 +44,47 @@ export default function BaseAuditPage() {
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null,
   );
+  const [extractionNodes, setExtractionNodes] = useState<Record<string, ExtractionNode>>({});
 
   function showInSidebar(filename: string) {
     setSidebarOpen(true);
     setSidebarSearch(filename);
+  }
+
+  function updateExtractionNodes(
+    filePath: string,
+    symbols: string[],
+    action: "add" | "remove",
+  ) {
+    if (filePath in extractionNodes) {
+      const existingSymbols = extractionNodes[filePath].symbols;
+      const newSymbols = action === "add"
+        ? [...new Set([...existingSymbols, ...symbols])]
+        : existingSymbols.filter((symbol) => !symbols.includes(symbol));
+
+      setExtractionNodes((prev) => {
+        // Ensure react forces a re-render
+        const newExtractionNodes = { ...prev };
+
+        // Remove a file if no symbols are left
+        // This is to prevent the file from being shown in the sidebar
+        if (newSymbols.length === 0) {
+          delete newExtractionNodes[filePath];
+          return newExtractionNodes;
+        }
+
+        newExtractionNodes[filePath] = { filePath: filePath, symbols: newSymbols };
+        return newExtractionNodes;
+      });
+    }
+    else {
+      setExtractionNodes((prev) => {
+        // Ensure react forces a re-render
+        const newExtractionNodes = { ...prev };
+        newExtractionNodes[filePath] = { filePath: filePath, symbols };
+        return newExtractionNodes;
+      });
+    }
   }
 
   useEffect(() => {
@@ -96,6 +139,10 @@ export default function BaseAuditPage() {
           setIsSearch={setSidebarSearch}
           highlightedNodeId={highlightedNodeId}
           setHighlightedNodeId={setHighlightedNodeId}
+          extractionState={{
+            extractionNodes,
+            setExtractionNodes: updateExtractionNodes,
+          }}
         />
       }
       graphSlot={
@@ -105,9 +152,11 @@ export default function BaseAuditPage() {
             dependencyManifest,
             auditManifest,
             highlightedNodeId,
+            extractionNodes,
             actions: {
               setHighlightedNodeId,
               showInSidebar,
+              setExtractionNodes: updateExtractionNodes,
             },
           }}
         />

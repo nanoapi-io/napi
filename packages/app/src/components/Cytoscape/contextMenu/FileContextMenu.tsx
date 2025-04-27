@@ -4,6 +4,7 @@ import {
   LuFolderSearch2,
   LuPanelRightOpen,
   LuSearchCode,
+  LuGitGraph
 } from "react-icons/lu";
 import { FileDependencyManifest } from "@nanoapi.io/shared";
 
@@ -14,7 +15,22 @@ export default function FileContextMenu(props: {
   showInSidebar: (filename: string) => void;
   onOpenChange: (open: boolean) => void;
   setDetailsPaneOpen: (open: boolean) => void;
+  setExtractionNodes: (
+    filePath: string,
+    symbols: string[],
+    action: "add" | "remove",
+  ) => void;
 }) {
+  function handleOnExtract() {
+    props.setExtractionNodes(
+      props.fileDependencyManifest.filePath,
+      Object.values(props.fileDependencyManifest.symbols).map(
+        (symbol) => symbol.id,
+      ),
+      "add",
+    );
+  }
+
   return (
     <div
       className="absolute z-50"
@@ -69,6 +85,16 @@ export default function FileContextMenu(props: {
             <div className="w-full flex justify-between space-x-2">
               <span>Show file</span>
               <LuFolderSearch2 className="text-lg my-auto" />
+            </div>
+          </DropdownMenu.Item>
+          <DropdownMenu.Separator />
+          <DropdownMenu.Item
+            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
+            onSelect={() => handleOnExtract()}
+          >
+            <div className="w-full flex justify-between space-x-2">
+              <span>Extract</span>
+              <LuGitGraph className="text-lg my-auto" />
             </div>
           </DropdownMenu.Item>
         </DropdownMenu.Content>

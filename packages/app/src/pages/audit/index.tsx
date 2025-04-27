@@ -157,6 +157,7 @@ export default function AuditPage() {
               setDetailsPaneNodeId(contextMenuNodeId);
             }
           }}
+          setExtractionNodes={context.actions.setExtractionNodes}
         />
       )}
 

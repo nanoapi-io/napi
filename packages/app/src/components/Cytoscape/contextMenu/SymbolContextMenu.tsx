@@ -2,7 +2,6 @@ import { Link } from "react-router";
 import { DropdownMenu } from "@radix-ui/themes";
 import { LuPanelRightOpen, LuSearchCode, LuGitGraph } from "react-icons/lu";
 import { FileDependencyManifest } from "@nanoapi.io/shared";
-import { toast } from "react-toastify";
 
 export default function SymbolContextMenu(props: {
   position: { x: number; y: number };
@@ -11,10 +10,17 @@ export default function SymbolContextMenu(props: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   setDetailsPaneOpen: (open: boolean) => void;
+  setExtractionNodes: (
+    filePath: string,
+    symbols: string[],
+    action: "add" | "remove",
+  ) => void;
 }) {
   function handleOnExtract() {
-    toast.warning(
-      "This functionality is not yet implemented. Please check back soon.",
+    props.setExtractionNodes(
+      props.fileDependencyManifest.filePath,
+      [props.symbolId],
+      "add",
     );
   }
 

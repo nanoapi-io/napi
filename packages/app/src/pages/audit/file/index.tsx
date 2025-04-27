@@ -179,6 +179,7 @@ export default function AuditFilePage() {
               setDetailsPaneSymbolId(contextMenuSymbolId);
             }
           }}
+          setExtractionNodes={context.actions.setExtractionNodes}
         />
       )}
 
