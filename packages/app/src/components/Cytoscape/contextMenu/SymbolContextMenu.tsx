@@ -75,7 +75,7 @@ export default function SymbolContextMenu(props: {
             onSelect={() => handleOnExtract()}
           >
             <div className="w-full flex justify-between space-x-2">
-              <span>Extract</span>
+              <span>Extract symbol</span>
               <LuGitGraph className="text-lg my-auto" />
             </div>
           </DropdownMenu.Item>
