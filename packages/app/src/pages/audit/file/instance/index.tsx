@@ -39,11 +39,9 @@ export default function AuditInstancePage() {
     string | undefined
   >(undefined);
 
-  const [detailsPaneSymbolId, setDetailsPaneSymbolId] = useState<
-    string | undefined
-  >(undefined);
+  const [, setDetailsPaneSymbolId] = useState<string | undefined>(undefined);
 
-  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
+  const [, setDetailsPaneOpen] = useState(false);
 
   // Initialize and cleanup Cytoscape
   useEffect(() => {

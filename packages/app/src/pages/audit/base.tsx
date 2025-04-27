@@ -9,7 +9,11 @@ import GraphLayout from "../../layout/GraphLayout.js";
 import FileExplorer, {
   FileExplorerFile,
 } from "../../components/FileExplorer/FileExplorer.js";
-import { DependencyManifest, AuditManifest, ExtractionNode } from "@nanoapi.io/shared";
+import {
+  DependencyManifest,
+  AuditManifest,
+  ExtractionNode,
+} from "@nanoapi.io/shared";
 
 export interface AuditContext {
   busy: boolean;
@@ -44,7 +48,9 @@ export default function BaseAuditPage() {
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null,
   );
-  const [extractionNodes, setExtractionNodes] = useState<Record<string, ExtractionNode>>({});
+  const [extractionNodes, setExtractionNodes] = useState<
+    Record<string, ExtractionNode>
+  >({});
 
   function showInSidebar(filename: string) {
     setSidebarOpen(true);
@@ -58,9 +64,10 @@ export default function BaseAuditPage() {
   ) {
     if (filePath in extractionNodes) {
       const existingSymbols = extractionNodes[filePath].symbols;
-      const newSymbols = action === "add"
-        ? [...new Set([...existingSymbols, ...symbols])]
-        : existingSymbols.filter((symbol) => !symbols.includes(symbol));
+      const newSymbols =
+        action === "add"
+          ? [...new Set([...existingSymbols, ...symbols])]
+          : existingSymbols.filter((symbol) => !symbols.includes(symbol));
 
       setExtractionNodes((prev) => {
         // Ensure react forces a re-render
@@ -69,15 +76,18 @@ export default function BaseAuditPage() {
         // Remove a file if no symbols are left
         // This is to prevent the file from being shown in the sidebar
         if (newSymbols.length === 0) {
+          // eslint-disable-next-line
           delete newExtractionNodes[filePath];
           return newExtractionNodes;
         }
 
-        newExtractionNodes[filePath] = { filePath: filePath, symbols: newSymbols };
+        newExtractionNodes[filePath] = {
+          filePath: filePath,
+          symbols: newSymbols,
+        };
         return newExtractionNodes;
       });
-    }
-    else {
+    } else {
       setExtractionNodes((prev) => {
         // Ensure react forces a re-render
         const newExtractionNodes = { ...prev };

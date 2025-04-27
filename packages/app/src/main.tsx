@@ -17,7 +17,7 @@ const router = createHashRouter([
   {
     path: "/",
     element: <Navigate to="/audit" replace />,
-  }, 
+  },
   {
     path: "/audit",
     element: <BaseAuditPage />,
