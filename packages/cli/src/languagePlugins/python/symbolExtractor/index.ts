@@ -78,8 +78,6 @@ export class PythonSymbolExtractor {
     console.info("Finding dependencies for all symbols to extract...");
     const symbolsToKeep = this.identifySymbolsAndDependencies(symbolsMap);
 
-    console.log("symbolsToKeep:", symbolsToKeep);
-
     // 2. Extract all the symbols
     console.info(`Extracting files in-memory...`);
     const extractedFiles = this.extractFilesInMemory(symbolsToKeep);
@@ -119,8 +117,6 @@ export class PythonSymbolExtractor {
         symbols: Set<string>;
       }
     >();
-
-    console.log("symbolsToKeep:", symbolsToKeep);
 
     symbolsMap.values().forEach(({ filePath, symbols }) => {
       symbols.forEach((symbol) => {
@@ -264,40 +260,34 @@ export class PythonSymbolExtractor {
    */
   private cleanErrorNodes(
     extractedFiles: Map<string, { path: string; content: string }>,
-  ): void {
+  ) {
     for (const [filePath, fileData] of extractedFiles.entries()) {
-      // Parse the file content
-      const tree = this.parser.parse(fileData.content);
+      let sourceCode = fileData.content;
 
-      // Find error nodes
-      const matches = this.errorNodeQuery.matches(tree.rootNode);
+      // Need to remove error nodes one at a time, as fixing one error
+      // might make previously invalid code valid
+      while (true) {
+        // Parse the file content
+        const tree = this.parser.parse(sourceCode);
 
-      // If there are error nodes, clean them by removing the content
-      if (matches.length > 0) {
-        console.warn(
-          `Found ${matches.length} error nodes in ${filePath}, cleaning...`,
-        );
+        // Find error nodes
+        const captures = this.errorNodeQuery.captures(tree.rootNode);
 
-        // Sort matches by start position in descending order to avoid offset issues
-        matches.sort((a, b) => {
-          const nodeA = a.captures[0].node;
-          const nodeB = b.captures[0].node;
-          return nodeB.startIndex - nodeA.startIndex;
-        });
-
-        let cleanedContent = fileData.content;
-
-        // Remove each error node
-        for (const match of matches) {
-          const errorNode = match.captures[0].node;
-          cleanedContent =
-            cleanedContent.substring(0, errorNode.startIndex) +
-            cleanedContent.substring(errorNode.endIndex);
+        if (captures.length === 0) {
+          break;
         }
 
-        // Update the file content
-        fileData.content = cleanedContent;
+        const firstCapture = captures[0];
+
+        sourceCode =
+          sourceCode.substring(0, firstCapture.node.startIndex) +
+          sourceCode.substring(firstCapture.node.endIndex);
       }
+
+      extractedFiles.set(filePath, {
+        path: filePath,
+        content: sourceCode,
+      });
     }
   }
 
@@ -472,8 +462,8 @@ export class PythonSymbolExtractor {
             if (!extractedItem) {
               // if the item doesn't resolve we need to remove it
               indexesToRemoveForImport.push({
-                startIndex: importStatement.node.startIndex,
-                endIndex: importStatement.node.endIndex,
+                startIndex: item.node.startIndex,
+                endIndex: item.node.endIndex,
               });
             }
           }
