@@ -211,7 +211,8 @@ export function generatePythonDependencyManifest(
   console.info("Generating Python dependency manifest...");
   let manifest: DependencyManifest = {};
 
-  for (const [i, file] of files.entries()) {
+  let i = 0;
+  for (const file of files.values()) {
     const fileDependencies = dependencyResolver.getFileDependencies(file.path);
 
     const dependencies: Record<string, DependencyInfo> = {};
@@ -283,7 +284,8 @@ export function generatePythonDependencyManifest(
 
     manifest[file.path] = fileManifest;
 
-    console.info(`✅ Processed file ${i + 1}/${files.size}: ${file.path}`);
+    console.info(`✅ Processed ${i + 1}/${files.size}: ${file.path}`);
+    i++;
   }
 
   console.info(

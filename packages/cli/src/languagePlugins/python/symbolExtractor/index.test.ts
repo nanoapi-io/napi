@@ -333,7 +333,6 @@ class Application:
     expect(result.get("services/user_service.py")).toBeDefined();
     expect(result.get("services/user_service.py")?.content.trim()).toEqual(
       `
-from models.user import User
 from database.repository import Repository
 
 class UserService:
@@ -350,7 +349,6 @@ class UserService:
     expect(result.get("services/auth_service.py")).toBeDefined();
     expect(result.get("services/auth_service.py")?.content.trim()).toEqual(
       `
-from models.user import User
 from services.user_service import UserService
 import hashlib
 
