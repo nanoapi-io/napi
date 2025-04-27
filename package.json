@@ -28,6 +28,6 @@
     "tsup": "^8.4.0",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.1",
-    "vitest": "^2.1.8"
+    "vitest": "^3.1.2"
   }
 }

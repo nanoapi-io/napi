@@ -49,6 +49,7 @@
     "release": "npx release-it"
   },
   "devDependencies": {
+    "@nanoapi.io/shared": "0.0.0",
     "@release-it/bumper": "^6.0.1",
     "@release-it/keep-a-changelog": "^5.0.0",
     "@rollup/plugin-commonjs": "^28.0.3",
@@ -61,11 +62,10 @@
     "@types/yargs": "^17.0.33",
     "cross-env": "^7.0.3",
     "nodemon": "^3.1.9",
-    "release-it": "^17.10.0",
+    "release-it": "^19.0.1",
     "rollup": "^4.40.0",
     "rollup-plugin-preserve-shebang": "^1.0.1",
-    "ts-node": "^10.9.2",
-    "@nanoapi.io/shared": "0.0.0"
+    "ts-node": "^10.9.2"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.4.1",

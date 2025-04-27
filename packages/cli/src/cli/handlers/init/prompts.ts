@@ -401,9 +401,6 @@ function suggestIncludePatterns(
       if (projectStructure.some((entry) => entry.includes("📂 app/"))) {
         suggestions.push("app/**/*.py");
       }
-      if (projectStructure.some((entry) => entry.includes("📂 tests/"))) {
-        suggestions.push("tests/**/*.py");
-      }
     }
 
     // If no specific directories found, suggest all Python files
@@ -427,9 +424,6 @@ function suggestIncludePatterns(
       }
       if (projectStructure.some((entry) => entry.includes("📂 Services/"))) {
         suggestions.push("Services/**/*.cs");
-      }
-      if (projectStructure.some((entry) => entry.includes("📂 Tests/"))) {
-        suggestions.push("Tests/**/*.cs");
       }
     }
 
@@ -655,7 +649,7 @@ RECOMMENDATIONS:
       `);
 
     const fileMaxCodeChar = await number({
-      message: "Enter maximum characters per file",
+      message: "Enter maximum (code only) characters per file",
       default: defaultMetrics.file.maxCodeChar,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
@@ -666,7 +660,7 @@ RECOMMENDATIONS:
     });
 
     const fileMaxChar = await number({
-      message: "Enter maximum characters per file",
+      message: "Enter maximum (all) characters per file",
       default: defaultMetrics.file.maxChar,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
@@ -677,7 +671,7 @@ RECOMMENDATIONS:
     });
 
     const fileMaxCodeLine = await number({
-      message: "Enter maximum lines per file",
+      message: "Enter maximum (code only) lines per file",
       default: defaultMetrics.file.maxCodeLine,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
@@ -688,7 +682,7 @@ RECOMMENDATIONS:
     });
 
     const fileMaxLine = await number({
-      message: "Enter maximum lines per file",
+      message: "Enter maximum (all) lines per file",
       default: defaultMetrics.file.maxLine,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
