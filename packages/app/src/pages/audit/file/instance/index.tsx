@@ -176,9 +176,11 @@ export default function AuditInstancePage() {
     cy.on("cxttap", "node", (evt) => {
       const node = evt.target;
       const data = node.data() as NodeElementDefinition["data"];
-      console.log("Cxttap", data);
 
-      if (data.isExternal) return;
+      if (data.customData.fileName !== params.file) {
+        // ignore clicks on nodes from other files
+        return;
+      }
 
       setContextMenuPosition(node.renderedPosition());
       setContextMenuOpen(true);

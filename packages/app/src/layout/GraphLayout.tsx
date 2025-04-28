@@ -7,12 +7,8 @@ import {
 } from "../contexts/ThemeContext.js";
 import { Link, useParams } from "react-router";
 import { MdLightMode, MdDarkMode, MdKeyboardArrowRight } from "react-icons/md";
-
-enum ViewType {
-  PROJECT = "project",
-  FILE = "file",
-  INSTANCE = "instance",
-}
+import { useCurrentViewName } from "../hooks/index.js";
+import { ViewNames } from "../hooks/types.js";
 
 export default function GraphLayout(props: {
   sideBarSlot?: React.ReactNode;
@@ -21,14 +17,7 @@ export default function GraphLayout(props: {
   const themeContext = useContext(ThemeContext);
   const { file, instance } = useParams();
 
-  let currentView: ViewType;
-  if (file && instance) {
-    currentView = ViewType.INSTANCE;
-  } else if (file) {
-    currentView = ViewType.FILE;
-  } else {
-    currentView = ViewType.PROJECT;
-  }
+  const currentView = useCurrentViewName();
 
   return (
     <div className="h-screen grow flex gap-3 bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark px-4 py-3">
@@ -39,10 +28,10 @@ export default function GraphLayout(props: {
       )}
       <div className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out">
         <div
-          className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-b-none flex items-center px-2 py-2 ${currentView === ViewType.PROJECT ? "justify-end" : "justify-between"}`}
+          className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-b-none flex items-center px-2 py-2 ${currentView === ViewNames.PROJECT ? "justify-end" : "justify-between"}`}
         >
           <div
-            className={`flex items-center space-x-2 ml-5 overflow-hidden ${currentView === ViewType.PROJECT ? "hidden" : ""}`}
+            className={`flex items-center space-x-2 ml-5 overflow-hidden ${currentView === ViewNames.PROJECT ? "hidden" : ""}`}
           >
             <Link
               to="/audit"
@@ -58,7 +47,7 @@ export default function GraphLayout(props: {
               <span className="">Project</span>
               {/* </Button> */}
             </Link>
-            {currentView !== ViewType.PROJECT && (
+            {currentView !== ViewNames.PROJECT && (
               <>
                 <MdKeyboardArrowRight className="text-gray-light dark:text-gray-dark" />
                 <h1 className="text-md font-semibold text-gray-500 dark:text-text-dark">
@@ -72,7 +61,7 @@ export default function GraphLayout(props: {
                 </Link>
               </>
             )}
-            {currentView === ViewType.INSTANCE && (
+            {currentView === ViewNames.INSTANCE && (
               <>
                 <MdKeyboardArrowRight className="text-gray-light dark:text-gray-dark" />
                 <h1 className="text-md font-semibold text-gray-500 dark:text-text-dark">
