@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { initCli } from "./cli/index.js";
 
 // remove all warning.
