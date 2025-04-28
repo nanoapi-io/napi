@@ -25,7 +25,7 @@ export class CSharpExtractor {
   private manifest: DependencyManifest;
   public projectMapper: CSharpProjectMapper;
   private nsMapper: CSharpNamespaceMapper;
-  private usingResolver: CSharpUsingResolver;
+  public usingResolver: CSharpUsingResolver;
 
   constructor(
     files: Map<string, { path: string; content: string }>,
