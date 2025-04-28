@@ -52,7 +52,7 @@ export interface UsingDirective {
 /**
  * Interface representing an internal symbol resolved from a 'using' directive
  */
-export interface InternalSymbol {
+export class InternalSymbol {
   /** The type of 'using' directive */
   usingtype: UsingType;
   /** The filepath it is imported in */
@@ -68,7 +68,7 @@ export interface InternalSymbol {
 /**
  * Interface representing an external symbol resolved from a 'using' directive
  */
-export interface ExternalSymbol {
+export class ExternalSymbol {
   /** The type of 'using' directive */
   usingtype: UsingType;
   /** The filepath it is imported in */
@@ -101,6 +101,10 @@ export class CSharpUsingResolver {
     string,
     ResolvedImports
   >();
+  private cachedDirectives: Map<string, UsingDirective[]> = new Map<
+    string,
+    UsingDirective[]
+  >();
   public projectmapper: CSharpProjectMapper;
   private cachedExternalDeps: Set<string> = new Set<string>();
 
@@ -118,6 +122,9 @@ export class CSharpUsingResolver {
    * @returns An array of UsingDirective objects.
    */
   public parseUsingDirectives(filepath: string): UsingDirective[] {
+    if (this.cachedDirectives.has(filepath)) {
+      return this.cachedDirectives.get(filepath) as UsingDirective[];
+    }
     const file = this.nsMapper.getFile(filepath);
     if (!file) {
       return [];
@@ -141,6 +148,8 @@ export class CSharpUsingResolver {
       const alias = aliasNode ? aliasNode.text : undefined;
       return { node, type, filepath, id, alias };
     });
+    // Cache the using directives for the file
+    this.cachedDirectives.set(filepath, this.usingDirectives);
     return this.usingDirectives;
   }
 
@@ -168,7 +177,7 @@ export class CSharpUsingResolver {
    * @param directive - The 'using' directive to resolve.
    * @returns An InternalSymbol or ExternalSymbol object.
    */
-  private resolveUsingDirective(
+  public resolveUsingDirective(
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
     const { type, filepath, id, alias } = directive;
