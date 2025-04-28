@@ -52,7 +52,7 @@ export interface UsingDirective {
 /**
  * Interface representing an internal symbol resolved from a 'using' directive
  */
-export interface InternalSymbol {
+export class InternalSymbol {
   /** The type of 'using' directive */
   usingtype: UsingType;
   /** The filepath it is imported in */
@@ -68,7 +68,7 @@ export interface InternalSymbol {
 /**
  * Interface representing an external symbol resolved from a 'using' directive
  */
-export interface ExternalSymbol {
+export class ExternalSymbol {
   /** The type of 'using' directive */
   usingtype: UsingType;
   /** The filepath it is imported in */
