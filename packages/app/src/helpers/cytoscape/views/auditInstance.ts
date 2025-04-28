@@ -3,12 +3,40 @@ import {
   FileDependencyManifest,
   AuditManifest,
 } from "@nanoapi.io/shared";
-import {
-  NodeElementDefinition,
-  EdgeElementDefinition,
-  NodeMap,
-  getNodeLabel,
-} from "./auditFile.js";
+import { ElementDefinition } from "cytoscape";
+import { EdgeElementDefinition, getNodeLabel } from "./auditFile.js";
+import { getNodeWidthAndHeightFromLabel } from "../label/index.js";
+
+interface NodeElementDefinition extends ElementDefinition {
+  data: {
+    id: string;
+    label: string;
+    position: { x: number; y: number };
+    parent?: string;
+    isExpanded: boolean;
+    type: "file" | "instance";
+    isCurrentFile: boolean;
+    isExternal: boolean;
+    customData: {
+      fileName: string;
+      instance?: {
+        name: string;
+        type?: string;
+      };
+      errorMessages: string[];
+      warningMessages: string[];
+      nodeWidth: number;
+    } & object;
+  };
+}
+
+type NodeMap = Record<
+  string,
+  {
+    element: NodeElementDefinition;
+    children: NodeMap;
+  }
+>;
 
 function getNodeId(filePath: string, symbolName: string): string {
   const joinChar = "|";
@@ -47,6 +75,8 @@ function createNodeElement(params: {
     warningMessages,
   });
 
+  const { width } = getNodeWidthAndHeightFromLabel(label);
+
   return {
     data: {
       id,
@@ -62,6 +92,7 @@ function createNodeElement(params: {
         instance: { name: symbolName, type: symbolType },
         errorMessages,
         warningMessages,
+        nodeWidth: width,
       },
     },
   };
