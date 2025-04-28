@@ -7,7 +7,7 @@ import {
   LuGitGraph,
 } from "react-icons/lu";
 import { FileDependencyManifest } from "@nanoapi.io/shared";
-import { basename } from "path";
+import { basename } from "path-browserify";
 
 export default function FileContextMenu(props: {
   position: { x: number; y: number };

@@ -31,7 +31,7 @@ import {
 } from "react-icons/md";
 import { runExtraction } from "../../service/api/index.js";
 import { toast } from "react-toastify";
-import { dirname, extname, sep } from "path";
+import { extname, sep } from "path-browserify";
 
 interface TreeData {
   id: string;
@@ -146,7 +146,7 @@ export default function FileExplorer(props: {
         return;
       }
 
-      const segments = dirname(file.path).split(sep);
+      const segments = file.path.split(sep);
 
       // Add the file to the tree structure
       addFileToTree(rootNodes, segments, "", file.symbols);

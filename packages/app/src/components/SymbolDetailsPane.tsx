@@ -26,7 +26,7 @@ import {
   metricDependentCount,
   metricLinesCount,
 } from "@nanoapi.io/shared";
-import { basename } from "path";
+import { basename } from "path-browserify";
 
 // Subcomponent for section headings
 function SectionHeading({ children }: { children: React.ReactNode }) {
