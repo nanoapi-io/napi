@@ -168,7 +168,7 @@ export class CSharpUsingResolver {
    * @param directive - The 'using' directive to resolve.
    * @returns An InternalSymbol or ExternalSymbol object.
    */
-  private resolveUsingDirective(
+  public resolveUsingDirective(
     directive: UsingDirective,
   ): InternalSymbol | ExternalSymbol {
     const { type, filepath, id, alias } = directive;
