@@ -15,6 +15,7 @@ import {
 import { getInstanceCyElements } from "../../../../helpers/cytoscape/views/auditInstance.js";
 import { CytoscapeSkeleton } from "../../../../components/Cytoscape/Skeleton.js";
 import { AuditContext } from "../../base.js";
+import SymbolDetailsPane from "../../../../components/SymbolDetailsPane.js";
 
 const DEFAULT_DEPENDENCY_DEPTH = 1;
 const DEFAULT_DEPENDENT_DEPTH = 1;
@@ -29,6 +30,7 @@ export default function AuditInstancePage() {
 
   const [dependencyDepth, setDependencyDepth] = useState(1);
   const [dependentDepth, setDependentDepth] = useState(1);
+  const [depLoading, setDepLoading] = useState(false);
 
   const [contextMenuOpen, setContextMenuOpen] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
@@ -39,9 +41,11 @@ export default function AuditInstancePage() {
     string | undefined
   >(undefined);
 
-  const [, setDetailsPaneSymbolId] = useState<string | undefined>(undefined);
+  const [detailsPaneSymbolId, setDetailsPaneSymbolId] = useState<
+    string | undefined
+  >(undefined);
 
-  const [, setDetailsPaneOpen] = useState(false);
+  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
 
   // Initialize and cleanup Cytoscape
   useEffect(() => {
@@ -69,21 +73,33 @@ export default function AuditInstancePage() {
   // Update elements when dependency depth or dependent depth changes
   useEffect(() => {
     if (cyInstance) {
-      // Remove existing elements
-      cyInstance.elements().remove();
+      // Update loading state
+      setDepLoading(true);
 
-      // Add new elements
-      const elements = getInstanceCyElements(
-        context.dependencyManifest,
-        context.auditManifest,
-        params.file as string,
-        params.instance as string,
-        dependencyDepth,
-        dependentDepth,
-      );
-      cyInstance.add(elements);
+      // This function lets us wait for the next animation frame before updating the elements
+      // This allows us to show the button loading state before blocking
+      // the main thread with the cytoscape operations
+      setTimeout(() => {
+        // Remove existing elements
+        cyInstance.elements().remove();
 
-      cyInstance.layout(layout).run();
+        // Add new elements
+        const elements = getInstanceCyElements(
+          context.dependencyManifest,
+          context.auditManifest,
+          params.file as string,
+          params.instance as string,
+          dependencyDepth,
+          dependentDepth,
+        );
+        cyInstance.add(elements);
+
+        cyInstance.one("layoutstop", () => {
+          setDepLoading(false);
+        });
+
+        cyInstance.layout(layout).run();
+      }, 50);
     }
   }, [dependencyDepth, dependentDepth]);
 
@@ -178,6 +194,8 @@ export default function AuditInstancePage() {
 
   return (
     <div className="relative w-full h-full">
+      <div ref={containerRef} className="relative w-full h-full z-10" />
+
       {context.busy || !cyInstance ? (
         <CytoscapeSkeleton />
       ) : (
@@ -187,10 +205,10 @@ export default function AuditInstancePage() {
             cy={cyInstance}
             busy={context.busy}
             onLayout={handleLayout}
-          /> */}
+            /> */}
           <GraphDepthExtension
             cy={cyInstance}
-            busy={context.busy}
+            busy={depLoading}
             dependencyState={{
               depth: dependencyDepth,
               setDepth: setDependencyDepth,
@@ -220,7 +238,15 @@ export default function AuditInstancePage() {
         />
       )}
 
-      <div ref={containerRef} className="relative w-full h-full z-1" />
+      {detailsPaneSymbolId && (
+        <SymbolDetailsPane
+          fileDependencyManifest={context.dependencyManifest[params.file]}
+          fileAuditManifest={context.auditManifest[params.file]}
+          symbolId={detailsPaneSymbolId}
+          open={detailsPaneOpen}
+          setOpen={setDetailsPaneOpen}
+        />
+      )}
     </div>
   );
 }
