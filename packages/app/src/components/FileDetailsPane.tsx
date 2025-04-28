@@ -1,12 +1,5 @@
 import { Link } from "react-router";
-import {
-  Button,
-  Callout,
-  ScrollArea,
-  Separator,
-  Text,
-  Box,
-} from "@radix-ui/themes";
+import { Button, Callout, ScrollArea, Separator, Text } from "@radix-ui/themes";
 import {
   LuX,
   LuCircleX,
@@ -30,9 +23,9 @@ import {
 // Subcomponent for section headings
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <Box className="font-semibold text-lg mt-4 mb-2 flex items-center gap-2">
+    <div className="font-semibold text-lg mt-4 mb-2 flex items-center gap-2">
       {children}
-    </Box>
+    </div>
   );
 }
 
@@ -72,7 +65,7 @@ function MetricItem({
 // Alert badge component
 function AlertBadge({ count }: { count: number }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center space-x-1">
       <LuTriangle
         className={`text-lg ${count > 0 ? "text-amber-500" : "text-gray-400"}`}
       />
@@ -109,7 +102,10 @@ function SymbolSection({
   return (
     <div className="mb-4">
       <div className="flex justify-between items-center">
-        <Text as="span" className="font-semibold">
+        <Text
+          as="span"
+          className="font-semibold break-words text-wrap max-w-[300px]"
+        >
           {symbolData.type}: {symbol.id}
         </Text>
         <AlertBadge count={alerts.length} />
@@ -155,139 +151,132 @@ export default function FileDetailsPane(props: {
   );
 
   return (
-    <div className="relative h-full flex justify-end z-1">
-      <div
-        style={{
-          width: open ? "400px" : "0px",
-          opacity: open ? 1 : 0,
-        }}
-        className="z-20 h-full flex flex-col gap-5 bg-background-light dark:bg-background-dark shadow-xl p-6 rounded-l-lg transition-all duration-300 ease-in-out overflow-hidden"
-      >
-        <ScrollArea className="h-full pr-5" scrollbars="vertical">
-          {/* Header */}
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold font-mono break-words text-wrap">
-                {fileName}
-              </h2>
-              <Button
-                onClick={() => setOpen(false)}
-                variant="ghost"
-                className="text-xl text-text-light dark:text-text-dark"
-              >
-                <LuX />
-              </Button>
+    <div
+      className={`fixed top-[6%] right-0 h-[92%] w-[400px] rounded-l-lg bg-background-light dark:bg-secondaryBackground-dark shadow-xl z-[8888] transition-transform duration-300 translate-x-0 ${
+        open ? "translate-x-0" : "translate-x-[400px]"
+      }`}
+    >
+      <ScrollArea className="h-full p-6" scrollbars="vertical">
+        {/* Header */}
+        <div className="flex justify-between items-center my-4 max-w-[388px]">
+          <h2 className="text-xl font-semibold font-mono break-words text-wrap max-w-[310px]">
+            {fileName}
+          </h2>
+          <button
+            onClick={() => setOpen(false)}
+            className="text-xl text-gray-light hover:text-black dark:text-gray-dark dark:hover:text-white"
+          >
+            <LuX />
+          </button>
+        </div>
+        <Separator className="w-full" />
+
+        {/* File Metrics with Alerts */}
+        <SectionHeading>
+          <div className="w-full flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <LuFileText />
+              <div>File Metrics</div>
             </div>
-            <Separator className="w-full" />
+            <AlertBadge count={fileAlerts.length} />
           </div>
+        </SectionHeading>
+        <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-3">
+          <MetricItem
+            label="Lines Total"
+            value={fileDependencyManifest.metrics[metricLinesCount]}
+            alert={alertsByMetric[metricLinesCount]}
+          />
+          <MetricItem
+            label="Lines of Code"
+            value={fileDependencyManifest.metrics[metricCodeLineCount]}
+            alert={alertsByMetric[metricCodeLineCount]}
+          />
+          <MetricItem
+            label="Characters"
+            value={fileDependencyManifest.metrics[metricCharacterCount]}
+            alert={alertsByMetric[metricCharacterCount]}
+          />
+          <MetricItem
+            label="Code Characters"
+            value={fileDependencyManifest.metrics[metricCodeCharacterCount]}
+            alert={alertsByMetric[metricCodeCharacterCount]}
+          />
+          <MetricItem
+            label="Cyclomatic Complexity"
+            value={fileDependencyManifest.metrics[metricCyclomaticComplexity]}
+            alert={alertsByMetric[metricCyclomaticComplexity]}
+          />
+          <MetricItem
+            label="Dependencies"
+            value={fileDependencyManifest.metrics[metricDependencyCount]}
+            alert={alertsByMetric[metricDependencyCount]}
+          />
+          <MetricItem
+            label="Dependents"
+            value={fileDependencyManifest.metrics[metricDependentCount]}
+            alert={alertsByMetric[metricDependentCount]}
+          />
+        </div>
 
-          {/* File Metrics with Alerts */}
-          <SectionHeading>
-            <div className="w-full flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <LuFileText />
-                <div>File Metrics</div>
-              </div>
-              <AlertBadge count={fileAlerts.length} />
-            </div>
-          </SectionHeading>
-          <div className="rounded-md bg-gray-100 dark:bg-gray-800 p-3">
-            <MetricItem
-              label="Lines Total"
-              value={fileDependencyManifest.metrics[metricLinesCount]}
-              alert={alertsByMetric[metricLinesCount]}
-            />
-            <MetricItem
-              label="Lines of Code"
-              value={fileDependencyManifest.metrics[metricCodeLineCount]}
-              alert={alertsByMetric[metricCodeLineCount]}
-            />
-            <MetricItem
-              label="Characters"
-              value={fileDependencyManifest.metrics[metricCharacterCount]}
-              alert={alertsByMetric[metricCharacterCount]}
-            />
-            <MetricItem
-              label="Code Characters"
-              value={fileDependencyManifest.metrics[metricCodeCharacterCount]}
-              alert={alertsByMetric[metricCodeCharacterCount]}
-            />
-            <MetricItem
-              label="Cyclomatic Complexity"
-              value={fileDependencyManifest.metrics[metricCyclomaticComplexity]}
-              alert={alertsByMetric[metricCyclomaticComplexity]}
-            />
-            <MetricItem
-              label="Dependencies"
-              value={fileDependencyManifest.metrics[metricDependencyCount]}
-              alert={alertsByMetric[metricDependencyCount]}
-            />
-            <MetricItem
-              label="Dependents"
-              value={fileDependencyManifest.metrics[metricDependentCount]}
-              alert={alertsByMetric[metricDependentCount]}
-            />
+        {/* Symbols with their metrics and alerts */}
+        <SectionHeading>
+          <LuCode /> Symbols
+        </SectionHeading>
+
+        {/* Total symbols count */}
+        <div className="mb-3">
+          <MetricItem
+            label="Total Symbols"
+            value={Object.keys(fileDependencyManifest.symbols).length}
+          />
+          <div className="mt-2">
+            <ul className="list-inside list-disc">
+              {Object.entries(
+                Object.values(fileDependencyManifest.symbols).reduce(
+                  (acc, symbol) => {
+                    acc[symbol.type] = (acc[symbol.type] || 0) + 1;
+                    return acc;
+                  },
+                  {} as Record<string, number>,
+                ),
+              ).map(([type, count]) => (
+                <li key={type} className="text-sm">
+                  <span className="font-medium">{type}:</span> {count}
+                </li>
+              ))}
+            </ul>
           </div>
+        </div>
 
-          {/* Symbols with their metrics and alerts */}
-          <SectionHeading>
-            <LuCode /> Symbols
-          </SectionHeading>
-
-          {/* Total symbols count */}
-          <div className="mb-3">
-            <MetricItem
-              label="Total Symbols"
-              value={Object.keys(fileDependencyManifest.symbols).length}
+        {/* Individual symbols with their metrics and alerts */}
+        <div className="mt-3">
+          {Object.values(fileAuditManifest.symbols).map((symbol) => (
+            <SymbolSection
+              key={symbol.id}
+              symbol={symbol}
+              fileDependencyManifest={fileDependencyManifest}
             />
-            <div className="mt-2">
-              <ul className="list-inside list-disc">
-                {Object.entries(
-                  Object.values(fileDependencyManifest.symbols).reduce(
-                    (acc, symbol) => {
-                      acc[symbol.type] = (acc[symbol.type] || 0) + 1;
-                      return acc;
-                    },
-                    {} as Record<string, number>,
-                  ),
-                ).map(([type, count]) => (
-                  <li key={type} className="text-sm">
-                    <span className="font-medium">{type}:</span> {count}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          ))}
+        </div>
 
-          {/* Individual symbols with their metrics and alerts */}
-          <div className="mt-3">
-            {Object.values(fileAuditManifest.symbols).map((symbol) => (
-              <SymbolSection
-                key={symbol.id}
-                symbol={symbol}
-                fileDependencyManifest={fileDependencyManifest}
-              />
-            ))}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="mt-5 grow flex flex-col justify-end">
-            <Link
-              to={`/audit/${encodeURIComponent(fileDependencyManifest.filePath)}`}
-              className="block"
+        {/* Action Buttons */}
+        <div className="mt-5 grow flex flex-col justify-end">
+          <Link
+            to={`/audit/${encodeURIComponent(fileDependencyManifest.filePath)}`}
+            className="block"
+          >
+            <Button
+              variant="ghost"
+              size="3"
+              className="flex justify-center gap-2 text-text-light dark:text-text-dark w-full"
             >
-              <Button
-                variant="ghost"
-                size="3"
-                className="flex justify-center gap-2 text-text-light dark:text-text-dark w-full"
-              >
-                <LuSearchCode className="text-xl my-auto" />
-                <span className="my-auto">Inspect file interactions</span>
-              </Button>
-            </Link>
-          </div>
-        </ScrollArea>
-      </div>
+              <LuSearchCode className="text-xl my-auto" />
+              <span className="my-auto">Inspect file interactions</span>
+            </Button>
+          </Link>
+        </div>
+      </ScrollArea>
     </div>
   );
 }

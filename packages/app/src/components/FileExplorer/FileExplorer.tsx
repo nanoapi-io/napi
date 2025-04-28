@@ -706,6 +706,15 @@ function ExtractionElement(props: {
         );
       }
 
+      // If a file is unchecked, remove all symbols from the extraction
+      if (fileChecked === false) {
+        props.updateExtractionNodes(
+          props.node.filePath,
+          props.node.symbols,
+          "remove",
+        );
+      }
+
       //Finally, update the checkedSymbols to remove the unchecked symbols
       setCheckedSymbols((prev) => {
         const newMap = new Map<string, boolean>();

@@ -12,6 +12,7 @@ import BaseAuditPage from "./pages/audit/base.js";
 import AuditPage from "./pages/audit/index.js";
 import AuditFilePage from "./pages/audit/file/index.js";
 import AuditInstancePage from "./pages/audit/file/instance/index.js";
+import { ViewNames } from "./hooks/types.js";
 
 const router = createHashRouter([
   {
@@ -25,14 +26,17 @@ const router = createHashRouter([
       {
         path: "/audit",
         element: <AuditPage />,
+        handle: { viewName: ViewNames.PROJECT },
       },
       {
         path: "/audit/:file",
         element: <AuditFilePage />,
+        handle: { viewName: ViewNames.FILE },
       },
       {
         path: "/audit/:file/:instance",
         element: <AuditInstancePage />,
+        handle: { viewName: ViewNames.INSTANCE },
       },
     ],
   },
