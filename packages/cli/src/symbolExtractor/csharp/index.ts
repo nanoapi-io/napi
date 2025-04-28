@@ -49,10 +49,65 @@ export function extractCSharpSymbols(
         symbol,
       );
       if (extractedFile) {
+        // Add the extracted file to the list of extracted files
         extractedFiles.push(...extractedFile);
+        // Add the extracted file to the parsed files map
+        // This is used to create a representation of the exported project
+        // It will help us to find which namespaces cannot be used in using directives anymore
+        for (const file of extractedFile) {
+          const filePath = file.name;
+          if (!parsedFiles.has(filePath)) {
+            parsedFiles.set(filePath, {
+              path: filePath,
+              rootNode: csharpParser.parse(extractor.getContent(file)).rootNode,
+            });
+          }
+          // Add the csproj file to the csproj files map
+          const subproject = file.subproject;
+          if (!csprojFiles.has(subproject.csprojPath)) {
+            csprojFiles.set(subproject.csprojPath, {
+              path: subproject.csprojPath,
+              content: subproject.csprojContent,
+            });
+            const globalUsingsPath = path.join(
+              subproject.rootFolder,
+              "GlobalUsings.cs",
+            );
+            const globalUsingsContent =
+              extractor.generateGlobalUsings(subproject);
+            if (!parsedFiles.has(globalUsingsPath)) {
+              parsedFiles.set(globalUsingsPath, {
+                path: globalUsingsPath,
+                rootNode: csharpParser.parse(globalUsingsContent).rootNode,
+              });
+            }
+          }
+        }
       }
     }
   }
+  // For each extracted file, check if the using directives are still valid
+  const nsMapper = new CSharpNamespaceMapper(parsedFiles);
+  const pjMapper = new CSharpProjectMapper(csprojFiles);
+  const usingResolver = new CSharpUsingResolver(nsMapper, pjMapper);
+  for (const extractedFile of extractedFiles) {
+    const imports = extractedFile.imports;
+    for (const importDirective of imports) {
+      const resolvedInNewFile =
+        usingResolver.resolveUsingDirective(importDirective);
+      const resolvedInOldFile =
+        extractor.usingResolver.resolveUsingDirective(importDirective);
+      if (
+        resolvedInNewFile instanceof ExternalSymbol &&
+        resolvedInOldFile instanceof InternalSymbol
+      ) {
+        extractedFile.imports = extractedFile.imports.filter(
+          (imp) => imp !== importDirective,
+        );
+      }
+    }
+  }
+  // Actually extract the files
   const subprojects: DotNetProject[] = [];
   const extractedFilesMap: ExtractedFilesMap = new Map();
   for (const extractedFile of extractedFiles) {
@@ -82,11 +137,6 @@ export function extractCSharpSymbols(
         path: key,
         content: filecontent,
       });
-      // Also add the file to a separate project for using resolution.
-      parsedFiles.set(key, {
-        path: key,
-        rootNode: csharpParser.parse(filecontent).rootNode,
-      });
     }
   }
   // Add the .csproj and GlobalUsings.cs files for each subproject
@@ -103,37 +153,6 @@ export function extractCSharpSymbols(
         path: globalUsingPath,
         content: extractor.generateGlobalUsings(subproject),
       });
-      // Add the project files to the parsed files map for using resolution
-      csprojFiles.set(projectPath, {
-        path: projectPath,
-        content: subproject.csprojContent,
-      });
-      parsedFiles.set(globalUsingPath, {
-        path: globalUsingPath,
-        rootNode: csharpParser.parse(extractor.generateGlobalUsings(subproject))
-          .rootNode,
-      });
-    }
-  }
-  // For each extracted file, check if the using directives are still valid
-  const nsMapper = new CSharpNamespaceMapper(parsedFiles);
-  const pjMapper = new CSharpProjectMapper(csprojFiles);
-  const usingResolver = new CSharpUsingResolver(nsMapper, pjMapper);
-  for (const extractedFile of extractedFiles) {
-    const imports = extractedFile.imports;
-    for (const importDirective of imports) {
-      const resolvedInNewFile =
-        usingResolver.resolveUsingDirective(importDirective);
-      const resolvedInOldFile =
-        extractor.usingResolver.resolveUsingDirective(importDirective);
-      if (
-        resolvedInNewFile instanceof ExternalSymbol &&
-        resolvedInOldFile instanceof InternalSymbol
-      ) {
-        extractedFile.imports = extractedFile.imports.filter(
-          (imp) => imp !== importDirective,
-        );
-      }
     }
   }
   console.timeEnd(`Extracted ${symbolsToExtract.size} symbol(s)`);
