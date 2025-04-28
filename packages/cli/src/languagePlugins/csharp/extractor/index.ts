@@ -25,7 +25,7 @@ export class CSharpExtractor {
   private manifest: DependencyManifest;
   public projectMapper: CSharpProjectMapper;
   private nsMapper: CSharpNamespaceMapper;
-  private usingResolver: CSharpUsingResolver;
+  public usingResolver: CSharpUsingResolver;
 
   constructor(
     files: Map<string, { path: string; content: string }>,
@@ -91,17 +91,19 @@ export class CSharpExtractor {
     symbol: SymbolNode,
     visited: Set<SymbolNode> = new Set<SymbolNode>(),
   ): SymbolNode[] {
-    const allDependencies: SymbolNode[] = [];
+    const allDependencies: Set<SymbolNode> = new Set<SymbolNode>();
     if (visited.has(symbol)) {
-      return allDependencies;
+      return Array.from(allDependencies);
     }
     visited.add(symbol);
     const dependencies = this.findDependencies(symbol);
     for (const dependency of dependencies) {
-      allDependencies.push(dependency);
-      allDependencies.push(...this.findAllDependencies(dependency, visited));
+      allDependencies.add(dependency);
+      for (const dep of this.findAllDependencies(dependency, visited)) {
+        allDependencies.add(dep);
+      }
     }
-    return allDependencies;
+    return Array.from(allDependencies);
   }
 
   /**
