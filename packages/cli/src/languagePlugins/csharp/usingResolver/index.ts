@@ -101,6 +101,10 @@ export class CSharpUsingResolver {
     string,
     ResolvedImports
   >();
+  private cachedDirectives: Map<string, UsingDirective[]> = new Map<
+    string,
+    UsingDirective[]
+  >();
   public projectmapper: CSharpProjectMapper;
   private cachedExternalDeps: Set<string> = new Set<string>();
 
@@ -118,6 +122,9 @@ export class CSharpUsingResolver {
    * @returns An array of UsingDirective objects.
    */
   public parseUsingDirectives(filepath: string): UsingDirective[] {
+    if (this.cachedDirectives.has(filepath)) {
+      return this.cachedDirectives.get(filepath) as UsingDirective[];
+    }
     const file = this.nsMapper.getFile(filepath);
     if (!file) {
       return [];
@@ -141,6 +148,8 @@ export class CSharpUsingResolver {
       const alias = aliasNode ? aliasNode.text : undefined;
       return { node, type, filepath, id, alias };
     });
+    // Cache the using directives for the file
+    this.cachedDirectives.set(filepath, this.usingDirectives);
     return this.usingDirectives;
   }
 
