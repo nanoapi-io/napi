@@ -297,46 +297,33 @@ export class ProjectDependencyVisualizer {
           "text-wrap": "wrap",
           color: tailwindConfig.theme.extend.colors.text[theme],
           "border-width": (node: NodeSingular) => {
-            return this.highlightedNodeId === node.id() ? 10 : 4;
+            return this.highlightedNodeId === node.id() ? 10 : 6;
           },
           "border-color": (node: NodeSingular) => {
-            return this.highlightedNodeId === node.id()
-              ? "yellow"
-              : tailwindConfig.theme.extend.colors.secondary[theme];
+            if (this.highlightedNodeId === node.id()) {
+              return "yellow";
+            }
+
+            if (this.targetMetric) {
+              return getMetricLevelColor(
+                this.theme,
+                node.data().customData.metricsSeverity[this.targetMetric],
+              );
+            }
+            return tailwindConfig.theme.extend.colors.primary[theme];
           },
-          "background-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
-          "z-index": (node: NodeSingular) => {
-            return this.highlightedNodeId === node.id() ? 3000 : 0;
-          },
-          shape: "round-rectangle",
-          width: 20,
-          height: 20,
-          "pie-size": "20px",
-          "pie-1-background-size": "100%",
-          "pie-1-background-color": (node: NodeSingular) => {
+          "background-color": (node: NodeSingular) => {
             const data = node.data() as NapiNodeData;
-            if (!this.targetMetric) {
-              return "transparent"; // even with transparent, the pie chart is visible. Need to set opacity to 0
+            if (this.targetMetric) {
+              return getMetricLevelColor(
+                this.theme,
+                data.customData.metricsSeverity[this.targetMetric],
+              );
             }
-
-            return getMetricLevelColor(
-              this.theme,
-              data.customData.metricsSeverity[this.targetMetric],
-            );
+            return tailwindConfig.theme.extend.colors.primary[theme];
           },
-          "pie-1-background-opacity": (node: NodeSingular) => {
-            const data = node.data() as NapiNodeData;
-
-            if (!this.targetMetric) {
-              return 0;
-            }
-
-            if (data.customData.metricsSeverity[this.targetMetric] === 0) {
-              return 0;
-            }
-            return 1;
-          },
+          "background-opacity": 0.4,
+          shape: "circle",
           "text-valign": "center",
           "text-halign": "center",
         },
@@ -355,6 +342,7 @@ export class ProjectDependencyVisualizer {
             tailwindConfig.theme.extend.colors.background[theme],
           "border-color": tailwindConfig.theme.extend.colors.primary[theme],
           "z-index": 2000,
+          shape: "roundrectangle",
           width: "data(customData.expanded.width)",
           height: "data(customData.expanded.height)",
         },
@@ -366,6 +354,7 @@ export class ProjectDependencyVisualizer {
           "background-color":
             tailwindConfig.theme.extend.colors.background[theme],
           "z-index": 1000,
+          shape: "roundrectangle",
           width: "data(customData.collapsed.width)",
           height: "data(customData.collapsed.height)",
         },

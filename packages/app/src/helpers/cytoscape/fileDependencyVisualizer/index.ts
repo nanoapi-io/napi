@@ -623,14 +623,40 @@ export class FileDependencyVisualizer {
             const data = node.data() as NapiNodeData;
             if (data.customData.isExternal) {
               return tailwindConfig.theme.extend.colors.border[theme];
-            } else if (data.customData.fileName === this.fileId) {
-              return tailwindConfig.theme.extend.colors.primary[theme];
-            } else {
+            } else if (data.customData.fileName !== this.fileId) {
               return tailwindConfig.theme.extend.colors.secondary[theme];
             }
+
+            if (this.targetMetric) {
+              return getMetricLevelColor(
+                this.theme,
+                data.customData.metricsSeverity[this.targetMetric],
+              );
+            }
+
+            return tailwindConfig.theme.extend.colors.primary[theme];
           },
-          "background-color":
-            tailwindConfig.theme.extend.colors.background[theme],
+          "background-color": (node: NodeSingular) => {
+            const data = node.data() as NapiNodeData;
+
+            if (data.customData.isExternal) {
+              return tailwindConfig.theme.extend.colors.border[theme];
+            }
+
+            if (data.customData.fileName !== this.fileId) {
+              return tailwindConfig.theme.extend.colors.secondary[theme];
+            }
+
+            if (this.targetMetric) {
+              return getMetricLevelColor(
+                this.theme,
+                data.customData.metricsSeverity[this.targetMetric],
+              );
+            }
+
+            return tailwindConfig.theme.extend.colors.primary[theme];
+          },
+
           shape: (node: NodeSingular) => {
             const symbolTypeToShape = {
               [classSymbolType]: "hexagon",
@@ -648,33 +674,9 @@ export class FileDependencyVisualizer {
               symbolTypeToShape[data.customData.symbolType] || fallbackShape
             );
           },
+          "background-opacity": 0.2,
           width: "data(customData.collapsed.width)",
           height: "data(customData.collapsed.height)",
-          "pie-size": "20px",
-          "pie-1-background-color": (node: NodeSingular) => {
-            const data = node.data() as NapiNodeData;
-            if (!this.targetMetric) {
-              return "transparent"; // even with transparent, the pie chart is visible. Need to set opacity to 0
-            }
-
-            return getMetricLevelColor(
-              this.theme,
-              data.customData.metricsSeverity[this.targetMetric],
-            );
-          },
-          "pie-1-background-size": "100%",
-          "pie-1-background-opacity": (node: NodeSingular) => {
-            const data = node.data() as NapiNodeData;
-
-            if (!this.targetMetric) {
-              return 0;
-            }
-
-            if (data.customData.metricsSeverity[this.targetMetric] === 0) {
-              return 0;
-            }
-            return 1;
-          },
           "text-valign": "center",
           "text-halign": "center",
         },

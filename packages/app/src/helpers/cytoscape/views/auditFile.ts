@@ -451,6 +451,7 @@ export function getCyStyle(theme: Theme) {
         "text-halign": "center",
         color: tailwindConfig.theme.extend.colors.text[theme],
         shape: "roundrectangle",
+        width: "data(customData.nodeWidth)",
       },
     },
     // current instancenode
@@ -458,6 +459,9 @@ export function getCyStyle(theme: Theme) {
       selector: "node[type = 'instance'][isCurrentFile]",
       style: {
         "background-color": tailwindConfig.theme.extend.colors.primary[theme],
+        "background-opacity": 0.2,
+        "border-color": tailwindConfig.theme.extend.colors.primary[theme],
+        "border-width": 2,
       },
     },
     // external instancenode
@@ -465,6 +469,9 @@ export function getCyStyle(theme: Theme) {
       selector: "node[type = 'instance'][!isCurrentFile][isExternal]",
       style: {
         "background-color": tailwindConfig.theme.extend.colors.gray[theme],
+        "background-opacity": 0.2,
+        "border-color": tailwindConfig.theme.extend.colors.gray[theme],
+        "border-width": 2,
       },
     },
     // instance node non external
@@ -472,6 +479,9 @@ export function getCyStyle(theme: Theme) {
       selector: "node[type = 'instance'][!isCurrentFile][!isExternal]",
       style: {
         "background-color": tailwindConfig.theme.extend.colors.secondary[theme],
+        "background-opacity": 0.2,
+        "border-color": tailwindConfig.theme.extend.colors.secondary[theme],
+        "border-width": 2,
       },
     },
     // dependency edge
