@@ -135,6 +135,7 @@ export default function GraphDepthExtension(props: {
         </div>
         <Button
           color="violet"
+          loading={props.busy}
           disabled={
             tempDependencyDepth === dependencyState.depth &&
             tempDependentDepth === dependentState.depth

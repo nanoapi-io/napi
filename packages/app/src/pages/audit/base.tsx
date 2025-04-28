@@ -62,6 +62,9 @@ export default function BaseAuditPage() {
     symbols: string[],
     action: "add" | "remove",
   ) {
+    // When doing anything here, we need to make sure the sidebar is open
+    setSidebarOpen(true);
+
     if (filePath in extractionNodes) {
       const existingSymbols = extractionNodes[filePath].symbols;
       const newSymbols =
