@@ -50,6 +50,7 @@ export function extractCSharpSymbols(
     const fakeprojectpath = subproject.name.split(".").join(path.sep);
     const spindex = namespace.split(".").indexOf(subproject.name);
     const key = path.join(
+      spindex !== -1 ? "" : subproject.name,
       namespace
         .split(".")
         .slice(spindex !== -1 ? spindex : 0)
