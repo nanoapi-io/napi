@@ -16,7 +16,7 @@ import {
 } from "react-resizable-panels";
 import { ExtractionNode } from "@nanoapi.io/shared";
 import { FileExplorerSkeleton } from "./Skeleton.js";
-import { LuPanelRightOpen, LuX } from "react-icons/lu";
+import { LuSearchCode, LuX } from "react-icons/lu";
 import languageIcon from "./languageIcons.js";
 import {
   MdSearch,
@@ -458,7 +458,7 @@ function NodeElement(props: {
                         color="violet"
                         className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
                       >
-                        <LuPanelRightOpen className="text-gray-light dark:text-gray-dark" />
+                        <LuSearchCode className="text-gray-light dark:text-gray-dark" />
                       </Button>
                     </Link>
                   </Tooltip>
@@ -638,7 +638,7 @@ function ExtractionElement(props: {
 
   const [fileChecked, setFileChecked] = useState<CheckedState>(true);
   const [checkedSymbols, setCheckedSymbols] = useState(symbolMap);
-  const maxPathLength = 35;
+  const maxPathLength = 20;
 
   function getDisplayedPath(name: string) {
     if (name.length > maxPathLength) {
