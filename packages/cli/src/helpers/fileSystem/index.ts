@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmdirSync,
-  writeFileSync,
-} from "fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { globSync } from "glob";
 import { dirname, join } from "path";
 import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.js";
@@ -89,13 +83,49 @@ export function writeFilesToDirectory(
 ) {
   // empty the directory first
   if (existsSync(dir)) {
-    rmdirSync(dir, { recursive: true });
+    try {
+      rmSync(dir, {
+        recursive: true,
+        force: true,
+        maxRetries: 3,
+        retryDelay: 100,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Failed to remove directory ${dir}: ${error.message}`);
+        throw new Error(
+          `Failed to remove directory ${dir}. Make sure no other process is using it.`,
+        );
+      }
+      throw error;
+    }
   }
-  mkdirSync(dir, { recursive: true });
+
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(`Failed to create directory ${dir}: ${error.message}`);
+      throw new Error(
+        `Failed to create directory ${dir}. Check permissions and try again.`,
+      );
+    }
+    throw error;
+  }
 
   for (const { path, content } of files.values()) {
     const fullPath = join(dir, path);
-    mkdirSync(dirname(fullPath), { recursive: true });
-    writeFileSync(fullPath, content);
+    try {
+      mkdirSync(dirname(fullPath), { recursive: true });
+      writeFileSync(fullPath, content);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Failed to write file ${fullPath}: ${error.message}`);
+        throw new Error(
+          `Failed to write file ${fullPath}. Check permissions and try again.`,
+        );
+      }
+      throw error;
+    }
   }
 }

@@ -7,6 +7,7 @@ import {
   LuGitGraph,
 } from "react-icons/lu";
 import { FileDependencyManifest } from "@nanoapi.io/shared";
+import { basename } from "path";
 
 export default function FileContextMenu(props: {
   position: { x: number; y: number };
@@ -51,7 +52,7 @@ export default function FileContextMenu(props: {
           className="rounded-md bg-secondarySurface-light dark:bg-secondarySurface-dark shadow-md border border-border-light dark:border-border-dark p-1"
         >
           <DropdownMenu.Label>
-            {props.fileDependencyManifest.filePath.split("/").pop()}
+            {basename(props.fileDependencyManifest.filePath)}
           </DropdownMenu.Label>
           <DropdownMenu.Separator />
           <DropdownMenu.Item
@@ -78,7 +79,7 @@ export default function FileContextMenu(props: {
             className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
             onSelect={() =>
               props.showInSidebar(
-                props.fileDependencyManifest.filePath.split("/").pop() || "",
+                basename(props.fileDependencyManifest.filePath) || "",
               )
             }
           >

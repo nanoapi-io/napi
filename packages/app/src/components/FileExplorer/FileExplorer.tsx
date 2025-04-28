@@ -31,6 +31,7 @@ import {
 } from "react-icons/md";
 import { runExtraction } from "../../service/api/index.js";
 import { toast } from "react-toastify";
+import { dirname, extname, sep } from "path";
 
 interface TreeData {
   id: string;
@@ -145,7 +146,7 @@ export default function FileExplorer(props: {
         return;
       }
 
-      const segments = file.path.split("/");
+      const segments = dirname(file.path).split(sep);
 
       // Add the file to the tree structure
       addFileToTree(rootNodes, segments, "", file.symbols);
@@ -431,7 +432,11 @@ function NodeElement(props: {
                     onClick={handleToggle}
                   >
                     <div className="flex space-x-2 items-center overflow-hidden">
-                      {languageIcon(props.node.name.split(".").pop() || "txt")}
+                      {languageIcon(
+                        extname(
+                          props.node.name.split(".").pop() || "txt",
+                        ).slice(1) || "txt",
+                      )}
                       <DisplayedPath node={props.node} search={props.search} />
                     </div>
                   </Button>
@@ -725,7 +730,7 @@ function ExtractionElement(props: {
     <div className="flex flex-col space-y-2 ml-5">
       <div className="flex items-center justify-between space-x-2">
         <div className="flex items-center space-x-2">
-          {languageIcon(props.node.filePath.split(".").pop() || "txt")}
+          {languageIcon(extname(props.node.filePath).slice(1) || "txt")}
           {getDisplayedPath(props.node.filePath)}
         </div>
         {props.editMode === EditMode.EDITING && (
