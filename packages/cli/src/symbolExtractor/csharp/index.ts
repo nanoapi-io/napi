@@ -49,13 +49,16 @@ export function extractCSharpSymbols(
     // File path for the extracted file
     const fakeprojectpath = subproject.name.split(".").join(path.sep);
     const spindex = namespace.split(".").indexOf(subproject.name);
+    const nspath = namespace
+      .split(".")
+      .slice(spindex !== -1 ? spindex : 0)
+      .join(path.sep)
+      .replace(fakeprojectpath, subproject.name);
     const key = path.join(
-      spindex !== -1 ? "" : subproject.name,
-      namespace
-        .split(".")
-        .slice(spindex !== -1 ? spindex : 0)
-        .join(path.sep)
-        .replace(fakeprojectpath, subproject.name),
+      spindex !== -1 || nspath.startsWith(subproject.name)
+        ? ""
+        : subproject.name,
+      nspath,
       `${name}.cs`,
     );
     if (!extractedFilesMap.has(key)) {
