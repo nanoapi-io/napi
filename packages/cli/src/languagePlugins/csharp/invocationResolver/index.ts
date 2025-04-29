@@ -8,7 +8,9 @@ import {
 import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
 import {
   CSharpUsingResolver,
+  ExternalSymbol,
   ResolvedImports,
+  UsingDirective,
 } from "../usingResolver/index.js";
 import { CSharpProjectMapper } from "../projectMapper/index.js";
 import {
@@ -463,5 +465,26 @@ export class CSharpInvocationResolver {
   public isUsedInFile(filepath: string, symbol: SymbolNode): boolean {
     const invocations = this.getInvocationsFromFile(filepath);
     return invocations.resolvedSymbols.some((inv) => inv.name === symbol.name);
+  }
+
+  /**
+   * Checks if a using directive is useful in a file.
+   * @param invocations - The invocations in the file.
+   * @param using - The using directive to check for.
+   * @returns True if the using directive is useful, false otherwise.
+   */
+  public isUsingUseful(
+    invocations: Invocations,
+    usingD: UsingDirective,
+  ): boolean {
+    const usedNamespace = this.usingResolver.resolveUsingDirective(usingD);
+    if (usedNamespace instanceof ExternalSymbol) return true;
+    return invocations.resolvedSymbols.some(
+      (inv) =>
+        (usedNamespace.namespace &&
+          inv.namespace ===
+            this.nsMapper.getFullNSName(usedNamespace.namespace)) ||
+        (usedNamespace.symbol && inv.name === usedNamespace.symbol.name),
+    );
   }
 }

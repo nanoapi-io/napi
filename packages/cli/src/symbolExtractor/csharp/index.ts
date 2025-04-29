@@ -17,6 +17,7 @@ import {
   InternalSymbol,
   ExternalSymbol,
 } from "../../languagePlugins/csharp/usingResolver/index.js";
+import { CSharpInvocationResolver } from "../../languagePlugins/csharp/invocationResolver/index.js";
 
 /**
  * Extracts C# symbols from the given files.
@@ -86,20 +87,25 @@ export function extractCSharpSymbols(
       }
     }
   }
-  // For each extracted file, check if the using directives are still valid
+  // For each extracted file, check if the using directives are still valid and useful
   const nsMapper = new CSharpNamespaceMapper(parsedFiles);
   const pjMapper = new CSharpProjectMapper(csprojFiles);
   const usingResolver = new CSharpUsingResolver(nsMapper, pjMapper);
+  const invocationResolver = new CSharpInvocationResolver(nsMapper, pjMapper);
   for (const extractedFile of extractedFiles) {
     const imports = extractedFile.imports;
+    const invocations = invocationResolver.getInvocationsFromFile(
+      extractedFile.name,
+    );
     for (const importDirective of imports) {
       const resolvedInNewFile =
         usingResolver.resolveUsingDirective(importDirective);
       const resolvedInOldFile =
         extractor.usingResolver.resolveUsingDirective(importDirective);
       if (
-        resolvedInNewFile instanceof ExternalSymbol &&
-        resolvedInOldFile instanceof InternalSymbol
+        (resolvedInNewFile instanceof ExternalSymbol &&
+          resolvedInOldFile instanceof InternalSymbol) ||
+        !invocationResolver.isUsingUseful(invocations, importDirective)
       ) {
         extractedFile.imports = extractedFile.imports.filter(
           (imp) => imp !== importDirective,
