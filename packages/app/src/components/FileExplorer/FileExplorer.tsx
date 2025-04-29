@@ -16,7 +16,7 @@ import {
 } from "react-resizable-panels";
 import { ExtractionNode } from "@nanoapi.io/shared";
 import { FileExplorerSkeleton } from "./Skeleton.js";
-import { LuPanelRightOpen, LuX } from "react-icons/lu";
+import { LuSearchCode, LuX } from "react-icons/lu";
 import languageIcon from "./languageIcons.js";
 import {
   MdSearch,
@@ -219,9 +219,15 @@ export default function FileExplorer(props: {
   }
 
   useEffect(() => {
-    if (extractionPanelRef.current) {
-      extractionPanelRef.current.resize(50);
-    }
+    // Use setTimeout to ensure the panel is resized after the DOM has updated
+    // IF WE DON'T DO THIS, the panel will not resize correctly when forcing
+    // the sidebar to open if it was closed.
+    // This is a side effect of the way we do the sidebar and state management
+    setTimeout(() => {
+      if (extractionPanelRef.current) {
+        extractionPanelRef.current.resize(50);
+      }
+    }, 50);
   }, [props.extractionState.extractionNodes]);
 
   useEffect(() => {
@@ -272,7 +278,7 @@ export default function FileExplorer(props: {
                   placeholder="Search"
                   value={props.search}
                   onChange={(e) => props.setIsSearch(e.target.value)}
-                  className={`transition-all duration-300 overflow-hidden ${!props.isOpen && "w-0"}`}
+                  className={`min-h-8 transition-all duration-300 overflow-hidden ${!props.isOpen && "w-0"}`}
                 >
                   <TextField.Slot>
                     <MdSearch className="h-6 w-6 my-auto" />
@@ -463,7 +469,7 @@ function NodeElement(props: {
                         color="violet"
                         className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
                       >
-                        <LuPanelRightOpen className="text-gray-light dark:text-gray-dark" />
+                        <LuSearchCode className="text-gray-light dark:text-gray-dark" />
                       </Button>
                     </Link>
                   </Tooltip>
@@ -544,8 +550,11 @@ function ExtractionPanel(props: {
   ) => void;
 }) {
   const [editMode, setEditMode] = useState<EditMode>(EditMode.NONE);
+  const [extractionLoading, setExtractionLoading] = useState(false);
 
   async function runExtractionViaAPI() {
+    setExtractionLoading(true);
+
     const extractionNodes = Object.values(props.extractionNodes);
     const response = await runExtraction(extractionNodes);
 
@@ -556,6 +565,8 @@ function ExtractionPanel(props: {
     } else {
       toast.error("Extraction failed. Please check the logs for more details.");
     }
+
+    setExtractionLoading(false);
   }
 
   return (
@@ -591,6 +602,7 @@ function ExtractionPanel(props: {
             <Tooltip content="Extract the above symbols into a separate codebase">
               <Button
                 color="violet"
+                loading={extractionLoading}
                 className="w-[48%]"
                 onClick={runExtractionViaAPI}
               >
@@ -643,7 +655,7 @@ function ExtractionElement(props: {
 
   const [fileChecked, setFileChecked] = useState<CheckedState>(true);
   const [checkedSymbols, setCheckedSymbols] = useState(symbolMap);
-  const maxPathLength = 35;
+  const maxPathLength = 20;
 
   function getDisplayedPath(name: string) {
     if (name.length > maxPathLength) {
@@ -695,6 +707,15 @@ function ExtractionElement(props: {
         props.updateExtractionNodes(
           props.node.filePath,
           uncheckedSymbols,
+          "remove",
+        );
+      }
+
+      // If a file is unchecked, remove all symbols from the extraction
+      if (fileChecked === false) {
+        props.updateExtractionNodes(
+          props.node.filePath,
+          props.node.symbols,
           "remove",
         );
       }

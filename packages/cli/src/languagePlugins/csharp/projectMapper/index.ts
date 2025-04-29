@@ -130,7 +130,10 @@ export class CSharpProjectMapper {
     // We assume that the most precise project is the one with the longest rootFolder
     // (In case there are nested projects)
     for (const project of this.subprojects) {
-      if (filePath.startsWith(project.rootFolder)) {
+      if (
+        filePath.startsWith(project.rootFolder) ||
+        project.rootFolder === "."
+      ) {
         if (
           mostPreciseProject === null ||
           project.rootFolder.length > mostPreciseProject.rootFolder.length

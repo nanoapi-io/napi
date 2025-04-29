@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useParams } from "react-router";
 import { DropdownMenu } from "@radix-ui/themes";
 import { LuPanelRightOpen, LuSearchCode, LuGitGraph } from "react-icons/lu";
 import { FileDependencyManifest } from "@nanoapi.io/shared";
@@ -16,6 +16,10 @@ export default function SymbolContextMenu(props: {
     action: "add" | "remove",
   ) => void;
 }) {
+  const { file, instance } = useParams();
+
+  const isSymbolLevelView = file && instance;
+
   function handleOnExtract() {
     props.setExtractionNodes(
       props.fileDependencyManifest.filePath,
@@ -48,27 +52,33 @@ export default function SymbolContextMenu(props: {
               {props.fileDependencyManifest.symbols[props.symbolId].id}
             </h1>
           </DropdownMenu.Label>
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item
-            className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
-            onSelect={() => props.setDetailsPaneOpen(true)}
-          >
-            <div className="w-full flex justify-between space-x-2">
-              <span>Details</span>
-              <LuPanelRightOpen className="text-lg my-auto" />
-            </div>
-          </DropdownMenu.Item>
-          <DropdownMenu.Item className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark">
-            <Link
-              to={`/audit/${encodeURIComponent(
-                props.fileDependencyManifest.filePath,
-              )}/${encodeURIComponent(props.symbolId)}`}
-              className="w-full flex justify-between space-x-2"
-            >
-              <span>Inspect symbol</span>
-              <LuSearchCode className="text-lg my-auto" />
-            </Link>
-          </DropdownMenu.Item>
+          {/* TODO: There is something wrong with the details pane on the symbol-level view */}
+          {/* Fix it, and then remove the following */}
+          {!isSymbolLevelView && (
+            <>
+              <DropdownMenu.Separator />
+              <DropdownMenu.Item
+                className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"
+                onSelect={() => props.setDetailsPaneOpen(true)}
+              >
+                <div className="w-full flex justify-between space-x-2">
+                  <span>Details</span>
+                  <LuPanelRightOpen className="text-lg my-auto" />
+                </div>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark">
+                <Link
+                  to={`/audit/${encodeURIComponent(
+                    props.fileDependencyManifest.filePath,
+                  )}/${encodeURIComponent(props.symbolId)}`}
+                  className="w-full flex justify-between space-x-2"
+                >
+                  <span>Inspect symbol</span>
+                  <LuSearchCode className="text-lg my-auto" />
+                </Link>
+              </DropdownMenu.Item>
+            </>
+          )}
           <DropdownMenu.Separator />
           <DropdownMenu.Item
             className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark"

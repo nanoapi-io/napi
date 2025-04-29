@@ -263,6 +263,7 @@ async function collectExcludePatterns(
   workDir: string,
   includePatterns: string[],
   language: string,
+  outDir: string,
 ): Promise<string[]> {
   console.info("\n❌ Specifying files to exclude from your project");
   console.info(
@@ -277,7 +278,11 @@ Examples:
   );
 
   // Suggest intelligent defaults based on include patterns
-  const suggestedExcludes = suggestExcludePatterns(includePatterns, language);
+  const suggestedExcludes = suggestExcludePatterns(
+    includePatterns,
+    language,
+    outDir,
+  );
   console.info("\nSuggested exclude patterns (based on included files):");
   suggestedExcludes.forEach((pattern) => console.info(`- ${pattern}`));
 
@@ -442,8 +447,12 @@ function suggestIncludePatterns(
 function suggestExcludePatterns(
   _includePatterns: string[],
   language: string,
+  outDir: string,
 ): string[] {
   const suggestions: string[] = [];
+
+  // add outDir to the suggestions
+  suggestions.push(`${outDir}/**`);
 
   // Common exclusions for all languages
   suggestions.push(".git/**");
@@ -513,21 +522,6 @@ export async function generateConfig(
     }
   }
 
-  console.info("\n🔍 ANALYZING PROJECT STRUCTURE...");
-
-  // Collect include patterns
-  const includePatterns = await collectIncludePatterns(workDir, language);
-
-  // Collect exclude patterns
-  const excludePatterns = await collectExcludePatterns(
-    workDir,
-    includePatterns,
-    language,
-  );
-
-  // Show final file selection to the user
-  await showFinalFileSelection(workDir, includePatterns, excludePatterns);
-
   // Output directory - must be a valid directory name within the project
   const outDir = await input({
     message: "Enter the output directory for NanoAPI artifacts",
@@ -552,19 +546,6 @@ export async function generateConfig(
           return "A file with this name already exists. Please choose a different name";
         }
 
-        // Check if the output directory would conflict with project source directories
-        if (
-          includePatterns.some((pattern) => {
-            const patternBase = pattern
-              .split("/")[0]
-              .replace("**", "")
-              .replace("*", "");
-            return patternBase === value;
-          })
-        ) {
-          return "Output directory should not conflict with your source directories";
-        }
-
         return true;
       } catch (error) {
         if (error instanceof Error) {
@@ -574,6 +555,22 @@ export async function generateConfig(
       }
     },
   });
+
+  console.info("\n🔍 ANALYZING PROJECT STRUCTURE...");
+
+  // Collect include patterns
+  const includePatterns = await collectIncludePatterns(workDir, language);
+
+  // Collect exclude patterns
+  const excludePatterns = await collectExcludePatterns(
+    workDir,
+    includePatterns,
+    language,
+    outDir,
+  );
+
+  // Show final file selection to the user
+  await showFinalFileSelection(workDir, includePatterns, excludePatterns);
 
   // Provide information about metrics before asking
   console.info(

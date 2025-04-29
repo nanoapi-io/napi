@@ -83,34 +83,7 @@ export function writeFilesToDirectory(
 ) {
   // empty the directory first
   if (existsSync(dir)) {
-    try {
-      rmSync(dir, {
-        recursive: true,
-        force: true,
-        maxRetries: 3,
-        retryDelay: 100,
-      });
-    } catch (error) {
-      if (error instanceof Error) {
-        console.error(`Failed to remove directory ${dir}: ${error.message}`);
-        throw new Error(
-          `Failed to remove directory ${dir}. Make sure no other process is using it.`,
-        );
-      }
-      throw error;
-    }
-  }
-
-  try {
-    mkdirSync(dir, { recursive: true });
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Failed to create directory ${dir}: ${error.message}`);
-      throw new Error(
-        `Failed to create directory ${dir}. Check permissions and try again.`,
-      );
-    }
-    throw error;
+    rmSync(dir, { recursive: true });
   }
 
   for (const { path, content } of files.values()) {
