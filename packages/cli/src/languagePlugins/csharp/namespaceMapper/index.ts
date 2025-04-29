@@ -33,6 +33,8 @@ export interface SymbolNode {
   filepath: string;
   /** The syntax node corresponding to the symbol */
   node: Parser.SyntaxNode;
+  /** The parent of the symbol if it is nested */
+  parent?: SymbolNode;
 }
 
 const DEBUG_NAMESPACE = "namespace";

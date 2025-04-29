@@ -488,7 +488,10 @@ export class CSharpInvocationResolver {
         (usedNamespace.namespace &&
           inv.namespace ===
             this.nsMapper.getFullNSName(usedNamespace.namespace)) ||
-        (usedNamespace.symbol && inv.name === usedNamespace.symbol.name),
+        (usedNamespace.symbol && inv.name === usedNamespace.symbol.name) ||
+        (usedNamespace.symbol &&
+          inv.parent &&
+          inv.parent.name === usedNamespace.symbol.name),
     );
   }
 }
