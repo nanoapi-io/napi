@@ -65,7 +65,12 @@ export class CSharpExtractor {
    */
   private findDependencies(symbol: SymbolNode): SymbolNode[] {
     const dependencies: SymbolNode[] = [];
-    const symbolDependencies = this.manifest[symbol.filepath]?.dependencies;
+    const symbolfullname =
+      symbol.namespace !== ""
+        ? symbol.namespace + "." + symbol.name
+        : symbol.name;
+    const symbolDependencies =
+      this.manifest[symbol.filepath]?.symbols[symbolfullname].dependencies;
     if (symbolDependencies) {
       for (const dependency of Object.values(symbolDependencies)) {
         for (const depsymbol of Object.values(dependency.symbols)) {
