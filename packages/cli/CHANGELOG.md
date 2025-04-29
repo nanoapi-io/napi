@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.6] - 2025-04-29
+
 Fix some small FE bugs.
 improve symbol extraction for C#
 
