@@ -1,10 +1,4 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmdirSync,
-  writeFileSync,
-} from "fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { globSync } from "glob";
 import { dirname, join } from "path";
 import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.js";
@@ -89,7 +83,7 @@ export function writeFilesToDirectory(
 ) {
   // empty the directory first
   if (existsSync(dir)) {
-    rmdirSync(dir, { recursive: true });
+    rmSync(dir, { recursive: true });
   }
   mkdirSync(dir, { recursive: true });
 

@@ -9,6 +9,115 @@ import { PythonModule } from "../moduleResolver/types.js";
 import { InternalUsage } from "./types.js";
 import { PythonSymbol } from "../exportExtractor/types.js";
 
+describe("USageResolver, getUsageNode", () => {
+  let parser: Parser;
+  let exportExtractor: PythonExportExtractor;
+  let resolver: PythonUsageResolver;
+  let files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+
+  beforeEach(() => {
+    parser = pythonParser;
+    files = new Map();
+    exportExtractor = new PythonExportExtractor(parser, files);
+    resolver = new PythonUsageResolver(parser, exportExtractor);
+  });
+
+  test("should return the correct usage of a symbol that is a leaf and root node", () => {
+    const targetNode = parser.parse(`
+        foo()
+      `).rootNode;
+
+    // as a leaf node
+    const usageNode = resolver.getUsageNode(targetNode, [], "foo");
+
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("foo");
+  });
+
+  test("should return the correct usage of a chain attribute that is both a leaf and root node", () => {
+    const targetNode = parser.parse(`
+        foo.bar()
+      `).rootNode;
+
+    const usageNode = resolver.getUsageNode(targetNode, [], "foo.bar");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("foo.bar");
+  });
+
+  test("should correctly identify parts of a complex attribute chain", () => {
+    const targetNode = parser.parse(`
+      foo.f.o()
+    `).rootNode;
+
+    // Test 'foo' - should be root but not leaf
+    let usageNode = resolver.getUsageNode(targetNode, [], "foo");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("foo");
+
+    // Test 'foo.f' - should be root but not leaf
+    usageNode = resolver.getUsageNode(targetNode, [], "foo.f");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("foo.f");
+  });
+
+  test("should correctly identify parts of a complex attribute chain with brackets", () => {
+    const targetNode = parser.parse(`
+      foo.bar.baz()[qux]
+    `).rootNode;
+
+    // Test 'foo' - should be root but not leaf
+    let usageNode = resolver.getUsageNode(targetNode, [], "foo");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("foo");
+
+    // Test 'bar' - should be neither root nor leaf
+    usageNode = resolver.getUsageNode(targetNode, [], "bar");
+    expect(usageNode.length).toBe(0);
+
+    // Test 'baz' - should be neither root nor leaf
+    usageNode = resolver.getUsageNode(targetNode, [], "baz");
+    expect(usageNode.length).toBe(0);
+
+    // Text 'foo.bar.baz' - should be root and leaf
+    usageNode = resolver.getUsageNode(targetNode, [], "foo.bar.baz");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("foo.bar.baz");
+
+    // Test 'qux' - should be leaf and a root
+    usageNode = resolver.getUsageNode(targetNode, [], "qux");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("qux");
+  });
+
+  test("should handle method calls with arguments", () => {
+    const targetNode = parser.parse(`
+      foo.bar(1, x.y.z)
+    `).rootNode;
+
+    // Test 'foo' should be root but not leaf
+    let usageNode = resolver.getUsageNode(targetNode, [], "foo");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("foo");
+    // Test 'bar' should not resolve as a leaf node or root node
+    usageNode = resolver.getUsageNode(targetNode, [], "bar");
+    expect(usageNode.length).toBe(0);
+
+    // Test 'x' in x.y.z should be root but not leaf
+    usageNode = resolver.getUsageNode(targetNode, [], "x");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("x");
+
+    // Test 'z' in x.y.z should not resolve as a leaf node and root node
+    usageNode = resolver.getUsageNode(targetNode, [], "z");
+    expect(usageNode.length).toBe(0);
+
+    // Test 'x.y.z' should be root and leaf
+    usageNode = resolver.getUsageNode(targetNode, [], "x.y.z");
+    expect(usageNode.length).toBe(1);
+    expect(usageNode[0].text).toBe("x.y.z");
+  });
+});
+
 describe("UsageResolver", () => {
   let parser: Parser;
   let exportExtractor: PythonExportExtractor;
