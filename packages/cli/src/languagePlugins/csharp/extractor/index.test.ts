@@ -32,12 +32,20 @@ describe("CSharpExtractor", () => {
     expect(
       extractor.extractSymbolFromFile(programpath, "Program")?.length,
     ).toBe(9);
-    expect(
-      extractor.extractSymbolFromFile(
-        twonamespacesonefilepath,
-        "ChickenBurger.Salad",
-      )?.length,
-    ).toBe(1);
+    const salad = extractor.extractSymbolFromFile(
+      twonamespacesonefilepath,
+      "ChickenBurger.Salad",
+    );
+    expect(salad.length).toBe(1);
+    const saladfile = salad[0];
+    expect(saladfile.name).toBe("Salad");
+    expect(saladfile.namespace).toBe("ChickenBurger");
+    expect(saladfile.subproject.name).toBe("TestFiles");
+    expect(saladfile.symbol).toMatchObject({
+      name: "Salad",
+      type: "class",
+      namespace: "ChickenBurger",
+    });
     expect(
       extractor.extractSymbolFromFile(
         twonamespacesonefilepath,
