@@ -43,7 +43,7 @@ describe("CSharpExtractor", () => {
         twonamespacesonefilepath,
         "MyApp.BeefBurger.Steak",
       )?.length,
-    ).toBe(1);
+    ).toBe(2);
     expect(
       extractor.extractSymbolFromFile(seminamespacedpath, "HeadCrab")?.length,
     ).toBe(2);

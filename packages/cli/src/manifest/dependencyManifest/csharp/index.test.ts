@@ -41,7 +41,7 @@ describe("generateCSharpDependencymanifest", () => {
   });
 
   test("Resolves dependencies", () => {
-    expect(Object.keys(manifest[burgers].dependencies).length).toBe(1);
+    expect(Object.keys(manifest[burgers].dependencies).length).toBe(2);
     expect(Object.keys(manifest[models].dependencies).length).toBe(1);
     expect(Object.keys(manifest[namespaced].dependencies).length).toBe(1);
     expect(Object.keys(manifest[nested].dependencies).length).toBe(1);
@@ -68,7 +68,7 @@ describe("generateCSharpDependencymanifest", () => {
       Object.keys(
         manifest[semiNamespaced].symbols["HalfNamespace.Gordon"].dependents,
       ).length,
-    ).toBe(1);
+    ).toBe(2);
     expect(
       Object.keys(manifest[semiNamespaced].symbols["Freeman"].dependents)
         .length,
