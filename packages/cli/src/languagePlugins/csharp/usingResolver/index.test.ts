@@ -6,6 +6,8 @@ import {
   USING_ALIAS,
   USING_STATIC,
   USING_CURRENT,
+  ExternalSymbol,
+  InternalSymbol,
 } from "./index.js";
 import { CSharpNamespaceMapper } from "../namespaceMapper/index.js";
 import {
@@ -155,5 +157,33 @@ describe("UsingResolver", () => {
         },
       },
     ]);
+  });
+
+  test("instanceof functions correctly", () => {
+    const filepath = path.join(csharpFilesFolder, "Usage.cs");
+    const directives = resolver.parseUsingDirectives(filepath);
+    expect(
+      directives.filter(
+        (d) => resolver.resolveUsingDirective(d) instanceof ExternalSymbol,
+      ).length,
+    ).toBe(4);
+    expect(
+      directives.filter(
+        (d) => resolver.resolveUsingDirective(d) instanceof InternalSymbol,
+      ).length,
+    ).toBe(2);
+
+    const programpath = path.join(csharpFilesFolder, "Program.cs");
+    const progDirectives = resolver.parseUsingDirectives(programpath);
+    expect(
+      progDirectives.filter(
+        (d) => resolver.resolveUsingDirective(d) instanceof ExternalSymbol,
+      ).length,
+    ).toBe(0);
+    expect(
+      progDirectives.filter(
+        (d) => resolver.resolveUsingDirective(d) instanceof InternalSymbol,
+      ).length,
+    ).toBe(6);
   });
 });
