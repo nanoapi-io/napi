@@ -167,16 +167,16 @@ describe("InvocationResolver", () => {
         invResolver.isUsingUseful(programInvocations, d),
       ).length,
     ).toBe(6);
-  });
 
-  const usagepath = path.join(csharpFilesFolder, "Usage.cs");
-  const usageUsingDirectives =
-    invResolver.usingResolver.parseUsingDirectives(usagepath);
-  const usageInvocations = invResolver.getInvocationsFromFile(usagepath);
-  expect(usageUsingDirectives.length).toBe(6);
-  expect(
-    usageUsingDirectives.filter((d) =>
-      invResolver.isUsingUseful(usageInvocations, d),
-    ).length,
-  ).toBe(4);
+    const usagepath = path.join(csharpFilesFolder, "Usage.cs");
+    const usageUsingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(usagepath);
+    const usageInvocations = invResolver.getInvocationsFromFile(usagepath);
+    expect(usageUsingDirectives.length).toBe(6);
+    expect(
+      usageUsingDirectives.filter((d) =>
+        invResolver.isUsingUseful(usageInvocations, d),
+      ).length,
+    ).toBe(4);
+  });
 });
