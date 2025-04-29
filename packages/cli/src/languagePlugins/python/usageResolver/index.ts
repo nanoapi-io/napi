@@ -77,11 +77,10 @@ export class PythonUsageResolver {
    * @param refToLookFor - The name/reference to search for in the code
    * @returns Array of matching syntax nodes
    */
-  private getUsageNode(
+  public getUsageNode(
     targetNode: Parser.SyntaxNode,
     nodesToExclude: Parser.SyntaxNode[],
     refToLookFor: string,
-    isLeaf: boolean,
   ) {
     let captures = this.query.captures(targetNode);
 
@@ -101,22 +100,20 @@ export class PythonUsageResolver {
         return false;
       }
 
-      // if we have a leaf node (a symbol) we can skip this check.
-      // this is because the usage might be a nested class or function.
-      // In such case, we want to include the usage.
-      if (isLeaf) return true;
-
-      // If the node is an identifier, check if it's inside an attribute chain
-      // This avoids counting the parts of expressions like `module.attribute`
-      // as standalone references
-      if (node.type === "identifier") {
-        const parent = node.parent;
-        if (parent && parent.type === "attribute") {
-          return false;
+      let isRoot = true;
+      const parent = node.parent;
+      if (parent && parent.type === "attribute") {
+        const parentObjChild = parent.childForFieldName("object");
+        if (!parentObjChild || parentObjChild.id !== node.id) {
+          isRoot = false;
         }
       }
 
-      return true;
+      if (isRoot) {
+        return true;
+      }
+
+      return false;
     });
 
     const nodes = captures.map(({ node }) => node);
@@ -168,12 +165,7 @@ export class PythonUsageResolver {
     /* Optional module that re-exports this symbol */
     reExportingModule?: PythonModule,
   ) {
-    const usageNodes = this.getUsageNode(
-      targetNode,
-      nodesToExclude,
-      lookupRef,
-      true,
-    );
+    const usageNodes = this.getUsageNode(targetNode, nodesToExclude, lookupRef);
 
     if (usageNodes.length > 0) {
       if (!internalUsageMap.has(module.path)) {
@@ -245,7 +237,6 @@ export class PythonUsageResolver {
       targetNode,
       nodesToExclude,
       lookupRef,
-      false,
     );
     if (moduleUsageNodes.length > 0) {
       // Register module usage even without specific symbols
@@ -321,12 +312,7 @@ export class PythonUsageResolver {
     lookupRef: string,
     externalUsageMap: Map<string, ExternalUsage>,
   ) {
-    const usageNodes = this.getUsageNode(
-      targetNode,
-      nodesToExclude,
-      lookupRef,
-      true,
-    );
+    const usageNodes = this.getUsageNode(targetNode, nodesToExclude, lookupRef);
 
     if (usageNodes.length > 0) {
       // Initialize entry for base module
