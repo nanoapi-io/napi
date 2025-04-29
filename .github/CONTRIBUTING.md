@@ -41,7 +41,7 @@ Make use of the issue templates, and label your issues appropriately. If you’r
 
 You will need the following tools to develop NanoAPI:
 
-- [Node.js](https://nodejs.org/en/) version 18 or higher.
+- [Node.js](https://nodejs.org/en/) version 22 or higher.
 
 ### Environment Set Up
 
@@ -72,25 +72,42 @@ $ git remote add upstream https://github.com/nanoapi-io/napi.git
 $ npm install
 ```
 
+> [!NOTE]
+> You may encounter issues on a second or third install of dependencies. If this happens, install with `npm i --no-cache --force` to fix these issues.
+
 ### Running the Project
 
-When running locally, the UI must be built before the CLI can be run.
+When running locally, the shared libraries and the UI must be built before the CLI can be run.
 
-To build the UI:
+To build them:
 
 ```bash
 $ npm run build
 ```
 
-To run the CLI:
+Next, we want to run the CLI and the UI with hot reload. You will need two terminal windows for this.
+
+1. In the first terminal, run the CLI. This command should be run in the `napi` directory with a `workdir` pointing to the project you want to work on. For example, if you want to work on Apache Airflow, run:
 
 ```bash
-$ npm start 
+$ npm run dev:cli -- audit view -- --workdir=/path/to/airflow
 ```
 
 Running the `audit view` command from the CLI will spin up a web server on your localhost. You can access the UI by navigating to `http://localhost:3000`.
 
-> **Note:** In case of port collisions, the UI will automatically switch to the next available port.
+> [!NOTE]
+> In case of port collisions, the UI will automatically switch to the next available port.
+
+2. In the second terminal, run the UI. This command should be run in the `napi` directory as well:
+
+```bash
+$ npm run dev:app
+```
+
+This controls the hot reload functionality for the UI. You can now make changes to the UI and see them reflected in real-time.
+
+> [!IMPORTANT]
+> The react UI elements (sidebar, header, etc.) will automatically reload when you make changes. However any Cytoscape elements will not. You will need to refresh the page to see those changes.
 
 ### Project Setup
 
@@ -102,34 +119,14 @@ git clone https://github.com/apache/airflow.git
 cd airflow
 ```
 
-2. From the `napi` repo initialize the project using the CLI:
+2. From the `napi` repo initialize the project using the CLI, which will create a `.napirc` file in the project root. This file contains the configuration for the project and is required for the CLI to work.:
 ```bash
 cd /path/to/napi # or just use a different terminal
 npm start -- init -- --workdir=/path/to/airflow
 ```
 
-3. This will create a `.napirc` file in root of the project. The file should look like the following. You can copy this content into the file and overwrite it if you are having issues.
-```json
-{
-  "entrypoint": "app.py",
-  "out": "napi_dist",
-  "audit": {
-    "language": "python",
-    "include": ["airflow-core/src/airflow/**/*"],
-    "exclude": [],
-    "targetMaxCharInFile": 5000,
-    "targetMaxLineInFile": 500,
-    "targetMaxDepPerFile": 4
-  }
-}
-```
-
-4. Now the audit view can be run.
-```bash
-npm start -- audit view -- --workdir=/path/to/airflow
-```
-
-5. The audit view will be available at `http://localhost:3000` and should automatically open in your default browser.
+> [!NOTE]
+> If you encounter any issues with the config file, you can [check the reference for the file on our documentation](https://docs.nanoapi.io/default-guide/reference/napirc).
 
 ### Testing
 
@@ -152,6 +149,14 @@ To ensure releases run smoothly, put the content of your changes in our [CHANGEL
 ### Documentation
 
 We are also building on the documentation process. For now, include any documentation changes in your PRs and we will add them into the main documentation.
+
+The critical documentation to maintain is for any changes that impact the following:
+- CLI commands
+- Configuration file
+- Local development setup
+- Release process
+- Testing
+- Linting
 
 ### Discussions vs Issues
 

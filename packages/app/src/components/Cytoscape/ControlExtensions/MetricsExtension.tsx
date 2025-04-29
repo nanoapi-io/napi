@@ -1,4 +1,4 @@
-import { Button, DropdownMenu, Tooltip } from "@radix-ui/themes";
+import { Button, DropdownMenu } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import {
   Metric,
@@ -50,22 +50,17 @@ export default function MetricsExtension(props: {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <Tooltip
-          content="Select metric to highlight failing nodes for that metric"
-          side="top"
+        <Button
+          size="1"
+          variant="ghost"
+          color="violet"
+          highContrast
+          disabled={props.busy}
+          className="py-1.5"
         >
-          <Button
-            size="1"
-            variant="ghost"
-            color="violet"
-            highContrast
-            disabled={props.busy}
-            className="py-1.5"
-          >
-            {getMetricLabel(metric)}
-            <LuChevronUp />
-          </Button>
-        </Tooltip>
+          {getMetricLabel(metric)}
+          <LuChevronUp />
+        </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content color="violet" variant="soft">
         <DropdownMenu.Item

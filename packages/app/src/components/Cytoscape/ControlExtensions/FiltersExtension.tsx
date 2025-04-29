@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router";
-import { Button, DropdownMenu, Checkbox, Tooltip } from "@radix-ui/themes";
+import { Button, DropdownMenu, Checkbox } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
 import { toast } from "react-toastify";
@@ -168,26 +168,24 @@ export default function FiltersExtension(props: {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
-        <Tooltip content="Filter visible elements" side="top">
-          <Button
-            size="1"
-            variant="ghost"
-            color="violet"
-            highContrast
-            className={`${checkFiltersSet() ? "bg-primary-light/20 dark:bg-primary-dark/20" : ""}`}
-            disabled={props.busy}
-            onClick={() => props.onLayout()}
-          >
-            <MdFilterAlt
-              className={`text-xl h-5 w-5 ${
-                checkFiltersSet()
-                  ? "text-primary-light dark:text-primary-dark"
-                  : "text-gray-light dark:text-gray-dark"
-              }`}
-            />
-            <LuChevronUp />
-          </Button>
-        </Tooltip>
+        <Button
+          size="1"
+          variant="ghost"
+          color="violet"
+          highContrast
+          className={`${checkFiltersSet() ? "bg-primary-light/20 dark:bg-primary-dark/20" : ""}`}
+          disabled={props.busy}
+          onClick={() => props.onLayout()}
+        >
+          <MdFilterAlt
+            className={`text-xl h-5 w-5 ${
+              checkFiltersSet()
+                ? "text-primary-light dark:text-primary-dark"
+                : "text-gray-light dark:text-gray-dark"
+            }`}
+          />
+          <LuChevronUp />
+        </Button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Content color="violet" variant="soft">
         {/* Add filter options here */}
