@@ -145,4 +145,38 @@ describe("InvocationResolver", () => {
       unresolved: [],
     });
   });
+
+  test("Finds useless using directives", () => {
+    const filepath = path.join(csharpFilesFolder, "2Namespaces1File.cs");
+    const usingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(filepath);
+    const invocations = invResolver.getInvocationsFromFile(filepath);
+    expect(usingDirectives.length).toBe(2);
+    expect(
+      usingDirectives.filter((d) => invResolver.isUsingUseful(invocations, d))
+        .length,
+    ).toBe(1);
+
+    const programpath = path.join(csharpFilesFolder, "Program.cs");
+    const programUsingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(programpath);
+    const programInvocations = invResolver.getInvocationsFromFile(programpath);
+    expect(programUsingDirectives.length).toBe(6);
+    expect(
+      programUsingDirectives.filter((d) =>
+        invResolver.isUsingUseful(programInvocations, d),
+      ).length,
+    ).toBe(6);
+  });
+
+  const usagepath = path.join(csharpFilesFolder, "Usage.cs");
+  const usageUsingDirectives =
+    invResolver.usingResolver.parseUsingDirectives(usagepath);
+  const usageInvocations = invResolver.getInvocationsFromFile(usagepath);
+  expect(usageUsingDirectives.length).toBe(6);
+  expect(
+    usageUsingDirectives.filter((d) =>
+      invResolver.isUsingUseful(usageInvocations, d),
+    ).length,
+  ).toBe(4);
 });
