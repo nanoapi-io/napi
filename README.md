@@ -46,6 +46,9 @@ For the latest updates, visit our [project board](/projects).
 
 ## Installation
 
+> [!IMPORTANT]
+> `napi` works out of the box on both mac and linux systems. To use this tool on Windows, you will need to install [WSL (Windows Subsystem for Linux)](https://learn.microsoft.com/en-us/windows/wsl/install) and run the CLI commands from there.
+
 Ensure you have Node.js (>=22) and npm installed.
 
 https://nodejs.org/en
