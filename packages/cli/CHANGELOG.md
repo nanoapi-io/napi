@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+Fix some small FE bugs.
+improve symbol extraction for C#
+
 ## [1.0.5] - 2025-04-29
 
 Improve symbol extraction for python now removing unused import, but keeping them if they were unused in the original code.
