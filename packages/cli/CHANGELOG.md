@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+Improve symbol extraction for python now removing unused import, but keeping them if they were unused in the original code.
+Improve python usage reolution logic, now more accurate.
+Improve accuracy of dependency manifest for C#
+Improve symbol extraction for for C#
+Implement metrics in C#
+
 ## [1.0.4] - 2025-04-25
 
 Fix release flow, bundling packages/shared into the CLI instead of using published version.
