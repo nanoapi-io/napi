@@ -178,5 +178,23 @@ describe("InvocationResolver", () => {
         invResolver.isUsingUseful(usageInvocations, d),
       ).length,
     ).toBe(4);
+
+    const globalusingpath = path.join(
+      csharpFilesFolder,
+      "Subfolder/GlobalUsings.cs",
+    );
+    const globalusingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(globalusingpath);
+    const globalusingInvocations =
+      invResolver.getInvocationsFromFile(globalusingpath);
+    expect(globalusingDirectives.length).toBe(2);
+    expect(
+      globalusingDirectives.filter((d) =>
+        invResolver.isUsingUseful(globalusingInvocations, d),
+      ).length,
+    ).toBe(1); // Every external import is considered useful no matter what
+    // Even if there is no invocation.
+    // It's also not dangerous to remove a global using directive
+    // because they are regrouped in GlobalUsings.cs.
   });
 });
