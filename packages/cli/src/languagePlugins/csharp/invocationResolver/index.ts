@@ -81,6 +81,10 @@ const calledClassesQuery = new Parser.Query(
   type: (identifier) @cls)
   (array_type
   type: (qualified_name) @cls)
+  (nullable_type
+  type: (identifier) @cls)
+  (nullable_type
+  type: (qualified_name) @cls)
   (generic_name) @cls
   `,
   // Might have to change the "(generic_name) @cls" line
