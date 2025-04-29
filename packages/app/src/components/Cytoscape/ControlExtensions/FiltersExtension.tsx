@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router";
-import { Button, DropdownMenu, Checkbox, Tooltip } from "@radix-ui/themes";
+import { Button, DropdownMenu, Checkbox } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import { Core } from "cytoscape";
 import { toast } from "react-toastify";

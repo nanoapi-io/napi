@@ -1,4 +1,4 @@
-import { Button, DropdownMenu, Tooltip } from "@radix-ui/themes";
+import { Button, DropdownMenu } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import {
   Metric,
