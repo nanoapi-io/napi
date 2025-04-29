@@ -138,7 +138,7 @@ export interface Invocations {
 export class CSharpInvocationResolver {
   parser: Parser = csharpParser;
   public nsMapper: CSharpNamespaceMapper;
-  private usingResolver: CSharpUsingResolver;
+  public usingResolver: CSharpUsingResolver;
   private extensions: ExtensionMethodMap = {};
   private resolvedImports: ResolvedImports;
   private cache: Map<string, Invocations> = new Map<string, Invocations>();
