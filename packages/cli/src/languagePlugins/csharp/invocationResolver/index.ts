@@ -192,17 +192,33 @@ export class CSharpInvocationResolver {
     // Remove any generic type information from the classname
     // Classes in the type argument list are managed on their own.
     const cleanClassname = classname.split("<")[0];
+    let cutClassname = cleanClassname;
     // Try to find the class in the resolved imports
-    const ucls = this.usingResolver.findClassInImports(
-      this.resolvedImports,
-      cleanClassname,
-      filepath,
-    );
+    let ucls = null;
+    while (!ucls) {
+      ucls = this.usingResolver.findClassInImports(
+        this.resolvedImports,
+        cleanClassname,
+        filepath,
+      );
+      if (!cutClassname.includes(".")) {
+        break;
+      }
+      cutClassname = cutClassname.split(".").slice(0, -1).join(".");
+    }
     if (ucls) {
       return ucls;
     }
     // Try to find the class in the namespace tree
-    const cls = this.nsMapper.findClassInTree(namespaceTree, cleanClassname);
+    let cls = null;
+    cutClassname = cleanClassname;
+    while (!cls) {
+      cls = this.nsMapper.findClassInTree(namespaceTree, cutClassname);
+      if (!cutClassname.includes(".")) {
+        break;
+      }
+      cutClassname = cutClassname.split(".").slice(0, -1).join(".");
+    }
     if (cls) {
       return cls;
     }
