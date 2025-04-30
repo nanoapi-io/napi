@@ -17,7 +17,13 @@ namespace MyApp.BeefBurger
             Console.WriteLine("Gordon, we need to cook.");
         }
     }
-    public class Cheese { }
+    public static class Cheese
+    {
+        public static void Melt(this Steak steak)
+        {
+            Console.WriteLine("Cheese melted.");
+        }
+    }
     public class Bun { }
 }
 namespace ChickenBurger

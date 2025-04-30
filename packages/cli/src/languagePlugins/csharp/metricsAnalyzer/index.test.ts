@@ -20,8 +20,8 @@ describe("CSharpMetricsAnalyzer", () => {
     const metrics = analyzeFile("2Namespaces1File.cs");
     expect(metrics).toMatchObject({
       cyclomaticComplexity: 0, // No control flow statements in this file
-      linesCount: 36, // Total lines in the file
-      codeLinesCount: 32, // Excluding blank lines and comments
+      linesCount: 42, // Total lines in the file
+      codeLinesCount: 38, // Excluding blank lines and comments
       characterCount: expect.any(Number), // Total characters in the file
       codeCharacterCount: expect.any(Number), // Characters excluding comments and whitespace
     });
