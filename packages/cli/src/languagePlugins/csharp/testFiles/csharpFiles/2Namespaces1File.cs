@@ -23,6 +23,13 @@ namespace MyApp.BeefBurger
 namespace ChickenBurger
 {
     public class Chicken { }
-    public class Salad { }
+    public class Salad<T>
+    {
+        public T Item { get; set; }
+        public void Add(T item)
+        {
+            Item = item;
+        }
+    }
     public class Bun { }
 }

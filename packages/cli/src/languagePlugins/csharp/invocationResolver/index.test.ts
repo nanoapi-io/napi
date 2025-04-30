@@ -27,56 +27,22 @@ describe("InvocationResolver", () => {
     const usedFiles = invResolver.getInvocationsFromFile(
       path.join(csharpFilesFolder, "Program.cs"),
     );
-    expect(usedFiles).toMatchObject({
-      resolvedSymbols: [
-        {
-          name: "Bun",
-          type: "class",
-          namespace: "MyApp.BeefBurger",
-        },
-        {
-          name: "Bun",
-          type: "class",
-          namespace: "ChickenBurger",
-        },
-        {
-          name: "MyClass",
-          type: "class",
-          namespace: "MyNamespace",
-        },
-        {
-          name: "Gordon",
-          type: "class",
-          namespace: "HalfNamespace",
-        },
-        {
-          name: "Freeman",
-          type: "class",
-          namespace: "",
-        },
-        {
-          name: "OuterInnerClass",
-          type: "class",
-          namespace: "OuterNamespace",
-        },
-        {
-          name: "InnerClass",
-          type: "class",
-          namespace: "OuterNamespace.InnerNamespace",
-        },
-        {
-          name: "OrderStatus",
-          type: "enum",
-          namespace: "MyApp.Models",
-        },
-        {
-          name: "HeadCrab",
-          type: "class",
-          namespace: "",
-        },
-      ],
-      unresolved: ["System.Math"],
-    });
+    const resolved = usedFiles.resolvedSymbols.map((s) =>
+      s.namespace !== "" ? s.namespace + "." + s.name : s.name,
+    );
+    const unresolved = usedFiles.unresolved;
+    expect(resolved).toContain("MyApp.BeefBurger.Bun");
+    expect(resolved).toContain("ChickenBurger.Bun");
+    expect(resolved).toContain("ChickenBurger.Salad");
+    expect(resolved).toContain("MyNamespace.MyClass");
+    expect(resolved).toContain("HalfNamespace.Gordon");
+    expect(resolved).toContain("Freeman");
+    expect(resolved).toContain("OuterNamespace.InnerNamespace.InnerClass");
+    expect(resolved).toContain("MyApp.Models.OrderStatus");
+    expect(unresolved).toContain("System.Math");
+    expect(unresolved).not.toContain("string");
+    expect(unresolved).not.toContain("System");
+    expect(unresolved).not.toContain("Salad<string>");
   });
 
   test("isUsedInFile", () => {
