@@ -139,7 +139,7 @@ function traverseGraphAdaptive(
 
         nodeMap[depId] = { element: depNode, children: {} };
         edges.push({
-          data: { source: currentId, target: depId, type: "dependency" },
+          data: { source: depId, target: currentId, type: "dependency" },
         });
 
         if (!depInfo.isExternal && depFile) {
@@ -182,7 +182,7 @@ function traverseGraphAdaptive(
 
         nodeMap[depId] = { element: depNode, children: {} };
         edges.push({
-          data: { source: depId, target: currentId, type: "dependent" },
+          data: { source: currentId, target: depId, type: "dependent" },
         });
 
         if (depFile) {
@@ -259,30 +259,6 @@ export function getInstanceCyElements(
     }
     return nodeElements;
   };
-
-  // const traverseEdges = (
-  //   edges: EdgeElementDefinition[] = []
-  // ): EdgeElementDefinition[] => {
-  //   const lookup = new Set<string>();
-  //   // Go through all the edges and remove cycles
-  //   for (const edge of edges) {
-  //     const sourceId = edge.data.source;
-  //     const targetId = edge.data.target;
-
-  //     // Check if the edge is a cycle
-  //     if (sourceId === targetId) {
-  //       edges.splice(edges.indexOf(edge), 1);
-  //       continue;
-  //     }
-
-  //     // Check if the edge is a duplicate
-  //     if (edges.some(e => e.data.source === targetId && e.data.target === sourceId)) {
-  //       edges.splice(edges.indexOf(edge), 1);
-  //       continue;
-  //     }
-  //   }
-  //   return edges;
-  // };
 
   const nodeElements = traverse(nodeMap);
   return [...nodeElements, ...edges];
