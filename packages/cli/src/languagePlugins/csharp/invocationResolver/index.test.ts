@@ -41,6 +41,7 @@ describe("InvocationResolver", () => {
     expect(resolved).toContain("MyApp.Models.OrderStatus");
     expect(resolved).toContain("HeadCrab"); // Used through extension Bite()
     expect(resolved).toContain("OuterNamespace.OuterInnerClass");
+    expect(resolved).not.toContain("MyApp.BeefBurger.Salad");
     expect(unresolved).toContain("System.Math");
     expect(unresolved).not.toContain("string");
     expect(unresolved).not.toContain("System");

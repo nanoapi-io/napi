@@ -41,7 +41,7 @@ describe("generateCSharpDependencymanifest", () => {
   });
 
   test("Resolves dependencies", () => {
-    expect(Object.keys(manifest[burgers].dependencies).length).toBe(2);
+    expect(Object.keys(manifest[burgers].dependencies).length).toBe(3);
     expect(Object.keys(manifest[models].dependencies).length).toBe(1);
     expect(Object.keys(manifest[namespaced].dependencies).length).toBe(1);
     expect(Object.keys(manifest[nested].dependencies).length).toBe(1);

@@ -31,7 +31,7 @@ describe("CSharpExtractor", () => {
   test("should extract symbols correctly", () => {
     expect(
       extractor.extractSymbolFromFile(programpath, "Program")?.length,
-    ).toBe(9);
+    ).toBe(10);
     const salad = extractor.extractSymbolFromFile(
       twonamespacesonefilepath,
       "ChickenBurger.Salad",
