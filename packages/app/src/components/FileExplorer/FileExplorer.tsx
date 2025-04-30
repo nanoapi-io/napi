@@ -7,7 +7,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link } from "react-router";
 import {
   PanelGroup,
   Panel,
@@ -16,7 +16,7 @@ import {
 } from "react-resizable-panels";
 import { ExtractionNode } from "@nanoapi.io/shared";
 import { FileExplorerSkeleton } from "./Skeleton.js";
-import { LuSearchCode, LuX } from "react-icons/lu";
+import { LuSearchCode, LuSearchSlash, LuX } from "react-icons/lu";
 import languageIcon from "./languageIcons.js";
 import {
   MdSearch,
@@ -378,8 +378,6 @@ function NodeElement(props: {
   hlNodeId: string | null;
   setHLNodeId: (node: string | null) => void;
 }) {
-  const params = useParams<{ file?: string }>();
-
   const [isOpen, setIsOpen] = useState(false);
 
   const shouldAutoExpand = props.search.length > 0 && props.node.matchesSearch;
@@ -471,16 +469,30 @@ function NodeElement(props: {
                 </div>
               </div>
             ) : (
-              <Button
-                className={`w-full text-text-light dark:text-text-dark ${params.file === props.node.id && "bg-background-light dark:bg-background-dark"}`}
-                variant="ghost"
-                color="violet"
-              >
-                <div className="w-full flex items-center space-x-2">
+              <div className="flex justify-between w-full items-center">
+                <div className="flex items-center space-x-2 text-sm">
                   <MdSubdirectoryArrowRight className="text-gray-light dark:text-gray-dark" />
                   <DisplayedPath node={props.node} search={props.search} />
                 </div>
-              </Button>
+                <div>
+                  <Button
+                    className="text-xl text-text-light dark:text-text-dark"
+                    variant="ghost"
+                    color="violet"
+                  >
+                    <Tooltip content="View details">
+                      <Link
+                        to={`/audit/${props.node.id
+                          .split("#")
+                          .map((id) => encodeURIComponent(id))
+                          .join("/")}`}
+                      >
+                        <LuSearchSlash className="text-gray-light dark:text-gray-dark" />
+                      </Link>
+                    </Tooltip>
+                  </Button>
+                </div>
+              </div>
             )}
           </>
         )}
@@ -504,7 +516,7 @@ function DisplayedPath({
   node: TreeData;
   search: string;
 }) {
-  const maxPathLength = 35 - 2 * node.level;
+  const maxPathLength = Math.max(25 - 2 * node.level, 5);
   let foundInSearch = false;
   if (search.length > 2) {
     foundInSearch = node.name.toLowerCase().includes(search.toLowerCase());

@@ -363,28 +363,29 @@ export class ProjectDependencyVisualizer {
         selector: "edge",
         style: {
           width: 1,
-          "line-color": tailwindConfig.theme.extend.colors.text[theme],
-          "line-opacity": 1,
-          "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
+          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
+          "target-arrow-color":
+            tailwindConfig.theme.extend.colors.primary[theme],
           "target-arrow-shape": "triangle",
           "curve-style": "straight",
-          "arrow-scale": 1,
         },
       },
       {
         selector: "edge.dependency",
         style: {
-          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
+          width: 2,
+          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
           "target-arrow-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
+            tailwindConfig.theme.extend.colors.primary[theme],
         },
       },
       {
         selector: "edge.dependent",
         style: {
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
+          width: 2,
+          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
           "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
+            tailwindConfig.theme.extend.colors.secondary[theme],
         },
       },
       {

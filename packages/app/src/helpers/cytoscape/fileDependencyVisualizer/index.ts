@@ -88,9 +88,6 @@ export class FileDependencyVisualizer {
       data: NapiNodeData;
     }) => void;
   };
-  /** Error and success character symbols for node labels */
-  private errorChar = "⚠️";
-  private successChar = "🎉";
 
   constructor(
     container: HTMLElement,
@@ -709,7 +706,7 @@ export class FileDependencyVisualizer {
       {
         selector: "edge",
         style: {
-          width: 1,
+          width: 2,
           "line-color": tailwindConfig.theme.extend.colors.text[theme],
           "line-opacity": 1,
           "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
@@ -719,19 +716,19 @@ export class FileDependencyVisualizer {
         },
       },
       {
-        selector: `edge[customData.type = '${edgeTypeDependent}']`,
-        style: {
-          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
-        },
-      },
-      {
         selector: `edge[customData.type = '${edgeTypeDependency}']`,
         style: {
           "line-color": tailwindConfig.theme.extend.colors.primary[theme],
           "target-arrow-color":
             tailwindConfig.theme.extend.colors.primary[theme],
+        },
+      },
+      {
+        selector: `edge[customData.type = '${edgeTypeDependent}']`,
+        style: {
+          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
+          "target-arrow-color":
+            tailwindConfig.theme.extend.colors.secondary[theme],
         },
       },
       {
