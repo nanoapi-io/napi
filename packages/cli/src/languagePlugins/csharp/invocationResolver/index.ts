@@ -41,54 +41,63 @@ const variablesQuery = new Parser.Query(
 const calledClassesQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
+  (object_creation_expression
+  type: (identifier) @cls)
+  (object_creation_expression
+  type: (qualified_name) @cls)
   ((object_creation_expression
-  type: (identifier) @cls))
-  ((object_creation_expression
-  type: (qualified_name) @cls))
+  type: (generic_name) @cls))
   (variable_declaration
   type: (identifier) @cls)
   (variable_declaration
   type: (qualified_name) @cls)
+  (variable_declaration
+  type: (generic_name) @cls)
   (parameter
   type: (identifier) @cls)
   (parameter
   type: (qualified_name) @cls)
+  (parameter
+  type: (generic_name) @cls)
   (type_argument_list
   (identifier) @cls)
   (type_argument_list
   (qualified_name) @cls)
+  (type_argument_list
+  (generic_name) @cls)
   (base_list
   (identifier) @cls)
   (base_list
   (qualified_name) @cls)
+  (base_list
+  (generic_name) @cls)
   (property_declaration
   type: (qualified_name) @cls)
   (property_declaration
   type: (identifier) @cls)
   (property_declaration
-  type: (nullable_type
-  type: (identifier) @cls))
-  (property_declaration
-  type: (nullable_type
-  type: (qualified_name) @cls))
+  type: (generic_name) @cls)
   (typeof_expression
   type: (_) @cls)
   (method_declaration
   returns: (qualified_name) @cls)
   (method_declaration
   returns: (identifier) @cls)
+  (method_declaration
+  returns: (generic_name) @cls)
   (array_type
   type: (identifier) @cls)
   (array_type
   type: (qualified_name) @cls)
+  (array_type
+  type: (generic_name) @cls)
   (nullable_type
   type: (identifier) @cls)
   (nullable_type
   type: (qualified_name) @cls)
-  (generic_name) @cls
+  (nullable_type
+  type: (generic_name) @cls)
   `,
-  // Might have to change the "(generic_name) @cls" line
-  // to be smarter, it may or may not add 1s of runtime.
 );
 
 /**
