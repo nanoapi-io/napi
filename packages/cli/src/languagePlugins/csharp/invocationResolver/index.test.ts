@@ -39,6 +39,7 @@ describe("InvocationResolver", () => {
     expect(resolved).toContain("Freeman");
     expect(resolved).toContain("OuterNamespace.InnerNamespace.InnerClass");
     expect(resolved).toContain("MyApp.Models.OrderStatus");
+    expect(resolved).toContain("HeadCrab"); // Used through extension Bite()
     expect(unresolved).toContain("System.Math");
     expect(unresolved).not.toContain("string");
     expect(unresolved).not.toContain("System");
