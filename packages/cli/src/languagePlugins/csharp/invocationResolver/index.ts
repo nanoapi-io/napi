@@ -41,50 +41,63 @@ const variablesQuery = new Parser.Query(
 const calledClassesQuery = new Parser.Query(
   csharpParser.getLanguage(),
   `
+  (object_creation_expression
+  type: (identifier) @cls)
+  (object_creation_expression
+  type: (qualified_name) @cls)
   ((object_creation_expression
-  type: (identifier) @cls))
-  ((object_creation_expression
-  type: (qualified_name) @cls))
+  type: (generic_name) @cls))
   (variable_declaration
   type: (identifier) @cls)
   (variable_declaration
   type: (qualified_name) @cls)
+  (variable_declaration
+  type: (generic_name) @cls)
   (parameter
   type: (identifier) @cls)
   (parameter
   type: (qualified_name) @cls)
+  (parameter
+  type: (generic_name) @cls)
   (type_argument_list
   (identifier) @cls)
   (type_argument_list
   (qualified_name) @cls)
+  (type_argument_list
+  (generic_name) @cls)
   (base_list
   (identifier) @cls)
   (base_list
   (qualified_name) @cls)
+  (base_list
+  (generic_name) @cls)
   (property_declaration
   type: (qualified_name) @cls)
   (property_declaration
   type: (identifier) @cls)
   (property_declaration
-  type: (nullable_type
-  type: (identifier) @cls))
-  (property_declaration
-  type: (nullable_type
-  type: (qualified_name) @cls))
+  type: (generic_name) @cls)
   (typeof_expression
   type: (_) @cls)
   (method_declaration
   returns: (qualified_name) @cls)
   (method_declaration
   returns: (identifier) @cls)
+  (method_declaration
+  returns: (generic_name) @cls)
   (array_type
   type: (identifier) @cls)
   (array_type
   type: (qualified_name) @cls)
-  (generic_name) @cls
+  (array_type
+  type: (generic_name) @cls)
+  (nullable_type
+  type: (identifier) @cls)
+  (nullable_type
+  type: (qualified_name) @cls)
+  (nullable_type
+  type: (generic_name) @cls)
   `,
-  // Might have to change the "(generic_name) @cls" line
-  // to be smarter, it may or may not add 1s of runtime.
 );
 
 /**
@@ -138,7 +151,7 @@ export interface Invocations {
 export class CSharpInvocationResolver {
   parser: Parser = csharpParser;
   public nsMapper: CSharpNamespaceMapper;
-  private usingResolver: CSharpUsingResolver;
+  public usingResolver: CSharpUsingResolver;
   private extensions: ExtensionMethodMap = {};
   private resolvedImports: ResolvedImports;
   private cache: Map<string, Invocations> = new Map<string, Invocations>();
@@ -179,17 +192,33 @@ export class CSharpInvocationResolver {
     // Remove any generic type information from the classname
     // Classes in the type argument list are managed on their own.
     const cleanClassname = classname.split("<")[0];
+    let cutClassname = cleanClassname;
     // Try to find the class in the resolved imports
-    const ucls = this.usingResolver.findClassInImports(
-      this.resolvedImports,
-      cleanClassname,
-      filepath,
-    );
+    let ucls = null;
+    while (!ucls) {
+      ucls = this.usingResolver.findClassInImports(
+        this.resolvedImports,
+        cleanClassname,
+        filepath,
+      );
+      if (!cutClassname.includes(".")) {
+        break;
+      }
+      cutClassname = cutClassname.split(".").slice(0, -1).join(".");
+    }
     if (ucls) {
       return ucls;
     }
     // Try to find the class in the namespace tree
-    const cls = this.nsMapper.findClassInTree(namespaceTree, cleanClassname);
+    let cls = null;
+    cutClassname = cleanClassname;
+    while (!cls) {
+      cls = this.nsMapper.findClassInTree(namespaceTree, cutClassname);
+      if (!cutClassname.includes(".")) {
+        break;
+      }
+      cutClassname = cutClassname.split(".").slice(0, -1).join(".");
+    }
     if (cls) {
       return cls;
     }
@@ -488,7 +517,10 @@ export class CSharpInvocationResolver {
         (usedNamespace.namespace &&
           inv.namespace ===
             this.nsMapper.getFullNSName(usedNamespace.namespace)) ||
-        (usedNamespace.symbol && inv.name === usedNamespace.symbol.name),
+        (usedNamespace.symbol && inv.name === usedNamespace.symbol.name) ||
+        (usedNamespace.symbol &&
+          inv.parent &&
+          inv.parent.name === usedNamespace.symbol.name),
     );
   }
 }

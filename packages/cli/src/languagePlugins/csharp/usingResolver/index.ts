@@ -63,6 +63,20 @@ export class InternalSymbol {
   symbol?: SymbolNode;
   /** The namespace node if it is a namespace */
   namespace?: NamespaceNode;
+
+  constructor(
+    usingtype: UsingType,
+    filepath: string,
+    alias?: string,
+    symbol?: SymbolNode,
+    namespace?: NamespaceNode,
+  ) {
+    this.usingtype = usingtype;
+    this.filepath = filepath;
+    this.alias = alias;
+    this.symbol = symbol;
+    this.namespace = namespace;
+  }
 }
 
 /**
@@ -77,6 +91,18 @@ export class ExternalSymbol {
   alias?: string;
   /** The name of the external symbol */
   name: string;
+
+  constructor(
+    usingtype: UsingType,
+    filepath: string,
+    alias?: string,
+    name?: string,
+  ) {
+    this.usingtype = usingtype;
+    this.filepath = filepath;
+    this.alias = alias;
+    this.name = name ?? "";
+  }
 }
 
 /**
@@ -183,23 +209,23 @@ export class CSharpUsingResolver {
     const { type, filepath, id, alias } = directive;
     // Check if the using directive is a known external dependency
     if (this.cachedExternalDeps.has(id)) {
-      return { usingtype: type, filepath, alias, name: id };
+      return new ExternalSymbol(type, filepath, alias, id);
     }
     const symbol = this.nsMapper.findClassInTree(this.nsMapper.nsTree, id);
     if (symbol) {
-      return { usingtype: type, filepath, alias, symbol };
+      return new InternalSymbol(type, filepath, alias, symbol);
     }
     const namespace = this.nsMapper.findNamespaceInTree(
       this.nsMapper.nsTree,
       id,
     );
     if (namespace) {
-      return { usingtype: type, filepath, alias, namespace };
+      return new InternalSymbol(type, filepath, alias, undefined, namespace);
     }
     // If the directive is not found in the namespace tree, treat it as an external symbol
     // and cache it
     this.cachedExternalDeps.add(id);
-    return { usingtype: type, filepath, alias, name: id };
+    return new ExternalSymbol(type, filepath, alias, id);
   }
 
   private getCurrentNamespaces(filepath: string): string[] {

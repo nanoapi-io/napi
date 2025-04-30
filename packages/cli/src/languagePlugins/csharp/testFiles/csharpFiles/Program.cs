@@ -14,6 +14,7 @@ namespace Tests
             // Test for ambiguity resolution
             Bun beefBun = new Bun();
             ChickenBurger.Bun chickenBun = new ChickenBurger.Bun();
+            ChickenBurger.Salad<string> salad = new ChickenBurger.Salad<string>();
             // Regular usage of imported namespaces
             MyClass myClass = new MyClass();
             Gordon gordon = new Gordon();

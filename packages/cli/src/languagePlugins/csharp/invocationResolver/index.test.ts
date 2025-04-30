@@ -27,56 +27,25 @@ describe("InvocationResolver", () => {
     const usedFiles = invResolver.getInvocationsFromFile(
       path.join(csharpFilesFolder, "Program.cs"),
     );
-    expect(usedFiles).toMatchObject({
-      resolvedSymbols: [
-        {
-          name: "Bun",
-          type: "class",
-          namespace: "MyApp.BeefBurger",
-        },
-        {
-          name: "Bun",
-          type: "class",
-          namespace: "ChickenBurger",
-        },
-        {
-          name: "MyClass",
-          type: "class",
-          namespace: "MyNamespace",
-        },
-        {
-          name: "Gordon",
-          type: "class",
-          namespace: "HalfNamespace",
-        },
-        {
-          name: "Freeman",
-          type: "class",
-          namespace: "",
-        },
-        {
-          name: "OuterInnerClass",
-          type: "class",
-          namespace: "OuterNamespace",
-        },
-        {
-          name: "InnerClass",
-          type: "class",
-          namespace: "OuterNamespace.InnerNamespace",
-        },
-        {
-          name: "OrderStatus",
-          type: "enum",
-          namespace: "MyApp.Models",
-        },
-        {
-          name: "HeadCrab",
-          type: "class",
-          namespace: "",
-        },
-      ],
-      unresolved: ["System.Math"],
-    });
+    const resolved = usedFiles.resolvedSymbols.map((s) =>
+      s.namespace !== "" ? s.namespace + "." + s.name : s.name,
+    );
+    const unresolved = usedFiles.unresolved;
+    expect(resolved).toContain("MyApp.BeefBurger.Bun");
+    expect(resolved).toContain("ChickenBurger.Bun");
+    expect(resolved).toContain("ChickenBurger.Salad");
+    expect(resolved).toContain("MyNamespace.MyClass");
+    expect(resolved).toContain("HalfNamespace.Gordon");
+    expect(resolved).toContain("Freeman");
+    expect(resolved).toContain("OuterNamespace.InnerNamespace.InnerClass");
+    expect(resolved).toContain("MyApp.Models.OrderStatus");
+    expect(resolved).toContain("HeadCrab"); // Used through extension Bite()
+    expect(resolved).toContain("OuterNamespace.OuterInnerClass");
+    expect(resolved).not.toContain("MyApp.BeefBurger.Salad");
+    expect(unresolved).toContain("System.Math");
+    expect(unresolved).not.toContain("string");
+    expect(unresolved).not.toContain("System");
+    expect(unresolved).not.toContain("Salad<string>");
   });
 
   test("isUsedInFile", () => {
@@ -144,5 +113,57 @@ describe("InvocationResolver", () => {
       ],
       unresolved: [],
     });
+  });
+
+  test("Finds useless using directives", () => {
+    const filepath = path.join(csharpFilesFolder, "2Namespaces1File.cs");
+    const usingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(filepath);
+    const invocations = invResolver.getInvocationsFromFile(filepath);
+    expect(usingDirectives.length).toBe(2);
+    expect(
+      usingDirectives.filter((d) => invResolver.isUsingUseful(invocations, d))
+        .length,
+    ).toBe(1);
+
+    const programpath = path.join(csharpFilesFolder, "Program.cs");
+    const programUsingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(programpath);
+    const programInvocations = invResolver.getInvocationsFromFile(programpath);
+    expect(programUsingDirectives.length).toBe(6);
+    expect(
+      programUsingDirectives.filter((d) =>
+        invResolver.isUsingUseful(programInvocations, d),
+      ).length,
+    ).toBe(6);
+
+    const usagepath = path.join(csharpFilesFolder, "Usage.cs");
+    const usageUsingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(usagepath);
+    const usageInvocations = invResolver.getInvocationsFromFile(usagepath);
+    expect(usageUsingDirectives.length).toBe(6);
+    expect(
+      usageUsingDirectives.filter((d) =>
+        invResolver.isUsingUseful(usageInvocations, d),
+      ).length,
+    ).toBe(4);
+
+    const globalusingpath = path.join(
+      csharpFilesFolder,
+      "Subfolder/GlobalUsings.cs",
+    );
+    const globalusingDirectives =
+      invResolver.usingResolver.parseUsingDirectives(globalusingpath);
+    const globalusingInvocations =
+      invResolver.getInvocationsFromFile(globalusingpath);
+    expect(globalusingDirectives.length).toBe(2);
+    expect(
+      globalusingDirectives.filter((d) =>
+        invResolver.isUsingUseful(globalusingInvocations, d),
+      ).length,
+    ).toBe(1); // Every external import is considered useful no matter what
+    // Even if there is no invocation.
+    // It's also not dangerous to remove a global using directive
+    // because they are regrouped in GlobalUsings.cs.
   });
 });
