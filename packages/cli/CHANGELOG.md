@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.0.7] - 2025-04-30
+
 Fix some small bug on the FE, mainly unify the colors of edges and their direction accross views
 
 ## [1.0.6] - 2025-04-29
