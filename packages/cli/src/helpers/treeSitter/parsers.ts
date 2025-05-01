@@ -15,4 +15,11 @@ const cParser = new Parser();
 cParser.setLanguage(C as Language);
 const cLanguage = C.name as "c";
 
-export { pythonParser, pythonLanguage, csharpParser, csharpLanguage };
+export {
+  pythonParser,
+  pythonLanguage,
+  csharpParser,
+  csharpLanguage,
+  cParser,
+  cLanguage,
+};
