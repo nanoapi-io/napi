@@ -42,17 +42,18 @@ export class CHeaderResolver {
         const qualifiers = capture.node.children
           .filter((child) => child.type === "type_qualifier")
           .map((child) => child.text);
-        let type = "variable";
+        // Check if the node is a function or variable declaration
+        const type =
+          capture.node.descendantsOfType("function_declarator").length !== 0
+            ? "function"
+            : "variable";
         let currentNode = capture.node;
+        // Traverse the tree to find the identifier node
+        // This is a workaround for the fact that the identifier node is not always the first child
+        // (e.g. in pointers or arrays)
         while (
           currentNode.childForFieldName("declarator").type !== "identifier"
         ) {
-          if (
-            currentNode.childForFieldName("declarator").type ===
-            "function_declaraor"
-          ) {
-            type = "function";
-          }
           currentNode = currentNode.childForFieldName("declarator");
         }
         const idNode = currentNode.childForFieldName("declarator");

@@ -18,17 +18,28 @@ enum ClassicSauces {
     SPICY = 4,
 };
 
+union Sauce {
+    enum ClassicSauces classic_sauce;
+    char custom_sauce[50];
+};
+
 struct Burger {
     int id;
     char name[50];
     float price;
     enum Condiment condiments[5];
+    union Sauce sauce;
 };
 
-union Sauce {
-    enum ClassicSauces classic_sauce;
-    char custom_sauce[50];
+const struct Burger classicBurger = {
+    .id = 1,
+    .name = "Classic Burger",
+    .price = 5.99,
+    .condiments = {SALAD, TOMAT, ONION, CHEESE},
+    .sauce = {.classic_sauce = KETCHUP}
 };
+
+static int burger_count = 0;
 
 struct Burger* create_burger(char name[50], enum Condiment condiments[5], union Sauce sauce);
 void destroy_burger(struct Burger* burger);
