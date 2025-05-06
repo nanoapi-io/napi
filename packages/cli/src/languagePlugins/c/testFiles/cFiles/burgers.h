@@ -4,7 +4,7 @@
 enum Condiment {
     NONE = 0,
     SALAD = 30,
-    TOMAT = 40,
+    TOMATO = 40,
     ONION = 50,
     CHEESE = 60,
     PICKLE = 70,
@@ -35,7 +35,7 @@ const struct Burger classicBurger = {
     .id = 1,
     .name = "Classic Burger",
     .price = 5.99,
-    .condiments = {SALAD, TOMAT, ONION, CHEESE},
+    .condiments = {SALAD, TOMATO, ONION, CHEESE},
     .sauce = {.classic_sauce = KETCHUP}
 };
 
