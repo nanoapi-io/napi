@@ -141,6 +141,10 @@ export class CSharpExtractor {
     const visitedSymbols = new Set<string>();
 
     const addExtractedFile = (symbol: SymbolNode) => {
+      // If the symbol is nested, we export the parent.
+      while (symbol.parent) {
+        symbol = symbol.parent;
+      }
       if (!visitedSymbols.has(symbol.name)) {
         visitedSymbols.add(symbol.name);
         const subproject = this.projectMapper.findSubprojectForFile(

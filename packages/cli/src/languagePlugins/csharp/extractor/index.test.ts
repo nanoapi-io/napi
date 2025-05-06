@@ -76,4 +76,15 @@ describe("CSharpExtractor", () => {
       subprojectUsingDirectives.includes("global using MyApp.Models;"),
     ).toBe(true);
   });
+
+  test("should manage nested classes", () => {
+    const extracted = extractor.extractSymbolFromFile(programpath, "Program");
+    const symbols = extracted?.map((file) =>
+      file.symbol.namespace !== ""
+        ? file.symbol.namespace + "." + file.symbol.name
+        : file.symbol.name,
+    );
+    expect(symbols).not.toContain("OuterNamespace.OuterInnerClass");
+    expect(symbols).toContain("OuterNamespace.OuterClass");
+  });
 });
