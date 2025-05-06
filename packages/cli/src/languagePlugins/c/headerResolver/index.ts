@@ -61,7 +61,7 @@ export class CHeaderResolver {
           type: type as SymbolType,
           node: capture.node,
           identifierNode: idNode,
-          filepath: file.filepath,
+          filepath: file.path,
           specifiers: specifiers as StorageClassSpecifier[],
           qualifiers: qualifiers as TypeQualifier[],
         });
