@@ -17,7 +17,7 @@ export class CHeaderResolver {
    * @returns An array of exported symbols.
    */
   resolveSymbols(file: {
-    filepath: string;
+    path: string;
     rootNode: Parser.SyntaxNode;
   }): ExportedSymbol[] {
     const exportedSymbols: ExportedSymbol[] = [];
@@ -31,7 +31,7 @@ export class CHeaderResolver {
           type: capture.name as SymbolType,
           node: capture.node,
           identifierNode: idNode,
-          filepath: file.filepath,
+          filepath: file.path,
           specifiers: [],
           qualifiers: [],
         });
