@@ -1,5 +1,4 @@
 import Parser from "tree-sitter";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
 
 // Constants representing different types of symbols in C
 export const C_STRUCT_TYPE = "struct";
@@ -41,17 +40,28 @@ export type TypeQualifier =
   | typeof C_VOLATILE_QUALIFIER
   | typeof C_RESTRICT_QUALIFIER;
 
+/** Type alias for the different atomic qualifiers */
 export interface File {
+  /** The path of the file */
   path: string;
+  /** The root node of the file */
   rootNode: Parser.SyntaxNode;
 }
 
+/** Interface representing an exported symbol */
 export interface ExportedSymbol {
+  /** The name of the symbol */
   name: string;
+  /** The type of the symbol (i.e. struct, union, enum, etc.) */
   type: SymbolType;
+  /** The storage class specifiers of the symbol (i.e. static, extern) */
   specifiers: StorageClassSpecifier[];
+  /** The type qualifiers of the symbol (i.e. const, volatile) */
   qualifiers: TypeQualifier[];
+  /** The syntax node corresponding to the symbol */
   node: Parser.SyntaxNode;
+  /** The syntax node corresponding to the identifier */
   identifierNode: Parser.SyntaxNode;
+  /** The path of the symbol's file */
   filepath: string;
 }
