@@ -40,14 +40,6 @@ export type TypeQualifier =
   | typeof C_VOLATILE_QUALIFIER
   | typeof C_RESTRICT_QUALIFIER;
 
-/** Type alias for the different atomic qualifiers */
-export interface File {
-  /** The path of the file */
-  path: string;
-  /** The root node of the file */
-  rootNode: Parser.SyntaxNode;
-}
-
 /** Interface representing an exported symbol */
 export interface ExportedSymbol {
   /** The name of the symbol */
