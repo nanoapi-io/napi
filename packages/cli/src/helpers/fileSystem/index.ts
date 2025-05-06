@@ -85,11 +85,20 @@ export function writeFilesToDirectory(
   if (existsSync(dir)) {
     rmSync(dir, { recursive: true });
   }
-  mkdirSync(dir, { recursive: true });
 
   for (const { path, content } of files.values()) {
     const fullPath = join(dir, path);
-    mkdirSync(dirname(fullPath), { recursive: true });
-    writeFileSync(fullPath, content);
+    try {
+      mkdirSync(dirname(fullPath), { recursive: true });
+      writeFileSync(fullPath, content);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Failed to write file ${fullPath}: ${error.message}`);
+        throw new Error(
+          `Failed to write file ${fullPath}. Check permissions and try again.`,
+        );
+      }
+      throw error;
+    }
   }
 }

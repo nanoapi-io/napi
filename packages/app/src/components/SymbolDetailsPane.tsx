@@ -19,6 +19,7 @@ import {
   metricDependentCount,
   metricLinesCount,
 } from "@nanoapi.io/shared";
+import { basename } from "path-browserify";
 
 // Subcomponent for section headings
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -85,7 +86,7 @@ export default function SymbolDetailsPane(props: {
 }) {
   const { fileDependencyManifest, fileAuditManifest, symbolId, open, setOpen } =
     props;
-  const fileName = fileDependencyManifest.filePath.split("/").pop() || "";
+  const fileName = basename(fileDependencyManifest.filePath);
   const symbolData = fileDependencyManifest.symbols[symbolId];
   const symbolName = symbolData?.id || symbolId;
   const symbolType = symbolData?.type || "";

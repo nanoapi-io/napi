@@ -37,13 +37,11 @@
     }
   },
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon --no-stdin --exec \"node --loader ts-node/esm\" src/index.ts",
-    "build:cleanup": "rm -rf ./dist && rm -rf ../app/dist",
+    "dev": "cross-env NODE_ENV=development nodemon --no-stdin --exec \"node --loader ts-node/esm src/index.ts\"",
     "build:app": "npm run build --prefix ../app",
-    "build:copy-app-dist": "cp -r ../app/dist ./dist/app_dist",
+    "build:copy-app-dist": "node -e \"import('fs').then(({cpSync}) => cpSync('../app/dist', './dist/app_dist', {recursive: true}))\"",
     "build:cli": "tsup",
-    "build:add-shebang": "echo '#!/usr/bin/env node' | cat - ./dist/index.js > temp && mv temp ./dist/index.js && chmod +x ./dist/index.js",
-    "build": "npm run build:cleanup && npm run build:app && npm run build:cli && npm run build:copy-app-dist && npm run build:add-shebang",
+    "build": "npm run build:app && npm run build:cli && npm run build:copy-app-dist",
     "start": "node dist/index.js",
     "npm:publish": "npm publish",
     "release": "npx release-it"

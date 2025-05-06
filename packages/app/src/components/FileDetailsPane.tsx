@@ -19,6 +19,7 @@ import {
   metricDependentCount,
   metricLinesCount,
 } from "@nanoapi.io/shared";
+import { basename } from "path-browserify";
 
 // Subcomponent for section headings
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -133,7 +134,7 @@ export default function FileDetailsPane(props: {
   setOpen: (open: boolean) => void;
 }) {
   const { fileDependencyManifest, fileAuditManifest, open, setOpen } = props;
-  const fileName = fileDependencyManifest.filePath.split("/").pop() || "";
+  const fileName = basename(fileDependencyManifest.filePath);
   const fileAlerts = Object.values(fileAuditManifest.alerts) as {
     message: { long: string };
     metric: string;
