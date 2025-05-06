@@ -1,4 +1,9 @@
-import { ExportedSymbol, StorageClassSpecifier, SymbolType, TypeQualifier } from "./types.js";
+import {
+  ExportedSymbol,
+  StorageClassSpecifier,
+  SymbolType,
+  TypeQualifier,
+} from "./types.js";
 import { C_DECLARATION_QUERY } from "./queries.js";
 import { cParser } from "../../../helpers/treeSitter/parsers.js";
 import Parser from "tree-sitter";
@@ -11,7 +16,10 @@ export class CHeaderResolver {
    * @param file The file to resolve.
    * @returns An array of exported symbols.
    */
-  resolveSymbols(file: { filepath: string; rootNode: Parser.SyntaxNode }): ExportedSymbol[] {
+  resolveSymbols(file: {
+    filepath: string;
+    rootNode: Parser.SyntaxNode;
+  }): ExportedSymbol[] {
     const exportedSymbols: ExportedSymbol[] = [];
     const query = C_DECLARATION_QUERY;
     const captures = query.captures(file.rootNode);
@@ -30,14 +38,19 @@ export class CHeaderResolver {
       } else {
         const specifiers = capture.node.children
           .filter((child) => child.type === "storage_class_specifier")
-          .map((child => child.text));
+          .map((child) => child.text);
         const qualifiers = capture.node.children
           .filter((child) => child.type === "type_qualifier")
-          .map((child => child.text));
+          .map((child) => child.text);
         let type = "variable";
         let currentNode = capture.node;
-        while (currentNode.childForFieldName("declarator").type !== "identifier") {
-          if (currentNode.childForFieldName("declarator").type === "function_declaraor") {
+        while (
+          currentNode.childForFieldName("declarator").type !== "identifier"
+        ) {
+          if (
+            currentNode.childForFieldName("declarator").type ===
+            "function_declaraor"
+          ) {
             type = "function";
           }
           currentNode = currentNode.childForFieldName("declarator");
