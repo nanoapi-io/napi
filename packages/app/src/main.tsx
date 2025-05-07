@@ -1,20 +1,19 @@
-import React, { useContext } from "react";
+/// <reference lib="dom" />
+
+import { StrictMode, useContext } from "react";
 import ReactDOM from "react-dom/client";
 import { Theme } from "@radix-ui/themes";
-import "react-toastify/dist/ReactToastify.css";
-
-import "@radix-ui/themes/styles.css";
 import "./index.css";
-import { createHashRouter, RouterProvider, Navigate } from "react-router";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
 import { ToastContainer } from "react-toastify";
-import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext.js";
-import BaseAuditPage from "./pages/audit/base.js";
-import AuditPage from "./pages/audit/index.js";
-import AuditFilePage from "./pages/audit/file/index.js";
-import AuditInstancePage from "./pages/audit/file/instance/index.js";
-import { ViewNames } from "./hooks/types.js";
+import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext.tsx";
+import BaseAuditPage from "./pages/audit/base.tsx";
+import AuditPage from "./pages/audit/index.tsx";
+import AuditFilePage from "./pages/audit/file/index.tsx";
+import AuditInstancePage from "./pages/audit/file/instance/index.tsx";
+import { ViewNames } from "./hooks/types.ts";
 
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/audit" replace />,
@@ -62,9 +61,9 @@ function Main() {
 }
 
 ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
+  <StrictMode>
     <ThemeProvider>
       <Main />
     </ThemeProvider>
-  </React.StrictMode>,
+  </StrictMode>,
 );

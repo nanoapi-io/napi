@@ -1,21 +1,21 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import {
+  useNavigate,
   useOutletContext,
   useParams,
-  useNavigate,
   useSearchParams,
 } from "react-router";
-import Controls from "../../../components/Cytoscape/Controls.js";
-import { ThemeContext } from "../../../contexts/ThemeContext.js";
-import { AuditContext } from "../base.js";
-import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
-import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.js";
-import { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualizer/types.js";
-import { Metric } from "@nanoapi.io/shared";
-import SymbolContextMenu from "../../../components/Cytoscape/contextMenu/SymbolContextMenu.js";
-import SymbolDetailsPane from "../../../components/SymbolDetailsPane.js";
-import FiltersExtension from "../../../components/Cytoscape/ControlExtensions/FiltersExtension.js";
-import MetricsExtension from "../../../components/Cytoscape/ControlExtensions/MetricsExtension.js";
+import Controls from "../../../components/Cytoscape/Controls.tsx";
+import { ThemeContext } from "../../../contexts/ThemeContext.tsx";
+import type { AuditContext } from "../base.tsx";
+import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.tsx";
+import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.ts";
+import type { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualizer/types.ts";
+import type { Metric } from "@napi/shared";
+import SymbolContextMenu from "../../../components/Cytoscape/contextMenu/SymbolContextMenu.tsx";
+import SymbolDetailsPane from "../../../components/SymbolDetailsPane.tsx";
+import FiltersExtension from "../../../components/Cytoscape/ControlExtensions/FiltersExtension.tsx";
+import MetricsExtension from "../../../components/Cytoscape/ControlExtensions/MetricsExtension.tsx";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
@@ -67,8 +67,9 @@ export default function AuditFilePage() {
       context.busy ||
       !context.dependencyManifest ||
       !context.auditManifest
-    )
+    ) {
       return;
+    }
 
     setBusy(true);
     const fileDependencyVisualizer = new FileDependencyVisualizer(
@@ -93,9 +94,11 @@ export default function AuditFilePage() {
         },
         onAfterNodeDblClick: (data: NapiNodeData) => {
           navigate(
-            `/audit/${encodeURIComponent(
-              data.customData.fileName,
-            )}/${encodeURIComponent(data.customData.symbolName)}`,
+            `/audit/${
+              encodeURIComponent(
+                data.customData.fileName,
+              )
+            }/${encodeURIComponent(data.customData.symbolName)}`,
           );
         },
       },
@@ -169,7 +172,8 @@ export default function AuditFilePage() {
       {contextMenuSymbolId && (
         <SymbolContextMenu
           position={contextMenuPosition}
-          fileDependencyManifest={context.dependencyManifest[params.file]}
+          fileDependencyManifest={context
+            .dependencyManifest[params.file as string]}
           symbolId={contextMenuSymbolId}
           open={contextMenuOpen}
           onOpenChange={setContextMenuOpen}
@@ -185,8 +189,9 @@ export default function AuditFilePage() {
 
       {detailsPaneSymbolId && (
         <SymbolDetailsPane
-          fileDependencyManifest={context.dependencyManifest[params.file]}
-          fileAuditManifest={context.auditManifest[params.file]}
+          fileDependencyManifest={context
+            .dependencyManifest[params.file as string]}
+          fileAuditManifest={context.auditManifest[params.file as string]}
           symbolId={detailsPaneSymbolId}
           open={detailsPaneOpen}
           setOpen={setDetailsPaneOpen}

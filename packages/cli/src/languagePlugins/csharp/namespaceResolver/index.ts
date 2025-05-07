@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 // Constants representing different types of symbols in C#
 export const CSHARP_CLASS_TYPE = "class";

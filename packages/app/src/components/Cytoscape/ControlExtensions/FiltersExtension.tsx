@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { type MouseEvent, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import { Button, DropdownMenu, Checkbox } from "@radix-ui/themes";
+import { Button, Checkbox, DropdownMenu } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
-import { Core } from "cytoscape";
+import type { Core } from "cytoscape";
 import { toast } from "react-toastify";
 import { MdFilterAlt } from "react-icons/md";
 
@@ -173,7 +173,11 @@ export default function FiltersExtension(props: {
           variant="ghost"
           color="violet"
           highContrast
-          className={`${checkFiltersSet() ? "bg-primary-light/20 dark:bg-primary-dark/20" : ""}`}
+          className={`${
+            checkFiltersSet()
+              ? "bg-primary-light/20 dark:bg-primary-dark/20"
+              : ""
+          }`}
           disabled={props.busy}
           onClick={() => props.onLayout()}
         >
@@ -193,7 +197,7 @@ export default function FiltersExtension(props: {
         <DropdownMenu.Item
           // This keeps the search typing from changing focus
           textValue=""
-          onClick={(e: React.MouseEvent) => {
+          onClick={(e: MouseEvent) => {
             e.preventDefault();
             setFilters({ ...filters, showExternal: !filters.showExternal });
           }}
@@ -204,14 +208,13 @@ export default function FiltersExtension(props: {
             color="violet"
             checked={filters.showExternal}
             onCheckedChange={(checked) =>
-              setFilters({ ...filters, showExternal: Boolean(checked) })
-            }
+              setFilters({ ...filters, showExternal: Boolean(checked) })}
           />
         </DropdownMenu.Item>
         <DropdownMenu.Item
           // This keeps the search typing from changing focus
           textValue=""
-          onClick={(e: React.MouseEvent) => {
+          onClick={(e: MouseEvent) => {
             e.preventDefault();
             setFilters({ ...filters, showInternal: !filters.showInternal });
           }}
@@ -221,8 +224,7 @@ export default function FiltersExtension(props: {
           <Checkbox
             checked={filters.showInternal}
             onCheckedChange={(checked) =>
-              setFilters({ ...filters, showInternal: Boolean(checked) })
-            }
+              setFilters({ ...filters, showInternal: Boolean(checked) })}
           />
         </DropdownMenu.Item>
         <DropdownMenu.Separator />
@@ -230,7 +232,7 @@ export default function FiltersExtension(props: {
         <DropdownMenu.Item
           // This keeps the search typing from changing focus
           textValue=""
-          onClick={(e: React.MouseEvent) => {
+          onClick={(e: MouseEvent) => {
             e.preventDefault();
             setFilters({ ...filters, showVariables: !filters.showVariables });
           }}
@@ -240,14 +242,13 @@ export default function FiltersExtension(props: {
           <Checkbox
             checked={filters.showVariables}
             onCheckedChange={(checked) =>
-              setFilters({ ...filters, showVariables: Boolean(checked) })
-            }
+              setFilters({ ...filters, showVariables: Boolean(checked) })}
           />
         </DropdownMenu.Item>
         <DropdownMenu.Item
           // This keeps the search typing from changing focus
           textValue=""
-          onClick={(e: React.MouseEvent) => {
+          onClick={(e: MouseEvent) => {
             e.preventDefault();
             setFilters({ ...filters, showFunctions: !filters.showFunctions });
           }}
@@ -257,14 +258,13 @@ export default function FiltersExtension(props: {
           <Checkbox
             checked={filters.showFunctions}
             onCheckedChange={(checked) =>
-              setFilters({ ...filters, showFunctions: Boolean(checked) })
-            }
+              setFilters({ ...filters, showFunctions: Boolean(checked) })}
           />
         </DropdownMenu.Item>
         <DropdownMenu.Item
           // This keeps the search typing from changing focus
           textValue=""
-          onClick={(e: React.MouseEvent) => {
+          onClick={(e: MouseEvent) => {
             e.preventDefault();
             setFilters({ ...filters, showClasses: !filters.showClasses });
           }}
@@ -274,8 +274,7 @@ export default function FiltersExtension(props: {
           <Checkbox
             checked={filters.showClasses}
             onCheckedChange={(checked) =>
-              setFilters({ ...filters, showClasses: Boolean(checked) })
-            }
+              setFilters({ ...filters, showClasses: Boolean(checked) })}
           />
         </DropdownMenu.Item>
         <DropdownMenu.Separator />

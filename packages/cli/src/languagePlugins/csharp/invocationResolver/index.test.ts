@@ -1,16 +1,19 @@
 import { describe, expect, test } from "vitest";
-import { File } from "../namespaceResolver/index.js";
-import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
-import { CSharpNamespaceResolver } from "../namespaceResolver/index.js";
+import type { File } from "../namespaceResolver/index.ts";
 import {
-  getCSharpFilesMap,
+  CSharpNamespaceMapper,
+  type SymbolNode,
+} from "../namespaceMapper/index.ts";
+import { CSharpNamespaceResolver } from "../namespaceResolver/index.ts";
+import {
   csharpFilesFolder,
+  getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../testFiles/index.js";
-import path from "path";
-import { CSharpInvocationResolver } from "./index.js";
-import Parser from "tree-sitter";
-import { CSharpProjectMapper } from "../projectMapper/index.js";
+} from "../testFiles/index.ts";
+import path from "node:path";
+import { CSharpInvocationResolver } from "./index.ts";
+import type Parser from "tree-sitter";
+import { CSharpProjectMapper } from "../projectMapper/index.ts";
 
 describe("InvocationResolver", () => {
   const parsedfiles: Map<string, File> = getCSharpFilesMap();
@@ -28,7 +31,7 @@ describe("InvocationResolver", () => {
       path.join(csharpFilesFolder, "Program.cs"),
     );
     const resolved = usedFiles.resolvedSymbols.map((s) =>
-      s.namespace !== "" ? s.namespace + "." + s.name : s.name,
+      s.namespace !== "" ? s.namespace + "." + s.name : s.name
     );
     const unresolved = usedFiles.unresolved;
     expect(resolved).toContain("MyApp.BeefBurger.Bun");
@@ -117,8 +120,9 @@ describe("InvocationResolver", () => {
 
   test("Finds useless using directives", () => {
     const filepath = path.join(csharpFilesFolder, "2Namespaces1File.cs");
-    const usingDirectives =
-      invResolver.usingResolver.parseUsingDirectives(filepath);
+    const usingDirectives = invResolver.usingResolver.parseUsingDirectives(
+      filepath,
+    );
     const invocations = invResolver.getInvocationsFromFile(filepath);
     expect(usingDirectives.length).toBe(2);
     expect(
@@ -127,24 +131,25 @@ describe("InvocationResolver", () => {
     ).toBe(1);
 
     const programpath = path.join(csharpFilesFolder, "Program.cs");
-    const programUsingDirectives =
-      invResolver.usingResolver.parseUsingDirectives(programpath);
+    const programUsingDirectives = invResolver.usingResolver
+      .parseUsingDirectives(programpath);
     const programInvocations = invResolver.getInvocationsFromFile(programpath);
     expect(programUsingDirectives.length).toBe(6);
     expect(
       programUsingDirectives.filter((d) =>
-        invResolver.isUsingUseful(programInvocations, d),
+        invResolver.isUsingUseful(programInvocations, d)
       ).length,
     ).toBe(6);
 
     const usagepath = path.join(csharpFilesFolder, "Usage.cs");
-    const usageUsingDirectives =
-      invResolver.usingResolver.parseUsingDirectives(usagepath);
+    const usageUsingDirectives = invResolver.usingResolver.parseUsingDirectives(
+      usagepath,
+    );
     const usageInvocations = invResolver.getInvocationsFromFile(usagepath);
     expect(usageUsingDirectives.length).toBe(6);
     expect(
       usageUsingDirectives.filter((d) =>
-        invResolver.isUsingUseful(usageInvocations, d),
+        invResolver.isUsingUseful(usageInvocations, d)
       ).length,
     ).toBe(4);
 
@@ -152,15 +157,17 @@ describe("InvocationResolver", () => {
       csharpFilesFolder,
       "Subfolder/GlobalUsings.cs",
     );
-    const globalusingDirectives =
-      invResolver.usingResolver.parseUsingDirectives(globalusingpath);
-    const globalusingInvocations =
-      invResolver.getInvocationsFromFile(globalusingpath);
+    const globalusingDirectives = invResolver.usingResolver
+      .parseUsingDirectives(globalusingpath);
+    const globalusingInvocations = invResolver.getInvocationsFromFile(
+      globalusingpath,
+    );
     expect(globalusingDirectives.length).toBe(2);
     expect(
       globalusingDirectives.filter((d) =>
-        invResolver.isUsingUseful(globalusingInvocations, d),
-      ).length,
+        invResolver.isUsingUseful(globalusingInvocations, d)
+      )
+        .length,
     ).toBe(1); // Every external import is considered useful no matter what
     // Even if there is no invocation.
     // It's also not dangerous to remove a global using directive

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import Parser from "tree-sitter";
-import { PythonMetricsAnalyzer } from "./index.js";
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+import type Parser from "tree-sitter";
+import { PythonMetricsAnalyzer } from "./index.ts";
+import { PythonExportExtractor } from "../exportExtractor/index.ts";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
 
 describe("PythonMetricsAnalyzer", () => {
   const parser = pythonParser;

@@ -1,19 +1,19 @@
 import { describe, expect, test } from "vitest";
-import Parser from "tree-sitter";
-import { PythonSymbolExtractor } from "./index.js";
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { PythonModuleResolver } from "../moduleResolver/index.js";
-import { PythonItemResolver } from "../itemResolver/index.js";
-import { PythonImportExtractor } from "../importExtractor/index.js";
-import { PythonUsageResolver } from "../usageResolver/index.js";
-import { DependencyManifest } from "@nanoapi.io/shared";
+import type Parser from "tree-sitter";
+import { PythonSymbolExtractor } from "./index.ts";
+import { PythonExportExtractor } from "../exportExtractor/index.ts";
+import { PythonModuleResolver } from "../moduleResolver/index.ts";
+import { PythonItemResolver } from "../itemResolver/index.ts";
+import { PythonImportExtractor } from "../importExtractor/index.ts";
+import { PythonUsageResolver } from "../usageResolver/index.ts";
+import type { DependencyManifest } from "@napi/shared";
 import {
   pythonLanguage,
   pythonParser,
-} from "../../../helpers/treeSitter/parsers.js";
-import { localConfigSchema } from "../../../config/localConfig.js";
-import z from "zod";
-import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python/index.js";
+} from "../../../helpers/treeSitter/parsers.ts";
+import type { localConfigSchema } from "../../../config/localConfig.ts";
+import type z from "zod";
+import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python/index.ts";
 
 describe("PythonSymbolExtractor", () => {
   // Helper to create a map of parsed files

@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { PythonComplexityMetrics } from "./types.js";
+import type { PythonComplexityMetrics } from "./types.ts";
 
 /**
  * Interface for representing comment spans in the code

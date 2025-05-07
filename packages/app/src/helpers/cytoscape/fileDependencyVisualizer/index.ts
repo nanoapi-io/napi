@@ -1,50 +1,50 @@
 import {
-  AuditManifest,
-  DependencyManifest,
-  Metric,
-  FileAuditManifest,
-  SymbolDependencyManifest,
-  metricLinesCount,
-  metricCodeLineCount,
-  metricCodeCharacterCount,
-  metricCharacterCount,
-  metricDependencyCount,
-  metricDependentCount,
-  metricCyclomaticComplexity,
+  type AuditManifest,
   classSymbolType,
-  functionSymbolType,
-  variableSymbolType,
+  type DependencyManifest,
   enumSymbolType,
+  type FileAuditManifest,
+  type FileDependencyManifest,
+  functionSymbolType,
+  type Metric,
+  type metricCharacterCount,
+  type metricCodeCharacterCount,
+  type metricCodeLineCount,
+  type metricCyclomaticComplexity,
+  type metricDependencyCount,
+  type metricDependentCount,
+  type metricLinesCount,
   structSymbolType,
-  FileDependencyManifest,
-  SymbolType,
-} from "@nanoapi.io/shared";
-import {
+  type SymbolDependencyManifest,
+  type SymbolType,
+  variableSymbolType,
+} from "@napi/shared";
+import type {
+  Collection,
   Core,
+  EventObjectNode,
   NodeSingular,
   StylesheetJson,
-  Collection,
-  EventObjectNode,
 } from "cytoscape";
 import fcose from "cytoscape-fcose";
 import {
-  NapiNodeData,
-  NapiEdgeData,
-  edgeTypeDependent,
   edgeTypeDependency,
-} from "./types.js";
+  edgeTypeDependent,
+  type NapiEdgeData,
+  type NapiNodeData,
+} from "./types.ts";
 import cytoscape from "cytoscape";
-import tailwindConfig from "../../../../tailwind.config.js";
 import {
   getCollapsedSymbolNodeLabel,
   getExpandedSymbolNodeLabel,
   getNodeWidthAndHeightFromLabel,
-} from "../label/index.js";
+} from "../label/index.ts";
 import {
   getMetricLevelColor,
   getMetricsSeverityForNode,
-} from "../metrics/index.js";
-import { mainLayout } from "../layout/index.js";
+} from "../metrics/index.ts";
+import { mainLayout } from "../layout/index.ts";
+import { getCssValue } from "../../css/index.ts";
 
 /**
  * FileDependencyVisualizer creates an interactive graph of symbol dependencies within a file.
@@ -108,11 +108,8 @@ export class FileDependencyVisualizer {
     this.fileId = fileId;
 
     const defaultOptions = {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeClick: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeDblClick: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeRightClick: () => {},
       theme: "light" as const,
       defaultMetric: undefined,
@@ -338,10 +335,14 @@ export class FileDependencyVisualizer {
   }): NapiNodeData {
     // Calculate dimensions for expanded and collapsed views
     const { width: expandedWidth, height: expandedHeight } =
-      getNodeWidthAndHeightFromLabel(params.expandedLabel);
+      getNodeWidthAndHeightFromLabel(
+        params.expandedLabel,
+      );
 
     const { width: collapsedWidth, height: collapsedHeight } =
-      getNodeWidthAndHeightFromLabel(params.collapsedLabel);
+      getNodeWidthAndHeightFromLabel(
+        params.collapsedLabel,
+      );
 
     // Create the node data structure
     return {
@@ -389,8 +390,8 @@ export class FileDependencyVisualizer {
     }
 
     const fileAuditManifest = auditManifest[fileId];
-    const nodes = [];
-    const edges = [];
+    const nodes: { data: NapiNodeData }[] = [];
+    const edges: { data: NapiEdgeData }[] = [];
 
     // First pass: Create nodes for each symbol in the file
     Object.values(fileManifest.symbols).forEach((symbol) => {
@@ -614,14 +615,14 @@ export class FileDependencyVisualizer {
         style: {
           label: "data(customData.collapsed.label)",
           "text-wrap": "wrap",
-          color: tailwindConfig.theme.extend.colors.text[theme],
+          color: getCssValue(`--color-text-${theme}`),
           "border-width": 4,
           "border-color": (node: NodeSingular) => {
             const data = node.data() as NapiNodeData;
             if (data.customData.isExternal) {
-              return tailwindConfig.theme.extend.colors.border[theme];
+              return getCssValue(`--color-border-${theme}`);
             } else if (data.customData.fileName !== this.fileId) {
-              return tailwindConfig.theme.extend.colors.secondary[theme];
+              return getCssValue(`--color-secondary-${theme}`);
             }
 
             if (this.targetMetric) {
@@ -631,17 +632,17 @@ export class FileDependencyVisualizer {
               );
             }
 
-            return tailwindConfig.theme.extend.colors.primary[theme];
+            return getCssValue(`--color-primary-${theme}`);
           },
           "background-color": (node: NodeSingular) => {
             const data = node.data() as NapiNodeData;
 
             if (data.customData.isExternal) {
-              return tailwindConfig.theme.extend.colors.border[theme];
+              return getCssValue(`--color-border-${theme}`);
             }
 
             if (data.customData.fileName !== this.fileId) {
-              return tailwindConfig.theme.extend.colors.secondary[theme];
+              return getCssValue(`--color-secondary-${theme}`);
             }
 
             if (this.targetMetric) {
@@ -651,7 +652,7 @@ export class FileDependencyVisualizer {
               );
             }
 
-            return tailwindConfig.theme.extend.colors.primary[theme];
+            return getCssValue(`--color-primary-${theme}`);
           },
 
           shape: (node: NodeSingular) => {
@@ -668,7 +669,10 @@ export class FileDependencyVisualizer {
             const data = node.data() as NapiNodeData;
 
             return (
-              symbolTypeToShape[data.customData.symbolType] || fallbackShape
+              symbolTypeToShape[
+                data.customData.symbolType as keyof typeof symbolTypeToShape
+              ] ||
+              fallbackShape
             );
           },
           "background-opacity": 0.2,
@@ -707,9 +711,9 @@ export class FileDependencyVisualizer {
         selector: "edge",
         style: {
           width: 2,
-          "line-color": tailwindConfig.theme.extend.colors.text[theme],
+          "line-color": getCssValue(`--color-text-${theme}`),
           "line-opacity": 1,
-          "target-arrow-color": tailwindConfig.theme.extend.colors.text[theme],
+          "target-arrow-color": getCssValue(`--color-text-${theme}`),
           "target-arrow-shape": "triangle",
           "curve-style": "straight",
           "arrow-scale": 1,
@@ -718,17 +722,15 @@ export class FileDependencyVisualizer {
       {
         selector: `edge[customData.type = '${edgeTypeDependency}']`,
         style: {
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
+          "line-color": getCssValue(`--color-primary-${theme}`),
+          "target-arrow-color": getCssValue(`--color-primary-${theme}`),
         },
       },
       {
         selector: `edge[customData.type = '${edgeTypeDependent}']`,
         style: {
-          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
+          "line-color": getCssValue(`--color-secondary-${theme}`),
+          "target-arrow-color": getCssValue(`--color-secondary-${theme}`),
         },
       },
       {

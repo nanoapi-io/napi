@@ -1,16 +1,17 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { Button, Callout, ScrollArea, Separator, Text } from "@radix-ui/themes";
 import {
-  LuX,
   LuCircleX,
-  LuSearchCode,
-  LuFileText,
   LuCode,
+  LuFileText,
+  LuSearchCode,
   LuTriangle,
+  LuX,
 } from "react-icons/lu";
 import {
-  FileAuditManifest,
-  FileDependencyManifest,
+  type FileAuditManifest,
+  type FileDependencyManifest,
   metricCharacterCount,
   metricCodeCharacterCount,
   metricCodeLineCount,
@@ -18,10 +19,10 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@nanoapi.io/shared";
+} from "@napi/shared";
 
 // Subcomponent for section headings
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({ children }: { children: ReactNode }) {
   return (
     <div className="font-semibold text-lg mt-4 mb-2 flex items-center gap-2">
       {children}
@@ -137,6 +138,7 @@ export default function SymbolDetailsPane(props: {
             {fileName}
           </h2>
           <button
+            type="button"
             onClick={() => setOpen(false)}
             className="text-xl text-gray-light hover:text-black dark:text-gray-dark dark:hover:text-white"
           >
@@ -228,7 +230,9 @@ export default function SymbolDetailsPane(props: {
         {/* Action Buttons */}
         <div className="mt-5 grow flex flex-col justify-end">
           <Link
-            to={`/audit/${encodeURIComponent(fileDependencyManifest.filePath)}/${encodeURIComponent(symbolId)}`}
+            to={`/audit/${
+              encodeURIComponent(fileDependencyManifest.filePath)
+            }/${encodeURIComponent(symbolId)}`}
             className="block"
           >
             <Button

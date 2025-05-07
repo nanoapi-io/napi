@@ -1,7 +1,7 @@
 import { Button, DropdownMenu } from "@radix-ui/themes";
 import { LuChevronUp } from "react-icons/lu";
 import {
-  Metric,
+  type Metric,
   metricCharacterCount,
   metricCodeCharacterCount,
   metricCodeLineCount,
@@ -9,19 +9,19 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@nanoapi.io/shared";
+} from "@napi/shared";
 
 // Extension for the controls in the project view
 export default function MetricsExtension(props: {
   busy: boolean;
   metricState: {
-    metric: Metric;
-    setMetric: (metric: string) => void;
+    metric: Metric | undefined;
+    setMetric: (metric: Metric | undefined) => void;
   };
 }) {
   const metric = props.metricState.metric;
 
-  function getMetricLabel(metric: Metric) {
+  function getMetricLabel(metric: Metric | undefined) {
     if (metric === metricLinesCount) {
       return "Lines";
     }

@@ -1,5 +1,5 @@
-import { PythonSymbol } from "../exportExtractor/types.js";
-import { PythonModule } from "../moduleResolver/types.js";
+import type { PythonSymbol } from "../exportExtractor/types.ts";
+import type { PythonModule } from "../moduleResolver/types.ts";
 
 /**
  * Constant representing an internal Python module/symbol that can be resolved

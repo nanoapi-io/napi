@@ -1,21 +1,21 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import cytoscape, { Core } from "cytoscape";
-import Controls from "../../../../components/Cytoscape/Controls.js";
-import GraphDepthExtension from "../../../../components/Cytoscape/ControlExtensions/GraphDepthExtension.js";
-import SymbolContextMenu from "../../../../components/Cytoscape/contextMenu/SymbolContextMenu.js";
-import { useOutletContext, useParams, useNavigate } from "react-router";
+import cytoscape, { type Core } from "cytoscape";
+import Controls from "../../../../components/Cytoscape/Controls.tsx";
+import GraphDepthExtension from "../../../../components/Cytoscape/ControlExtensions/GraphDepthExtension.tsx";
+import SymbolContextMenu from "../../../../components/Cytoscape/contextMenu/SymbolContextMenu.tsx";
+import { useNavigate, useOutletContext, useParams } from "react-router";
 import fcose from "cytoscape-fcose";
-import { ThemeContext } from "../../../../contexts/ThemeContext.js";
+import { ThemeContext } from "../../../../contexts/ThemeContext.tsx";
 import {
-  layout,
   getCyStyle,
-  NodeElementDefinition,
   getNodeLabel,
-} from "../../../../helpers/cytoscape/views/auditFile.js";
-import { getInstanceCyElements } from "../../../../helpers/cytoscape/views/auditInstance.js";
-import { CytoscapeSkeleton } from "../../../../components/Cytoscape/Skeleton.js";
-import { AuditContext } from "../../base.js";
-import SymbolDetailsPane from "../../../../components/SymbolDetailsPane.js";
+  layout,
+  type NodeElementDefinition,
+} from "../../../../helpers/cytoscape/views/auditFile.ts";
+import { getInstanceCyElements } from "../../../../helpers/cytoscape/views/auditInstance.ts";
+import { CytoscapeSkeleton } from "../../../../components/Cytoscape/Skeleton.tsx";
+import type { AuditContext } from "../../base.tsx";
+import SymbolDetailsPane from "../../../../components/SymbolDetailsPane.tsx";
 
 const DEFAULT_DEPENDENCY_DEPTH = 1;
 const DEFAULT_DEPENDENT_DEPTH = 1;
@@ -86,7 +86,6 @@ export default function AuditInstancePage() {
         // Add new elements
         const elements = getInstanceCyElements(
           context.dependencyManifest,
-          context.auditManifest,
           params.file as string,
           params.instance as string,
           dependencyDepth,
@@ -114,7 +113,6 @@ export default function AuditInstancePage() {
     // Add elements
     const elements = getInstanceCyElements(
       context.dependencyManifest,
-      context.auditManifest,
       params.file as string,
       params.instance as string,
       DEFAULT_DEPENDENCY_DEPTH,
@@ -184,7 +182,7 @@ export default function AuditInstancePage() {
 
       setContextMenuPosition(node.renderedPosition());
       setContextMenuOpen(true);
-      setContextMenuSymbolId(data.customData.instance.name);
+      setContextMenuSymbolId(data.customData.instance?.name);
     });
 
     return cy;
@@ -198,35 +196,38 @@ export default function AuditInstancePage() {
     <div className="relative w-full h-full">
       <div ref={containerRef} className="relative w-full h-full z-10" />
 
-      {context.busy || !cyInstance ? (
-        <CytoscapeSkeleton />
-      ) : (
-        <Controls busy={false} cy={cyInstance} onLayout={handleLayout}>
-          {/* TODO: Fix data shape for instane-level view and then uncomment */}
-          {/* <FiltersExtension
+      {context.busy || !cyInstance
+        ? <CytoscapeSkeleton />
+        : (
+          <Controls busy={false} cy={cyInstance} onLayout={handleLayout}>
+            {/* TODO: Fix data shape for instane-level view and then uncomment */}
+            {
+              /* <FiltersExtension
             cy={cyInstance}
             busy={context.busy}
             onLayout={handleLayout}
-            /> */}
-          <GraphDepthExtension
-            cy={cyInstance}
-            busy={depLoading}
-            dependencyState={{
-              depth: dependencyDepth,
-              setDepth: setDependencyDepth,
-            }}
-            dependentState={{
-              depth: dependentDepth,
-              setDepth: setDependentDepth,
-            }}
-          />
-        </Controls>
-      )}
+            /> */
+            }
+            <GraphDepthExtension
+              cy={cyInstance}
+              busy={depLoading}
+              dependencyState={{
+                depth: dependencyDepth,
+                setDepth: setDependencyDepth,
+              }}
+              dependentState={{
+                depth: dependentDepth,
+                setDepth: setDependentDepth,
+              }}
+            />
+          </Controls>
+        )}
 
       {contextMenuSymbolId && (
         <SymbolContextMenu
           position={contextMenuPosition}
-          fileDependencyManifest={context.dependencyManifest[params.file]}
+          fileDependencyManifest={context
+            .dependencyManifest[params.file as string]}
           symbolId={contextMenuSymbolId}
           open={contextMenuOpen}
           onOpenChange={setContextMenuOpen}
@@ -242,8 +243,9 @@ export default function AuditInstancePage() {
 
       {detailsPaneSymbolId && (
         <SymbolDetailsPane
-          fileDependencyManifest={context.dependencyManifest[params.file]}
-          fileAuditManifest={context.auditManifest[params.file]}
+          fileDependencyManifest={context
+            .dependencyManifest[params.file as string]}
+          fileAuditManifest={context.auditManifest[params.file as string]}
           symbolId={detailsPaneSymbolId}
           open={detailsPaneOpen}
           setOpen={setDetailsPaneOpen}

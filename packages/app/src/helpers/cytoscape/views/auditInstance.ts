@@ -1,11 +1,7 @@
-import {
-  DependencyManifest,
-  FileDependencyManifest,
-  AuditManifest,
-} from "@nanoapi.io/shared";
-import { ElementDefinition } from "cytoscape";
-import { EdgeElementDefinition, getNodeLabel } from "./auditFile.js";
-import { getNodeWidthAndHeightFromLabel } from "../label/index.js";
+import type { DependencyManifest, FileDependencyManifest } from "@napi/shared";
+import type { ElementDefinition } from "cytoscape";
+import { type EdgeElementDefinition, getNodeLabel } from "./auditFile.ts";
+import { getNodeWidthAndHeightFromLabel } from "../label/index.ts";
 
 interface NodeElementDefinition extends ElementDefinition {
   data: {
@@ -207,7 +203,6 @@ function traverseGraphAdaptive(
 
 export function getInstanceCyElements(
   dependencyManifest: DependencyManifest,
-  auditManifest: AuditManifest,
   currentFilePath: string,
   currentSymbolName: string,
   dependencyDepth = 1,

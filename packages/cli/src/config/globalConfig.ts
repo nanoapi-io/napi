@@ -1,8 +1,9 @@
-import os from "os";
-import path from "path";
-import fs from "fs";
+import os from "node:os";
+import path from "node:path";
+import fs from "node:fs";
 import { v4 } from "uuid";
 import { z } from "zod";
+import process from "node:process";
 
 export const globalConfigSchema = z.object({
   userId: z.string(),
@@ -14,8 +15,8 @@ function getConfigPath() {
 
   if (os.platform() === "win32") {
     // Windows: Use %APPDATA%
-    const appData =
-      process.env.APPDATA || path.join(homeDir, "AppData", "Roaming");
+    const appData = process.env.APPDATA ||
+      path.join(homeDir, "AppData", "Roaming");
     return path.join(appData, appName, "config.json");
   } else if (os.platform() === "darwin") {
     // macOS: Use ~/Library/Application Support
@@ -28,13 +29,13 @@ function getConfigPath() {
     );
   } else {
     // Linux and others: Use ~/.config
-    const configDir =
-      process.env.XDG_CONFIG_HOME || path.join(homeDir, ".config");
+    const configDir = process.env.XDG_CONFIG_HOME ||
+      path.join(homeDir, ".config");
     return path.join(configDir, appName, "config.json");
   }
 }
 
-async function createNewConfig(configPath: string) {
+function createNewConfig(configPath: string) {
   const config = {
     userId: v4(),
   };
@@ -52,7 +53,7 @@ async function createNewConfig(configPath: string) {
   return config;
 }
 
-export async function getOrCreateGlobalConfig() {
+export function getOrCreateGlobalConfig() {
   const configPath = getConfigPath();
 
   let config: z.infer<typeof globalConfigSchema>;
@@ -65,14 +66,14 @@ export async function getOrCreateGlobalConfig() {
         config = globalConfigSchema.parse(JSON.parse(content));
       } catch (error) {
         console.debug(`Failed to parse config: ${error}`);
-        config = await createNewConfig(configPath);
+        config = createNewConfig(configPath);
       }
     } else {
-      config = await createNewConfig(configPath);
+      config = createNewConfig(configPath);
     }
   } catch (error) {
     console.error(`Failed to read or create config: ${error}`);
-    config = await createNewConfig(configPath);
+    config = createNewConfig(configPath);
   }
 
   return config;

@@ -1,11 +1,11 @@
-import { describe, test, expect, beforeEach } from "vitest";
-import Parser from "tree-sitter";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { PythonImportExtractor } from "../importExtractor/index.js";
-import { PythonModuleResolver } from "../moduleResolver/index.js";
-import { PythonItemResolver } from "./index.js";
-import { PYTHON_INTERNAL_MODULE_TYPE } from "./types.js";
+import { beforeEach, describe, expect, test } from "vitest";
+import type Parser from "tree-sitter";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
+import { PythonExportExtractor } from "../exportExtractor/index.ts";
+import { PythonImportExtractor } from "../importExtractor/index.ts";
+import { PythonModuleResolver } from "../moduleResolver/index.ts";
+import { PythonItemResolver } from "./index.ts";
+import { PYTHON_INTERNAL_MODULE_TYPE } from "./types.ts";
 
 /**
  * These tests verify the Python symbol resolution system, which handles:
@@ -522,8 +522,9 @@ describe("PythonItemResolver", () => {
   // ========================================================
   describe("Advanced Import Scenarios and Shadowing", () => {
     test("handles shadowing in nested imports", () => {
-      const shadowNest2 =
-        moduleResolver.getModuleFromFilePath("shadow_nest_2.py");
+      const shadowNest2 = moduleResolver.getModuleFromFilePath(
+        "shadow_nest_2.py",
+      );
       expect(shadowNest2).toBeDefined();
 
       // When importing shadow_func, should get the local definition from shadow_nest_2,
@@ -544,8 +545,9 @@ describe("PythonItemResolver", () => {
     });
 
     test("handles deep package hierarchies with multiple layers of __all__ inheritance", () => {
-      const useNestedAll =
-        moduleResolver.getModuleFromFilePath("use_nested_all.py");
+      const useNestedAll = moduleResolver.getModuleFromFilePath(
+        "use_nested_all.py",
+      );
       expect(useNestedAll).toBeDefined();
 
       // Should be able to resolve symbols listed in the top-level __all__
@@ -657,8 +659,9 @@ describe("PythonItemResolver", () => {
   // ========================================================
   describe("Import Precedence and Shadowing", () => {
     test("local definitions override imports", () => {
-      const precedenceModule =
-        moduleResolver.getModuleFromFilePath("precedence.py");
+      const precedenceModule = moduleResolver.getModuleFromFilePath(
+        "precedence.py",
+      );
       expect(precedenceModule).toBeDefined();
 
       // The local 'duplicate' function should be returned, not the imported one
@@ -682,8 +685,9 @@ describe("PythonItemResolver", () => {
     });
 
     test("earlier wildcard imports shadow later ones", () => {
-      const multiWildcards =
-        moduleResolver.getModuleFromFilePath("multi_wildcards.py");
+      const multiWildcards = moduleResolver.getModuleFromFilePath(
+        "multi_wildcards.py",
+      );
       expect(multiWildcards).toBeDefined();
 
       // The 'common' function should come from the first wildcard import
@@ -718,8 +722,9 @@ describe("PythonItemResolver", () => {
   // ========================================================
   describe("Visibility and __all__ Directive", () => {
     test("respects __all__ in wildcard imports", () => {
-      const importAllModule =
-        moduleResolver.getModuleFromFilePath("importAllModule.py");
+      const importAllModule = moduleResolver.getModuleFromFilePath(
+        "importAllModule.py",
+      );
       expect(importAllModule).toBeDefined();
 
       // Should find public_func which is in __all__
@@ -766,8 +771,9 @@ describe("PythonItemResolver", () => {
     });
 
     test("excludes private symbols in wildcard imports without __all__", () => {
-      const importPrivate =
-        moduleResolver.getModuleFromFilePath("importPrivate.py");
+      const importPrivate = moduleResolver.getModuleFromFilePath(
+        "importPrivate.py",
+      );
       expect(importPrivate).toBeDefined();
 
       // Should find public symbols through wildcard
@@ -902,8 +908,9 @@ describe("PythonItemResolver", () => {
   // ========================================================
   describe("Wildcard Symbol Collection", () => {
     test("collects all symbols for wildcard exports respecting __all__", () => {
-      const moduleWithAll =
-        moduleResolver.getModuleFromFilePath("moduleWithAll.py");
+      const moduleWithAll = moduleResolver.getModuleFromFilePath(
+        "moduleWithAll.py",
+      );
       expect(moduleWithAll).toBeDefined();
 
       const symbols = resolver.getWildcardSymbols(moduleWithAll);
@@ -916,8 +923,9 @@ describe("PythonItemResolver", () => {
     });
 
     test("collects all non-private symbols for wildcard exports without __all__", () => {
-      const privateSymbols =
-        moduleResolver.getModuleFromFilePath("privateSymbols.py");
+      const privateSymbols = moduleResolver.getModuleFromFilePath(
+        "privateSymbols.py",
+      );
       expect(privateSymbols).toBeDefined();
 
       const symbols = resolver.getWildcardSymbols(privateSymbols);

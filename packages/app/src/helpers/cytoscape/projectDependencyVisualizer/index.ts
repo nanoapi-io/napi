@@ -1,28 +1,28 @@
 import cytoscape, {
-  Collection,
-  EdgeDefinition,
-  EdgeSingular,
-  ElementDefinition,
-  EventObjectNode,
-  NodeDefinition,
-  NodeSingular,
-  StylesheetJson,
+  type Collection,
+  type EdgeDefinition,
+  type EdgeSingular,
+  type ElementDefinition,
+  type EventObjectNode,
+  type NodeDefinition,
+  type NodeSingular,
+  type StylesheetJson,
 } from "cytoscape";
-import { Core } from "cytoscape";
+import type { Core } from "cytoscape";
 import fcose from "cytoscape-fcose";
-import { DependencyManifest, AuditManifest, Metric } from "@nanoapi.io/shared";
-import tailwindConfig from "../../../../tailwind.config.js";
+import type { AuditManifest, DependencyManifest, Metric } from "@napi/shared";
 import {
   getCollapsedFileNodeLabel,
   getExpandedFileNodeLabel,
   getNodeWidthAndHeightFromLabel,
-} from "../label/index.js";
-import { NapiNodeData } from "./types.js";
+} from "../label/index.ts";
+import type { NapiNodeData } from "./types.ts";
 import {
   getMetricLevelColor,
   getMetricsSeverityForNode,
-} from "../metrics/index.js";
-import { mainLayout } from "../layout/index.js";
+} from "../metrics/index.ts";
+import { mainLayout } from "../layout/index.ts";
+import { getCssValue } from "../../css/index.ts";
 /**
  * ProjectDependencyVisualizer creates an interactive graph of project-level dependencies.
  *
@@ -88,11 +88,8 @@ export class ProjectDependencyVisualizer {
     },
   ) {
     const defaultOptions = {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeClick: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeDblClick: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeRightClick: () => {},
       theme: "light" as const,
       defaultMetric: undefined,
@@ -295,7 +292,7 @@ export class ProjectDependencyVisualizer {
         selector: "node",
         style: {
           "text-wrap": "wrap",
-          color: tailwindConfig.theme.extend.colors.text[theme],
+          color: getCssValue(`--color-text-${theme}`),
           "border-width": (node: NodeSingular) => {
             return this.highlightedNodeId === node.id() ? 10 : 6;
           },
@@ -310,7 +307,7 @@ export class ProjectDependencyVisualizer {
                 node.data().customData.metricsSeverity[this.targetMetric],
               );
             }
-            return tailwindConfig.theme.extend.colors.primary[theme];
+            return getCssValue(`--color-primary-${theme}`);
           },
           "background-color": (node: NodeSingular) => {
             const data = node.data() as NapiNodeData;
@@ -320,7 +317,7 @@ export class ProjectDependencyVisualizer {
                 data.customData.metricsSeverity[this.targetMetric],
               );
             }
-            return tailwindConfig.theme.extend.colors.primary[theme];
+            return getCssValue(`--color-primary-${theme}`);
           },
           "background-opacity": 0.4,
           shape: "circle",
@@ -338,9 +335,8 @@ export class ProjectDependencyVisualizer {
         selector: "node.selected",
         style: {
           label: "data(customData.expanded.label)",
-          "background-color":
-            tailwindConfig.theme.extend.colors.background[theme],
-          "border-color": tailwindConfig.theme.extend.colors.primary[theme],
+          "background-color": getCssValue(`--color-background-${theme}`),
+          "border-color": getCssValue(`--color-primary-${theme}`),
           "z-index": 2000,
           shape: "roundrectangle",
           width: "data(customData.expanded.width)",
@@ -351,8 +347,7 @@ export class ProjectDependencyVisualizer {
         selector: "node.connected",
         style: {
           label: "data(customData.collapsed.label)",
-          "background-color":
-            tailwindConfig.theme.extend.colors.background[theme],
+          "background-color": getCssValue(`--color-background-${theme}`),
           "z-index": 1000,
           shape: "roundrectangle",
           width: "data(customData.collapsed.width)",
@@ -363,9 +358,8 @@ export class ProjectDependencyVisualizer {
         selector: "edge",
         style: {
           width: 1,
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
+          "line-color": getCssValue(`--color-primary-${theme}`),
+          "target-arrow-color": getCssValue(`--color-primary-${theme}`),
           "target-arrow-shape": "triangle",
           "curve-style": "straight",
         },
@@ -374,18 +368,16 @@ export class ProjectDependencyVisualizer {
         selector: "edge.dependency",
         style: {
           width: 2,
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
+          "line-color": getCssValue(`--color-primary-${theme}`),
+          "target-arrow-color": getCssValue(`--color-primary-${theme}`),
         },
       },
       {
         selector: "edge.dependent",
         style: {
           width: 2,
-          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
+          "line-color": getCssValue(`--color-secondary-${theme}`),
+          "target-arrow-color": getCssValue(`--color-secondary-${theme}`),
         },
       },
       {
@@ -428,24 +420,24 @@ export class ProjectDependencyVisualizer {
 
     Object.values(dependencyManifest).forEach((fileDependencyManifest) => {
       const fileAuditManifest = auditManifest[fileDependencyManifest.id];
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const alertMessage: string[] = Object.values(
-        fileAuditManifest.alerts,
-      ).map((alert) => alert.message.short);
 
       const expandedLabel = getExpandedFileNodeLabel({
         fileName: fileDependencyManifest.id,
         fileAuditManifest,
       });
       const { width: expandedWitdh, height: expandedHeight } =
-        getNodeWidthAndHeightFromLabel(expandedLabel);
+        getNodeWidthAndHeightFromLabel(
+          expandedLabel,
+        );
 
       const collapsedLabel = getCollapsedFileNodeLabel({
         fileName: fileDependencyManifest.id,
         fileAuditManifest,
       });
       const { width: collapsedWidth, height: collapsedHeight } =
-        getNodeWidthAndHeightFromLabel(collapsedLabel);
+        getNodeWidthAndHeightFromLabel(
+          collapsedLabel,
+        );
 
       const metricsColors = getMetricsSeverityForNode(fileAuditManifest);
 

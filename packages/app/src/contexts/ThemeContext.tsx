@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, type ReactNode, useState } from "react";
 
 export const lightTheme = "light";
 export const darkTheme = "dark";
@@ -9,16 +9,15 @@ export const ThemeContext = createContext<{
   changeTheme: (newTheme: Theme) => void;
 }>({
   theme: lightTheme,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   changeTheme: () => {},
 });
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   function getModeFromLocalStorage() {
     if (
       localStorage.theme === darkTheme ||
       (!("theme" in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
+        globalThis.matchMedia("(prefers-color-scheme: dark)").matches)
     ) {
       localStorage.theme = darkTheme;
       document.documentElement.classList.add(darkTheme);

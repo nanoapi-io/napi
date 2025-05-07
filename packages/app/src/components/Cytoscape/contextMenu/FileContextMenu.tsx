@@ -2,11 +2,11 @@ import { Link } from "react-router";
 import { DropdownMenu } from "@radix-ui/themes";
 import {
   LuFolderSearch2,
+  LuGitGraph,
   LuPanelRightOpen,
   LuSearchCode,
-  LuGitGraph,
 } from "react-icons/lu";
-import { FileDependencyManifest } from "@nanoapi.io/shared";
+import type { FileDependencyManifest } from "@napi/shared";
 
 export default function FileContextMenu(props: {
   position: { x: number; y: number };
@@ -65,9 +65,11 @@ export default function FileContextMenu(props: {
           </DropdownMenu.Item>
           <DropdownMenu.Item className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark">
             <Link
-              to={`/audit/${encodeURIComponent(
-                props.fileDependencyManifest.filePath,
-              )}`}
+              to={`/audit/${
+                encodeURIComponent(
+                  props.fileDependencyManifest.filePath,
+                )
+              }`}
               className="w-full flex justify-between space-x-2"
             >
               <span>Inspect symbols</span>
@@ -79,8 +81,7 @@ export default function FileContextMenu(props: {
             onSelect={() =>
               props.showInSidebar(
                 props.fileDependencyManifest.filePath.split("/").pop() || "",
-              )
-            }
+              )}
           >
             <div className="w-full flex justify-between space-x-2">
               <span>Show file</span>

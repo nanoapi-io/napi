@@ -1,11 +1,13 @@
-import path from "path";
-import fs from "fs";
+import path from "node:path";
+import fs from "node:fs";
 import { z } from "zod";
-import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json" with { type: "json" };
+import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json" with {
+  type: "json",
+};
 import {
   csharpLanguage,
   pythonLanguage,
-} from "../helpers/treeSitter/parsers.js";
+} from "../helpers/treeSitter/parsers.ts";
 
 const pythonVersions = Object.keys(pythonStdlibList);
 
@@ -16,7 +18,9 @@ export const localConfigSchema = z.object({
       version: z
         .string()
         .refine((val) => pythonVersions.includes(val), {
-          message: `Python version must be one of: ${pythonVersions.join(", ")}`,
+          message: `Python version must be one of: ${
+            pythonVersions.join(", ")
+          }`,
         })
         .optional(),
     })

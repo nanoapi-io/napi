@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router";
 import { DropdownMenu } from "@radix-ui/themes";
-import { LuPanelRightOpen, LuSearchCode, LuGitGraph } from "react-icons/lu";
-import { FileDependencyManifest } from "@nanoapi.io/shared";
+import { LuGitGraph, LuPanelRightOpen, LuSearchCode } from "react-icons/lu";
+import type { FileDependencyManifest } from "@napi/shared";
 
 export default function SymbolContextMenu(props: {
   position: { x: number; y: number };
@@ -68,9 +68,11 @@ export default function SymbolContextMenu(props: {
               </DropdownMenu.Item>
               <DropdownMenu.Item className="px-2 py-1 hover:bg-primary-light dark:hover:bg-primary-dark">
                 <Link
-                  to={`/audit/${encodeURIComponent(
-                    props.fileDependencyManifest.filePath,
-                  )}/${encodeURIComponent(props.symbolId)}`}
+                  to={`/audit/${
+                    encodeURIComponent(
+                      props.fileDependencyManifest.filePath,
+                    )
+                  }/${encodeURIComponent(props.symbolId)}`}
                   className="w-full flex justify-between space-x-2"
                 >
                   <span>Inspect symbol</span>

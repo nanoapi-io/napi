@@ -9,27 +9,27 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import {
-  PanelGroup,
+  type ImperativePanelHandle,
   Panel,
+  PanelGroup,
   PanelResizeHandle,
-  ImperativePanelHandle,
 } from "react-resizable-panels";
-import { ExtractionNode } from "@nanoapi.io/shared";
-import { FileExplorerSkeleton } from "./Skeleton.js";
+import type { ExtractionNode } from "@napi/shared";
+import { FileExplorerSkeleton } from "./Skeleton.tsx";
 import { LuSearchCode, LuSearchSlash, LuX } from "react-icons/lu";
-import languageIcon from "./languageIcons.js";
+import languageIcon from "./languageIcons.tsx";
 import {
-  MdSearch,
-  MdOutlineRemoveRedEye,
+  MdDragHandle,
+  MdOutlineKeyboardArrowDown,
   MdOutlineKeyboardArrowLeft,
   MdOutlineKeyboardArrowRight,
-  MdOutlineKeyboardArrowDown,
+  MdOutlineRemoveRedEye,
+  MdSearch,
   MdSubdirectoryArrowRight,
-  MdDragHandle,
-  MdVerticalAlignTop,
   MdVerticalAlignBottom,
+  MdVerticalAlignTop,
 } from "react-icons/md";
-import { runExtraction } from "../../service/api/index.js";
+import { runExtraction } from "../../service/api/index.ts";
 import { toast } from "react-toastify";
 
 interface TreeData {
@@ -73,7 +73,7 @@ export default function FileExplorer(props: {
       !props.search ||
       name.toLowerCase().includes(props.search.toLowerCase()) ||
       symbols.some((symbol) =>
-        symbol.toLowerCase().includes(props.search.toLowerCase()),
+        symbol.toLowerCase().includes(props.search.toLowerCase())
       )
     );
   }
@@ -110,8 +110,8 @@ export default function FileExplorer(props: {
       );
       existingNode.matchesSearch = existingNode.matchesSearch || childMatches;
     } else {
-      existingNode.matchesSearch =
-        existingNode.matchesSearch || matchesCurrentNode;
+      existingNode.matchesSearch = existingNode.matchesSearch ||
+        matchesCurrentNode;
 
       // ADD SYMBOLS AS CHILDREN HERE
       if (symbols.length > 0) {
@@ -119,15 +119,13 @@ export default function FileExplorer(props: {
           id: `${nodeId}#${symbol}`,
           level: existingNode.level + 1,
           name: symbol,
-          matchesSearch:
-            !props.search ||
+          matchesSearch: !props.search ||
             symbol.toLowerCase().includes(props.search.toLowerCase()),
           isSymbol: true,
         }));
 
         // Update matchesSearch if symbol matches
-        existingNode.matchesSearch =
-          existingNode.matchesSearch ||
+        existingNode.matchesSearch = existingNode.matchesSearch ||
           existingNode.children.some((child) => child.matchesSearch);
       }
     }
@@ -256,11 +254,9 @@ export default function FileExplorer(props: {
               color="violet"
               radius="full"
             >
-              {props.isOpen ? (
-                <MdOutlineKeyboardArrowLeft className="h-8 w-8" />
-              ) : (
-                <MdOutlineKeyboardArrowRight className="h-8 w-8" />
-              )}
+              {props.isOpen
+                ? <MdOutlineKeyboardArrowLeft className="h-8 w-8" />
+                : <MdOutlineKeyboardArrowRight className="h-8 w-8" />}
             </Button>
           </div>
 
@@ -268,16 +264,16 @@ export default function FileExplorer(props: {
             style={{ width: props.isOpen ? "325px" : "0px" }}
             className="grow flex flex-col gap-4 overflow-hidden transition-all duration-300 my-2"
           >
-            {props.busy ? (
-              <FileExplorerSkeleton />
-            ) : (
+            {props.busy ? <FileExplorerSkeleton /> : (
               <>
                 <TextField.Root
                   color="violet"
                   placeholder="Search"
                   value={props.search}
                   onChange={(e) => props.setIsSearch(e.target.value)}
-                  className={`min-h-8 transition-all duration-300 overflow-hidden ${!props.isOpen && "w-0"}`}
+                  className={`min-h-8 transition-all duration-300 overflow-hidden ${
+                    !props.isOpen && "w-0"
+                  }`}
                 >
                   <TextField.Slot>
                     <MdSearch className="h-6 w-6 my-auto" />
@@ -311,17 +307,19 @@ export default function FileExplorer(props: {
       {props.isOpen && (
         <>
           <div className="flex w-full items-center space-x-2 cursor-pointer">
-            {extractionPanelSize > 0 ? (
-              <MdVerticalAlignBottom
-                onClick={() => handleExpandAndCollapse()}
-                className="text-xl text-gray-light dark:text-gray-dark"
-              />
-            ) : (
-              <MdVerticalAlignTop
-                onClick={() => handleExpandAndCollapse()}
-                className="text-xl text-gray-light dark:text-gray-dark"
-              />
-            )}
+            {extractionPanelSize > 0
+              ? (
+                <MdVerticalAlignBottom
+                  onClick={() => handleExpandAndCollapse()}
+                  className="text-xl text-gray-light dark:text-gray-dark"
+                />
+              )
+              : (
+                <MdVerticalAlignTop
+                  onClick={() => handleExpandAndCollapse()}
+                  className="text-xl text-gray-light dark:text-gray-dark"
+                />
+              )}
             <PanelResizeHandle className="grow flex justify-between bg-surface-light dark:bg-surface-dark rounded-sm px-1">
               <span>Symbol Extraction</span>
               <MdDragHandle className="text-2xl text-gray-light dark:text-gray-dark" />
@@ -338,9 +336,8 @@ export default function FileExplorer(props: {
           >
             <ExtractionPanel
               extractionNodes={props.extractionState.extractionNodes}
-              updateExtractionNodes={
-                props.extractionState.updateExtractionNodes
-              }
+              updateExtractionNodes={props.extractionState
+                .updateExtractionNodes}
             />
           </Panel>
         </>
@@ -406,96 +403,111 @@ function NodeElement(props: {
     >
       <div className="flex items-center space-x-2">
         {props.node.children &&
-        props.node.children.length > 0 &&
-        !props.node.children[0].isSymbol ? (
-          <Button
-            color="violet"
-            variant="ghost"
-            className="w-full py-1 my-0.5 text-text-light dark:text-text-dark"
-            onClick={handleToggle}
-          >
-            <div className="w-full flex items-center space-x-2">
-              {isOpen ? (
-                <MdOutlineKeyboardArrowDown className="text-lg text-gray-light dark:text-gray-dark" />
-              ) : (
-                <MdOutlineKeyboardArrowRight className="text-lg text-gray-light dark:text-gray-dark" />
-              )}
-              <DisplayedPath node={props.node} search={props.search} />
-            </div>
-          </Button>
-        ) : (
-          <>
-            {!props.node.isSymbol ? (
-              <div className="flex justify-between w-full items-center">
-                <div className="grow">
-                  <Button
-                    variant="ghost"
-                    color="violet"
-                    className="w-full text-text-light dark:text-text-dark cursor-pointer justify-start pr-0"
-                    onClick={handleToggle}
-                  >
-                    <div className="flex space-x-2 items-center overflow-hidden">
-                      {languageIcon(props.node.name.split(".").pop() || "txt")}
-                      <DisplayedPath node={props.node} search={props.search} />
-                    </div>
-                  </Button>
-                </div>
-                <div className="flex space-x-2 items-center">
-                  <Tooltip content="Highlight this node">
-                    <Button
-                      variant="ghost"
-                      color="violet"
-                      className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
-                        isHighlighted
-                          ? "bg-focus-light dark:bg-focus-dark bg-opacity-20"
-                          : ""
-                      }`}
-                      onClick={() => toggleHighlight(props.node.id)}
-                    >
-                      <MdOutlineRemoveRedEye className="text-gray-light dark:text-gray-dark" />
-                    </Button>
-                  </Tooltip>
-                  <Tooltip content="View details">
-                    <Link to={`/audit/${encodeURIComponent(props.node.id)}`}>
+            props.node.children.length > 0 &&
+            !props.node.children[0].isSymbol
+          ? (
+            <Button
+              color="violet"
+              variant="ghost"
+              className="w-full py-1 my-0.5 text-text-light dark:text-text-dark"
+              onClick={handleToggle}
+            >
+              <div className="w-full flex items-center space-x-2">
+                {isOpen
+                  ? (
+                    <MdOutlineKeyboardArrowDown className="text-lg text-gray-light dark:text-gray-dark" />
+                  )
+                  : (
+                    <MdOutlineKeyboardArrowRight className="text-lg text-gray-light dark:text-gray-dark" />
+                  )}
+                <DisplayedPath node={props.node} search={props.search} />
+              </div>
+            </Button>
+          )
+          : (
+            <>
+              {!props.node.isSymbol
+                ? (
+                  <div className="flex justify-between w-full items-center">
+                    <div className="grow">
                       <Button
                         variant="ghost"
                         color="violet"
-                        className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
+                        className="w-full text-text-light dark:text-text-dark cursor-pointer justify-start pr-0"
+                        onClick={handleToggle}
                       >
-                        <LuSearchCode className="text-gray-light dark:text-gray-dark" />
+                        <div className="flex space-x-2 items-center overflow-hidden">
+                          {languageIcon(
+                            props.node.name.split(".").pop() || "txt",
+                          )}
+                          <DisplayedPath
+                            node={props.node}
+                            search={props.search}
+                          />
+                        </div>
                       </Button>
-                    </Link>
-                  </Tooltip>
-                </div>
-              </div>
-            ) : (
-              <div className="flex justify-between w-full items-center">
-                <div className="flex items-center space-x-2 text-sm">
-                  <MdSubdirectoryArrowRight className="text-gray-light dark:text-gray-dark" />
-                  <DisplayedPath node={props.node} search={props.search} />
-                </div>
-                <div>
-                  <Button
-                    className="text-xl text-text-light dark:text-text-dark"
-                    variant="ghost"
-                    color="violet"
-                  >
-                    <Tooltip content="View details">
-                      <Link
-                        to={`/audit/${props.node.id
-                          .split("#")
-                          .map((id) => encodeURIComponent(id))
-                          .join("/")}`}
+                    </div>
+                    <div className="flex space-x-2 items-center">
+                      <Tooltip content="Highlight this node">
+                        <Button
+                          variant="ghost"
+                          color="violet"
+                          className={`text-xl py-1.5 text-text-light dark:text-text-dark my-auto ${
+                            isHighlighted
+                              ? "bg-focus-light dark:bg-focus-dark bg-opacity-20"
+                              : ""
+                          }`}
+                          onClick={() => toggleHighlight(props.node.id)}
+                        >
+                          <MdOutlineRemoveRedEye className="text-gray-light dark:text-gray-dark" />
+                        </Button>
+                      </Tooltip>
+                      <Tooltip content="View details">
+                        <Link
+                          to={`/audit/${encodeURIComponent(props.node.id)}`}
+                        >
+                          <Button
+                            variant="ghost"
+                            color="violet"
+                            className="text-xl py-1.5 text-text-light dark:text-text-dark my-auto"
+                          >
+                            <LuSearchCode className="text-gray-light dark:text-gray-dark" />
+                          </Button>
+                        </Link>
+                      </Tooltip>
+                    </div>
+                  </div>
+                )
+                : (
+                  <div className="flex justify-between w-full items-center">
+                    <div className="flex items-center space-x-2 text-sm">
+                      <MdSubdirectoryArrowRight className="text-gray-light dark:text-gray-dark" />
+                      <DisplayedPath node={props.node} search={props.search} />
+                    </div>
+                    <div>
+                      <Button
+                        className="text-xl text-text-light dark:text-text-dark"
+                        variant="ghost"
+                        color="violet"
                       >
-                        <LuSearchSlash className="text-gray-light dark:text-gray-dark" />
-                      </Link>
-                    </Tooltip>
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+                        <Tooltip content="View details">
+                          <Link
+                            to={`/audit/${
+                              props.node.id
+                                .split("#")
+                                .map((id) => encodeURIComponent(id))
+                                .join("/")
+                            }`}
+                          >
+                            <LuSearchSlash className="text-gray-light dark:text-gray-dark" />
+                          </Link>
+                        </Tooltip>
+                      </Button>
+                    </div>
+                  </div>
+                )}
+            </>
+          )}
       </div>
       {isOpen && props.node.children && (
         <ListElement
@@ -526,8 +538,12 @@ function DisplayedPath({
     return (
       <Tooltip content={node.name}>
         <div
-          className={`overflow-ellipsis ${foundInSearch ? "bg-yellow-400/40 px-1 rounded-md" : ""}`}
-        >{`...${node.name.slice(-maxPathLength)}`}</div>
+          className={`overflow-ellipsis ${
+            foundInSearch ? "bg-yellow-400/40 px-1 rounded-md" : ""
+          }`}
+        >
+          {`...${node.name.slice(-maxPathLength)}`}
+        </div>
       </Tooltip>
     );
   }
@@ -668,9 +684,13 @@ function ExtractionElement(props: {
     if (name.length > maxPathLength) {
       return (
         <Tooltip content={name}>
-          <div className="overflow-ellipsis">{`...${name.slice(
-            -maxPathLength,
-          )}`}</div>
+          <div className="overflow-ellipsis">
+            {`...${
+              name.slice(
+                -maxPathLength,
+              )
+            }`}
+          </div>
         </Tooltip>
       );
     }
@@ -694,14 +714,12 @@ function ExtractionElement(props: {
   }
 
   function handleSymbolCheck(symbol: string, checked: boolean) {
-    let newMap: Map<string, boolean>;
     setCheckedSymbols((prev) => {
-      newMap = new Map(prev);
+      const newMap = new Map(prev);
       newMap.set(symbol, checked);
+      setFileChecked(resolveFileCheckedState(newMap));
       return newMap;
     });
-
-    setFileChecked(resolveFileCheckedState(newMap));
   }
 
   useEffect(() => {
@@ -778,7 +796,8 @@ function ExtractionElement(props: {
                     }
                   }
                 }}
-              ></Checkbox>
+              >
+              </Checkbox>
             </div>
           </Tooltip>
         )}
@@ -801,7 +820,8 @@ function ExtractionElement(props: {
                   onCheckedChange={(checked) => {
                     handleSymbolCheck(symbol, Boolean(checked));
                   }}
-                ></Checkbox>
+                >
+                </Checkbox>
               </div>
             </Tooltip>
           )}

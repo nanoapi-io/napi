@@ -1,7 +1,7 @@
 import { LuFileCode } from "react-icons/lu";
 import { DiPython } from "react-icons/di";
 import { TbBrandCSharp } from "react-icons/tb";
-import { JSX } from "react";
+import type { JSX } from "react";
 
 const languageIconMap: Record<string, JSX.Element> = {
   py: (

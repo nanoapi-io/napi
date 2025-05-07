@@ -1,12 +1,12 @@
-import { describe, test, expect } from "vitest";
-import { CSharpDependencyFormatter } from "./index.js";
+import { describe, expect, test } from "vitest";
+import { CSharpDependencyFormatter } from "./index.ts";
 import {
-  getCSharpFilesMap,
   csharpFilesFolder,
+  getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../testFiles/index.js";
-import path from "path";
-import { File } from "../namespaceResolver/index.js";
+} from "../testFiles/index.ts";
+import path from "node:path";
+import type { File } from "../namespaceResolver/index.ts";
 
 describe("Dependency formatting", () => {
   const parsedfiles: Map<string, File> = getCSharpFilesMap();

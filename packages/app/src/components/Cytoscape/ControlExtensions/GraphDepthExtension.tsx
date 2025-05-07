@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Core } from "cytoscape";
+import type { Core } from "cytoscape";
 import { Button, DropdownMenu, Slider, TextField } from "@radix-ui/themes";
 import { MdTune } from "react-icons/md";
 import { LuChevronUp } from "react-icons/lu";
@@ -56,7 +56,9 @@ export default function GraphDepthExtension(props: {
           variant="ghost"
           color="violet"
           highContrast
-          className={`${checkFiltersSet() && "bg-primary-light/20 dark:bg-primary-dark/20"}`}
+          className={`${
+            checkFiltersSet() && "bg-primary-light/20 dark:bg-primary-dark/20"
+          }`}
           disabled={props.busy}
         >
           <MdTune
@@ -136,10 +138,8 @@ export default function GraphDepthExtension(props: {
         <Button
           color="violet"
           loading={props.busy}
-          disabled={
-            tempDependencyDepth === dependencyState.depth &&
-            tempDependentDepth === dependentState.depth
-          }
+          disabled={tempDependencyDepth === dependencyState.depth &&
+            tempDependentDepth === dependentState.depth}
           onClick={() => applyChanges()}
           className="mx-3 mt-2"
         >

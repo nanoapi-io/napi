@@ -1,38 +1,37 @@
-import { z } from "zod";
-import path from "path";
-import { localConfigSchema } from "../../config/localConfig.js";
-import { ExtractedFilesMap } from "../types.js";
+import type { z } from "zod";
+import path from "node:path";
+import type { localConfigSchema } from "../../config/localConfig.ts";
+import type { ExtractedFilesMap } from "../types.ts";
 import {
   CSharpExtractor,
-  ExtractedFile,
-} from "../../languagePlugins/csharp/extractor/index.js";
-import { DependencyManifest } from "@nanoapi.io/shared";
-import { DotNetProject } from "../../languagePlugins/csharp/projectMapper/index.js";
-import Parser from "tree-sitter";
-import { csharpParser } from "../../helpers/treeSitter/parsers.js";
-import { CSharpNamespaceMapper } from "../../languagePlugins/csharp/namespaceMapper/index.js";
-import { CSharpProjectMapper } from "../../languagePlugins/csharp/projectMapper/index.js";
+  type ExtractedFile,
+} from "../../languagePlugins/csharp/extractor/index.ts";
+import type { DependencyManifest } from "@napi/shared";
+import type { DotNetProject } from "../../languagePlugins/csharp/projectMapper/index.ts";
+import type Parser from "tree-sitter";
+import { csharpParser } from "../../helpers/treeSitter/parsers.ts";
+import { CSharpNamespaceMapper } from "../../languagePlugins/csharp/namespaceMapper/index.ts";
+import { CSharpProjectMapper } from "../../languagePlugins/csharp/projectMapper/index.ts";
 import {
   CSharpUsingResolver,
-  InternalSymbol,
   ExternalSymbol,
-} from "../../languagePlugins/csharp/usingResolver/index.js";
-import { CSharpInvocationResolver } from "../../languagePlugins/csharp/invocationResolver/index.js";
+  InternalSymbol,
+} from "../../languagePlugins/csharp/usingResolver/index.ts";
+import { CSharpInvocationResolver } from "../../languagePlugins/csharp/invocationResolver/index.ts";
 
 /**
  * Extracts C# symbols from the given files.
  * @param files - A map of file paths to their content.
  * @param dependencyManifest - The dependency manifest.
  * @param symbolsToExtract - A map of symbols to extract, where the key is the symbol name and the value is an object containing the file path and a set of symbols.
- * @param napiConfig - The NAPI configuration.
+ * @param _napiConfig - The NAPI configuration.
  * @returns - A map of extracted files, where the key is the file path and the value is an object containing the file path and content.
  */
 export function extractCSharpSymbols(
   files: Map<string, { path: string; content: string }>,
   dependencyManifest: DependencyManifest,
   symbolsToExtract: Map<string, { filePath: string; symbols: Set<string> }>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  napiConfig: z.infer<typeof localConfigSchema>,
+  _napiConfig: z.infer<typeof localConfigSchema>,
 ): ExtractedFilesMap {
   console.time(`Extracted ${symbolsToExtract.size} symbol(s)`);
   const extractor = new CSharpExtractor(files, dependencyManifest);
@@ -74,8 +73,9 @@ export function extractCSharpSymbols(
               subproject.rootFolder,
               "GlobalUsings.cs",
             );
-            const globalUsingsContent =
-              extractor.generateGlobalUsings(subproject);
+            const globalUsingsContent = extractor.generateGlobalUsings(
+              subproject,
+            );
             if (!parsedFiles.has(globalUsingsPath)) {
               parsedFiles.set(globalUsingsPath, {
                 path: globalUsingsPath,
@@ -98,10 +98,12 @@ export function extractCSharpSymbols(
       extractedFile.name,
     );
     for (const importDirective of imports) {
-      const resolvedInNewFile =
-        usingResolver.resolveUsingDirective(importDirective);
-      const resolvedInOldFile =
-        extractor.usingResolver.resolveUsingDirective(importDirective);
+      const resolvedInNewFile = usingResolver.resolveUsingDirective(
+        importDirective,
+      );
+      const resolvedInOldFile = extractor.usingResolver.resolveUsingDirective(
+        importDirective,
+      );
       if (
         (resolvedInNewFile instanceof ExternalSymbol &&
           resolvedInOldFile instanceof InternalSymbol) ||

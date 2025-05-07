@@ -1,4 +1,4 @@
-import { FileAuditManifest, SymbolAuditManifest } from "@nanoapi.io/shared";
+import type { FileAuditManifest, SymbolAuditManifest } from "@napi/shared";
 
 /**
  * Calculates the optimal width and height for a node based on its label text.
@@ -58,10 +58,9 @@ export function getCollapsedFileNodeLabel(data: {
   fileAuditManifest: FileAuditManifest;
 }) {
   const fileNameMaxLength = 25;
-  const fileName =
-    data.fileName.length > fileNameMaxLength
-      ? `...${data.fileName.slice(-fileNameMaxLength)}`
-      : data.fileName;
+  const fileName = data.fileName.length > fileNameMaxLength
+    ? `...${data.fileName.slice(-fileNameMaxLength)}`
+    : data.fileName;
 
   let label = fileName;
 

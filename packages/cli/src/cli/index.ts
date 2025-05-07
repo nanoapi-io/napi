@@ -1,10 +1,11 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { checkVersionMiddleware } from "./helpers/checkNpmVersion.js";
-import { globalOptions } from "./helpers/options.js";
-import initCommand from "./handlers/init/index.js";
-import auditCommand from "./handlers/audit/index.js";
-import { TelemetryEvents, trackEvent } from "../telemetry.js";
+import { checkVersionMiddleware } from "./helpers/checkNpmVersion.ts";
+import { globalOptions } from "./helpers/options.ts";
+import initCommand from "./handlers/init/index.ts";
+import auditCommand from "./handlers/audit/index.ts";
+import { TelemetryEvents, trackEvent } from "../telemetry.ts";
+import process from "node:process";
 
 export function initCli() {
   trackEvent(TelemetryEvents.APP_START, {
