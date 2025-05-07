@@ -1,6 +1,9 @@
 #ifndef BURGERS_H
 #define BURGERS_H
 
+#define MAX_BURGERS 100
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+
 enum Condiment {
     NONE = 0,
     SALAD = 30,

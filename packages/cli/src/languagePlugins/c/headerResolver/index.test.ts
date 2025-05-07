@@ -14,7 +14,7 @@ describe("CHeaderResolver", () => {
       throw new Error(`File not found: ${burgers}`);
     }
     const exportedSymbols = resolver.resolveSymbols(file);
-    expect(exportedSymbols).toHaveLength(10);
+    expect(exportedSymbols).toHaveLength(13);
     const condiment = exportedSymbols.find(
       (symbol) => symbol.name === "Condiment",
     );
@@ -75,10 +75,42 @@ describe("CHeaderResolver", () => {
     const function_names = exportedSymbols
       .filter((symbol) => symbol.type === "function")
       .map((symbol) => symbol.name);
-    expect(function_names).toHaveLength(4);
+    expect(function_names).toHaveLength(5);
     expect(function_names).toContain("get_burger_by_id");
     expect(function_names).toContain("get_cheapest_burger");
     expect(function_names).toContain("create_burger");
     expect(function_names).toContain("destroy_burger");
+    expect(function_names).toContain("MAX");
+
+    const burgers_h = exportedSymbols.find(
+      (symbol) => symbol.name === "BURGERS_H",
+    );
+    expect(burgers_h).toBeDefined();
+    expect(burgers_h.type).toBe("variable");
+    expect(burgers_h.specifiers).toEqual([]);
+    expect(burgers_h.qualifiers).toEqual([]);
+    expect(burgers_h.node.type).toBe("preproc_def");
+    expect(burgers_h.identifierNode.type).toBe("identifier");
+    expect(burgers_h.filepath).toBe(burgers);
+
+    const max_burgers = exportedSymbols.find(
+      (symbol) => symbol.name === "MAX_BURGERS",
+    );
+    expect(max_burgers).toBeDefined();
+    expect(max_burgers.type).toBe("variable");
+    expect(max_burgers.specifiers).toEqual([]);
+    expect(max_burgers.qualifiers).toEqual([]);
+    expect(max_burgers.node.type).toBe("preproc_def");
+    expect(max_burgers.identifierNode.type).toBe("identifier");
+    expect(max_burgers.filepath).toBe(burgers);
+
+    const max_macro = exportedSymbols.find((symbol) => symbol.name === "MAX");
+    expect(max_macro).toBeDefined();
+    expect(max_macro.type).toBe("function");
+    expect(max_macro.specifiers).toEqual([]);
+    expect(max_macro.qualifiers).toEqual([]);
+    expect(max_macro.node.type).toBe("preproc_function_def");
+    expect(max_macro.identifierNode.type).toBe("identifier");
+    expect(max_macro.filepath).toBe(burgers);
   });
 });

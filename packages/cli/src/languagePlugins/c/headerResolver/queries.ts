@@ -19,5 +19,7 @@ export const C_DECLARATION_QUERY = new Parser.Query(
     (enum_specifier) @enum
     (union_specifier) @union
   ])
+  (preproc_def) @variable
+  (preproc_function_def) @function
   `,
 );
