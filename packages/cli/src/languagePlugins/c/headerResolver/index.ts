@@ -25,7 +25,12 @@ export class CHeaderResolver {
     const captures = query.captures(file.rootNode);
     for (const capture of captures) {
       if (capture.name !== "decl") {
-        const idNode = capture.node.childForFieldName("name");
+        let idNode: Parser.SyntaxNode;
+        if (capture.name !== "typedef") {
+          idNode = capture.node.childForFieldName("name");
+        } else {
+          idNode = capture.node.childForFieldName("declarator");
+        }
         if (!idNode) {
           continue;
         }

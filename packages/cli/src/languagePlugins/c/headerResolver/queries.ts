@@ -11,6 +11,7 @@ export const C_DECLARATION_QUERY = new Parser.Query(
     (struct_specifier) @struct
     (enum_specifier) @enum
     (union_specifier) @union
+    (type_definition) @typedef
   ])
   (preproc_ifdef
   [
@@ -18,6 +19,7 @@ export const C_DECLARATION_QUERY = new Parser.Query(
     (struct_specifier) @struct
     (enum_specifier) @enum
     (union_specifier) @union
+    (type_definition) @typedef
   ])
   (preproc_def) @variable
   (preproc_function_def) @function

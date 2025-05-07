@@ -33,6 +33,14 @@ typedef struct {
     float price;
 } Fries;
 
+typedef enum Drink {
+    COKE = 0,
+    ICED_TEA = 1,
+    LEMONADE = 2,
+    COFFEE = 3,
+    WATER = 4,
+} Drink;
+
 struct Burger {
     int id;
     char name[50];
