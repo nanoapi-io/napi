@@ -26,6 +26,9 @@ export class CHeaderResolver {
     for (const capture of captures) {
       if (capture.name !== "decl") {
         const idNode = capture.node.childForFieldName("name");
+        if (!idNode) {
+          continue;
+        }
         exportedSymbols.push({
           name: idNode.text,
           type: capture.name as SymbolType,

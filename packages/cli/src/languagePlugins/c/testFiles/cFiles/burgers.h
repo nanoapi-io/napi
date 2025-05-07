@@ -26,6 +26,13 @@ union Sauce {
     char custom_sauce[50];
 };
 
+typedef struct {
+    int id;
+    union Sauce sauce;
+    _Bool salted;
+    float price;
+} Fries;
+
 struct Burger {
     int id;
     char name[50];
