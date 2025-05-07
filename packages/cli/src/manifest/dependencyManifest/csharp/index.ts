@@ -1,7 +1,5 @@
 import {
-  DependencyManifest,
-  SymbolDependencyManifest,
-  SymbolType,
+  type DependencyManifest,
   metricCharacterCount,
   metricCodeCharacterCount,
   metricCodeLineCount,
@@ -9,17 +7,19 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@nanoapi.io/shared";
+  type SymbolDependencyManifest,
+  type SymbolType,
+} from "@napi/shared";
 import {
   CSharpDependencyFormatter,
-  CSharpFile,
-} from "../../../languagePlugins/csharp/dependencyFormatting/index.js";
-import Parser from "tree-sitter";
+  type CSharpFile,
+} from "../../../languagePlugins/csharp/dependencyFormatting/index.ts";
+import type Parser from "tree-sitter";
 import {
   csharpLanguage,
   csharpParser,
-} from "../../../helpers/treeSitter/parsers.js";
-import { CSharpMetricsAnalyzer } from "../../../languagePlugins/csharp/metricsAnalyzer/index.js";
+} from "../../../helpers/treeSitter/parsers.ts";
+import { CSharpMetricsAnalyzer } from "../../../languagePlugins/csharp/metricsAnalyzer/index.ts";
 
 /**
  * Generates a dependency manifest for C# files.

@@ -1,15 +1,18 @@
-import { SymbolType } from "../namespaceResolver/index.js";
+import type { SymbolType } from "../namespaceResolver/index.ts";
 import {
   CSharpInvocationResolver,
-  Invocations,
-} from "../invocationResolver/index.js";
-import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
-import Parser from "tree-sitter";
+  type Invocations,
+} from "../invocationResolver/index.ts";
 import {
-  ResolvedImports,
+  CSharpNamespaceMapper,
+  type SymbolNode,
+} from "../namespaceMapper/index.ts";
+import type Parser from "tree-sitter";
+import {
   CSharpUsingResolver,
-} from "../usingResolver/index.js";
-import { CSharpProjectMapper } from "../projectMapper/index.js";
+  type ResolvedImports,
+} from "../usingResolver/index.ts";
+import { CSharpProjectMapper } from "../projectMapper/index.ts";
 
 /**
  * Represents a dependency in a C# file.
@@ -154,8 +157,8 @@ export class CSharpDependencyFormatter {
   ): Record<string, CSharpSymbol> {
     const symbols: Record<string, CSharpSymbol> = {};
     for (const symbol of exportedSymbols) {
-      const fullname =
-        (symbol.namespace !== "" ? symbol.namespace + "." : "") + symbol.name;
+      const fullname = (symbol.namespace !== "" ? symbol.namespace + "." : "") +
+        symbol.name;
       const dependencies = this.invResolver.getInvocationsFromNode(
         symbol.node,
         symbol.filepath,
@@ -188,10 +191,9 @@ export class CSharpDependencyFormatter {
     for (const resolvedSymbol of invocations.resolvedSymbols) {
       const namespace = resolvedSymbol.namespace;
       const filepath = resolvedSymbol.filepath;
-      const id =
-        namespace !== ""
-          ? namespace + "." + resolvedSymbol.name
-          : resolvedSymbol.name;
+      const id = namespace !== ""
+        ? namespace + "." + resolvedSymbol.name
+        : resolvedSymbol.name;
       if (!dependencies[filepath]) {
         dependencies[filepath] = {
           id: filepath,
@@ -286,7 +288,6 @@ export class CSharpDependencyFormatter {
           const parentDep = formattedFile.dependencies[parentNamespace];
           if (parentDep && !parentDep.isExternal) {
             parentDep.symbols[dep.id] = dep.id;
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete formattedFile.dependencies[key];
           }
         }

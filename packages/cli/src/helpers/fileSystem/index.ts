@@ -1,10 +1,16 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { globSync } from "glob";
-import { dirname, join } from "path";
-import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.js";
+import { dirname, join } from "node:path";
+import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.ts";
 
 export function getExtensionsForLanguage(language: string) {
-  const supportedLanguages = {
+  const supportedLanguages: Record<string, string[]> = {
     [pythonLanguage]: ["py"],
     [csharpLanguage]: ["cs", "csproj"],
   };
@@ -42,10 +48,11 @@ export function getFilesFromDirectory(
     ignore: mergedOptions.excludes,
   });
 
-  if (mergedOptions.logMessages)
+  if (mergedOptions.logMessages) {
     console.info(
       `Found a total of ${relativeFilePaths.length} files in ${dir}`,
     );
+  }
 
   const files = new Map<string, { path: string; content: string }>();
 
@@ -66,13 +73,15 @@ export function getFilesFromDirectory(
         content: fileContent,
       });
     } else {
-      if (mergedOptions.logMessages)
+      if (mergedOptions.logMessages) {
         console.info(`❌ Not including ${relativeFilePath} (not supported)`);
+      }
     }
   });
 
-  if (mergedOptions.logMessages)
+  if (mergedOptions.logMessages) {
     console.info(`Included a total of ${files.size} files from ${dir}`);
+  }
 
   return files;
 }

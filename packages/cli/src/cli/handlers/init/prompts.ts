@@ -1,23 +1,25 @@
-import fs from "fs";
-import path from "path";
-import z from "zod";
-import { localConfigSchema } from "../../../config/localConfig.js";
-import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with { type: "json" };
-import { select, confirm, input, number, search } from "@inquirer/prompts";
+import fs from "node:fs";
+import path from "node:path";
+import type z from "zod";
+import type { localConfigSchema } from "../../../config/localConfig.ts";
+import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with {
+  type: "json",
+};
+import { confirm, input, number, search, select } from "@inquirer/prompts";
 import { globSync } from "glob";
 import {
   csharpLanguage,
   pythonLanguage,
-} from "../../../helpers/treeSitter/parsers.js";
+} from "../../../helpers/treeSitter/parsers.ts";
 
 /**
  * Shows files that match a given glob pattern
  */
-async function showMatchingFiles(
+function showMatchingFiles(
   workDir: string,
   pattern: string,
   maxFilesToShow = 10,
-): Promise<void> {
+) {
   try {
     // Find matching files using glob
     const files = globSync(pattern, {
@@ -47,12 +49,12 @@ async function showMatchingFiles(
 /**
  * Shows the final set of files that will be included after applying include and exclude patterns
  */
-async function showFinalFileSelection(
+function showFinalFileSelection(
   workDir: string,
   includePatterns: string[],
   excludePatterns: string[],
   maxFilesToShow = 20,
-): Promise<void> {
+) {
   try {
     // Get all included files
     const files = globSync(includePatterns, {
@@ -91,7 +93,7 @@ function getProjectStructureOverview(workDir: string): string[] {
   const overview: string[] = [];
 
   try {
-    function traverseDirectory(dir: string, depth: number) {
+    const traverseDirectory = (dir: string, depth: number) => {
       const entries = fs.readdirSync(dir);
 
       for (const entry of entries) {
@@ -120,7 +122,7 @@ function getProjectStructureOverview(workDir: string): string[] {
           console.info(`Could not access ${fullPath}: ${error}`);
         }
       }
-    }
+    };
 
     traverseDirectory(workDir, 0);
   } catch (error) {
@@ -189,7 +191,7 @@ Examples:
     while (continueAdding) {
       const pattern = await input({
         message: "Enter glob pattern (e.g., '**/*.py', 'src/**')",
-        validate: async (value) => {
+        validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
             // Basic validation - a more thorough validation could use a glob validation library
@@ -319,7 +321,7 @@ Examples:
     while (continueAdding) {
       const pattern = await input({
         message: "Enter glob pattern (e.g., 'node_modules/**', '**/*.test.js')",
-        validate: async (value) => {
+        validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
             // Basic validation - a more thorough validation could use a glob validation library
@@ -647,7 +649,7 @@ RECOMMENDATIONS:
 
     const fileMaxCodeChar = await number({
       message: "Enter maximum (code only) characters per file",
-      default: defaultMetrics.file.maxCodeChar,
+      default: defaultMetrics.file?.maxCodeChar,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -658,7 +660,7 @@ RECOMMENDATIONS:
 
     const fileMaxChar = await number({
       message: "Enter maximum (all) characters per file",
-      default: defaultMetrics.file.maxChar,
+      default: defaultMetrics.file?.maxChar,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -669,7 +671,7 @@ RECOMMENDATIONS:
 
     const fileMaxCodeLine = await number({
       message: "Enter maximum (code only) lines per file",
-      default: defaultMetrics.file.maxCodeLine,
+      default: defaultMetrics.file?.maxCodeLine,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -680,7 +682,7 @@ RECOMMENDATIONS:
 
     const fileMaxLine = await number({
       message: "Enter maximum (all) lines per file",
-      default: defaultMetrics.file.maxLine,
+      default: defaultMetrics.file?.maxLine,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -691,7 +693,7 @@ RECOMMENDATIONS:
 
     const fileMaxDependency = await number({
       message: "Enter maximum dependencies per file",
-      default: defaultMetrics.file.maxDependency,
+      default: defaultMetrics.file?.maxDependency,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -702,7 +704,7 @@ RECOMMENDATIONS:
 
     const fileMaxDependent = await number({
       message: "Enter maximum dependents per file",
-      default: defaultMetrics.file.maxDependent,
+      default: defaultMetrics.file?.maxDependent,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -713,7 +715,7 @@ RECOMMENDATIONS:
 
     const fileMaxCyclomaticComplexity = await number({
       message: "Enter maximum cyclomatic complexity per file",
-      default: defaultMetrics.file.maxCyclomaticComplexity,
+      default: defaultMetrics.file?.maxCyclomaticComplexity,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -724,7 +726,7 @@ RECOMMENDATIONS:
 
     const symbolMaxCodeChar = await number({
       message: "Enter maximum characters per symbol",
-      default: defaultMetrics.symbol.maxCodeChar,
+      default: defaultMetrics.symbol?.maxCodeChar,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -735,7 +737,7 @@ RECOMMENDATIONS:
 
     const symbolMaxChar = await number({
       message: "Enter maximum characters per symbol",
-      default: defaultMetrics.symbol.maxChar,
+      default: defaultMetrics.symbol?.maxChar,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -746,7 +748,7 @@ RECOMMENDATIONS:
 
     const symbolMaxCodeLine = await number({
       message: "Enter maximum lines per symbol",
-      default: defaultMetrics.symbol.maxCodeLine,
+      default: defaultMetrics.symbol?.maxCodeLine,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -757,7 +759,7 @@ RECOMMENDATIONS:
 
     const symbolMaxLine = await number({
       message: "Enter maximum lines per symbol",
-      default: defaultMetrics.symbol.maxLine,
+      default: defaultMetrics.symbol?.maxLine,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -768,7 +770,7 @@ RECOMMENDATIONS:
 
     const symbolMaxDependency = await number({
       message: "Enter maximum dependencies per symbol",
-      default: defaultMetrics.symbol.maxDependency,
+      default: defaultMetrics.symbol?.maxDependency,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -779,7 +781,7 @@ RECOMMENDATIONS:
 
     const symbolMaxDependent = await number({
       message: "Enter maximum dependents per symbol",
-      default: defaultMetrics.symbol.maxDependent,
+      default: defaultMetrics.symbol?.maxDependent,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";
@@ -790,7 +792,7 @@ RECOMMENDATIONS:
 
     const symbolMaxCyclomaticComplexity = await number({
       message: "Enter maximum cyclomatic complexity per symbol",
-      default: defaultMetrics.symbol.maxCyclomaticComplexity,
+      default: defaultMetrics.symbol?.maxCyclomaticComplexity,
       validate: (value: number | undefined) => {
         if (typeof value !== "number" || value <= 0) {
           return "Value must be greater than 0";

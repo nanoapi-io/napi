@@ -1,4 +1,5 @@
-import { PositionalOptionsType } from "yargs";
+import type { PositionalOptionsType } from "yargs";
+import process from "node:process";
 
 export const globalOptions = {
   workdir: {

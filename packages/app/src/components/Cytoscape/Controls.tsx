@@ -1,5 +1,6 @@
+import type { ReactNode } from "react";
 import { Button, Tooltip } from "@radix-ui/themes";
-import { Core } from "cytoscape";
+import type { Core } from "cytoscape";
 import {
   MdFilterCenterFocus,
   MdOutlineAccountTree,
@@ -12,7 +13,7 @@ export default function Controls(props: {
   cy: Core;
   onLayout: () => void;
   showFilters?: boolean;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }) {
   function handleFit() {
     const elements = props.cy.elements();

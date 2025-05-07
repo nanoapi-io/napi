@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { removeIndexesFromSourceCode } from "./index.js";
+import { describe, expect, it } from "vitest";
+import { removeIndexesFromSourceCode } from "./index.ts";
 
 describe("removeIndexesFromSourceCode", () => {
   it("should return the original source code if no indexes are provided", () => {

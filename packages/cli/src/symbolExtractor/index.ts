@@ -1,9 +1,9 @@
-import { ExtractedFilesMap } from "./types.js";
-import { extractPythonSymbols } from "./python/index.js";
-import { extractCSharpSymbols } from "./csharp/index.js";
-import { localConfigSchema } from "../config/localConfig.js";
-import z from "zod";
-import { DependencyManifest } from "@nanoapi.io/shared";
+import type { ExtractedFilesMap } from "./types.ts";
+import { extractPythonSymbols } from "./python/index.ts";
+import { extractCSharpSymbols } from "./csharp/index.ts";
+import type { localConfigSchema } from "../config/localConfig.ts";
+import type z from "zod";
+import type { DependencyManifest } from "@napi/shared";
 
 const handlerMap: Record<
   string,

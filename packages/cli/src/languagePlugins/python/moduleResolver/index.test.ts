@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { PythonModuleResolver } from "./index.js";
+import { PythonModuleResolver } from "./index.ts";
 import {
   PYTHON_MODULE_TYPE,
   PYTHON_NAMESPACE_MODULE_TYPE,
   PYTHON_PACKAGE_MODULE_TYPE,
-} from "./types.js";
-import { sep } from "path";
+} from "./types.ts";
+import { sep } from "node:path";
 
 describe("PythonModuleResolver", () => {
   describe("Module Map Building", () => {
@@ -280,7 +280,7 @@ describe("PythonModuleResolver", () => {
 
         // Spy on the error throwing to ensure cache is used and we don't
         // go through the resolution logic again
-        const mockThrow = vi.spyOn(global, "Error");
+        const mockThrow = vi.spyOn(globalThis, "Error");
 
         // Second lookup should use the cache
         const moduleSecond = resolver.getModuleFromFilePath("pkg/module1.py");
@@ -692,8 +692,9 @@ describe("PythonModuleResolver", () => {
         );
 
         // Get the internal module
-        const internalModule =
-          resolver.getModuleFromFilePath("pkg/_internal.py");
+        const internalModule = resolver.getModuleFromFilePath(
+          "pkg/_internal.py",
+        );
         expect(internalModule.name).toBe("_internal");
 
         // Should be able to resolve _name from outside

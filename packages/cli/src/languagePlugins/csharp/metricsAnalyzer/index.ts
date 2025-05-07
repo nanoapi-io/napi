@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 /**
  * Interface for code volumes

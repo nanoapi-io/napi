@@ -1,18 +1,18 @@
-import { useContext } from "react";
+import { type ReactNode, useContext } from "react";
 import { Button } from "@radix-ui/themes";
 import {
-  ThemeContext,
-  lightTheme,
   darkTheme,
-} from "../contexts/ThemeContext.js";
+  lightTheme,
+  ThemeContext,
+} from "../contexts/ThemeContext.tsx";
 import { Link, useParams } from "react-router";
-import { MdLightMode, MdDarkMode, MdKeyboardArrowRight } from "react-icons/md";
-import { useCurrentViewName } from "../hooks/index.js";
-import { ViewNames } from "../hooks/types.js";
+import { MdDarkMode, MdKeyboardArrowRight, MdLightMode } from "react-icons/md";
+import { useCurrentViewName } from "../hooks/index.ts";
+import { ViewNames } from "../hooks/types.ts";
 
 export default function GraphLayout(props: {
-  sideBarSlot?: React.ReactNode;
-  graphSlot: React.ReactNode;
+  sideBarSlot?: ReactNode;
+  graphSlot: ReactNode;
 }) {
   const themeContext = useContext(ThemeContext);
   const { file, instance } = useParams();
@@ -28,30 +28,39 @@ export default function GraphLayout(props: {
       )}
       <div className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out">
         <div
-          className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-b-none flex items-center px-2 py-2 ${currentView === ViewNames.PROJECT ? "justify-end" : "justify-between"}`}
+          className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-b-none flex items-center px-2 py-2 ${
+            currentView === ViewNames.PROJECT
+              ? "justify-end"
+              : "justify-between"
+          }`}
         >
           <div
-            className={`flex items-center space-x-2 ml-5 overflow-hidden ${currentView === ViewNames.PROJECT ? "hidden" : ""}`}
+            className={`flex items-center space-x-2 ml-5 overflow-hidden ${
+              currentView === ViewNames.PROJECT ? "hidden" : ""
+            }`}
           >
             <Link
               to="/audit"
               className="text-primary-light dark:text-primary-dark hover:underline cursor-pointer"
             >
-              {/* <Button
+              {
+                /* <Button
                 color="violet"
                 radius="large"
                 variant="ghost"
                 size="3"
                 className="flex space-x-2 ml-1"
-              > */}
+              > */
+              }
               <span className="">Project</span>
               {/* </Button> */}
             </Link>
-            {currentView !== ViewNames.PROJECT && (
+            {[ViewNames.PROJECT, ViewNames.FILE].includes(currentView) &&
+              file && (
               <>
                 <MdKeyboardArrowRight className="text-gray-light dark:text-gray-dark" />
                 <h1 className="text-md font-semibold text-gray-500 dark:text-text-dark">
-                  Fiile:
+                  File:
                 </h1>
                 <Link
                   to={`/audit/${encodeURIComponent(file)}`}
@@ -61,14 +70,16 @@ export default function GraphLayout(props: {
                 </Link>
               </>
             )}
-            {currentView === ViewNames.INSTANCE && (
+            {currentView === ViewNames.INSTANCE && file && instance && (
               <>
                 <MdKeyboardArrowRight className="text-gray-light dark:text-gray-dark" />
                 <h1 className="text-md font-semibold text-gray-500 dark:text-text-dark">
                   Symbol:
                 </h1>
                 <Link
-                  to={`/audit/${encodeURIComponent(file)}/${encodeURIComponent(instance)}`}
+                  to={`/audit/${encodeURIComponent(file)}/${
+                    encodeURIComponent(instance)
+                  }`}
                   className="text-primary-light dark:text-primary-dark hover:underline cursor-pointer"
                 >
                   <span className="">{instance}</span>

@@ -1,23 +1,23 @@
 import Parser from "tree-sitter";
-import { File } from "../namespaceResolver/index.js";
-import {
+import type { File } from "../namespaceResolver/index.ts";
+import type {
   CSharpNamespaceMapper,
   NamespaceNode,
   SymbolNode,
-} from "../namespaceMapper/index.js";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+} from "../namespaceMapper/index.ts";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 import {
   CSharpUsingResolver,
   ExternalSymbol,
-  ResolvedImports,
-  UsingDirective,
-} from "../usingResolver/index.js";
-import { CSharpProjectMapper } from "../projectMapper/index.js";
+  type ResolvedImports,
+  type UsingDirective,
+} from "../usingResolver/index.ts";
+import type { CSharpProjectMapper } from "../projectMapper/index.ts";
 import {
   CSharpExtensionResolver,
-  ExtensionMethod,
-  ExtensionMethodMap,
-} from "../extensionResolver/index.js";
+  type ExtensionMethod,
+  type ExtensionMethodMap,
+} from "../extensionResolver/index.ts";
 
 /**
  * Query to identify variable names in the file

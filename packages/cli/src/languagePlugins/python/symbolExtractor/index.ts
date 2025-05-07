@@ -1,15 +1,15 @@
 import Parser from "tree-sitter";
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { PythonModuleResolver } from "../moduleResolver/index.js";
-import { PythonItemResolver } from "../itemResolver/index.js";
-import { PythonImportExtractor } from "../importExtractor/index.js";
-import { PythonUsageResolver } from "../usageResolver/index.js";
-import { DependencyManifest } from "@nanoapi.io/shared";
-import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode/index.js";
+import { PythonExportExtractor } from "../exportExtractor/index.ts";
+import { PythonModuleResolver } from "../moduleResolver/index.ts";
+import { PythonItemResolver } from "../itemResolver/index.ts";
+import { PythonImportExtractor } from "../importExtractor/index.ts";
+import { PythonUsageResolver } from "../usageResolver/index.ts";
+import type { DependencyManifest } from "@napi/shared";
+import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode/index.ts";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "../importExtractor/types.js";
+} from "../importExtractor/types.ts";
 
 /**
  * Python Symbol Extractor
@@ -289,8 +289,7 @@ export class PythonSymbolExtractor {
 
         const firstCapture = captures[0];
 
-        sourceCode =
-          sourceCode.substring(0, firstCapture.node.startIndex) +
+        sourceCode = sourceCode.substring(0, firstCapture.node.startIndex) +
           sourceCode.substring(firstCapture.node.endIndex);
       }
 
@@ -343,20 +342,30 @@ export class PythonSymbolExtractor {
     );
 
     for (const { path, content } of extractedFiles.values()) {
-      const originalFile = this.originalFiles.get(path);
-      const extractedFile = extractedParsedFiles.get(path);
+      const originalFile = this.originalFiles.get(path) as {
+        path: string;
+        rootNode: Parser.SyntaxNode;
+      };
+      const extractedFile = extractedParsedFiles.get(path) as {
+        path: string;
+        rootNode: Parser.SyntaxNode;
+      };
 
       // Get all imports in the file
       const originalImportStatements = this.importExtractor.getImportStatements(
         originalFile.path,
       );
-      const extractedFilesImportStatements =
-        extractedFilesImportExtractor.getImportStatements(extractedFile.path);
+      const extractedFilesImportStatements = extractedFilesImportExtractor
+        .getImportStatements(
+          extractedFile.path,
+        );
 
       const indexesToRemove: { startIndex: number; endIndex: number }[] = [];
 
       // Check each import statement to see if it's still valid
-      for (const extractedFilesImportStatement of extractedFilesImportStatements) {
+      for (
+        const extractedFilesImportStatement of extractedFilesImportStatements
+      ) {
         if (
           extractedFilesImportStatement.type === NORMAL_IMPORT_STATEMENT_TYPE
         ) {
@@ -367,8 +376,8 @@ export class PythonSymbolExtractor {
           // Handle normal imports (import foo, import foo.bar)
           for (const member of extractedFilesImportStatement.members) {
             // resolve the module from the original file
-            const originalFileModule =
-              this.moduleResolver.getModuleFromFilePath(originalFile.path);
+            const originalFileModule = this.moduleResolver
+              .getModuleFromFilePath(originalFile.path);
             const resolvedOriginalModule = this.moduleResolver.resolveModule(
               originalFileModule,
               member.identifierNode.text,
@@ -385,8 +394,8 @@ export class PythonSymbolExtractor {
               );
 
               // Check if the import is used in extracted code
-              const extractedUsageNode =
-                extractedFilesUsageResolver.getUsageNode(
+              const extractedUsageNode = extractedFilesUsageResolver
+                .getUsageNode(
                   extractedFile.rootNode,
                   extractedFilesImportStatements.map((s) => s.node),
                   member.aliasNode?.text || member.identifierNode.text,
@@ -414,12 +423,12 @@ export class PythonSymbolExtractor {
             }
 
             // resolve the module from the extracted file
-            const extractedFileModule =
-              extractedFilesModuleResolver.getModuleFromFilePath(
+            const extractedFileModule = extractedFilesModuleResolver
+              .getModuleFromFilePath(
                 extractedFile.path,
               );
-            const resolvedExtractedFileModule =
-              extractedFilesModuleResolver.resolveModule(
+            const resolvedExtractedFileModule = extractedFilesModuleResolver
+              .resolveModule(
                 extractedFileModule,
                 member.identifierNode.text,
               );
@@ -476,7 +485,7 @@ export class PythonSymbolExtractor {
           if (indexesToRemoveForImport.length > 0) {
             if (
               indexesToRemoveForImport.length ===
-              extractedFilesImportStatement.members.length
+                extractedFilesImportStatement.members.length
             ) {
               // remove the whole import
               indexesToRemove.push({
@@ -530,8 +539,8 @@ export class PythonSymbolExtractor {
               );
 
               // Check if the imported item is used in extracted code
-              const extractedUsageNode =
-                extractedFilesUsageResolver.getUsageNode(
+              const extractedUsageNode = extractedFilesUsageResolver
+                .getUsageNode(
                   extractedFile.rootNode,
                   extractedFilesImportStatements.map((s) => s.node),
                   item.aliasNode?.text || item.identifierNode.text,
@@ -573,12 +582,12 @@ export class PythonSymbolExtractor {
           }
 
           // Check if the module can be resolved in the extracted files
-          const extractedFileModule =
-            extractedFilesModuleResolver.getModuleFromFilePath(
+          const extractedFileModule = extractedFilesModuleResolver
+            .getModuleFromFilePath(
               extractedFile.path,
             );
-          const resolvedExtractedModule =
-            extractedFilesModuleResolver.resolveModule(
+          const resolvedExtractedModule = extractedFilesModuleResolver
+            .resolveModule(
               extractedFileModule,
               member.identifierNode.text,
             );
@@ -628,8 +637,8 @@ export class PythonSymbolExtractor {
               );
 
               // Check if the imported item is used in extracted code
-              const extractedUsageNode =
-                extractedFilesUsageResolver.getUsageNode(
+              const extractedUsageNode = extractedFilesUsageResolver
+                .getUsageNode(
                   extractedFile.rootNode,
                   extractedFilesImportStatements.map((s) => s.node),
                   item.aliasNode?.text || item.identifierNode.text,

@@ -2,18 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { Outlet } from "react-router";
 import { toast } from "react-toastify";
 import {
-  getDependencyManifest,
   getAuditManifest,
-} from "../../service/api/index.js";
-import GraphLayout from "../../layout/GraphLayout.js";
+  getDependencyManifest,
+} from "../../service/api/index.ts";
+import GraphLayout from "../../layout/GraphLayout.tsx";
 import FileExplorer, {
-  FileExplorerFile,
-} from "../../components/FileExplorer/FileExplorer.js";
-import {
-  DependencyManifest,
+  type FileExplorerFile,
+} from "../../components/FileExplorer/FileExplorer.tsx";
+import type {
   AuditManifest,
+  DependencyManifest,
   ExtractionNode,
-} from "@nanoapi.io/shared";
+} from "@napi/shared";
 
 export interface AuditContext {
   busy: boolean;
@@ -42,8 +42,9 @@ export default function BaseAuditPage() {
   const [files, setFiles] = useState<FileExplorerFile[]>([]);
 
   const [auditManifest, setAuditManifest] = useState<AuditManifest>({});
-  const [dependencyManifest, setDependencyManifest] =
-    useState<DependencyManifest>({});
+  const [dependencyManifest, setDependencyManifest] = useState<
+    DependencyManifest
+  >({});
 
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null,
@@ -67,10 +68,9 @@ export default function BaseAuditPage() {
 
     if (filePath in extractionNodes) {
       const existingSymbols = extractionNodes[filePath].symbols;
-      const newSymbols =
-        action === "add"
-          ? [...new Set([...existingSymbols, ...symbols])]
-          : existingSymbols.filter((symbol) => !symbols.includes(symbol));
+      const newSymbols = action === "add"
+        ? [...new Set([...existingSymbols, ...symbols])]
+        : existingSymbols.filter((symbol) => !symbols.includes(symbol));
 
       setExtractionNodes((prev) => {
         // Ensure react forces a re-render
@@ -79,7 +79,6 @@ export default function BaseAuditPage() {
         // Remove a file if no symbols are left
         // This is to prevent the file from being shown in the sidebar
         if (newSymbols.length === 0) {
-          // eslint-disable-next-line
           delete newExtractionNodes[filePath];
           return newExtractionNodes;
         }

@@ -1,32 +1,32 @@
-import Parser from "tree-sitter";
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { PythonUsageResolver } from "../usageResolver/index.js";
-import { ExternalUsage, InternalUsage } from "../usageResolver/types.js";
-import { PythonItemResolver } from "../itemResolver/index.js";
+import type Parser from "tree-sitter";
+import type { PythonExportExtractor } from "../exportExtractor/index.ts";
+import type { PythonUsageResolver } from "../usageResolver/index.ts";
+import type { ExternalUsage, InternalUsage } from "../usageResolver/types.ts";
+import type { PythonItemResolver } from "../itemResolver/index.ts";
 import {
   PYTHON_INTERNAL_MODULE_TYPE,
-  ResolvedExternalModule,
-  ResolvedExternalSymbol,
-  ResolvedInternalModule,
-  ResolvedInternalSymbol,
-} from "../itemResolver/types.js";
-import { PythonImportExtractor } from "../importExtractor/index.js";
-import { PythonModuleResolver } from "../moduleResolver/index.js";
+  type ResolvedExternalModule,
+  type ResolvedExternalSymbol,
+  type ResolvedInternalModule,
+  type ResolvedInternalSymbol,
+} from "../itemResolver/types.ts";
+import type { PythonImportExtractor } from "../importExtractor/index.ts";
+import type { PythonModuleResolver } from "../moduleResolver/index.ts";
 import {
   PYTHON_NAMESPACE_MODULE_TYPE,
-  PythonModule,
-} from "../moduleResolver/types.js";
-import {
+  type PythonModule,
+} from "../moduleResolver/types.ts";
+import type {
   FileDependencies,
   ModuleDependency,
   SymbolDependency,
-} from "./types.js";
+} from "./types.ts";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
-  ImportStatement,
+  type ImportStatement,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "../importExtractor/types.js";
-import { PythonMetricsAnalyzer } from "../metricAnalyzer/index.js";
+} from "../importExtractor/types.ts";
+import type { PythonMetricsAnalyzer } from "../metricAnalyzer/index.ts";
 /**
  * PythonDependencyResolver analyzes a Python file's AST to build a dependency manifest.
  * It uses the PythonExportExtractor to determine exported symbols and the PythonUsageResolver
@@ -103,8 +103,12 @@ export class PythonDependencyResolver {
     const importStmts = this.importExtractor.getImportStatements(file.path);
 
     // Analyze dependencies for the file-level node
-    const { internalUsageMap, externalUsageMap } =
-      this.analyzeDependenciesForNode(file.rootNode, fileModule, importStmts);
+    const { internalUsageMap, externalUsageMap } = this
+      .analyzeDependenciesForNode(
+        file.rootNode,
+        fileModule,
+        importStmts,
+      );
 
     // Convert usage maps to dependencies
     fileDependencies.dependencies = new Map([
@@ -274,15 +278,16 @@ export class PythonDependencyResolver {
                 targetInternal.reExportingModules = new Map();
               }
 
-              for (const [
-                modulePath,
-                module,
-              ] of sourceInternal.reExportingModules.entries()) {
+              for (
+                const [
+                  modulePath,
+                  module,
+                ] of sourceInternal.reExportingModules.entries()
+              ) {
                 targetInternal.reExportingModules.set(modulePath, module);
               }
             }
-          }
-          // Handle external usage maps
+          } // Handle external usage maps
           else if ("itemNames" in sourceValue && "itemNames" in targetValue) {
             const sourceExternal = sourceValue as ExternalUsage;
             const targetExternal = targetValue as ExternalUsage;
@@ -376,7 +381,9 @@ export class PythonDependencyResolver {
                   internalResolvedSymbol.reExportChain &&
                   internalResolvedSymbol.reExportChain.length > 0
                 ) {
-                  for (const reExportModule of internalResolvedSymbol.reExportChain) {
+                  for (
+                    const reExportModule of internalResolvedSymbol.reExportChain
+                  ) {
                     if (reExportModule.path !== sourceModule.path) {
                       // Skip the immediate re-exporter (already handled)
                       this.usageResolver.resolveInternalUsageForSymbol(
@@ -550,10 +557,12 @@ export class PythonDependencyResolver {
 
       // Add re-exporting modules as dependencies without symbols
       if (usage.reExportingModules) {
-        for (const [
-          reExportingModulePath,
-          reExportingModule,
-        ] of usage.reExportingModules.entries()) {
+        for (
+          const [
+            reExportingModulePath,
+            reExportingModule,
+          ] of usage.reExportingModules.entries()
+        ) {
           if (!dependencies.has(reExportingModulePath)) {
             dependencies.set(reExportingModulePath, {
               id: reExportingModulePath,

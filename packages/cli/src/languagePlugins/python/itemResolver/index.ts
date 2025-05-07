@@ -1,24 +1,24 @@
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { PythonImportExtractor } from "../importExtractor/index.js";
+import type { PythonExportExtractor } from "../exportExtractor/index.ts";
+import type { PythonImportExtractor } from "../importExtractor/index.ts";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "../importExtractor/types.js";
-import { PythonModuleResolver } from "../moduleResolver/index.js";
+} from "../importExtractor/types.ts";
+import type { PythonModuleResolver } from "../moduleResolver/index.ts";
 import {
   PYTHON_NAMESPACE_MODULE_TYPE,
-  PythonModule,
-} from "../moduleResolver/types.js";
+  type PythonModule,
+} from "../moduleResolver/types.ts";
 import {
   PYTHON_EXTERNAL_MODULE_TYPE,
   PYTHON_INTERNAL_MODULE_TYPE,
-  ResolvedExternalModule,
-  ResolvedExternalSymbol,
-  ResolvedInternalModule,
-  ResolvedInternalSymbol,
-  ResolvedItem,
-  ResolvedSymbol,
-} from "./types.js";
+  type ResolvedExternalModule,
+  type ResolvedExternalSymbol,
+  type ResolvedInternalModule,
+  type ResolvedInternalSymbol,
+  type ResolvedItem,
+  type ResolvedSymbol,
+} from "./types.ts";
 
 /**
  * PythonItemResolver resolves items across Python modules following Python's
@@ -250,8 +250,8 @@ export class PythonItemResolver {
         // 3.2 Check normal import
         if (stmt.type === NORMAL_IMPORT_STATEMENT_TYPE) {
           for (const member of stmt.members) {
-            const lookupName =
-              member.aliasNode?.text || member.identifierNode.text;
+            const lookupName = member.aliasNode?.text ||
+              member.identifierNode.text;
 
             if (itemName === lookupName) {
               const sourceModule = this.moduleResolver.resolveModule(

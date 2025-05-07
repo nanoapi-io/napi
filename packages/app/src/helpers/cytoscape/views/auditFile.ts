@@ -1,7 +1,8 @@
-import { ElementDefinition, StylesheetJson } from "cytoscape";
-import tailwindConfig from "../../../../tailwind.config.js";
-import { FcoseLayoutOptions } from "cytoscape-fcose";
-import { Theme } from "../../../contexts/ThemeContext.js";
+import type { ElementDefinition, StylesheetJson } from "cytoscape";
+import type { FcoseLayoutOptions } from "cytoscape-fcose";
+import type { Theme } from "../../../contexts/ThemeContext.tsx";
+import { getCssValue } from "../../css/index.ts";
+
 export interface NodeElementDefinition extends ElementDefinition {
   data: {
     id: string;
@@ -40,10 +41,9 @@ export function getCyStyle(theme: Theme) {
       style: {
         label: "data(label)",
         "text-wrap": "wrap",
-        "background-color":
-          tailwindConfig.theme.extend.colors.background[theme],
+        "background-color": getCssValue(`--color-background-${theme}`),
         "border-width": 2,
-        "border-color": tailwindConfig.theme.extend.colors.border[theme],
+        "border-color": getCssValue(`--color-border-${theme}`),
         opacity: 0.8,
         "text-valign": "top",
         "text-halign": "center",
@@ -54,21 +54,21 @@ export function getCyStyle(theme: Theme) {
     {
       selector: "node[type = 'file'][isCurrentFile]",
       style: {
-        color: tailwindConfig.theme.extend.colors.primary[theme],
+        color: getCssValue(`--color-primary-${theme}`),
       },
     },
     // external filenode
     {
       selector: "node[type = 'file'][!isCurrentFile][isExternal]",
       style: {
-        color: tailwindConfig.theme.extend.colors.gray[theme],
+        color: getCssValue(`--color-gray-${theme}`),
       },
     },
     // file node non external
     {
       selector: "node[type = 'file'][!isCurrentFile][!isExternal]",
       style: {
-        color: tailwindConfig.theme.extend.colors.secondary[theme],
+        color: getCssValue(`--color-secondary-${theme}`),
       },
     },
     // instancenode general style
@@ -79,7 +79,7 @@ export function getCyStyle(theme: Theme) {
         "text-wrap": "wrap",
         "text-valign": "center",
         "text-halign": "center",
-        color: tailwindConfig.theme.extend.colors.text[theme],
+        color: getCssValue(`--color-text-${theme}`),
         shape: "roundrectangle",
         width: "data(customData.nodeWidth)",
       },
@@ -88,9 +88,9 @@ export function getCyStyle(theme: Theme) {
     {
       selector: "node[type = 'instance'][isCurrentFile]",
       style: {
-        "background-color": tailwindConfig.theme.extend.colors.primary[theme],
+        "background-color": getCssValue(`--color-primary-${theme}`),
         "background-opacity": 0.2,
-        "border-color": tailwindConfig.theme.extend.colors.primary[theme],
+        "border-color": getCssValue(`--color-primary-${theme}`),
         "border-width": 2,
       },
     },
@@ -98,9 +98,9 @@ export function getCyStyle(theme: Theme) {
     {
       selector: "node[type = 'instance'][!isCurrentFile][isExternal]",
       style: {
-        "background-color": tailwindConfig.theme.extend.colors.gray[theme],
+        "background-color": getCssValue(`--color-gray-${theme}`),
         "background-opacity": 0.2,
-        "border-color": tailwindConfig.theme.extend.colors.gray[theme],
+        "border-color": getCssValue(`--color-gray-${theme}`),
         "border-width": 2,
       },
     },
@@ -108,9 +108,9 @@ export function getCyStyle(theme: Theme) {
     {
       selector: "node[type = 'instance'][!isCurrentFile][!isExternal]",
       style: {
-        "background-color": tailwindConfig.theme.extend.colors.secondary[theme],
+        "background-color": getCssValue(`--color-secondary-${theme}`),
         "background-opacity": 0.2,
-        "border-color": tailwindConfig.theme.extend.colors.secondary[theme],
+        "border-color": getCssValue(`--color-secondary-${theme}`),
         "border-width": 2,
       },
     },
@@ -119,8 +119,8 @@ export function getCyStyle(theme: Theme) {
       selector: "edge[type = 'dependency']",
       style: {
         width: 2,
-        "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-        "target-arrow-color": tailwindConfig.theme.extend.colors.primary[theme],
+        "line-color": getCssValue(`--color-primary-${theme}`),
+        "target-arrow-color": getCssValue(`--color-primary-${theme}`),
         "target-arrow-shape": "triangle",
         "curve-style": "bezier",
       },
@@ -130,9 +130,8 @@ export function getCyStyle(theme: Theme) {
       selector: "edge[type = 'dependent']",
       style: {
         width: 2,
-        "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
-        "target-arrow-color":
-          tailwindConfig.theme.extend.colors.secondary[theme],
+        "line-color": getCssValue(`--color-secondary-${theme}`),
+        "target-arrow-color": getCssValue(`--color-secondary-${theme}`),
         "target-arrow-shape": "triangle",
         "curve-style": "bezier",
       },

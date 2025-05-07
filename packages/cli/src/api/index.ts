@@ -1,16 +1,16 @@
 import { json, Router } from "express";
-import { z } from "zod";
-import { localConfigSchema } from "../config/localConfig.js";
+import type { z } from "zod";
+import type { localConfigSchema } from "../config/localConfig.ts";
 import {
   getFilesFromDirectory,
   writeFilesToDirectory,
-} from "../helpers/fileSystem/index.js";
-import { getExtensionsForLanguage } from "../helpers/fileSystem/index.js";
-import { generateDependencyManifest } from "../manifest/dependencyManifest/index.js";
-import { generateAuditManifest } from "../manifest/auditManifest/index.js";
-import { extractSymbols } from "../symbolExtractor/index.js";
-import { join } from "path";
-import { extractSymbolPayloadSchema } from "./types.js";
+} from "../helpers/fileSystem/index.ts";
+import { getExtensionsForLanguage } from "../helpers/fileSystem/index.ts";
+import { generateDependencyManifest } from "../manifest/dependencyManifest/index.ts";
+import { generateAuditManifest } from "../manifest/auditManifest/index.ts";
+import { extractSymbols } from "../symbolExtractor/index.ts";
+import { join } from "node:path";
+import { extractSymbolPayloadSchema } from "./types.ts";
 
 export function getApi(
   workDir: string,

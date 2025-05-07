@@ -1,4 +1,4 @@
-import { Metric } from "../dependencyManifest/types.js";
+import type { Metric } from "../dependencyManifest/types.ts";
 
 /**
  * Represents an alert for a specific metric that exceeds target thresholds.

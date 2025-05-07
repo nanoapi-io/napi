@@ -1,15 +1,15 @@
 import { useMatches } from "react-router";
-import { ViewNames, RouteHandle } from "./types.js";
+import type { RouteHandle, ViewNames } from "./types.ts";
 
 export function useCurrentViewName(): ViewNames {
   const matches = useMatches();
   if (!matches || matches.length === 0) {
-    return undefined;
+    throw new Error("No matches found");
   }
 
   const currentMatch = matches[matches.length - 1];
   if (!currentMatch) {
-    return undefined;
+    throw new Error("No current match found");
   }
 
   const handle = currentMatch.handle as RouteHandle;

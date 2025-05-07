@@ -3,9 +3,9 @@ import {
   PYTHON_CLASS_TYPE,
   PYTHON_FUNCTION_TYPE,
   PYTHON_VARIABLE_TYPE,
-  PythonSymbol,
-  PythonSymbolType,
-} from "./types.js";
+  type PythonSymbol,
+  type PythonSymbolType,
+} from "./types.ts";
 
 /**
  * PythonExportExtractor extracts exported symbols from a Python source file using Tree-sitter.
@@ -297,24 +297,22 @@ export class PythonExportExtractor {
             // Check if this node is already in the array (to avoid duplicates)
             const isDuplicate = existingSymbol.nodes.some(
               (node) =>
-                node.startPosition.row === symbolNode.startPosition.row &&
-                node.startPosition.column === symbolNode.startPosition.column,
+                node.startPosition.row === symbolNode?.startPosition.row &&
+                node.startPosition.column === symbolNode?.startPosition.column,
             );
 
             if (!isDuplicate) {
               // Only add modifications to existing variable symbols, not creating a new variable symbol
               if (isModification && symbolType === PYTHON_VARIABLE_TYPE) {
                 existingSymbol.nodes.push(symbolNode);
-              }
-              // For classes and functions with multiple definitions, add each occurrence
+              } // For classes and functions with multiple definitions, add each occurrence
               else if (
                 !isModification &&
                 (symbolType === PYTHON_CLASS_TYPE ||
                   symbolType === PYTHON_FUNCTION_TYPE)
               ) {
                 existingSymbol.nodes.push(symbolNode);
-              }
-              // For non-modification variable assignments, if the symbol already exists,
+              } // For non-modification variable assignments, if the symbol already exists,
               // add the node to track reassignments
               else if (!isModification && symbolType === PYTHON_VARIABLE_TYPE) {
                 existingSymbol.nodes.push(symbolNode);

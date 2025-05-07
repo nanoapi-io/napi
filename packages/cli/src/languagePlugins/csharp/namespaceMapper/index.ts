@@ -1,9 +1,9 @@
-import Parser from "tree-sitter";
+import type Parser from "tree-sitter";
 import {
   CSharpNamespaceResolver,
-  SymbolType,
-} from "../namespaceResolver/index.js";
-import fs from "fs";
+  type SymbolType,
+} from "../namespaceResolver/index.ts";
+import fs from "node:fs";
 
 /**
  * Interface representing a namespace node in the namespace tree.
@@ -216,10 +216,10 @@ export class CSharpNamespaceMapper {
         type: DEBUG_NAMESPACE,
         children: [
           ...node.childrenNamespaces.map((child: NamespaceNode) =>
-            this.#convertNodeToDebug(child),
+            this.#convertNodeToDebug(child)
           ),
           ...node.exports.map((symbol: SymbolNode) =>
-            this.#convertNodeToDebug(symbol),
+            this.#convertNodeToDebug(symbol)
           ),
         ],
       };

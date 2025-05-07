@@ -1,11 +1,11 @@
 import {
   createConfig,
   getConfigFromWorkDir,
-} from "../../../config/localConfig.js";
-import { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
-import { globalOptions } from "../../helpers/options.js";
-import { TelemetryEvents, trackEvent } from "../../../telemetry.js";
-import { generateConfig } from "./prompts.js";
+} from "../../../config/localConfig.ts";
+import type { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
+import type { globalOptions } from "../../helpers/options.ts";
+import { TelemetryEvents, trackEvent } from "../../../telemetry.ts";
+import { generateConfig } from "./prompts.ts";
 import { confirm } from "@inquirer/prompts";
 
 async function handler(
@@ -21,7 +21,8 @@ async function handler(
     try {
       if (getConfigFromWorkDir(argv.workdir)) {
         const confirmOverwrite = await confirm({
-          message: `A .napirc file already exists in the selected directory. Do you want to overwrite it?`,
+          message:
+            `A .napirc file already exists in the selected directory. Do you want to overwrite it?`,
           default: false,
         });
         if (!confirmOverwrite) {

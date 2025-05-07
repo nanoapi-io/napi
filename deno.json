@@ -1,0 +1,15 @@
+{
+  "workspace": ["./packages/app", "./packages/cli", "./packages/shared"],
+  "nodeModulesDir": "auto",
+  "tasks": {
+    "dev:app": "deno task --config packages/app/deno.json dev",
+    "dev:cli": "deno task --config packages/cli/deno.json dev",
+    "build:app": "deno task --config packages/app/deno.json build",
+    "compile:cli": "deno task --config packages/cli/deno.json compile",
+    "compile": "deno task --config packages/app/deno.json build && deno task --config packages/cli/deno.json compile",
+    "compile:all": "deno task --config packages/app/deno.json build && deno task --config packages/cli/deno.json compile:linux && deno task --config packages/cli/deno.json compile:macos && deno task --config packages/cli/deno.json compile:windows",
+    "test": "deno test",
+    "lint": "deno lint",
+    "fmt": "deno fmt"
+  }
+}

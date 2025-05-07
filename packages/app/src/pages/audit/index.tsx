@@ -1,15 +1,15 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { useOutletContext, useSearchParams, useNavigate } from "react-router";
-import Controls from "../../components/Cytoscape/Controls.js";
-import MetricsExtension from "../../components/Cytoscape/ControlExtensions/MetricsExtension.js";
-import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton.js";
-import FileContextMenu from "../../components/Cytoscape/contextMenu/FileContextMenu.js";
-import { ThemeContext } from "../../contexts/ThemeContext.js";
-import { AuditContext } from "./base.js";
-import FileDetailsPane from "../../components/FileDetailsPane.js";
-import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.js";
-import { NapiNodeData } from "../../helpers/cytoscape/projectDependencyVisualizer/types.js";
-import { Metric } from "@nanoapi.io/shared";
+import { useNavigate, useOutletContext, useSearchParams } from "react-router";
+import Controls from "../../components/Cytoscape/Controls.tsx";
+import MetricsExtension from "../../components/Cytoscape/ControlExtensions/MetricsExtension.tsx";
+import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton.tsx";
+import FileContextMenu from "../../components/Cytoscape/contextMenu/FileContextMenu.tsx";
+import { ThemeContext } from "../../contexts/ThemeContext.tsx";
+import type { AuditContext } from "./base.tsx";
+import FileDetailsPane from "../../components/FileDetailsPane.tsx";
+import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.ts";
+import type { NapiNodeData } from "../../helpers/cytoscape/projectDependencyVisualizer/types.ts";
+import type { Metric } from "@napi/shared";
 
 export default function AuditPage() {
   const navigate = useNavigate();
