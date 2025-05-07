@@ -33,7 +33,7 @@ typedef struct {
     float price;
 } Fries;
 
-typedef enum Drink {
+typedef enum Drink_t {
     COKE = 0,
     ICED_TEA = 1,
     LEMONADE = 2,

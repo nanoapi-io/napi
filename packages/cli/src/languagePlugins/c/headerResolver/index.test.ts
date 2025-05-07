@@ -14,7 +14,8 @@ describe("CHeaderResolver", () => {
       throw new Error(`File not found: ${burgers}`);
     }
     const exportedSymbols = resolver.resolveSymbols(file);
-    expect(exportedSymbols).toHaveLength(15);
+    console.log(exportedSymbols.map((s) => s.name));
+    expect(exportedSymbols).toHaveLength(16);
     const condiment = exportedSymbols.find(
       (symbol) => symbol.name === "Condiment",
     );
@@ -130,5 +131,14 @@ describe("CHeaderResolver", () => {
     expect(drink.node.type).toBe("type_definition");
     expect(drink.identifierNode.type).toBe("type_identifier");
     expect(drink.filepath).toBe(burgers);
+
+    const drink_t = exportedSymbols.find((symbol) => symbol.name === "Drink_t");
+    expect(drink_t).toBeDefined();
+    expect(drink_t.type).toBe("enum");
+    expect(drink_t.specifiers).toEqual([]);
+    expect(drink_t.qualifiers).toEqual([]);
+    expect(drink_t.node.type).toBe("enum_specifier");
+    expect(drink_t.identifierNode.type).toBe("type_identifier");
+    expect(drink_t.filepath).toBe(burgers);
   });
 });
