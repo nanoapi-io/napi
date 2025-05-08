@@ -8,6 +8,10 @@ import {
   CFile,
   Symbol,
 } from "./types.js";
+import {
+  StorageClassSpecifier,
+  TypeQualifier,
+} from "../headerResolver/types.js";
 import { C_FUNCTION_DEF_QUERY, C_TYPEDEF_TYPE_QUERY } from "./queries.js";
 import Parser from "tree-sitter";
 
@@ -131,14 +135,41 @@ export class CSymbolRegistry {
           currentNode = currentNode.childForFieldName("declarator");
         }
         const name = currentNode.childForFieldName("declarator").text;
+        let foundInRegistry = false;
         for (const [, header] of this.#registry.entries()) {
           if (header.symbols.has(name)) {
             const symbol = header.symbols.get(name);
             if (symbol instanceof Function) {
               symbol.definitionPath = file.path;
               symbol.definition = capture.node;
+              foundInRegistry = true;
             }
           }
+        }
+        if (!foundInRegistry) {
+          // If the function is not found in the registry, add it to the source file
+          const symbol = new Function();
+          const specifiers = capture.node.children
+            .filter((child) => child.type === "storage_class_specifier")
+            .map((child) => child.text);
+          const qualifiers = capture.node.children
+            .filter((child) => child.type === "type_qualifier")
+            .map((child) => child.text);
+          const idNode = capture.node.childForFieldName("declarator");
+          symbol.name = name;
+          symbol.declaration = {
+            name,
+            type: "function",
+            node: capture.node,
+            identifierNode: idNode,
+            filepath: file.path,
+            specifiers: specifiers as StorageClassSpecifier[],
+            qualifiers: qualifiers as TypeQualifier[],
+          };
+          symbol.definitionPath = file.path;
+          symbol.definition = capture.node;
+          symbol.isMacro = capture.node.type === "preproc_function_def";
+          source.symbols.set(name, symbol);
         }
       }
     }

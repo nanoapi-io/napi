@@ -108,4 +108,23 @@ describe("CSymbolRegistry", () => {
     expect(burgers).toBeInstanceOf(Variable);
     expect((burgers as Variable).isMacro).toBe(false);
   });
+
+  test("registers main", () => {
+    const main = path.join(cFilesFolder, "main.c");
+    const mainsymbols = registry.get(main);
+    if (!mainsymbols) {
+      throw new Error(`File not found: ${main}`);
+    }
+    expect(mainsymbols.type).toBe(".c");
+    expect(mainsymbols.symbols.size).toBe(1);
+    const mainfunc = mainsymbols.symbols.get("main");
+    expect(mainfunc).toBeDefined();
+    expect(mainfunc).toBeInstanceOf(Function);
+    expect((mainfunc as Function).isMacro).toBe(false);
+    expect((mainfunc as Function).definition.type).toBe("function_definition");
+    expect((mainfunc as Function).definitionPath).toBe(main);
+    expect((mainfunc as Function).declaration.node.type).toBe(
+      "function_definition",
+    );
+  });
 });
