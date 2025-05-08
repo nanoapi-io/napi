@@ -13,6 +13,8 @@ export class Symbol {
 export class Function extends Symbol {
   /** The definition of the function in a source file */
   definition: Parser.SyntaxNode;
+  /** The path to the definition of the function */
+  definitionPath: string;
   /** Whether the function is a macro or not */
   isMacro: boolean;
 }

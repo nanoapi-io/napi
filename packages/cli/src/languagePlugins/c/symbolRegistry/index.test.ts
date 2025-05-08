@@ -75,6 +75,11 @@ describe("CSymbolRegistry", () => {
     expect((destroy as Function).definition.type).toBe("function_definition");
     expect((get as Function).definition.type).toBe("function_definition");
     expect((cheapest as Function).definition.type).toBe("function_definition");
+    expect((max as Function).definitionPath).toBe(burgersh);
+    expect((create as Function).definitionPath).toBe(burgersc);
+    expect((destroy as Function).definitionPath).toBe(burgersc);
+    expect((get as Function).definitionPath).toBe(burgersc);
+    expect((cheapest as Function).definitionPath).toBe(burgersc);
   });
 
   test("registers variables for burgers.h", () => {

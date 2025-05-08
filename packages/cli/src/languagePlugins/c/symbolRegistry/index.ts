@@ -46,6 +46,7 @@ export class CSymbolRegistry {
       symbol.name = es.name;
       symbol.declaration = es;
       symbol.definition = es.node;
+      symbol.definitionPath = es.filepath;
       symbol.isMacro = es.node.type === "preproc_function_def";
       return symbol;
     }
@@ -134,6 +135,7 @@ export class CSymbolRegistry {
           if (header.symbols.has(name)) {
             const symbol = header.symbols.get(name);
             if (symbol instanceof Function) {
+              symbol.definitionPath = file.path;
               symbol.definition = capture.node;
             }
           }
