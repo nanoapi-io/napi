@@ -51,13 +51,7 @@ export class CIncludeResolver {
       const file = this.#getFile(path);
       if (file) {
         for (const [name, symbol] of file.symbols) {
-          if (
-            symbol.declaration.specifiers.filter((s) =>
-              ["auto", "register", "static"].includes(s),
-            ).length === 0
-          ) {
-            inclusions.symbols.set(name, symbol);
-          }
+          inclusions.symbols.set(name, symbol);
         }
       }
     }

@@ -1,6 +1,5 @@
 // TOTAL SYMBOL COUNT : 16
 // TOTAL FUNCTION COUNT : 5
-// TOTAL IMPORTABLE SYMBOLS : 15
 #ifndef BURGERS_H
 #define BURGERS_H
 #include <stdbool.h>

@@ -1,6 +1,5 @@
 // TOTAL SYMBOL COUNT : 12
 // TOTAL FUNCTION COUNT : 6
-// TOTAL IMPORTABLE SYMBOLS : 10
 #ifndef PERSONNEL_H
 #define PERSONNEL_H
 #include <stdbool.h>

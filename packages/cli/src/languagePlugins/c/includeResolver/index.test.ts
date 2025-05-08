@@ -31,7 +31,7 @@ describe("CIncludeResolver", () => {
       throw new Error(`Inclusions not found for: ${burgersc}`);
     }
     expect(bcinclusions.filepath).toBe(burgersc);
-    expect(bcinclusions.symbols.size).toBe(15);
+    expect(bcinclusions.symbols.size).toBe(16);
     expect(bcinclusions.internal.length).toBe(1);
     expect(bcinclusions.internal[0]).toBe("burgers.h");
     expect(bcinclusions.standard.length).toBe(3);
@@ -47,7 +47,7 @@ describe("CIncludeResolver", () => {
       throw new Error(`Inclusions not found for: ${main}`);
     }
     expect(maininclusions.filepath).toBe(main);
-    expect(maininclusions.symbols.size).toBe(25);
+    expect(maininclusions.symbols.size).toBe(28);
     expect(maininclusions.internal.length).toBe(2);
     expect(maininclusions.internal).toContain("burgers.h");
     expect(maininclusions.internal).toContain("personnel.h");
