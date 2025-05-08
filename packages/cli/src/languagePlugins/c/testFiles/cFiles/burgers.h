@@ -1,5 +1,6 @@
 #ifndef BURGERS_H
 #define BURGERS_H
+#include <stdbool.h>
 
 #define MAX_BURGERS 100
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
