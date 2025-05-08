@@ -1,3 +1,5 @@
+// TOTAL SYMBOL COUNT : 1
+// TOTAL FUNCTION COUNT : 0
 #include "burgers.h"
 #include <stdio.h>
 #include <stdlib.h>
