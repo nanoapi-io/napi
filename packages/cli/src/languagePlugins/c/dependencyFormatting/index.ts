@@ -58,6 +58,23 @@ export class CDependencyFormatter {
     return dependencies;
   }
 
+  #formatStandardIncludes(
+    stdincludes: Parser.SyntaxNode[],
+  ): Record<string, CDependency> {
+    const dependencies: Record<string, CDependency> = {};
+    for (const include of stdincludes) {
+      const id = include.childForFieldName("path").text;
+      if (!dependencies[id]) {
+        dependencies[id] = {
+          id: id,
+          isExternal: true,
+          symbols: {},
+        };
+      }
+    }
+    return dependencies;
+  }
+
   /**
    * Formats the symbols of a file.
    * @param fileSymbols - The symbols of the file.
@@ -70,8 +87,8 @@ export class CDependencyFormatter {
       const id = symName;
       const dependencies =
         this.invocationResolver.getInvocationsForSymbol(symbol);
-      if (!symbols[filepath]) {
-        symbols[filepath] = {
+      if (!symbols[id]) {
+        symbols[id] = {
           id: filepath,
           type: symbol.declaration.type as SymbolType,
           lineCount:
@@ -85,11 +102,6 @@ export class CDependencyFormatter {
           dependencies: this.#formatDependencies(dependencies),
         };
       }
-      symbols[filepath].dependencies[id] = {
-        id: id,
-        isExternal: false,
-        symbols: {},
-      };
     }
     return symbols;
   }
@@ -102,13 +114,21 @@ export class CDependencyFormatter {
     const fileSymbols = file.symbols;
     const fileDependencies =
       this.invocationResolver.getInvocationsForFile(filepath);
+    const includes = this.includeResolver.getInclusions().get(filepath);
+    const stdincludes = includes.standard;
+    const invokedDependencies = this.#formatDependencies(fileDependencies);
+    const stdDependencies = this.#formatStandardIncludes(stdincludes);
+    const allDependencies = {
+      ...invokedDependencies,
+      ...stdDependencies,
+    };
     const formattedFile: CDepFile = {
       id: filepath,
       filePath: file.file.path,
       rootNode: file.file.rootNode,
       lineCount: file.file.rootNode.endPosition.row,
       characterCount: file.file.rootNode.endIndex,
-      dependencies: this.#formatDependencies(fileDependencies),
+      dependencies: allDependencies,
       symbols: this.#formatSymbols(fileSymbols),
     };
     return formattedFile;
