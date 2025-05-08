@@ -52,9 +52,9 @@ export class CIncludeResolver {
       if (file) {
         for (const [name, symbol] of file.symbols) {
           if (
-            !symbol.declaration.specifiers.filter((s) =>
+            symbol.declaration.specifiers.filter((s) =>
               ["auto", "register", "static"].includes(s),
-            )
+            ).length === 0
           ) {
             inclusions.symbols.set(name, symbol);
           }
