@@ -7,6 +7,12 @@ export const structSymbolType = "struct";
 /** Identifies the "enum" instance type. */
 export const enumSymbolType = "enum";
 
+/** Identifies the "union" instance type. */
+export const unionSymbolType = "union";
+
+/** Identifies the "typedef" instance type. */
+export const typedefSymbolType = "typedef";
+
 /** Identifies the "function" instance type. */
 export const functionSymbolType = "function";
 
@@ -24,7 +30,9 @@ export type SymbolType =
   | typeof functionSymbolType
   | typeof variableSymbolType
   | typeof structSymbolType
-  | typeof enumSymbolType;
+  | typeof enumSymbolType
+  | typeof unionSymbolType
+  | typeof typedefSymbolType;
 
 export const metricLinesCount = "linesCount";
 export const metricCodeLineCount = "codeLineCount";
