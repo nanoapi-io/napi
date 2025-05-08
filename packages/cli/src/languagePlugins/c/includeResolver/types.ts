@@ -1,0 +1,14 @@
+import Parser from "tree-sitter";
+import { Symbol } from "../symbolRegistry/types.js";
+
+/** Interface representing the #include statements of a file */
+export interface Inclusions {
+  /** The path of the file */
+  filepath: string;
+  /** The imported symbols from internal imports */
+  symbols: Map<string, Symbol>;
+  /** The list of the paths of the internal imports */
+  internal: string[];
+  /** The list of include directives of the standard imports */
+  standard: Parser.SyntaxNode[];
+}
