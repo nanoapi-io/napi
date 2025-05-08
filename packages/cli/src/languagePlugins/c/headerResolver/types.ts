@@ -6,6 +6,7 @@ export const C_UNION_TYPE = "union";
 export const C_ENUM_TYPE = "enum";
 export const C_FUNCTION_TYPE = "function";
 export const C_VARIABLE_TYPE = "variable";
+export const C_TYPEDEF_TYPE = "typedef";
 
 // Constants representing different storage class specifiers in C
 export const C_AUTO_SPECIFIER = "auto";
@@ -25,7 +26,8 @@ export type SymbolType =
   | typeof C_UNION_TYPE
   | typeof C_ENUM_TYPE
   | typeof C_FUNCTION_TYPE
-  | typeof C_VARIABLE_TYPE;
+  | typeof C_VARIABLE_TYPE
+  | typeof C_TYPEDEF_TYPE;
 
 /** Type alias for the different storage class specifiers */
 export type StorageClassSpecifier =

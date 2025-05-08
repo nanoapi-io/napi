@@ -1,5 +1,9 @@
 #ifndef BURGERS_H
 #define BURGERS_H
+#include <stdbool.h>
+
+#define MAX_BURGERS 100
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 enum Condiment {
     NONE = 0,
@@ -22,6 +26,21 @@ union Sauce {
     enum ClassicSauces classic_sauce;
     char custom_sauce[50];
 };
+
+typedef struct {
+    int id;
+    union Sauce sauce;
+    _Bool salted;
+    float price;
+} Fries;
+
+typedef enum Drink_t {
+    COKE = 0,
+    ICED_TEA = 1,
+    LEMONADE = 2,
+    COFFEE = 3,
+    WATER = 4,
+} Drink;
 
 struct Burger {
     int id;
