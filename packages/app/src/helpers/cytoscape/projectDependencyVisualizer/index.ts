@@ -22,7 +22,8 @@ import {
   getMetricsSeverityForNode,
 } from "../metrics/index.ts";
 import { mainLayout } from "../layout/index.ts";
-import { getCssValue } from "../../css/index.ts";
+import { getCytoscapeStyles } from "../styles.ts";
+
 /**
  * ProjectDependencyVisualizer creates an interactive graph of project-level dependencies.
  *
@@ -138,7 +139,8 @@ export class ProjectDependencyVisualizer {
    *
    * @param nodeId - The ID of the node to highlight
    */
-  public highlightNode(nodeId: string) {
+  public highlightNode(ref: { filePath: string; symbolId?: string }) {
+    const nodeId = ref.filePath;
     this.highlightedNodeId = nodeId;
     this.cy.style(this.getCyStyleSheet(this.theme));
   }
@@ -292,35 +294,33 @@ export class ProjectDependencyVisualizer {
         selector: "node",
         style: {
           "text-wrap": "wrap",
-          color: getCssValue(`--color-text-${theme}`),
+          color: getCytoscapeStyles(theme).colors.foreground,
           "border-width": (node: NodeSingular) => {
-            return this.highlightedNodeId === node.id() ? 10 : 6;
+            return this.highlightedNodeId === node.id() ? 10 : 5;
           },
           "border-color": (node: NodeSingular) => {
             if (this.highlightedNodeId === node.id()) {
-              return "yellow";
+              return getCytoscapeStyles(theme).colors.highlighted;
             }
 
-            if (this.targetMetric) {
-              return getMetricLevelColor(
-                this.theme,
-                node.data().customData.metricsSeverity[this.targetMetric],
-              );
-            }
-            return getCssValue(`--color-primary-${theme}`);
+            // if (this.targetMetric) {
+            //   return getMetricLevelColor(
+            //     node.data().customData.metricsSeverity[this.targetMetric],
+            //   );
+            // }
+            return getCytoscapeStyles(theme).colors.foreground;
           },
           "background-color": (node: NodeSingular) => {
             const data = node.data() as NapiNodeData;
             if (this.targetMetric) {
               return getMetricLevelColor(
-                this.theme,
                 data.customData.metricsSeverity[this.targetMetric],
               );
             }
-            return getCssValue(`--color-primary-${theme}`);
+            return getCytoscapeStyles(theme).colors.foreground;
           },
-          "background-opacity": 0.4,
-          shape: "circle",
+          "background-opacity": 0.8,
+          shape: "ellipse",
           "text-valign": "center",
           "text-halign": "center",
         },
@@ -328,15 +328,15 @@ export class ProjectDependencyVisualizer {
       {
         selector: "node.background",
         style: {
-          opacity: 0.2,
+          opacity: 0.1,
         },
       },
       {
         selector: "node.selected",
         style: {
           label: "data(customData.expanded.label)",
-          "background-color": getCssValue(`--color-background-${theme}`),
-          "border-color": getCssValue(`--color-primary-${theme}`),
+          "background-color": getCytoscapeStyles(theme).colors.background,
+          "border-color": getCytoscapeStyles(theme).colors.selected,
           "z-index": 2000,
           shape: "roundrectangle",
           width: "data(customData.expanded.width)",
@@ -347,7 +347,7 @@ export class ProjectDependencyVisualizer {
         selector: "node.connected",
         style: {
           label: "data(customData.collapsed.label)",
-          "background-color": getCssValue(`--color-background-${theme}`),
+          "background-color": getCytoscapeStyles(theme).colors.background,
           "z-index": 1000,
           shape: "roundrectangle",
           width: "data(customData.collapsed.width)",
@@ -358,8 +358,8 @@ export class ProjectDependencyVisualizer {
         selector: "edge",
         style: {
           width: 1,
-          "line-color": getCssValue(`--color-primary-${theme}`),
-          "target-arrow-color": getCssValue(`--color-primary-${theme}`),
+          "line-color": getCytoscapeStyles(theme).colors.foreground,
+          "target-arrow-color": getCytoscapeStyles(theme).colors.foreground,
           "target-arrow-shape": "triangle",
           "curve-style": "straight",
         },
@@ -368,16 +368,16 @@ export class ProjectDependencyVisualizer {
         selector: "edge.dependency",
         style: {
           width: 2,
-          "line-color": getCssValue(`--color-primary-${theme}`),
-          "target-arrow-color": getCssValue(`--color-primary-${theme}`),
+          "line-color": getCytoscapeStyles(theme).colors.dependency,
+          "target-arrow-color": getCytoscapeStyles(theme).colors.dependency,
         },
       },
       {
         selector: "edge.dependent",
         style: {
           width: 2,
-          "line-color": getCssValue(`--color-secondary-${theme}`),
-          "target-arrow-color": getCssValue(`--color-secondary-${theme}`),
+          "line-color": getCytoscapeStyles(theme).colors.dependent,
+          "target-arrow-color": getCytoscapeStyles(theme).colors.dependent,
         },
       },
       {

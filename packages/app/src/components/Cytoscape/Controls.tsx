@@ -1,12 +1,8 @@
 import type { ReactNode } from "react";
-import { Button, Tooltip } from "@radix-ui/themes";
+import { Button } from "../shadcn/Button.tsx";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../shadcn/Tooltip.tsx";
 import type { Core } from "cytoscape";
-import {
-  MdFilterCenterFocus,
-  MdOutlineAccountTree,
-  MdOutlineZoomIn,
-  MdOutlineZoomOut,
-} from "react-icons/md";
+import { Focus, Network, ZoomIn, ZoomOut } from "lucide-react";
 
 export default function Controls(props: {
   busy: boolean;
@@ -36,54 +32,66 @@ export default function Controls(props: {
   return (
     <div className="absolute bottom-6 inset-x-4 z-10 flex justify-around">
       <div className="flex gap-3 items-center">
-        <div className="bg-background-light dark:bg-background-dark flex gap-4 py-2 px-3 rounded-lg">
-          <Tooltip content="Fit to screen" side="top">
-            <Button
-              size="1"
-              variant="ghost"
-              color="violet"
-              highContrast
-              disabled={props.busy}
-              onClick={handleFit}
-            >
-              <MdFilterCenterFocus className="text-2xl h-5 w-5" />
-            </Button>
+        <div className="flex space-x-1 p-1 rounded-lg border bg-background">
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={props.busy}
+                onClick={handleFit}
+              >
+                <Focus />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Fit to screen
+            </TooltipContent>
           </Tooltip>
-          <Tooltip content="Reset layout" side="top">
-            <Button
-              size="1"
-              variant="ghost"
-              color="violet"
-              highContrast
-              disabled={props.busy}
-              onClick={() => props.onLayout()}
-            >
-              <MdOutlineAccountTree className="text-xl h-5 w-5" />
-            </Button>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={props.busy}
+                onClick={() => props.onLayout()}
+              >
+                <Network />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Reset layout
+            </TooltipContent>
           </Tooltip>
-          <Tooltip content="Zoom out" side="top">
-            <Button
-              size="1"
-              variant="ghost"
-              color="violet"
-              highContrast
-              disabled={props.busy}
-              onClick={() => handleZoom(0.9)}
-            >
-              <MdOutlineZoomOut className="text-2xl h-5 w-5" />
-            </Button>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={props.busy}
+                onClick={() => handleZoom(0.9)}
+              >
+                <ZoomOut />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Zoom out
+            </TooltipContent>
           </Tooltip>
-          <Tooltip content="Zoom in" side="top">
-            <Button
-              size="1"
-              variant="ghost"
-              color="violet"
-              highContrast
-              disabled={props.busy}
-              onClick={() => handleZoom(1.1)}
-            >
-              <MdOutlineZoomIn className="text-2xl h-5 w-5" />
-            </Button>
+          <Tooltip delayDuration={500}>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="ghost"
+                disabled={props.busy}
+                onClick={() => handleZoom(1.1)}
+              >
+                <ZoomIn />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Zoom in
+            </TooltipContent>
           </Tooltip>
           {/* Used to pass extensions into the controls */}
           {props.children}

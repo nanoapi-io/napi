@@ -1,23 +1,26 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router";
 import Controls from "../../components/Cytoscape/Controls.tsx";
 import MetricsExtension from "../../components/Cytoscape/ControlExtensions/MetricsExtension.tsx";
-import { CytoscapeSkeleton } from "../../components/Cytoscape/Skeleton.tsx";
 import FileContextMenu from "../../components/Cytoscape/contextMenu/FileContextMenu.tsx";
-import { ThemeContext } from "../../contexts/ThemeContext.tsx";
 import type { AuditContext } from "./base.tsx";
 import FileDetailsPane from "../../components/FileDetailsPane.tsx";
 import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.ts";
 import type { NapiNodeData } from "../../helpers/cytoscape/projectDependencyVisualizer/types.ts";
-import type { Metric } from "@napi/shared";
+import type {
+  FileAuditManifest,
+  FileDependencyManifest,
+  Metric,
+} from "@napi/shared";
+import { useTheme } from "../../contexts/ThemeProvider.tsx";
 
 export default function AuditPage() {
   const navigate = useNavigate();
 
+  const { theme } = useTheme();
+
   const [searchParams, setSearchParams] = useSearchParams();
   const context = useOutletContext<AuditContext>();
-
-  const themeContext = useContext(ThemeContext);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState<boolean>(true);
@@ -40,20 +43,19 @@ export default function AuditPage() {
     setMetric(metric);
   }
 
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const [contextMenuNodeId, setContextMenuNodeId] = useState<
-    string | undefined
+  const [contextMenu, setContextMenu] = useState<
+    {
+      position: { x: number; y: number };
+      fileDependencyManifest: FileDependencyManifest;
+    } | undefined
   >(undefined);
 
-  const [detailsPaneNodeId, setDetailsPaneNodeId] = useState<
-    string | undefined
+  const [detailsPane, setDetailsPane] = useState<
+    {
+      fileDependencyManifest: FileDependencyManifest;
+      fileAuditManifest: FileAuditManifest;
+    } | undefined
   >(undefined);
-
-  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
 
   // On mount useEffect
   useEffect(() => {
@@ -63,15 +65,16 @@ export default function AuditPage() {
       context.dependencyManifest,
       context.auditManifest,
       {
-        theme: themeContext.theme,
+        theme,
         defaultMetric: metric,
         onAfterNodeRightClick: (value: {
           position: { x: number; y: number };
           id: string;
         }) => {
-          setContextMenuPosition(value.position);
-          setContextMenuOpen(true);
-          setContextMenuNodeId(value.id);
+          setContextMenu({
+            position: value.position,
+            fileDependencyManifest: context.dependencyManifest[value.id],
+          });
         },
         onAfterNodeDblClick: (data: NapiNodeData) => {
           const urlEncodedFileName = encodeURIComponent(
@@ -103,20 +106,20 @@ export default function AuditPage() {
   // Hook to update highlight node in the graph
   useEffect(() => {
     if (projectVisualizer) {
-      if (context.highlightedNodeId) {
-        projectVisualizer.highlightNode(context.highlightedNodeId);
+      if (context.highlightedCytoscapeRef) {
+        projectVisualizer.highlightNode(context.highlightedCytoscapeRef);
       } else {
         projectVisualizer.unhighlightNodes();
       }
     }
-  }, [context.highlightedNodeId]);
+  }, [context.highlightedCytoscapeRef]);
 
   // Hook to update the theme in the graph
   useEffect(() => {
     if (projectVisualizer) {
-      projectVisualizer.updateTheme(themeContext.theme);
+      projectVisualizer.updateTheme(theme);
     }
-  }, [themeContext.theme]);
+  }, [theme]);
 
   return (
     <div className="relative w-full h-full">
@@ -124,8 +127,6 @@ export default function AuditPage() {
       {/* It is important to set the width and height to 100% */}
       {/* Otherwise, Cytoscape will not render correctly */}
       <div ref={containerRef} className="absolute w-full h-full z-10" />
-
-      {(context.busy || busy || !projectVisualizer) && <CytoscapeSkeleton />}
 
       {projectVisualizer && (
         <Controls
@@ -143,7 +144,21 @@ export default function AuditPage() {
         </Controls>
       )}
 
-      {contextMenuNodeId && (
+      {contextMenu !== undefined && (
+        <FileContextMenu
+          context={contextMenu}
+          onClose={() => setContextMenu(undefined)}
+          onOpenDetails={(filePath) => {
+            setDetailsPane({
+              fileDependencyManifest: context.dependencyManifest[filePath],
+              fileAuditManifest: context.auditManifest[filePath],
+            });
+          }}
+        />
+      )}
+
+      {
+        /* {contextMenuNodeId && (
         <FileContextMenu
           position={contextMenuPosition}
           fileDependencyManifest={context.dependencyManifest[contextMenuNodeId]}
@@ -167,7 +182,8 @@ export default function AuditPage() {
           open={detailsPaneOpen}
           setOpen={setDetailsPaneOpen}
         />
-      )}
+      )} */
+      }
     </div>
   );
 }
