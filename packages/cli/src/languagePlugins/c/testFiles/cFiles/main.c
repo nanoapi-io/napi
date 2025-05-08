@@ -1,4 +1,5 @@
 #include "burgers.h"
+#include "personnel.h"
 #include <stdio.h>
 
 int main(void) {
@@ -14,5 +15,8 @@ int main(void) {
     }
     printf("\n");
     printf("Burger Sauce: %d\n", burger->sauce.classic_sauce);
+
+    Employee* emp1 = create_employee(1, "Alice", "Manager", IT, 75000.0);
+    print_employee_details(emp1);
     return 0;
 }

@@ -47,9 +47,10 @@ describe("CIncludeResolver", () => {
       throw new Error(`Inclusions not found for: ${main}`);
     }
     expect(maininclusions.filepath).toBe(main);
-    expect(maininclusions.symbols.size).toBe(15);
-    expect(maininclusions.internal.length).toBe(1);
-    expect(maininclusions.internal[0]).toBe("burgers.h");
+    expect(maininclusions.symbols.size).toBe(25);
+    expect(maininclusions.internal.length).toBe(2);
+    expect(maininclusions.internal).toContain("burgers.h");
+    expect(maininclusions.internal).toContain("personnel.h");
     expect(maininclusions.standard.length).toBe(1);
     const stdincludes = maininclusions.standard.map((node) => node.text.trim());
     expect(stdincludes).toContain("#include <stdio.h>");
