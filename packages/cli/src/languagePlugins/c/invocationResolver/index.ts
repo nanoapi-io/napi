@@ -44,17 +44,27 @@ export class CInvocationResolver {
     };
   }
 
+  getInvocationsForSymbol(symbol: Symbol) {
+    let filepath = symbol.declaration.filepath;
+    let node = symbol.declaration.node;
+    if (symbol instanceof Function) {
+      filepath = symbol.definitionPath;
+      node = symbol.definition;
+    }
+    const name = symbol.name;
+    const invocations = this.getInvocationsForNode(node, filepath, name);
+    return {
+      resolved: invocations.resolved,
+      unresolved: invocations.unresolved,
+    };
+  }
+
   getInvocationsForFile(filepath: string): Invocations {
     const symbols = this.includeResolver.symbolRegistry.get(filepath).symbols;
     let unresolved = new Set<string>();
     const resolved = new Map<string, Symbol>();
     for (const symbol of symbols.values()) {
-      const node =
-        symbol instanceof Function
-          ? (symbol as Function).definition
-          : symbol.declaration.node;
-      const name = symbol.name;
-      const invocations = this.getInvocationsForNode(node, filepath, name);
+      const invocations = this.getInvocationsForSymbol(symbol);
       unresolved = new Set([...unresolved, ...invocations.unresolved]);
       for (const [key, value] of invocations.resolved) {
         if (!resolved.has(key)) {
