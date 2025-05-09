@@ -1,10 +1,4 @@
 import { Link } from "react-router";
-import {
-  LuFolderSearch2,
-  LuGitGraph,
-  LuPanelRightOpen,
-  LuSearchCode,
-} from "react-icons/lu";
 import type { FileDependencyManifest } from "@napi/shared";
 import {
   DropdownMenu,
@@ -14,8 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../shadcn/Dropdownmenu.tsx";
-import { Button } from "../../shadcn/Button.tsx";
-import { PanelRight, Pickaxe, SearchCode } from "lucide-react";
+import { PanelRight, SearchCode } from "lucide-react";
+import DisplayNameWithTooltip from "../../DisplayNameWithTootip.tsx";
 
 export default function FileContextMenu(props: {
   context: {
@@ -24,24 +18,7 @@ export default function FileContextMenu(props: {
   } | undefined;
   onClose: () => void;
   onOpenDetails: (filePath: string) => void;
-  // showInSidebar: (filename: string) => void;
-  // setDetailsPaneOpen: (open: boolean) => void;
-  // setExtractionNodes: (
-  //   filePath: string,
-  //   symbols: string[],
-  //   action: "add" | "remove",
-  // ) => void;
 }) {
-  // function handleOnExtract() {
-  //   props.setExtractionNodes(
-  //     props.fileDependencyManifest.filePath,
-  //     Object.values(props.fileDependencyManifest.symbols).map(
-  //       (symbol) => symbol.id,
-  //     ),
-  //     "add",
-  //   );
-  // }
-
   return (
     <div
       className="absolute z-50"
@@ -54,55 +31,41 @@ export default function FileContextMenu(props: {
         open={props.context !== undefined}
         onOpenChange={() => props.onClose()}
       >
-        <DropdownMenuTrigger>
-          <div />
-        </DropdownMenuTrigger>
+        <DropdownMenuTrigger />
 
         <DropdownMenuContent>
           <DropdownMenuLabel>
-            {props.context?.fileDependencyManifest.filePath.split("/").pop()}
+            <DisplayNameWithTooltip
+              name={props.context?.fileDependencyManifest.filePath || ""}
+              maxChar={30}
+            />
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <Button
-              variant="ghost"
-              onClick={() =>
-                props.context?.fileDependencyManifest &&
-                props.onOpenDetails(
-                  props.context?.fileDependencyManifest.filePath,
-                )}
-              className="w-full"
+          <DropdownMenuItem
+            onClick={() =>
+              props.context?.fileDependencyManifest &&
+              props.onOpenDetails(
+                props.context?.fileDependencyManifest.filePath,
+              )}
+          >
+            <div className="flex items-center space-x-2">
+              <PanelRight />
+              <div>Show details</div>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link
+              to={`/audit/${
+                encodeURIComponent(
+                  props.context?.fileDependencyManifest.filePath || "",
+                )
+              }`}
             >
               <div className="flex items-center space-x-2">
-                <PanelRight />
-                <div>Show details</div>
+                <SearchCode />
+                <div>Inspect symbols</div>
               </div>
-            </Button>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <Button asChild variant="link" className="w-full">
-              <Link
-                to={`/audit/${
-                  encodeURIComponent(
-                    props.context?.fileDependencyManifest.filePath || "",
-                  )
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <SearchCode />
-                  <div>Inspect symbols</div>
-                </div>
-              </Link>
-            </Button>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <Button variant="ghost" className="w-full">
-              <div className="flex items-center space-x-2">
-                <Pickaxe />
-                <div>Mark for extraction</div>
-              </div>
-            </Button>
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

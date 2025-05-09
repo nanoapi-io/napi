@@ -37,13 +37,15 @@ import {
 import {
   ChevronDown,
   ChevronRight,
+  CircleMinus,
+  Code,
   File,
+  Loader,
   Moon,
   Pickaxe,
   ScanEye,
   SearchCode,
   Sun,
-  Variable,
 } from "lucide-react";
 import {
   ResizableHandle,
@@ -53,6 +55,13 @@ import {
 import { ScrollArea, ScrollBar } from "../../components/shadcn/Scrollarea.tsx";
 import { useToast } from "../../components/shadcn/hooks/use-toast.tsx";
 import { useTheme } from "../../contexts/ThemeProvider.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/shadcn/Card.tsx";
+import DisplayNameWithTooltip from "../../components/DisplayNameWithTootip.tsx";
 
 export interface AuditContext {
   busy: boolean;
@@ -92,6 +101,12 @@ export default function BaseAuditPage() {
   const [symbolsToExtract, setSymbolsToExtract] = useState<SymbolsToExtract>(
     [],
   );
+
+  function extractSymbols() {
+    setBusy(true);
+    // TODO: Implement
+    setBusy(false);
+  }
 
   useEffect(() => {
     async function handleOnLoad() {
@@ -166,6 +181,7 @@ export default function BaseAuditPage() {
         }}
         symbolsToExtract={symbolsToExtract}
         onUpdateSymbolsToExtract={setSymbolsToExtract}
+        onExtractSymbols={extractSymbols}
       />
       <div className="h-full w-full flex flex-col overflow-hidden">
         <div className="flex items-center py-2 justify-between">
@@ -199,7 +215,28 @@ export default function BaseAuditPage() {
               auditManifest,
               highlightedCytoscapeRef,
               onAddSymbolsForExtraction: (filePath, symbolIds) => {
-                // TODO
+                const newSymbolsToExtract = [...symbolsToExtract];
+                for (const symbolId of symbolIds) {
+                  // Check if there's an existing entry for this file
+                  const existingIndex = newSymbolsToExtract.findIndex(
+                    (s) => s.filePath === filePath,
+                  );
+
+                  if (existingIndex === -1) {
+                    // No existing entry for this file, create a new one
+                    newSymbolsToExtract.push({ filePath, symbols: [symbolId] });
+                  } else {
+                    // File exists, check if symbol is already included
+                    if (
+                      !newSymbolsToExtract[existingIndex].symbols.includes(
+                        symbolId,
+                      )
+                    ) {
+                      newSymbolsToExtract[existingIndex].symbols.push(symbolId);
+                    }
+                  }
+                }
+                setSymbolsToExtract(newSymbolsToExtract);
               },
             } as AuditContext}
           />
@@ -274,6 +311,7 @@ function FileExplorerSidebar(props: {
   toDetails: (node: ExplorerNodeData) => string;
   symbolsToExtract: SymbolsToExtract;
   onUpdateSymbolsToExtract: (symbolsToExtract: SymbolsToExtract) => void;
+  onExtractSymbols: () => void;
 }) {
   const [search, setSearch] = useState<string>("");
 
@@ -400,6 +438,25 @@ function FileExplorerSidebar(props: {
     return flattenTree(root);
   }
 
+  function removeSymbolsFromExtraction(filePath: string, symbolIds: string[]) {
+    const newSymbolsToExtract = props.symbolsToExtract.map(
+      (symbolToExtract) => {
+        if (symbolToExtract.filePath === filePath) {
+          // Only filter out the specific symbol IDs from this file's symbols array
+          return {
+            ...symbolToExtract,
+            symbols: symbolToExtract.symbols.filter(
+              (symbolId) => !symbolIds.includes(symbolId),
+            ),
+          };
+        }
+        return symbolToExtract;
+      },
+    ).filter((symbolToExtract) => symbolToExtract.symbols.length > 0); // Remove entries with no symbols left
+
+    props.onUpdateSymbolsToExtract(newSymbolsToExtract);
+  }
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -408,24 +465,24 @@ function FileExplorerSidebar(props: {
           target="_blank"
           className="flex items-center space-x-3"
         >
-          <img src="/logo.png" alt="logo" className="w-8 h-8" />
+          <img src="/logo.png" alt="logo" className="h-10" />
           <div className="text-xl font-bold">NanoAPI</div>
         </Link>
       </SidebarHeader>
 
-      <SidebarContent className="m-2">
+      <SidebarContent>
         {props.busy
           ? (
-            <div className="flex flex-col space-y-5">
+            <SidebarGroup className="flex flex-col space-y-5">
               {Array.from({ length: 10 }).map((_, index) => (
                 <Skeleton key={index} className="w-full h-6" />
               ))}
-            </div>
+            </SidebarGroup>
           )
           : (
             <ResizablePanelGroup direction="vertical">
               <ResizablePanel>
-                <div className="flex flex-col h-full">
+                <SidebarGroup className="flex h-full">
                   <ScrollArea>
                     <Tooltip delayDuration={500}>
                       <TooltipTrigger asChild>
@@ -437,20 +494,21 @@ function FileExplorerSidebar(props: {
                       </TooltipTrigger>
                       <TooltipContent>
                         <div className="text-sm">
-                          <div>
-                            Search for a file or symbol.
-                          </div>
-                          <div>
-                            The search will find partial matches in both symbol
-                            names and file paths.
-                          </div>
+                          Search for a file or symbol.
+                          <br />
+                          The search will find partial matches in both symbol
+                          names and file paths.
                         </div>
                       </TooltipContent>
                     </Tooltip>
 
-                    <SidebarGroup>
+                    <div className="pt-2">
                       {!explorerTree
-                        ? <div>No Matching files found</div>
+                        ? (
+                          <div className="text-sm font-muted italic">
+                            No Matching files found
+                          </div>
+                        )
                         : (
                           <ExplorerNode
                             node={explorerTree}
@@ -460,34 +518,103 @@ function FileExplorerSidebar(props: {
                             toDetails={props.toDetails}
                           />
                         )}
-                    </SidebarGroup>
+                    </div>
                     <ScrollBar orientation="vertical" />
                   </ScrollArea>
-                </div>
+                </SidebarGroup>
               </ResizablePanel>
               <ResizableHandle withHandle />
               <ResizablePanel defaultSize={20} minSize={5}>
-                <div className="flex flex-col h-full">
-                  <SidebarGroup>
+                <SidebarGroup className="flex h-full">
+                  <ScrollArea>
                     <SidebarGroupLabel className="flex items-center space-x-2">
                       <Pickaxe />
-                      <div>Symbol Extraction</div>
+                      <div className="text-lg font-bold">Symbol Extraction</div>
                     </SidebarGroupLabel>
-                  </SidebarGroup>
-                  <ScrollArea>
-                    {props.symbolsToExtract.map((symbol) => (
-                      <div key={symbol.filePath} className="h-6 w-full">
-                        {symbol.filePath}
-                      </div>
-                    ))}
+                    <div className="flex flex-col space-y-2 pt-2">
+                      {props.symbolsToExtract.length === 0
+                        ? (
+                          <div className="text-sm font-muted italic">
+                            No symbols marked for extraction yet
+                          </div>
+                        )
+                        : (
+                          <div className="flex flex-col space-y-2">
+                            {props.symbolsToExtract.map((symbolToExtract) => (
+                              <Card key={symbolToExtract.filePath}>
+                                <CardHeader>
+                                  <div className="flex items-center justify-between">
+                                    <CardTitle className="flex items-center space-x-2 text-xs">
+                                      <File size={20} />
+                                      <DisplayNameWithTooltip
+                                        name={symbolToExtract.filePath}
+                                        maxChar={30}
+                                      />
+                                    </CardTitle>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        removeSymbolsFromExtraction(
+                                          symbolToExtract.filePath,
+                                          symbolToExtract.symbols,
+                                        )}
+                                    >
+                                      <CircleMinus color="red" />
+                                    </Button>
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="flex flex-col space-y-1">
+                                    {symbolToExtract.symbols.map((symbol) => (
+                                      <div className="flex items-center justify-between">
+                                        <div
+                                          key={symbol}
+                                          className="flex items-center gap-1 text-xs"
+                                        >
+                                          <Code size={12} />
+                                          <DisplayNameWithTooltip
+                                            name={symbol}
+                                            maxChar={30}
+                                          />
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() =>
+                                            removeSymbolsFromExtraction(
+                                              symbolToExtract.filePath,
+                                              [symbol],
+                                            )}
+                                        >
+                                          <CircleMinus color="red" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                            <Button
+                              disabled={props.busy}
+                              size="sm"
+                              onClick={props.onExtractSymbols}
+                            >
+                              {props.busy
+                                ? <Loader className="animate-spin" />
+                                : <Pickaxe />}
+                              Extract symbols
+                            </Button>
+                          </div>
+                        )}
+                    </div>
                     <ScrollBar orientation="vertical" />
                   </ScrollArea>
-                </div>
+                </SidebarGroup>
               </ResizablePanel>
             </ResizablePanelGroup>
           )}
       </SidebarContent>
-
       <SidebarRail />
     </Sidebar>
   );
@@ -500,28 +627,6 @@ function ExplorerNode(props: {
   toDetails: (node: ExplorerNodeData) => string;
 }) {
   const [showChildren, setShowChildren] = useState<boolean>(false);
-
-  function DisplayedName() {
-    const maxChar = Math.max(5, 30 - props.level * 2);
-
-    if (props.node.displayName.length > maxChar) {
-      const displayedName = props.node.displayName.length > maxChar
-        ? props.node.displayName.slice(0, maxChar) + "..."
-        : props.node.displayName;
-      return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            {displayedName}
-          </TooltipTrigger>
-          <TooltipContent className="text-xs">
-            {props.node.displayName}
-          </TooltipContent>
-        </Tooltip>
-      );
-    } else {
-      return <div className="text-xs">{props.node.displayName}</div>;
-    }
-  }
 
   const type: "folder" | "file" | "symbol" = props.node.symbolId
     ? "symbol"
@@ -545,7 +650,10 @@ function ExplorerNode(props: {
                 className="w-full justify-start"
               >
                 {showChildren ? <ChevronDown /> : <ChevronRight />}
-                <DisplayedName />
+                <DisplayNameWithTooltip
+                  name={props.node.displayName}
+                  maxChar={Math.max(5, 30 - props.level * 2)}
+                />
               </Button>
             );
           case "file":
@@ -558,42 +666,76 @@ function ExplorerNode(props: {
                   className="w-full justify-start"
                 >
                   <File />
-                  <DisplayedName />
+                  <DisplayNameWithTooltip
+                    name={props.node.displayName}
+                    maxChar={Math.max(5, 30 - props.level * 2)}
+                  />
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => props.onHighlightInCytoscape(props.node)}
-                >
-                  <ScanEye />
-                </Button>
-                <Button asChild variant="secondary" size="sm">
-                  <Link to={props.toDetails(props.node)}>
-                    <SearchCode />
-                  </Link>
-                </Button>
+                <Tooltip delayDuration={500}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => props.onHighlightInCytoscape(props.node)}
+                    >
+                      <ScanEye />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs">
+                    Highlight in graph
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip delayDuration={500}>
+                  <TooltipTrigger asChild>
+                    <Button asChild variant="secondary" size="sm">
+                      <Link to={props.toDetails(props.node)}>
+                        <SearchCode />
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="text-xs">
+                    View graph for this file
+                  </TooltipContent>
+                </Tooltip>
               </div>
             );
           case "symbol":
             return (
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-1">
-                  <Variable />
-                  <DisplayedName />
+                  <Code size={12} />
+                  <DisplayNameWithTooltip
+                    name={props.node.displayName}
+                    maxChar={Math.max(5, 30 - props.level * 2)}
+                  />
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => props.onHighlightInCytoscape(props.node)}
-                  >
-                    <ScanEye />
-                  </Button>
-                  <Button asChild variant="secondary" size="sm">
-                    <Link to={props.toDetails(props.node)}>
-                      <SearchCode />
-                    </Link>
-                  </Button>
+                  <Tooltip delayDuration={500}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => props.onHighlightInCytoscape(props.node)}
+                      >
+                        <ScanEye />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                      Highlight in graph
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip delayDuration={500}>
+                    <TooltipTrigger asChild>
+                      <Button asChild variant="secondary" size="sm">
+                        <Link to={props.toDetails(props.node)}>
+                          <SearchCode />
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                      View graph for this symbol
+                    </TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
             );

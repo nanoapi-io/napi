@@ -128,11 +128,11 @@ export default function AuditPage() {
       {/* Otherwise, Cytoscape will not render correctly */}
       <div ref={containerRef} className="absolute w-full h-full z-10" />
 
-      {projectVisualizer && (
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
         <Controls
           busy={context.busy || busy}
-          cy={projectVisualizer.cy}
-          onLayout={() => projectVisualizer.layoutGraph(projectVisualizer.cy)}
+          cy={projectVisualizer?.cy}
+          onLayout={() => projectVisualizer?.layoutGraph(projectVisualizer.cy)}
         >
           <MetricsExtension
             busy={context.busy || busy}
@@ -142,48 +142,29 @@ export default function AuditPage() {
             }}
           />
         </Controls>
-      )}
+      </div>
 
-      {contextMenu !== undefined && (
-        <FileContextMenu
-          context={contextMenu}
-          onClose={() => setContextMenu(undefined)}
-          onOpenDetails={(filePath) => {
-            setDetailsPane({
-              fileDependencyManifest: context.dependencyManifest[filePath],
-              fileAuditManifest: context.auditManifest[filePath],
-            });
-          }}
-        />
-      )}
+      <FileContextMenu
+        context={contextMenu}
+        onClose={() => setContextMenu(undefined)}
+        onOpenDetails={(filePath) => {
+          setDetailsPane({
+            fileDependencyManifest: context.dependencyManifest[filePath],
+            fileAuditManifest: context.auditManifest[filePath],
+          });
+        }}
+        onAddSymbolsForExtraction={(filePath, symbolIds) => {
+          context.onAddSymbolsForExtraction(filePath, symbolIds);
+        }}
+      />
 
-      {
-        /* {contextMenuNodeId && (
-        <FileContextMenu
-          position={contextMenuPosition}
-          fileDependencyManifest={context.dependencyManifest[contextMenuNodeId]}
-          open={contextMenuOpen}
-          onOpenChange={setContextMenuOpen}
-          showInSidebar={context.actions.showInSidebar}
-          setDetailsPaneOpen={(open) => {
-            setDetailsPaneOpen(open);
-            if (open) {
-              setDetailsPaneNodeId(contextMenuNodeId);
-            }
-          }}
-          setExtractionNodes={context.actions.updateExtractionNodes}
-        />
-      )}
-
-      {detailsPaneNodeId && (
-        <FileDetailsPane
-          fileDependencyManifest={context.dependencyManifest[detailsPaneNodeId]}
-          fileAuditManifest={context.auditManifest[detailsPaneNodeId]}
-          open={detailsPaneOpen}
-          setOpen={setDetailsPaneOpen}
-        />
-      )} */
-      }
+      <FileDetailsPane
+        context={detailsPane}
+        onClose={() => setDetailsPane(undefined)}
+        onAddSymbolsForExtraction={(filePath, symbolIds) => {
+          context.onAddSymbolsForExtraction(filePath, symbolIds);
+        }}
+      />
     </div>
   );
 }
