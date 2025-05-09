@@ -52,10 +52,9 @@ export async function runServer(
       `Running in development mode, proxying all traffic to the app to ${targetServiceUrl}`,
     );
     app.use(createProxyMiddleware({
-        target: targetServiceUrl,
-        changeOrigin: true,
-      }),
-    );
+      target: targetServiceUrl,
+      changeOrigin: true,
+    }));
   } else {
     app.use(express.static(app_dist));
   }

@@ -1,5 +1,3 @@
-import { Button, DropdownMenu } from "@radix-ui/themes";
-import { LuChevronUp } from "react-icons/lu";
 import {
   type Metric,
   metricCharacterCount,
@@ -10,6 +8,19 @@ import {
   metricDependentCount,
   metricLinesCount,
 } from "@napi/shared";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../shadcn/Tooltip.tsx";
+import { Button } from "../../shadcn/Button.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../shadcn/Dropdownmenu.tsx";
+import { ChevronUp } from "lucide-react";
 
 // Extension for the controls in the project view
 export default function MetricsExtension(props: {
@@ -48,49 +59,42 @@ export default function MetricsExtension(props: {
   }
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger>
-        <Button
-          size="1"
-          variant="ghost"
-          color="violet"
-          highContrast
-          disabled={props.busy}
-          className="py-1.5"
-        >
-          {getMetricLabel(metric)}
-          <LuChevronUp />
-        </Button>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Content color="violet" variant="soft">
-        <DropdownMenu.Item
-          onClick={() => props.metricState?.setMetric?.(undefined)}
-          disabled={props.busy}
-        >
-          No Metric
-        </DropdownMenu.Item>
-        {(
-          [
-            { metric: metricLinesCount, label: "Total Lines" },
+    <Tooltip delayDuration={500}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              disabled={props.busy}
+            >
+              <ChevronUp />
+              {getMetricLabel(metric)}
+            </Button>
+          </TooltipTrigger>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          {([
+            { metric: undefined, label: "No Metric" },
+            { metric: metricLinesCount, label: "Lines" },
             { metric: metricCodeLineCount, label: "Code Lines" },
             { metric: metricCharacterCount, label: "Total Characters" },
             { metric: metricCodeCharacterCount, label: "Code Characters" },
-            { metric: metricDependencyCount, label: "Dependencies Count" },
-            { metric: metricDependentCount, label: "Dependents Count" },
-            {
-              metric: metricCyclomaticComplexity,
-              label: "Cyclomatic Complexity",
-            },
-          ] as { metric: Metric; label: string }[]
-        ).map(({ metric, label }) => (
-          <DropdownMenu.Item
-            key={metric}
-            onClick={() => props.metricState?.setMetric?.(metric)}
-          >
-            {label}
-          </DropdownMenu.Item>
-        ))}
-      </DropdownMenu.Content>
-    </DropdownMenu.Root>
+            { metric: metricDependencyCount, label: "Dependencies" },
+            { metric: metricDependentCount, label: "Dependents" },
+            { metric: metricCyclomaticComplexity, label: "Complexity" },
+          ] as { metric: Metric | undefined; label: string }[]).map((val) => (
+            <DropdownMenuItem
+              key={val.metric}
+              onClick={() => props.metricState?.setMetric?.(val.metric)}
+            >
+              {val.label}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <TooltipContent>
+        Select a metric to display on the graph
+      </TooltipContent>
+    </Tooltip>
   );
 }

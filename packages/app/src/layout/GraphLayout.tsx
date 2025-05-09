@@ -1,14 +1,24 @@
 import { type ReactNode, useContext } from "react";
-import { Button } from "@radix-ui/themes";
+import { Button } from "../components/shadcn/Button.tsx";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "../components/shadcn/Breadcrumb.tsx";
 import {
   darkTheme,
   lightTheme,
   ThemeContext,
 } from "../contexts/ThemeContext.tsx";
 import { Link, useParams } from "react-router";
-import { MdDarkMode, MdKeyboardArrowRight, MdLightMode } from "react-icons/md";
-import { useCurrentViewName } from "../hooks/index.ts";
-import { ViewNames } from "../hooks/types.ts";
+import { MdDarkMode, MdLightMode } from "react-icons/md";
+import {
+  SidebarProvider,
+  SidebarTrigger,
+} from "../components/shadcn/Sidebar.tsx";
+import Sidebar from "./Sidebar.tsx";
 
 export default function GraphLayout(props: {
   sideBarSlot?: ReactNode;
@@ -17,109 +27,69 @@ export default function GraphLayout(props: {
   const themeContext = useContext(ThemeContext);
   const { file, instance } = useParams();
 
-  const currentView = useCurrentViewName();
-
   return (
-    <div className="h-screen grow flex gap-3 bg-background-light text-text-light dark:bg-background-dark dark:text-text-dark px-4 py-3">
-      {props.sideBarSlot && (
-        <div className="flex flex-col gap-2 bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl px-2 py-2">
-          {props.sideBarSlot}
-        </div>
-      )}
-      <div className="flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out">
-        <div
-          className={`bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-b-none flex items-center px-2 py-2 ${
-            currentView === ViewNames.PROJECT
-              ? "justify-end"
-              : "justify-between"
-          }`}
-        >
-          <div
-            className={`flex items-center space-x-2 ml-5 overflow-hidden ${
-              currentView === ViewNames.PROJECT ? "hidden" : ""
-            }`}
+    <SidebarProvider defaultOpen={false} className="h-screen w-screen">
+      <Sidebar />
+      <div className="h-full w-full flex flex-col overflow-hidden">
+        <div className="flex items-center py-2 justify-between">
+          <div className="flex items-center gap-2 ml-2">
+            <SidebarTrigger />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/audit">Project</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                {file && (
+                  <>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link to={`/audit/${encodeURIComponent(file)}`}>
+                          {file}
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    {instance && (
+                      <>
+                        <BreadcrumbSeparator />
+                        <BreadcrumbItem>
+                          <BreadcrumbLink asChild>
+                            <Link
+                              to={`/audit/${encodeURIComponent(file)}/${
+                                encodeURIComponent(instance)
+                              }`}
+                            >
+                              {instance}
+                            </Link>
+                          </BreadcrumbLink>
+                        </BreadcrumbItem>
+                      </>
+                    )}
+                  </>
+                )}
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() =>
+              themeContext.changeTheme(
+                themeContext.theme === lightTheme ? darkTheme : lightTheme,
+              )}
+            className="mr-2"
           >
-            <Link
-              to="/audit"
-              className="text-primary-light dark:text-primary-dark hover:underline cursor-pointer"
-            >
-              {
-                /* <Button
-                color="violet"
-                radius="large"
-                variant="ghost"
-                size="3"
-                className="flex space-x-2 ml-1"
-              > */
-              }
-              <span className="">Project</span>
-              {/* </Button> */}
-            </Link>
-            {[ViewNames.PROJECT, ViewNames.FILE].includes(currentView) &&
-              file && (
-              <>
-                <MdKeyboardArrowRight className="text-gray-light dark:text-gray-dark" />
-                <h1 className="text-md font-semibold text-gray-500 dark:text-text-dark">
-                  File:
-                </h1>
-                <Link
-                  to={`/audit/${encodeURIComponent(file)}`}
-                  className="text-primary-light dark:text-primary-dark hover:underline cursor-pointer"
-                >
-                  <span className="">{file}</span>
-                </Link>
-              </>
-            )}
-            {currentView === ViewNames.INSTANCE && file && instance && (
-              <>
-                <MdKeyboardArrowRight className="text-gray-light dark:text-gray-dark" />
-                <h1 className="text-md font-semibold text-gray-500 dark:text-text-dark">
-                  Symbol:
-                </h1>
-                <Link
-                  to={`/audit/${encodeURIComponent(file)}/${
-                    encodeURIComponent(instance)
-                  }`}
-                  className="text-primary-light dark:text-primary-dark hover:underline cursor-pointer"
-                >
-                  <span className="">{instance}</span>
-                </Link>
-              </>
-            )}
-          </div>
-          <div className="flex gap-4 border border-secondarySurface-light dark:border-secondarySurface-dark px-3 py-2 rounded-xl">
-            <Button
-              color="violet"
-              variant="ghost"
-              size="1"
-              onClick={() => themeContext.changeTheme(lightTheme)}
-              className={`p-2.5 rounded-md ${
-                themeContext.theme === lightTheme
-                  ? "bg-secondarySurface-light"
-                  : ""
-              }`}
-            >
-              <MdLightMode className="text-gray-light dark:text-gray-dark h-6 w-6" />
-            </Button>
-            <Button
-              color="violet"
-              variant="ghost"
-              size="1"
-              onClick={() => themeContext.changeTheme(darkTheme)}
-              className={`p-2.5 rounded-md ${
-                themeContext.theme === darkTheme
-                  ? "bg-secondarySurface-dark"
-                  : ""
-              }`}
-            >
-              <MdDarkMode className="text-gray-light dark:text-gray-dark h-6 w-6" />
-            </Button>
-          </div>
+            {themeContext.theme === lightTheme
+              ? <MdDarkMode />
+              : <MdLightMode />}
+          </Button>
         </div>
-        <div className="relative grow bg-secondaryBackground-light dark:bg-secondaryBackground-dark rounded-xl rounded-t-none border-t border-t-border-light dark:border-t-border-dark overflow-hidden">
+        <div className="grow w-full">
           {props.graphSlot}
         </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

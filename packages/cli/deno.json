@@ -21,9 +21,9 @@
   "tasks": {
     "dev": "NODE_ENV=development deno run --allow-all --watch src/index.ts",
     "compile": "deno compile --allow-all --include=../app/dist --output=dist/napi src/index.ts",
-    "compile:linux": "deno compile --allow-all --include=../app/dist --output=dist/napi.linux --target=x86_64-unknown-linux-gnu src/index.ts",
-    "compile:macos": "deno compile --allow-all --include=../app/dist --output=dist/napi.macos --target=x86_64-apple-darwin src/index.ts",
-    "compile:windows": "deno compile --allow-all --include=../app/dist --output=dist/napi.exe --target=x86_64-pc-windows-msvc src/index.ts",
+    "compile-linux": "deno compile --allow-all --include=../app/dist --output=dist/napi.linux --target=x86_64-unknown-linux-gnu src/index.ts",
+    "compile-macos": "deno compile --allow-all --include=../app/dist --output=dist/napi.macos --target=x86_64-apple-darwin src/index.ts",
+    "compile-windows": "deno compile --allow-all --include=../app/dist --output=dist/napi.exe --target=x86_64-pc-windows-msvc src/index.ts",
     "test": "deno test --allow-all"
   }
 }
