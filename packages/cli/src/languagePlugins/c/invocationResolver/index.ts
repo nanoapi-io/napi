@@ -1,8 +1,9 @@
 import { Invocations } from "./types.js";
-import { C_INVOCATION_QUERY } from "./queries.js";
+import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.js";
 import { CIncludeResolver } from "../includeResolver/index.js";
 import { Symbol, Function } from "../symbolRegistry/types.js";
 import Parser from "tree-sitter";
+import { cParser } from "../../../helpers/treeSitter/parsers.js";
 
 export class CInvocationResolver {
   includeResolver: CIncludeResolver;
@@ -36,6 +37,26 @@ export class CInvocationResolver {
         resolved.set(name, localSymbols.get(name));
       } else {
         unresolved.add(name);
+      }
+    }
+    // Check for macro invocations
+    // The logic of a macro is set in a single (preproc_arg) node.
+    // If we parse that node's text, we can find the invocations.
+    const macroCaptures = C_MACRO_CONTENT_QUERY.captures(node);
+    for (const capture of macroCaptures) {
+      const contentNode = cParser.parse(capture.node.text).rootNode;
+      const contentInvocations = this.getInvocationsForNode(
+        contentNode,
+        filepath,
+        symbolname,
+      );
+      for (const [key, value] of contentInvocations.resolved) {
+        if (!resolved.has(key)) {
+          resolved.set(key, value);
+        }
+      }
+      for (const value of contentInvocations.unresolved) {
+        unresolved.add(value);
       }
     }
     return {

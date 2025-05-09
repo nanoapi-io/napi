@@ -13,6 +13,7 @@ describe("CInvocationResolver", () => {
   const burgersh = path.join(cFilesFolder, "burgers.h");
   const burgersc = path.join(cFilesFolder, "burgers.c");
   const personnelh = path.join(cFilesFolder, "personnel.h");
+  const crashcasesh = path.join(cFilesFolder, "crashcases.h");
   const main = path.join(cFilesFolder, "main.c");
   const registry = symbolRegistry.getRegistry();
 
@@ -111,5 +112,18 @@ describe("CInvocationResolver", () => {
     expect(main_resolved).toContain("Employee");
     expect(main_resolved).toContain("Condiment");
     expect(main_resolved).toContain("Sauce");
+  });
+
+  test("Crash Cases", () => {
+    const symbols = registry.get(crashcasesh).symbols;
+    if (!symbols) {
+      throw new Error(`Symbol not found for: ${crashcasesh}`);
+    }
+    const crash = symbols.get("CpuFastFill");
+    const crash_invocations = invocationResolver.getInvocationsForSymbol(crash);
+    const crash_resolved = Array.from(crash_invocations.resolved.keys());
+    expect(crash_resolved.length).toBe(2);
+    expect(crash_resolved).toContain("CpuFastSet");
+    expect(crash_resolved).toContain("CPU_FAST_SET_SRC_FIXED");
   });
 });
