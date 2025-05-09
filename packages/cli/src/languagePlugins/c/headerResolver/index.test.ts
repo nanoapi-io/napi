@@ -7,9 +7,14 @@ describe("CHeaderResolver", () => {
   const cFilesMap = getCFilesMap();
   const resolver = new CHeaderResolver();
   const burgers = path.join(cFilesFolder, "burgers.h");
+  const crashcases = path.join(cFilesFolder, "crashcases.h");
   const file = cFilesMap.get(burgers);
   if (!file) {
     throw new Error(`File not found: ${burgers}`);
+  }
+  const ccfile = cFilesMap.get(crashcases);
+  if (!ccfile) {
+    throw new Error(`File not found: ${crashcases}`);
   }
   const exportedSymbols = resolver.resolveSymbols(file);
 
@@ -152,5 +157,41 @@ describe("CHeaderResolver", () => {
     expect(drink.node.type).toBe("type_definition");
     expect(drink.identifierNode.type).toBe("type_identifier");
     expect(drink.filepath).toBe(burgers);
+  });
+
+  test("Crash Cases", () => {
+    const ccexportedSymbols = resolver.resolveSymbols(ccfile);
+    expect(ccexportedSymbols).toBeDefined();
+
+    const sprite = ccexportedSymbols.find((s) => s.name === "Sprite");
+    expect(sprite).toBeDefined();
+    expect(sprite.type).toBe("struct");
+    expect(sprite.specifiers).toEqual([]);
+    expect(sprite.qualifiers).toEqual([]);
+    expect(sprite.node.type).toBe("struct_specifier");
+    expect(sprite.identifierNode.type).toBe("type_identifier");
+    expect(sprite.filepath).toBe(crashcases);
+
+    const placeholderfunction = ccexportedSymbols.find(
+      (s) => s.name === "PlaceholderFunction",
+    );
+    expect(placeholderfunction).toBeDefined();
+    expect(placeholderfunction.type).toBe("function");
+    expect(placeholderfunction.specifiers).toEqual([]);
+    expect(placeholderfunction.qualifiers).toEqual([]);
+    expect(placeholderfunction.node.type).toBe("declaration");
+    expect(placeholderfunction.identifierNode.type).toBe("identifier");
+    expect(placeholderfunction.filepath).toBe(crashcases);
+
+    const gmtfwa = ccexportedSymbols.find(
+      (s) => s.name === "gMovementTypeFuncs_WanderAround",
+    );
+    expect(gmtfwa).toBeDefined();
+    expect(gmtfwa.type).toBe("variable");
+    expect(gmtfwa.specifiers).toEqual([]);
+    expect(gmtfwa.qualifiers).toEqual([]);
+    expect(gmtfwa.node.type).toBe("declaration");
+    expect(gmtfwa.identifierNode.type).toBe("identifier");
+    expect(gmtfwa.filepath).toBe(crashcases);
   });
 });

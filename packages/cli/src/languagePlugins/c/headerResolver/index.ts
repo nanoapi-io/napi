@@ -50,20 +50,22 @@ export class CHeaderResolver {
         const qualifiers = capture.node.children
           .filter((child) => child.type === "type_qualifier")
           .map((child) => child.text);
-        // Check if the node is a function or variable declaration
-        const type =
-          capture.node.descendantsOfType("function_declarator").length !== 0
-            ? "function"
-            : "variable";
         let currentNode = capture.node;
         // Traverse the tree to find the identifier node
         // This is a workaround for the fact that the identifier node is not always the first child
         // (e.g. in pointers or arrays)
         while (
+          !currentNode.childForFieldName("declarator") ||
           currentNode.childForFieldName("declarator").type !== "identifier"
         ) {
-          currentNode = currentNode.childForFieldName("declarator");
+          if (!currentNode.childForFieldName("declarator")) {
+            currentNode = currentNode.firstNamedChild;
+          } else {
+            currentNode = currentNode.childForFieldName("declarator");
+          }
         }
+        const type =
+          currentNode.type === "function_declarator" ? "function" : "variable";
         const idNode = currentNode.childForFieldName("declarator");
         exportedSymbols.push({
           name: idNode.text,

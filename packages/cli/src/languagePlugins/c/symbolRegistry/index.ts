@@ -130,9 +130,14 @@ export class CSymbolRegistry {
         // Traverse the tree to find the identifier node
         // cf. header resolver.
         while (
+          !currentNode.childForFieldName("declarator") ||
           currentNode.childForFieldName("declarator").type !== "identifier"
         ) {
-          currentNode = currentNode.childForFieldName("declarator");
+          if (!currentNode.childForFieldName("declarator")) {
+            currentNode = currentNode.firstNamedChild;
+          } else {
+            currentNode = currentNode.childForFieldName("declarator");
+          }
         }
         const name = currentNode.childForFieldName("declarator").text;
         let foundInRegistry = false;
