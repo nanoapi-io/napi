@@ -3,6 +3,7 @@ import { C_INCLUDE_QUERY, C_STANDARD_INCLUDE_QUERY } from "./queries.js";
 import { CSymbolRegistry } from "../symbolRegistry/index.js";
 import Parser from "tree-sitter";
 import { CFile } from "../symbolRegistry/types.js";
+import path from "path";
 
 export class CIncludeResolver {
   symbolRegistry: Map<string, CFile>;
@@ -15,11 +16,19 @@ export class CIncludeResolver {
     this.#inclusions = undefined;
   }
 
-  #getFile(filepath: string): CFile | undefined {
+  #getFile(filepath: string, sourcepath: string): CFile | undefined {
     const filepaths = Array.from(this.symbolRegistry.keys());
-    const corresponding = filepaths.find((f) => f.endsWith(filepath));
-    if (corresponding) {
-      return this.symbolRegistry.get(corresponding);
+    // 1. Check current file's directory
+    const sourceDir = path.dirname(sourcepath);
+    const pathfromrelative = path.join(sourceDir, filepath);
+    const corresponding1 = filepaths.find((f) => f === pathfromrelative);
+    if (corresponding1) {
+      return this.symbolRegistry.get(corresponding1);
+    }
+    // 2. Check from workspace root
+    const corresponding2 = filepaths.find((f) => f === filepath);
+    if (corresponding2) {
+      return this.symbolRegistry.get(corresponding2);
     }
     return undefined;
   }
@@ -48,9 +57,9 @@ export class CIncludeResolver {
     for (const node of includeNodes) {
       const path = node.node.text;
       inclusions.internal.push(path);
-      const file = this.#getFile(path);
-      if (file) {
-        for (const [name, symbol] of file.symbols) {
+      const includedfile = this.#getFile(path, file.path);
+      if (includedfile) {
+        for (const [name, symbol] of includedfile.symbols) {
           inclusions.symbols.set(name, symbol);
         }
       }
