@@ -2,7 +2,7 @@ import { CDependency, CDepFile, CDepSymbol } from "./types.js";
 import { CSymbolRegistry } from "../symbolRegistry/index.js";
 import { CIncludeResolver } from "../includeResolver/index.js";
 import { CInvocationResolver } from "../invocationResolver/index.js";
-import { CFile, Function, Symbol } from "../symbolRegistry/types.js";
+import { CFile, Symbol } from "../symbolRegistry/types.js";
 import { Invocations } from "../invocationResolver/types.js";
 import Parser from "tree-sitter";
 import { SymbolType } from "../headerResolver/types.js";
@@ -43,17 +43,17 @@ export class CDependencyFormatter {
         };
       }
       dependencies[filepath].symbols[id] = id;
-      if (symbol instanceof Function) {
-        const defpath = symbol.definitionPath;
-        if (!dependencies[defpath]) {
-          dependencies[defpath] = {
-            id: defpath,
-            isExternal: false,
-            symbols: {},
-          };
-        }
-        dependencies[defpath].symbols[id] = id;
-      }
+      // if (symbol instanceof Function) {
+      //   const defpath = symbol.definitionPath;
+      //   if (!dependencies[defpath]) {
+      //     dependencies[defpath] = {
+      //       id: defpath,
+      //       isExternal: false,
+      //       symbols: {},
+      //     };
+      //   }
+      //   dependencies[defpath].symbols[id] = id;
+      // }
     }
     return dependencies;
   }
@@ -83,13 +83,12 @@ export class CDependencyFormatter {
   #formatSymbols(fileSymbols: Map<string, Symbol>): Record<string, CDepSymbol> {
     const symbols: Record<string, CDepSymbol> = {};
     for (const [symName, symbol] of fileSymbols) {
-      const filepath = symbol.declaration.filepath;
       const id = symName;
       const dependencies =
         this.invocationResolver.getInvocationsForSymbol(symbol);
       if (!symbols[id]) {
         symbols[id] = {
-          id: filepath,
+          id: id,
           type: symbol.declaration.type as SymbolType,
           lineCount:
             symbol.declaration.node.endPosition.row -

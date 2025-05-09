@@ -16,16 +16,14 @@ describe("CDependencyFormatter", () => {
     expect(fmain).toBeDefined();
     expect(fmain.id).toBe(main);
     expect(fmain.dependencies[burgersh]).toBeDefined();
-    expect(fmain.dependencies[burgersc]).toBeDefined();
+    expect(fmain.dependencies[burgersc]).not.toBeDefined();
     expect(fmain.dependencies[personnelh]).toBeDefined();
     expect(fmain.dependencies["<stdio.h>"]).toBeDefined();
     expect(fmain.dependencies[personnelh].isExternal).toBe(false);
     expect(fmain.dependencies[burgersh].isExternal).toBe(false);
-    expect(fmain.dependencies[burgersc].isExternal).toBe(false);
     expect(fmain.dependencies["<stdio.h>"].isExternal).toBe(true);
     expect(fmain.dependencies[burgersh].symbols["Burger"]).toBeDefined();
     expect(fmain.dependencies[burgersh].symbols["create_burger"]).toBeDefined();
-    expect(fmain.dependencies[burgersc].symbols["create_burger"]).toBeDefined();
     expect(fmain.dependencies[personnelh].symbols["Employee"]).toBeDefined();
     expect(
       fmain.dependencies[personnelh].symbols["create_employee"],
@@ -46,11 +44,6 @@ describe("CDependencyFormatter", () => {
     );
     expect(
       fmain.symbols["main"].dependencies[burgersh].symbols["create_burger"],
-    ).toBe("create_burger");
-    expect(fmain.symbols["main"].dependencies[burgersc]).toBeDefined();
-    expect(fmain.symbols["main"].dependencies[burgersc].isExternal).toBe(false);
-    expect(
-      fmain.symbols["main"].dependencies[burgersc].symbols["create_burger"],
     ).toBe("create_burger");
     expect(fmain.symbols["main"].dependencies[personnelh]).toBeDefined();
     expect(fmain.symbols["main"].dependencies[personnelh].isExternal).toBe(
