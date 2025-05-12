@@ -16,9 +16,6 @@ jobs:
         with:
           deno-version: "2.x"
 
-      # - name: Install dependencies
-      #   run: deno install
-
       - name: Deno check
         run: deno check
 
@@ -39,9 +36,6 @@ jobs:
         with:
           deno-version: "2.x"
 
-      # - name: Install dependencies
-      #   run: deno install
-
       - name: Tests
         run: deno task test
 
@@ -55,9 +49,6 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: "2.x"
-
-      # - name: Install dependencies
-      #   run: deno install
 
       - name: Compile
         run: deno task compile:all
