@@ -14,13 +14,19 @@ export const C_DECLARATION_QUERY = new Parser.Query(
     (type_definition
     	type:[
         	(struct_specifier
+            name: (_)
             body: (_)) @struct
+            (struct_specifier !name)
             (struct_specifier !body)
             (enum_specifier
+            name: (_)
             body: (_)) @enum
+            (enum_specifier !name)
             (enum_specifier !body)
             (union_specifier
+            name: (_)
             body: (_)) @union
+            (union_specifier !name)
             (union_specifier !body)
             (type_identifier)
             (primitive_type)
@@ -36,13 +42,19 @@ export const C_DECLARATION_QUERY = new Parser.Query(
     (type_definition
     	type:[
         	(struct_specifier
+            name: (_)
             body: (_)) @struct
+            (struct_specifier !name)
             (struct_specifier !body)
             (enum_specifier
+            name: (_)
             body: (_)) @enum
+            (enum_specifier !name)
             (enum_specifier !body)
             (union_specifier
+            name: (_)
             body: (_)) @union
+            (union_specifier !name)
             (union_specifier !body)
             (type_identifier)
             (primitive_type)
