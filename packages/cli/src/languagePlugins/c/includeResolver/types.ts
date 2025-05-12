@@ -10,5 +10,5 @@ export interface Inclusions {
   /** The list of the paths of the internal imports */
   internal: string[];
   /** The list of include directives of the standard imports */
-  standard: Parser.SyntaxNode[];
+  standard: Map<string, Parser.SyntaxNode>;
 }

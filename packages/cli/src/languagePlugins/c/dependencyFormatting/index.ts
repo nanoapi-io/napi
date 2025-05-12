@@ -58,12 +58,9 @@ export class CDependencyFormatter {
     return dependencies;
   }
 
-  #formatStandardIncludes(
-    stdincludes: Parser.SyntaxNode[],
-  ): Record<string, CDependency> {
+  #formatStandardIncludes(stdincludes: string[]): Record<string, CDependency> {
     const dependencies: Record<string, CDependency> = {};
-    for (const include of stdincludes) {
-      const id = include.childForFieldName("path").text;
+    for (const id of stdincludes) {
       if (!dependencies[id]) {
         dependencies[id] = {
           id: id,
@@ -114,7 +111,7 @@ export class CDependencyFormatter {
     const fileDependencies =
       this.invocationResolver.getInvocationsForFile(filepath);
     const includes = this.includeResolver.getInclusions().get(filepath);
-    const stdincludes = includes.standard;
+    const stdincludes = Array.from(includes.standard.keys());
     const invokedDependencies = this.#formatDependencies(fileDependencies);
     const stdDependencies = this.#formatStandardIncludes(stdincludes);
     const allDependencies = {

@@ -46,7 +46,7 @@ export class CIncludeResolver {
       filepath: file.path,
       symbols: new Map(),
       internal: [],
-      standard: [],
+      standard: new Map(),
     };
 
     // Add the current file to the visited set to prevent infinite recursion
@@ -75,12 +75,17 @@ export class CIncludeResolver {
           inclusions.symbols.set(name, symbol);
         }
         inclusions.internal.push(...nestedInclusions.internal);
-        inclusions.standard.push(...nestedInclusions.standard);
+        for (const node of nestedInclusions.standard) {
+          inclusions.standard.set(node[0], node[1]);
+        }
       }
     }
 
     for (const node of standardIncludeNodes) {
-      inclusions.standard.push(node.node);
+      inclusions.standard.set(
+        node.node.childForFieldName("path").text,
+        node.node,
+      );
     }
 
     return inclusions;
