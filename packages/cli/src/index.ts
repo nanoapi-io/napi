@@ -11,5 +11,13 @@ if (process.env.NODE_ENV !== "development") {
 
 initCli();
 
-export const entryPointDirname = path.resolve(import.meta.dirname as string);
-export const app_dist = path.join(entryPointDirname, "..", "..", "app", "dist");
+const entryPointDirname: string = path.resolve(
+  import.meta.dirname as string,
+);
+export const app_dist: string = path.join(
+  entryPointDirname,
+  "..",
+  "..",
+  "app",
+  "dist",
+);

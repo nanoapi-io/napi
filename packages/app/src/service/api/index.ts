@@ -1,7 +1,7 @@
 import type {
   AuditManifest,
   DependencyManifest,
-  ExtractionNode,
+  SymbolsToExtract,
 } from "@napi/shared";
 
 export async function getDependencyManifest() {
@@ -33,14 +33,14 @@ export async function getAuditManifest() {
 }
 
 export async function runExtraction(
-  extractionNodes: ExtractionNode[],
+  symbolsToExtract: SymbolsToExtract,
 ): Promise<{ success: boolean }> {
   const response = await fetch("/api/extractSymbol/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(extractionNodes),
+    body: JSON.stringify(symbolsToExtract),
   });
 
   if (!response.ok || response.status !== 200) {

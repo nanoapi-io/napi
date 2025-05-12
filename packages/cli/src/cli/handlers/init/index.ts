@@ -74,6 +74,3 @@ export default {
   builder: {},
   handler,
 };
-
-// Export for testing
-export { generateConfig };

@@ -113,8 +113,11 @@ export function getExpandedFileNodeLabel(data: {
  * @param data - Object containing symbol name
  * @returns Symbol name as the collapsed label
  */
-export function getCollapsedSymbolNodeLabel(data: { symbolName: string }) {
-  return data.symbolName;
+export function getCollapsedSymbolNodeLabel(data: {
+  symbolName: string;
+  symbolType: string;
+}) {
+  return `${data.symbolName} (${data.symbolType})`;
 }
 
 /**

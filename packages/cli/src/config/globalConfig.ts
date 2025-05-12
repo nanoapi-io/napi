@@ -5,7 +5,7 @@ import { v4 } from "uuid";
 import { z } from "zod";
 import process from "node:process";
 
-export const globalConfigSchema = z.object({
+const globalConfigSchema = z.object({
   userId: z.string(),
 });
 
@@ -77,9 +77,4 @@ export function getOrCreateGlobalConfig() {
   }
 
   return config;
-}
-
-export function updateConfig(newConfig: z.infer<typeof globalConfigSchema>) {
-  const configPath = getConfigPath();
-  fs.writeFileSync(configPath, JSON.stringify(newConfig, null, 2));
 }
