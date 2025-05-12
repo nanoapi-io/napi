@@ -3,7 +3,10 @@ import path from "node:path";
 import type Parser from "tree-sitter";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
-export const csharpFilesFolder = path.join(__dirname, "csharpFiles");
+export const csharpFilesFolder = path.join(
+  import.meta.dirname as string,
+  "csharpFiles",
+);
 
 const csharpFilesMap = new Map<
   string,

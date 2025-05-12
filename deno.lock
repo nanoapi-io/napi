@@ -10,7 +10,6 @@
     "npm:@radix-ui/react-separator@^1.1.6": "1.1.6_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@radix-ui/react-slider@^1.3.4": "1.3.4_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@radix-ui/react-slot@^1.2.2": "1.2.2_@types+react@19.1.3_react@19.1.0",
-    "npm:@radix-ui/react-switch@^1.2.4": "1.2.4_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@radix-ui/react-toast@^1.2.13": "1.2.13_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@radix-ui/react-tooltip@^1.2.6": "1.2.6_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:@radix-ui/themes@^3.2.1": "3.2.1_react@19.1.0_react-dom@19.1.0__react@19.1.0_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3",
@@ -23,7 +22,6 @@
     "npm:@types/react@^19.1.3": "19.1.3",
     "npm:@types/yargs@^17.0.33": "17.0.33",
     "npm:@vitejs/plugin-react@^4.4.1": "4.4.1_vite@6.3.5__picomatch@4.0.2_@babel+core@7.27.1_@types+node@22.12.0",
-    "npm:autoprefixer@^10.4.21": "10.4.21_postcss@8.5.3",
     "npm:class-variance-authority@~0.7.1": "0.7.1",
     "npm:clsx@^2.1.1": "2.1.1",
     "npm:cytoscape-fcose@^2.2.0": "2.2.0_cytoscape@3.31.1",
@@ -34,10 +32,8 @@
     "npm:http-proxy-middleware@^3.0.5": "3.0.5",
     "npm:lucide-react@0.508": "0.508.0_react@19.1.0",
     "npm:react-dom@^19.1.0": "19.1.0_react@19.1.0",
-    "npm:react-icons@5.5.0": "5.5.0_react@19.1.0",
     "npm:react-resizable-panels@^3.0.1": "3.0.1_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:react-router@^7.5.3": "7.5.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
-    "npm:react-toastify@^11.0.5": "11.0.5_react@19.1.0_react-dom@19.1.0__react@19.1.0",
     "npm:react@^19.1.0": "19.1.0",
     "npm:shadcn@latest": "2.5.0_@babel+core@7.27.1_@types+node@22.12.0",
     "npm:tailwind-merge@^3.2.0": "3.2.0",
@@ -49,6 +45,8 @@
     "npm:uuid@^11.1.0": "11.1.0",
     "npm:vite@*": "6.3.5_picomatch@4.0.2_@types+node@22.12.0",
     "npm:vite@^6.3.5": "6.3.5_picomatch@4.0.2_@types+node@22.12.0",
+    "npm:vitest@*": "3.1.3_vite@6.3.5__picomatch@4.0.2_@types+node@22.12.0",
+    "npm:vitest@3.1.3": "3.1.3_vite@6.3.5__picomatch@4.0.2_@types+node@22.12.0",
     "npm:vitest@^3.1.3": "3.1.3_vite@6.3.5__picomatch@4.0.2_@types+node@22.12.0",
     "npm:yargs@^17.7.2": "17.7.2",
     "npm:zod@^3.24.4": "3.24.4"
@@ -2489,26 +2487,6 @@
         "@types/react"
       ]
     },
-    "@radix-ui/react-switch@1.2.4_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0": {
-      "integrity": "sha512-yZCky6XZFnR7pcGonJkr9VyNRu46KcYAbyg1v/gVVCZUr8UJ4x+RpncC27hHtiZ15jC+3WS8Yg/JSgyIHnYYsQ==",
-      "dependencies": [
-        "@radix-ui/primitive",
-        "@radix-ui/react-compose-refs@1.1.2_@types+react@19.1.3_react@19.1.0",
-        "@radix-ui/react-context@1.1.2_@types+react@19.1.3_react@19.1.0",
-        "@radix-ui/react-primitive@2.1.2_@types+react@19.1.3_@types+react-dom@19.1.3__@types+react@19.1.3_react@19.1.0_react-dom@19.1.0__react@19.1.0",
-        "@radix-ui/react-use-controllable-state@1.2.2_@types+react@19.1.3_react@19.1.0",
-        "@radix-ui/react-use-previous@1.1.1_@types+react@19.1.3_react@19.1.0",
-        "@radix-ui/react-use-size@1.1.1_@types+react@19.1.3_react@19.1.0",
-        "@types/react",
-        "@types/react-dom",
-        "react",
-        "react-dom"
-      ],
-      "optionalPeers": [
-        "@types/react",
-        "@types/react-dom"
-      ]
-    },
     "@radix-ui/react-switch@1.2.4_react@19.1.0_react-dom@19.1.0__react@19.1.0": {
       "integrity": "sha512-yZCky6XZFnR7pcGonJkr9VyNRu46KcYAbyg1v/gVVCZUr8UJ4x+RpncC27hHtiZ15jC+3WS8Yg/JSgyIHnYYsQ==",
       "dependencies": [
@@ -3643,19 +3621,6 @@
         "tslib"
       ]
     },
-    "autoprefixer@10.4.21_postcss@8.5.3": {
-      "integrity": "sha512-O+A6LWV5LDHSJD3LjHYoNi4VLsj/Whi7k6zG12xTYaU4cQ8oxQGckXNX8cRHK5yOZ/ppVHe0ZBXGzSV9jXdVbQ==",
-      "dependencies": [
-        "browserslist",
-        "caniuse-lite",
-        "fraction.js",
-        "normalize-range",
-        "picocolors",
-        "postcss",
-        "postcss-value-parser"
-      ],
-      "bin": true
-    },
     "balanced-match@1.0.2": {
       "integrity": "sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw=="
     },
@@ -4143,9 +4108,6 @@
     },
     "forwarded@0.2.0": {
       "integrity": "sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow=="
-    },
-    "fraction.js@4.3.7": {
-      "integrity": "sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew=="
     },
     "fresh@2.0.0": {
       "integrity": "sha512-Rx/WycZ60HOaqLKAi6cHRKKI7zxWbJ31MhntmtwMoaTeF7XFH9hhBp8vITaMidfljRQ6eYWCKkaTK+ykVJHP2A=="
@@ -4666,9 +4628,6 @@
     "node-releases@2.0.19": {
       "integrity": "sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw=="
     },
-    "normalize-range@0.1.2": {
-      "integrity": "sha512-bdok/XvKII3nUpklnV6P2hxtMNrCboOjAcyBuQnWEhO665FwrSNRxU+AqpsyvO6LgGYPspN+lu5CLtw4jPRKNA=="
-    },
     "npm-run-path@5.3.0": {
       "integrity": "sha512-ppwTtiJZq0O/ai0z7yfudtBpWIoxM8yE6nHi1X47eFR2EWORqfbu6CnPlNsjeN683eT0qG6H/Pyf9fCcvjnnnQ==",
       "dependencies": [
@@ -4785,9 +4744,6 @@
     },
     "picomatch@4.0.2": {
       "integrity": "sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg=="
-    },
-    "postcss-value-parser@4.2.0": {
-      "integrity": "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ=="
     },
     "postcss@8.5.3": {
       "integrity": "sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==",
@@ -4981,12 +4937,6 @@
         "scheduler"
       ]
     },
-    "react-icons@5.5.0_react@19.1.0": {
-      "integrity": "sha512-MEFcXdkP3dLo8uumGI5xN3lDFNsRtrjbOEKDLD7yv76v4wpnEq2Lt2qeHaQOr34I/wPN3s3+N08WkQ+CW37Xiw==",
-      "dependencies": [
-        "react"
-      ]
-    },
     "react-refresh@0.17.0": {
       "integrity": "sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ=="
     },
@@ -5113,14 +5063,6 @@
       ],
       "optionalPeers": [
         "@types/react"
-      ]
-    },
-    "react-toastify@11.0.5_react@19.1.0_react-dom@19.1.0__react@19.1.0": {
-      "integrity": "sha512-EpqHBGvnSTtHYhCPLxML05NLY2ZX0JURbAdNYa6BUkk+amz4wbKBQvoKQAB0ardvSarUBuY4Q4s1sluAzZwkmA==",
-      "dependencies": [
-        "clsx",
-        "react",
-        "react-dom"
       ]
     },
     "react@19.1.0": {
@@ -5873,6 +5815,9 @@
     }
   },
   "workspace": {
+    "dependencies": [
+      "npm:vitest@^3.1.3"
+    ],
     "members": {
       "packages/app": {
         "dependencies": [
@@ -5884,7 +5829,6 @@
           "npm:@radix-ui/react-separator@^1.1.6",
           "npm:@radix-ui/react-slider@^1.3.4",
           "npm:@radix-ui/react-slot@^1.2.2",
-          "npm:@radix-ui/react-switch@^1.2.4",
           "npm:@radix-ui/react-toast@^1.2.13",
           "npm:@radix-ui/react-tooltip@^1.2.6",
           "npm:@radix-ui/themes@^3.2.1",
@@ -5894,17 +5838,14 @@
           "npm:@types/react-router@^5.1.20",
           "npm:@types/react@^19.1.3",
           "npm:@vitejs/plugin-react@^4.4.1",
-          "npm:autoprefixer@^10.4.21",
           "npm:class-variance-authority@~0.7.1",
           "npm:clsx@^2.1.1",
           "npm:cytoscape-fcose@^2.2.0",
           "npm:cytoscape@3.31.1",
           "npm:lucide-react@0.508",
           "npm:react-dom@^19.1.0",
-          "npm:react-icons@5.5.0",
           "npm:react-resizable-panels@^3.0.1",
           "npm:react-router@^7.5.3",
-          "npm:react-toastify@^11.0.5",
           "npm:react@^19.1.0",
           "npm:tailwind-merge@^3.2.0",
           "npm:tailwindcss@^4.1.5",
@@ -5924,7 +5865,6 @@
           "npm:tree-sitter-python@~0.23.6",
           "npm:tree-sitter@~0.22.4",
           "npm:uuid@^11.1.0",
-          "npm:vitest@^3.1.3",
           "npm:yargs@^17.7.2",
           "npm:zod@^3.24.4"
         ]

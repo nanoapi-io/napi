@@ -11,10 +11,8 @@ our application's theme.
 
 ## Important Notes
 
-- Do not modify these component files directly
-- If customization is needed, extend the components in a separate file
-- Updates to these components should be done by updating the shadcn/ui packages
-  and re-importing
+Modification of these files can have consequenses on other shadcn/ui components.
+Make sure to double check before mofifying these
 
 For more information on how to use or customize these components, refer to the
 [shadcn/ui documentation](https://ui.shadcn.com/docs).

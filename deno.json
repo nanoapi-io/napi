@@ -8,8 +8,10 @@
     "compile:cli": "deno task --config packages/cli/deno.json compile",
     "compile": "deno task --config packages/app/deno.json build && deno task --config packages/cli/deno.json compile",
     "compile:all": "deno task --config packages/app/deno.json build && deno task --config packages/cli/deno.json 'compile-*'",
-    "test": "deno test",
-    "lint": "deno lint",
-    "fmt": "deno fmt"
+    "test": "deno run -A npm:vitest",
+    "lint": "deno fmt && deno check &&deno lint --fix"
+  },
+  "imports": {
+    "vitest": "npm:vitest@^3.1.3"
   }
 }
