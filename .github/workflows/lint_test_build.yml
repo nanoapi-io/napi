@@ -57,4 +57,7 @@ jobs:
           deno-version: "2.x"
 
       - name: Install dependencies
-        run: deno compile
+        run: deno install
+
+      - name: Build
+        run: deno task compile
