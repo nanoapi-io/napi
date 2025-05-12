@@ -33,7 +33,7 @@ export async function getAuditManifest() {
 }
 
 export async function runExtraction(
-  symbolsToExtract: SymbolsToExtract[],
+  symbolsToExtract: SymbolsToExtract,
 ): Promise<{ success: boolean }> {
   const response = await fetch("/api/extractSymbol/", {
     method: "POST",

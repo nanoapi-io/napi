@@ -3,6 +3,7 @@ import { Link, Outlet, useParams } from "react-router";
 import {
   getAuditManifest,
   getDependencyManifest,
+  runExtraction,
 } from "../../service/api/index.ts";
 import type {
   AuditManifest,
@@ -102,15 +103,36 @@ export default function BaseAuditPage() {
     [],
   );
 
-  function extractSymbols() {
+  async function extractSymbols() {
     setBusy(true);
-    // TODO: Implement
-    setBusy(false);
+    const extractionToast = toast({
+      title: "Extracting symbols",
+      description: "This may take a while...",
+    });
+    try {
+      await runExtraction(symbolsToExtract);
+      extractionToast.update({
+        id: extractionToast.id,
+        description: "Symbols extracted successfully",
+      });
+    } catch (_error) {
+      extractionToast.update({
+        id: extractionToast.id,
+        description: "Failed to extract symbols",
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
   }
 
   useEffect(() => {
     async function handleOnLoad() {
       setBusy(true);
+      const allPromiseToast = toast({
+        title: "Loading manifests",
+        description: "This may take a while...",
+      });
       try {
         const dependencyManifestPromise = getDependencyManifest();
         const auditManifestPromise = getAuditManifest();
@@ -125,13 +147,14 @@ export default function BaseAuditPage() {
         setDependencyManifest(dependencyManifest);
         setAuditManifest(auditManifest);
 
-        toast({
-          title: "Successfully loaded project overview",
+        allPromiseToast.update({
+          id: allPromiseToast.id,
+          description: "Manifests loaded successfully",
         });
-      } catch (error) {
-        toast({
-          title: "Failed to load project overview",
-          description: error instanceof Error ? error.message : "Unknown error",
+      } catch (_error) {
+        allPromiseToast.update({
+          id: allPromiseToast.id,
+          description: "Failed to load manifests",
           variant: "destructive",
         });
       } finally {
