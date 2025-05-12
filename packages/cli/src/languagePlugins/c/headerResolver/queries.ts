@@ -1,7 +1,9 @@
 import { cParser } from "../../../helpers/treeSitter/parsers.js";
 import Parser from "tree-sitter";
 
-/** Query that catches every declaration except typedefs in a header file */
+/** Query that catches every declaration including macros in a header file
+ * Does not catch function definitions
+ */
 export const C_DECLARATION_QUERY = new Parser.Query(
   cParser.getLanguage(),
   `
