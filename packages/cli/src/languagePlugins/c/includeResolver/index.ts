@@ -38,16 +38,19 @@ export class CIncludeResolver {
    * @param file The file to resolve inclusions for.
    * @returns The inclusions of the file.
    */
-  #resolveInclusions(file: {
-    path: string;
-    rootNode: Parser.SyntaxNode;
-  }): Inclusions {
+  #resolveInclusions(
+    file: { path: string; rootNode: Parser.SyntaxNode },
+    visitedFiles = new Set<string>(),
+  ): Inclusions {
     const inclusions: Inclusions = {
       filepath: file.path,
       symbols: new Map(),
       internal: [],
       standard: [],
     };
+
+    // Add the current file to the visited set to prevent infinite recursion
+    visitedFiles.add(file.path);
 
     const includeNodes = C_INCLUDE_QUERY.captures(file.rootNode);
     const standardIncludeNodes = C_STANDARD_INCLUDE_QUERY.captures(
@@ -58,10 +61,21 @@ export class CIncludeResolver {
       const path = node.node.text;
       inclusions.internal.push(path);
       const includedfile = this.#getFile(path, file.path);
-      if (includedfile) {
+      if (includedfile && !visitedFiles.has(includedfile.file.path)) {
+        // Add the included file's symbols to the current file's symbols
         for (const [name, symbol] of includedfile.symbols) {
           inclusions.symbols.set(name, symbol);
         }
+        // Recursively resolve inclusions for the included file
+        const nestedInclusions = this.#resolveInclusions(
+          includedfile.file,
+          visitedFiles,
+        );
+        for (const [name, symbol] of nestedInclusions.symbols) {
+          inclusions.symbols.set(name, symbol);
+        }
+        inclusions.internal.push(...nestedInclusions.internal);
+        inclusions.standard.push(...nestedInclusions.standard);
       }
     }
 
