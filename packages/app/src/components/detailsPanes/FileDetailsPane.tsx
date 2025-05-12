@@ -1,38 +1,19 @@
-import {
-  type FileAuditManifest,
-  type FileDependencyManifest,
-  type Metric,
-  metricCharacterCount,
-  metricCodeCharacterCount,
-  metricCodeLineCount,
-  metricCyclomaticComplexity,
-  metricDependencyCount,
-  metricDependentCount,
-  metricLinesCount,
-  type SymbolAuditManifest,
-  type SymbolDependencyManifest,
-} from "@napi/shared";
+import type { FileAuditManifest, FileDependencyManifest } from "@napi/shared";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./shadcn/Sheet.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "./shadcn/Card.tsx";
-import {
-  Check,
-  Code,
-  File,
-  Pickaxe,
-  SearchCode,
-  TriangleAlert,
-} from "lucide-react";
-import { Alert, AlertDescription } from "./shadcn/Alert.tsx";
-import { ScrollArea } from "./shadcn/Scrollarea.tsx";
-import { Button } from "./shadcn/Button.tsx";
+} from "../shadcn/Sheet.tsx";
+import { Card, CardContent, CardHeader, CardTitle } from "../shadcn/Card.tsx";
+import { Code, File, Pickaxe, SearchCode } from "lucide-react";
+import { ScrollArea } from "../shadcn/Scrollarea.tsx";
+import { Button } from "../shadcn/Button.tsx";
 import { Link } from "react-router";
-import DisplayNameWithTooltip from "../components/DisplayNameWithTootip.tsx";
+import DisplayNameWithTooltip from "../DisplayNameWithTootip.tsx";
+import Metrics from "./metrics.tsx";
+import AlertBadge from "./alertBadge.tsx";
 
 export default function FileDetailsPane(props: {
   context: {
@@ -42,76 +23,6 @@ export default function FileDetailsPane(props: {
   onClose: () => void;
   onAddSymbolsForExtraction: (filePath: string, symbolIds: string[]) => void;
 }) {
-  function AlertBadge(props: { count: number }) {
-    return (
-      <div className="flex items-center space-x-2">
-        {props.count > 0
-          ? (
-            <>
-              <TriangleAlert color="red" />
-              {props.count}
-            </>
-          )
-          : <Check color="green" />}
-      </div>
-    );
-  }
-
-  function Metrics(props: {
-    dependencyManifest:
-      | FileDependencyManifest
-      | SymbolDependencyManifest
-      | undefined;
-    auditManifest: FileAuditManifest | SymbolAuditManifest | undefined;
-  }) {
-    function metricToHumanString(metric: string) {
-      switch (metric) {
-        case metricLinesCount:
-          return "Lines";
-        case metricCodeLineCount:
-          return "Code Lines";
-        case metricCharacterCount:
-          return "Characters";
-        case metricCodeCharacterCount:
-          return "Code Characters";
-        case metricDependencyCount:
-          return "Dependencies";
-        case metricDependentCount:
-          return "Dependents";
-        case metricCyclomaticComplexity:
-          return "Cyclomatic Complexity";
-        default:
-          return metric;
-      }
-    }
-
-    return (
-      <div className="flex flex-col space-y-2">
-        {Object.entries(props.dependencyManifest?.metrics || {}).map((
-          [key, value],
-        ) => (
-          <div className="flex flex-col space-y-2">
-            <div key={key} className="flex items-center justify-between">
-              <div className="text-sm font-medium">
-                {metricToHumanString(key)}
-              </div>
-              <div>
-                {value}
-              </div>
-            </div>
-            {(props.auditManifest?.alerts || {})?.[key] && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {props.auditManifest?.alerts?.[key]?.message?.long}
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  }
-
   function markAllSymbolsForExtraction() {
     if (!props.context?.fileDependencyManifest) {
       return;
@@ -144,12 +55,20 @@ export default function FileDetailsPane(props: {
         <SheetContent className="flex flex-col space-y-2">
           <SheetHeader>
             <SheetTitle>
-              <DisplayNameWithTooltip
-                name={props.context?.fileDependencyManifest.filePath || ""}
-                maxChar={30}
-              />
+              <div className="flex items-center space-x-2">
+                <File />
+                <DisplayNameWithTooltip
+                  name={props.context?.fileDependencyManifest.filePath || ""}
+                  maxChar={30}
+                />
+              </div>
             </SheetTitle>
-            <Button asChild variant="secondary" size="sm">
+            <Button
+              asChild
+              variant="secondary"
+              size="sm"
+              onClick={props.onClose}
+            >
               <Link
                 to={`/audit/${
                   encodeURIComponent(
@@ -240,6 +159,19 @@ export default function FileDetailsPane(props: {
                         />
                       </div>
                     </CardTitle>
+                    <Button asChild variant="secondary" size="sm">
+                      <Link
+                        to={`/audit/${
+                          encodeURIComponent(
+                            props.context?.fileDependencyManifest.filePath ||
+                              "",
+                          )
+                        }/${encodeURIComponent(symbol.id)}`}
+                      >
+                        <SearchCode />
+                        View graph for this symbol
+                      </Link>
+                    </Button>
                     <Button
                       onClick={() => markSymbolForExtraction(symbol.id)}
                       variant="secondary"

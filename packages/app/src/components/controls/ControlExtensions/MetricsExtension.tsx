@@ -20,7 +20,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../../shadcn/Dropdownmenu.tsx";
-import { ChevronUp } from "lucide-react";
 
 // Extension for the controls in the project view
 export default function MetricsExtension(props: {
@@ -54,7 +53,7 @@ export default function MetricsExtension(props: {
     if (metric === metricCyclomaticComplexity) {
       return "Complexity";
     } else {
-      return "No Metric";
+      return "None";
     }
   }
 
@@ -67,7 +66,6 @@ export default function MetricsExtension(props: {
               variant="ghost"
               disabled={props.busy}
             >
-              <ChevronUp />
               {getMetricLabel(metric)}
             </Button>
           </TooltipTrigger>
@@ -84,7 +82,7 @@ export default function MetricsExtension(props: {
             { metric: metricCyclomaticComplexity, label: "Complexity" },
           ] as { metric: Metric | undefined; label: string }[]).map((val) => (
             <DropdownMenuItem
-              key={val.metric}
+              key={val.label}
               onClick={() => props.metricState?.setMetric?.(val.metric)}
             >
               {val.label}

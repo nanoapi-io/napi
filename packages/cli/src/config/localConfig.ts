@@ -58,7 +58,7 @@ export const localConfigSchema = z.object({
     .optional(),
 });
 
-export const napiConfigFileName = ".napirc";
+const napiConfigFileName = ".napirc";
 
 export function getConfigFromWorkDir(workdir: string) {
   const napircPath = path.join(workdir, napiConfigFileName);

@@ -744,6 +744,7 @@ function ExplorerNode(props: {
       {showChildren &&
         Array.from(props.node.children.values()).map((child) => (
           <ExplorerNode
+            key={child.id}
             node={child}
             level={props.level + 1}
             onHighlightInCytoscape={props.onHighlightInCytoscape}

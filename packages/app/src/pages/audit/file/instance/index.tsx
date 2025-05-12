@@ -1,256 +1,210 @@
-import { useContext, useEffect, useRef, useState } from "react";
-import cytoscape, { type Core } from "cytoscape";
-import Controls from "../../../../components/Cytoscape/Controls.tsx";
-import GraphDepthExtension from "../../../../components/Cytoscape/ControlExtensions/GraphDepthExtension.tsx";
-import SymbolContextMenu from "../../../../components/Cytoscape/contextMenu/SymbolContextMenu.tsx";
-import { useNavigate, useOutletContext, useParams } from "react-router";
-import fcose from "cytoscape-fcose";
-import { ThemeContext } from "../../../../contexts/ThemeContext.tsx";
+import { useEffect, useRef, useState } from "react";
+import Controls from "../../../../components/controls/Controls.tsx";
+import GraphDepthExtension from "../../../../components/controls/ControlExtensions/GraphDepthExtension.tsx";
+import SymbolContextMenu from "../../../../components/contextMenu/SymbolContextMenu.tsx";
 import {
-  getCyStyle,
-  getNodeLabel,
-  layout,
-  type NodeElementDefinition,
-} from "../../../../helpers/cytoscape/views/auditFile.ts";
-import { getInstanceCyElements } from "../../../../helpers/cytoscape/views/auditInstance.ts";
-import { CytoscapeSkeleton } from "../../../../components/Cytoscape/Skeleton.tsx";
+  useNavigate,
+  useOutletContext,
+  useParams,
+  useSearchParams,
+} from "react-router";
 import type { AuditContext } from "../../base.tsx";
-import SymbolDetailsPane from "../../../../components/SymbolDetailsPane.tsx";
-
-const DEFAULT_DEPENDENCY_DEPTH = 1;
-const DEFAULT_DEPENDENT_DEPTH = 1;
+import SymbolDetailsPane from "../../../../components/detailsPanes/SymbolDetailsPane.tsx";
+import { useTheme } from "../../../../contexts/ThemeProvider.tsx";
+import type {
+  FileAuditManifest,
+  FileDependencyManifest,
+  SymbolAuditManifest,
+  SymbolDependencyManifest,
+} from "@napi/shared";
+import { SymbolDependencyVisualizer } from "../../../../helpers/cytoscape/symbolDependencyVisualizer/index.ts";
 
 export default function AuditInstancePage() {
   const navigate = useNavigate();
+
+  const { theme } = useTheme();
+
   const params = useParams<{ file: string; instance: string }>();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const context = useOutletContext<AuditContext>();
-  const themeContext = useContext(ThemeContext);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [cyInstance, setCyInstance] = useState<Core | undefined>(undefined);
-
-  const [dependencyDepth, setDependencyDepth] = useState(1);
-  const [dependentDepth, setDependentDepth] = useState(1);
-  const [depLoading, setDepLoading] = useState(false);
-
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const [contextMenuSymbolId, setContextMenuSymbolId] = useState<
-    string | undefined
+  const [busy, setBusy] = useState<boolean>(true);
+  const [symbolVisualizer, setSymbolVisualizer] = useState<
+    SymbolDependencyVisualizer | undefined
   >(undefined);
 
-  const [detailsPaneSymbolId, setDetailsPaneSymbolId] = useState<
-    string | undefined
+  const dependencyDepthFromUrl =
+    (searchParams.get("dependencyDepth") || undefined) as number | undefined;
+  const dependentDepthFromUrl =
+    (searchParams.get("dependentDepth") || undefined) as number | undefined;
+
+  const [dependencyDepth, setDependencyDepth] = useState<number>(
+    dependencyDepthFromUrl || 3,
+  );
+  const [dependentDepth, setDependentDepth] = useState<number>(
+    dependentDepthFromUrl || 0,
+  );
+
+  function handleDependencyDepthChange(depth: number) {
+    setSearchParams({ dependencyDepth: depth.toString() });
+    setDependencyDepth(depth);
+    // TODO do something with the symbolVisualizer
+  }
+
+  function handleDependentDepthChange(depth: number) {
+    setSearchParams({ dependentDepth: depth.toString() });
+    setDependentDepth(depth);
+    // TODO do something with the symbolVisualizer
+  }
+
+  const [contextMenu, setContextMenu] = useState<
+    {
+      position: { x: number; y: number };
+      fileDependencyManifest: FileDependencyManifest;
+      symbolDependencyManifest: SymbolDependencyManifest;
+    } | undefined
   >(undefined);
 
-  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
+  const [detailsPane, setDetailsPane] = useState<
+    {
+      fileDependencyManifest: FileDependencyManifest;
+      symbolDependencyManifest: SymbolDependencyManifest;
+      fileAuditManifest: FileAuditManifest;
+      symbolAuditManifest: SymbolAuditManifest;
+    } | undefined
+  >(undefined); // Hook to update highlight node in the graph
 
-  // Initialize and cleanup Cytoscape
+  // On mount useEffect
   useEffect(() => {
-    if (context.busy) return;
+    setBusy(true);
 
-    if (cyInstance) {
-      cyInstance.destroy();
-      setCyInstance(undefined);
+    if (!params.file || !params.instance) {
+      return;
     }
 
-    const cy = initializeCytoscape();
-    setCyInstance(cy);
-
-    return () => {
-      cy.destroy();
-      setCyInstance(undefined);
-    };
-  }, [context.busy, params.file]);
-
-  // Update style when theme changes
-  useEffect(() => {
-    cyInstance?.style(getCyStyle(themeContext.theme));
-  }, [themeContext.changeTheme]);
-
-  // Update elements when dependency depth or dependent depth changes
-  useEffect(() => {
-    if (cyInstance) {
-      // Update loading state
-      setDepLoading(true);
-
-      // This function lets us wait for the next animation frame before updating the elements
-      // This allows us to show the button loading state before blocking
-      // the main thread with the cytoscape operations
-      setTimeout(() => {
-        // Remove existing elements
-        cyInstance.elements().remove();
-
-        // Add new elements
-        const elements = getInstanceCyElements(
-          context.dependencyManifest,
-          params.file as string,
-          params.instance as string,
-          dependencyDepth,
-          dependentDepth,
-        );
-        cyInstance.add(elements);
-
-        cyInstance.one("layoutstop", () => {
-          setDepLoading(false);
-        });
-
-        cyInstance.layout(layout).run();
-      }, 50);
-    }
-  }, [dependencyDepth, dependentDepth]);
-
-  function initializeCytoscape() {
-    cytoscape.use(fcose);
-    const cy = cytoscape();
-    cy.mount(containerRef.current as Element);
-
-    // Apply style
-    cy.style(getCyStyle(themeContext.theme));
-
-    // Add elements
-    const elements = getInstanceCyElements(
+    const symbolVisualizer = new SymbolDependencyVisualizer(
+      containerRef.current as HTMLElement,
+      params.file,
+      params.instance,
+      dependencyDepth,
+      dependentDepth,
       context.dependencyManifest,
-      params.file as string,
-      params.instance as string,
-      DEFAULT_DEPENDENCY_DEPTH,
-      DEFAULT_DEPENDENT_DEPTH,
+      context.auditManifest,
+      {
+        theme: theme,
+        onAfterNodeRightClick: (value: {
+          position: { x: number; y: number };
+          filePath: string;
+          symbolId: string;
+        }) => {
+          const fileDependencyManifest =
+            context.dependencyManifest[value.filePath];
+          const symbolDependencyManifest =
+            fileDependencyManifest.symbols[value.symbolId];
+          setContextMenu({
+            position: value.position,
+            fileDependencyManifest,
+            symbolDependencyManifest,
+          });
+        },
+        onAfterNodeDblClick: (filePath: string, symbolId: string) => {
+          const urlEncodedFileName = encodeURIComponent(
+            filePath,
+          );
+          const urlEncodedSymbolId = encodeURIComponent(
+            symbolId,
+          );
+          const urlEncodedSymbolName =
+            `/audit/${urlEncodedFileName}/${urlEncodedSymbolId}`;
+
+          navigate(urlEncodedSymbolName);
+        },
+      },
     );
-    cy.add(elements);
 
-    // Apply layout
-    cy.layout(layout).run();
+    setSymbolVisualizer(symbolVisualizer);
 
-    // Add event listeners
-    addEventListeners(cy);
+    setBusy(false);
 
-    return cy;
-  }
+    // Cleanup on unmount
+    return () => {
+      symbolVisualizer?.cy.destroy();
+      setSymbolVisualizer(undefined);
+    };
+  }, [
+    context.dependencyManifest,
+    context.auditManifest,
+    params.file,
+    params.instance,
+    dependencyDepth,
+    dependentDepth,
+  ]);
 
-  function addEventListeners(cy: Core) {
-    // Toggle node expansion on tap
-    cy.on("tap", "node", (evt) => {
-      const node = evt.target;
-      const data = node.data() as NodeElementDefinition["data"];
-
-      const isExpanded = !data.isExpanded;
-
-      const label = getNodeLabel({
-        isExpanded,
-        isExternal: data.isExternal,
-        type: data.type,
-        fileName: data.customData.fileName,
-        instance: data.customData.instance,
-        errorMessages: data.customData.errorMessages,
-        warningMessages: data.customData.warningMessages,
-      });
-
-      node.data({ label, isExpanded });
-    });
-
-    // Navigate to file/instance on double tap
-    cy.on("dbltap", "node", (evt) => {
-      const node = evt.target;
-      const data = node.data() as NodeElementDefinition["data"];
-
-      if (data.isExternal) return;
-
-      const urlEncodedFileName = encodeURIComponent(data.customData.fileName);
-      let url = `/audit/${urlEncodedFileName}`;
-
-      if (data.type === "instance" && data.customData.instance) {
-        const urlEncodedInstance = encodeURIComponent(
-          data.customData.instance.name,
-        );
-        url += `/${urlEncodedInstance}`;
+  useEffect(() => {
+    if (symbolVisualizer) {
+      if (context.highlightedCytoscapeRef) {
+        symbolVisualizer.highlightNode(context.highlightedCytoscapeRef);
+      } else {
+        symbolVisualizer.unhighlightNodes();
       }
-
-      navigate(url);
-    });
-
-    // Show context menu on right click
-    cy.on("cxttap", "node", (evt) => {
-      const node = evt.target;
-      const data = node.data() as NodeElementDefinition["data"];
-
-      if (data.customData.fileName !== params.file) {
-        // ignore clicks on nodes from other files
-        return;
-      }
-
-      setContextMenuPosition(node.renderedPosition());
-      setContextMenuOpen(true);
-      setContextMenuSymbolId(data.customData.instance?.name);
-    });
-
-    return cy;
-  }
-
-  function handleLayout() {
-    cyInstance?.makeLayout(layout).run();
-  }
+    }
+  }, [context.highlightedCytoscapeRef]);
 
   return (
     <div className="relative w-full h-full">
-      <div ref={containerRef} className="relative w-full h-full z-10" />
+      {/* This is the container for Cytoscape */}
+      {/* It is important to set the width and height to 100% */}
+      {/* Otherwise, Cytoscape will not render correctly */}
+      <div ref={containerRef} className="absolute w-full h-full z-10" />
 
-      {context.busy || !cyInstance
-        ? <CytoscapeSkeleton />
-        : (
-          <Controls busy={false} cy={cyInstance} onLayout={handleLayout}>
-            {/* TODO: Fix data shape for instane-level view and then uncomment */}
-            {
-              /* <FiltersExtension
-            cy={cyInstance}
-            busy={context.busy}
-            onLayout={handleLayout}
-            /> */
-            }
-            <GraphDepthExtension
-              cy={cyInstance}
-              busy={depLoading}
-              dependencyState={{
-                depth: dependencyDepth,
-                setDepth: setDependencyDepth,
-              }}
-              dependentState={{
-                depth: dependentDepth,
-                setDepth: setDependentDepth,
-              }}
-            />
-          </Controls>
-        )}
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
+        <Controls
+          busy={context.busy || busy}
+          cy={symbolVisualizer?.cy}
+          onLayout={() => symbolVisualizer?.layoutGraph(symbolVisualizer.cy)}
+        >
+          <GraphDepthExtension
+            busy={context.busy || busy}
+            dependencyState={{
+              depth: dependencyDepth,
+              setDepth: handleDependencyDepthChange,
+            }}
+            dependentState={{
+              depth: dependentDepth,
+              setDepth: handleDependentDepthChange,
+            }}
+          />
+        </Controls>
+      </div>
 
-      {contextMenuSymbolId && (
-        <SymbolContextMenu
-          position={contextMenuPosition}
-          fileDependencyManifest={context
-            .dependencyManifest[params.file as string]}
-          symbolId={contextMenuSymbolId}
-          open={contextMenuOpen}
-          onOpenChange={setContextMenuOpen}
-          setDetailsPaneOpen={(open) => {
-            setDetailsPaneOpen(open);
-            if (open) {
-              setDetailsPaneSymbolId(contextMenuSymbolId);
-            }
-          }}
-          setExtractionNodes={context.actions.updateExtractionNodes}
-        />
-      )}
+      <SymbolContextMenu
+        context={contextMenu}
+        onClose={() => setContextMenu(undefined)}
+        onOpenDetails={(filePath, symbolId) => {
+          const fileDependencyManifest = context.dependencyManifest[filePath];
+          const symbolDependencyManifest =
+            fileDependencyManifest.symbols[symbolId];
+          const fileAuditManifest = context.auditManifest[filePath];
+          const symbolAuditManifest = fileAuditManifest.symbols[symbolId];
+          setDetailsPane({
+            fileDependencyManifest,
+            symbolDependencyManifest,
+            fileAuditManifest,
+            symbolAuditManifest,
+          });
+        }}
+      />
 
-      {detailsPaneSymbolId && (
-        <SymbolDetailsPane
-          fileDependencyManifest={context
-            .dependencyManifest[params.file as string]}
-          fileAuditManifest={context.auditManifest[params.file as string]}
-          symbolId={detailsPaneSymbolId}
-          open={detailsPaneOpen}
-          setOpen={setDetailsPaneOpen}
-        />
-      )}
+      <SymbolDetailsPane
+        context={detailsPane}
+        onClose={() => setDetailsPane(undefined)}
+        onAddSymbolsForExtraction={(filePath, symbolIds) => {
+          context.onAddSymbolsForExtraction(filePath, symbolIds);
+        }}
+      />
     </div>
   );
 }

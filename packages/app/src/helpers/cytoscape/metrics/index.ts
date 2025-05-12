@@ -13,32 +13,6 @@ import {
 import type { Metric } from "@napi/shared";
 
 /**
- * Returns a color for a specific metric severity level based on theme.
- *
- * Maps severity levels (0-5) to appropriate colors in either light or dark theme.
- * Level 0 represents no issues (green), while level 5 represents critical issues (red).
- * Colors are optimized for visibility in each theme mode.
- *
- * @param theme - The current UI theme ("light" or "dark")
- * @param level - The severity level of the metric (0-5)
- * @returns The hex color code for the specified severity level
- */
-export function getMetricLevelColor(
-  level: number,
-): string {
-  const levelToColor = {
-    0: "#22c55e", // green - no issues
-    1: "#eab308", // yellow - minor issues
-    2: "#f97316", // orange - moderate issues
-    3: "#d97706", // amber - significant issues
-    4: "#991b1b", // dark red - severe issues
-    5: "#ef4444", // red - critical issues
-  };
-
-  return levelToColor[level as keyof typeof levelToColor] || levelToColor[5];
-}
-
-/**
  * Extracts metric severity levels from an audit manifest for visualization.
  *
  * Processes the audit manifest to build a record of severity values (0-5) for each

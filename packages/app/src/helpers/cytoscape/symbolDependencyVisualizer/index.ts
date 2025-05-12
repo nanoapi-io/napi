@@ -1,20 +1,16 @@
 import {
   type AuditManifest,
   classSymbolType,
-  delegateSymbolType,
   type DependencyManifest,
   enumSymbolType,
   functionSymbolType,
-  interfaceSymbolType,
   type Metric,
-  recordSymbolType,
   structSymbolType,
   variableSymbolType,
 } from "@napi/shared";
 import type {
   Collection,
   Core,
-  EdgeSingular,
   EventObjectNode,
   NodeSingular,
 } from "cytoscape";
@@ -23,7 +19,8 @@ import type { SymbolNapiNodeData } from "../elements/types.ts";
 import cytoscape from "cytoscape";
 import { mainLayout } from "../layout/index.ts";
 import { getCytoscapeStylesheet } from "../styles/index.ts";
-import { computeNodeId, getSymbolElementsInFile } from "../elements/file.ts";
+import { computeNodeId } from "../elements/file.ts";
+import { getSymbolElementsForSymbol } from "../elements/symbol.ts";
 
 /**
  * FileDependencyVisualizer creates an interactive graph of symbol dependencies within a file.
@@ -47,13 +44,12 @@ import { computeNodeId, getSymbolElementsInFile } from "../elements/file.ts";
  * at the symbol level, identify complex relationships, and analyze internal
  * dependencies within files.
  */
-export class FileDependencyVisualizer {
+export class SymbolDependencyVisualizer {
   public cy: Core;
   private theme: "light" | "dark";
   private layout = mainLayout;
-  private fileId: string;
-  /** Current metric used for node coloring */
-  private targetMetric: Metric | undefined;
+  private filePath: string;
+  private symbolId: string;
   /** Currently selected node in the graph */
   private selectedNodeId: string | undefined;
   /** Callback functions triggered by graph interactions */
@@ -69,7 +65,10 @@ export class FileDependencyVisualizer {
 
   constructor(
     container: HTMLElement,
-    fileId: string,
+    filePath: string,
+    symbolId: string,
+    dependencyDepth: number,
+    dependentDepth: number,
     dependencyManifest: DependencyManifest,
     auditManifest: AuditManifest,
     options?: {
@@ -84,7 +83,8 @@ export class FileDependencyVisualizer {
       onAfterNodeDblClick?: (filePath: string, symbolId: string) => void;
     },
   ) {
-    this.fileId = fileId;
+    this.filePath = filePath;
+    this.symbolId = symbolId;
 
     const defaultOptions = {
       onAfterNodeClick: () => {},
@@ -95,8 +95,6 @@ export class FileDependencyVisualizer {
     };
 
     const mergedOptions = { ...defaultOptions, ...options };
-
-    this.targetMetric = mergedOptions.defaultMetric;
 
     this.externalCallbacks = {
       onAfterNodeClick: mergedOptions.onAfterNodeClick,
@@ -111,21 +109,31 @@ export class FileDependencyVisualizer {
     this.cy.mount(container);
 
     this.cy.batch(() => {
-      const elements = getSymbolElementsInFile(
-        fileId,
+      const elements = getSymbolElementsForSymbol(
+        this.filePath,
+        this.symbolId,
+        dependencyDepth,
+        dependentDepth,
         dependencyManifest,
         auditManifest,
       );
       this.cy.add(elements);
 
-      const currentFileNode = this.cy.nodes().filter(
-        `node[fileName="${this.fileId}"]`,
+      const allNodes = this.cy.nodes();
+      const selectedNode = this.cy.nodes().filter(
+        (node) => {
+          const data = node.data() as SymbolNapiNodeData;
+          return data.fileName === this.filePath &&
+            data.symbolName === this.symbolId;
+        },
       );
-      currentFileNode.addClass("collapsed");
-      currentFileNode.addClass("symbol");
+      selectedNode.addClass("selected");
+      selectedNode.addClass("expanded");
+
+      allNodes.addClass("symbol");
 
       const stylesheet = getCytoscapeStylesheet(
-        this.targetMetric,
+        undefined,
         this.theme,
       );
       this.cy.style(stylesheet);
@@ -144,7 +152,7 @@ export class FileDependencyVisualizer {
   public updateTheme(theme: "light" | "dark") {
     this.theme = theme;
     const stylesheet = getCytoscapeStylesheet(
-      this.targetMetric,
+      undefined,
       this.theme,
     );
     this.cy.style(stylesheet);
@@ -177,21 +185,6 @@ export class FileDependencyVisualizer {
     allElements.removeClass("highlighted");
   }
 
-  /**
-   * Changes the metric used for coloring nodes and updates the visualization
-   *
-   * @param metric - The new metric to use for node coloring
-   */
-  public setTargetMetric(metric: Metric | undefined) {
-    this.targetMetric = metric;
-
-    const stylesheet = getCytoscapeStylesheet(
-      this.targetMetric,
-      this.theme,
-    );
-    this.cy.style(stylesheet);
-  }
-
   public filterNodes(
     showExternal: boolean,
     showVariables: boolean,
@@ -199,37 +192,34 @@ export class FileDependencyVisualizer {
     showClasses: boolean,
     showStructs: boolean,
     showEnums: boolean,
-    showInterfaces: boolean,
-    showRecords: boolean,
-    showDelegates: boolean,
   ) {
     const nodesToHide = this.cy.nodes().filter((node: NodeSingular) => {
       const data = node.data() as SymbolNapiNodeData;
-      if (data.fileName === this.fileId) {
-        // never hide symbols from the current file
+      if (
+        data.fileName === this.filePath && data.symbolName === this.symbolId
+      ) {
+        // never hide the current symbol
         return false;
       }
 
       if (!showExternal && data.isExternal) {
         return true;
       }
-
-      const symbolTypeFilters = {
-        [variableSymbolType]: showVariables,
-        [functionSymbolType]: showFunctions,
-        [classSymbolType]: showClasses,
-        [structSymbolType]: showStructs,
-        [enumSymbolType]: showEnums,
-        [interfaceSymbolType]: showInterfaces,
-        [recordSymbolType]: showRecords,
-        [delegateSymbolType]: showDelegates,
-      };
-      for (const [symbolType, show] of Object.entries(symbolTypeFilters)) {
-        if (!show && data.symbolType === symbolType) {
-          return true;
-        }
+      if (!showVariables && data.symbolType === variableSymbolType) {
+        return true;
       }
-
+      if (!showFunctions && data.symbolType === functionSymbolType) {
+        return true;
+      }
+      if (!showClasses && data.symbolType === classSymbolType) {
+        return true;
+      }
+      if (!showStructs && data.symbolType === structSymbolType) {
+        return true;
+      }
+      if (!showEnums && data.symbolType === enumSymbolType) {
+        return true;
+      }
       return false;
     });
 
@@ -249,77 +239,16 @@ export class FileDependencyVisualizer {
   private createEventListeners() {
     this.cy.on("onetap", "node", (evt: EventObjectNode) => {
       const nodeId = evt.target.id();
-      const nodeData = evt.target.data() as SymbolNapiNodeData;
-      const isAlreadySelected = this.selectedNodeId === nodeId;
       this.selectedNodeId = nodeId;
 
-      const isCurrentFile = nodeData.fileName === this.fileId;
-      if (!isCurrentFile) {
-        // Only allow selection of nodes within the current file
-        return;
+      const selectedNode = this.cy.nodes(`node[id="${nodeId}"]`);
+      const isAlreadyExpanded = selectedNode[0].hasClass("expanded");
+
+      if (isAlreadyExpanded) {
+        selectedNode.removeClass("expanded");
+      } else {
+        selectedNode.addClass("expanded");
       }
-
-      const allElements = this.cy.elements();
-
-      const selectedNode = this.cy.nodes(`node[id="${this.selectedNodeId}"]`);
-
-      const connectedNodes = selectedNode
-        .closedNeighborhood()
-        .nodes()
-        .difference(selectedNode);
-
-      const dependentEdges = selectedNode
-        .connectedEdges()
-        .filter(
-          (edge: EdgeSingular) => edge.source().id() === this.selectedNodeId,
-        );
-
-      const dependencyEdges = selectedNode
-        .connectedEdges()
-        .filter(
-          (edge: EdgeSingular) => edge.target().id() === this.selectedNodeId,
-        );
-
-      const focusedElements = selectedNode.closedNeighborhood();
-
-      const backgroundElements = allElements.difference(focusedElements);
-
-      this.cy.batch(() => {
-        // remove all, clean state
-        allElements.removeClass([
-          "symbol",
-          "collapsed",
-          "expanded",
-          "selected",
-          "background",
-          "dependency",
-          "dependent",
-        ]);
-
-        if (!isAlreadySelected) {
-          backgroundElements.addClass("background");
-
-          connectedNodes.addClass("collapsed");
-          connectedNodes.addClass("symbol");
-
-          selectedNode.addClass("expanded");
-          selectedNode.addClass("selected");
-          selectedNode.addClass("symbol");
-
-          dependencyEdges.addClass("dependency");
-          dependentEdges.addClass("dependent");
-
-          focusedElements.layout(this.layout).run();
-        } else {
-          this.selectedNodeId = undefined;
-
-          const fileNodes = this.cy.nodes().filter(
-            `node[fileName="${this.fileId}"]`,
-          );
-          fileNodes.addClass("collapsed");
-          fileNodes.addClass("symbol");
-        }
-      });
 
       this.externalCallbacks.onAfterNodeClick();
     });
@@ -333,7 +262,7 @@ export class FileDependencyVisualizer {
 
       this.externalCallbacks.onAfterNodeDblClick(
         data.fileName,
-        data.symbolName,
+        data.id,
       );
     });
 

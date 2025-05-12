@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useOutletContext, useSearchParams } from "react-router";
-import Controls from "../../components/Cytoscape/Controls.tsx";
-import MetricsExtension from "../../components/Cytoscape/ControlExtensions/MetricsExtension.tsx";
-import FileContextMenu from "../../components/Cytoscape/contextMenu/FileContextMenu.tsx";
+import Controls from "../../components/controls/Controls.tsx";
+import MetricsExtension from "../../components/controls/ControlExtensions/MetricsExtension.tsx";
+import FileContextMenu from "../../components/contextMenu/FileContextMenu.tsx";
 import type { AuditContext } from "./base.tsx";
-import FileDetailsPane from "../../components/FileDetailsPane.tsx";
+import FileDetailsPane from "../../components/detailsPanes/FileDetailsPane.tsx";
 import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.ts";
-import type { NapiNodeData } from "../../helpers/cytoscape/projectDependencyVisualizer/types.ts";
 import type {
   FileAuditManifest,
   FileDependencyManifest,
@@ -20,6 +19,7 @@ export default function AuditPage() {
   const { theme } = useTheme();
 
   const [searchParams, setSearchParams] = useSearchParams();
+
   const context = useOutletContext<AuditContext>();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -69,16 +69,16 @@ export default function AuditPage() {
         defaultMetric: metric,
         onAfterNodeRightClick: (value: {
           position: { x: number; y: number };
-          id: string;
+          filePath: string;
         }) => {
           setContextMenu({
             position: value.position,
-            fileDependencyManifest: context.dependencyManifest[value.id],
+            fileDependencyManifest: context.dependencyManifest[value.filePath],
           });
         },
-        onAfterNodeDblClick: (data: NapiNodeData) => {
+        onAfterNodeDblClick: (filePath: string) => {
           const urlEncodedFileName = encodeURIComponent(
-            data.customData.fileName,
+            filePath,
           );
           navigate(`/audit/${urlEncodedFileName}`);
         },
@@ -152,9 +152,6 @@ export default function AuditPage() {
             fileDependencyManifest: context.dependencyManifest[filePath],
             fileAuditManifest: context.auditManifest[filePath],
           });
-        }}
-        onAddSymbolsForExtraction={(filePath, symbolIds) => {
-          context.onAddSymbolsForExtraction(filePath, symbolIds);
         }}
       />
 

@@ -7,9 +7,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../shadcn/Dropdownmenu.tsx";
+} from "../shadcn/Dropdownmenu.tsx";
 import { PanelRight, SearchCode } from "lucide-react";
-import DisplayNameWithTooltip from "../../DisplayNameWithTootip.tsx";
+import DisplayNameWithTooltip from "../DisplayNameWithTootip.tsx";
 
 export default function FileContextMenu(props: {
   context: {
