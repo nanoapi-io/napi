@@ -3,8 +3,8 @@
   "version": "1.0.7",
   "exports": "./src/index.ts",
   "imports": {
-    "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.0",
     "@napi/shared": "../shared/src/index.ts",
+    "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.0",
     "@types/express": "npm:@types/express@^5.0.1",
     "@types/yargs": "npm:@types/yargs@^17.0.33",
     "express": "npm:express@^5.1.0",
