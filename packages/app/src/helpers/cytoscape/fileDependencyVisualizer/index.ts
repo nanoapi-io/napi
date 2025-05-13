@@ -118,11 +118,14 @@ export class FileDependencyVisualizer {
       );
       this.cy.add(elements);
 
-      const currentFileNode = this.cy.nodes().filter(
+      const allNodes = this.cy.nodes();
+
+      const currentFileNode = allNodes.filter(
         `node[fileName="${this.fileId}"]`,
       );
+
+      allNodes.addClass("symbol");
       currentFileNode.addClass("collapsed");
-      currentFileNode.addClass("symbol");
 
       const stylesheet = getCytoscapeStylesheet(
         this.targetMetric,
@@ -287,7 +290,6 @@ export class FileDependencyVisualizer {
       this.cy.batch(() => {
         // remove all, clean state
         allElements.removeClass([
-          "symbol",
           "collapsed",
           "expanded",
           "selected",
@@ -300,11 +302,9 @@ export class FileDependencyVisualizer {
           backgroundElements.addClass("background");
 
           connectedNodes.addClass("collapsed");
-          connectedNodes.addClass("symbol");
 
           selectedNode.addClass("expanded");
           selectedNode.addClass("selected");
-          selectedNode.addClass("symbol");
 
           dependencyEdges.addClass("dependency");
           dependentEdges.addClass("dependent");
@@ -317,7 +317,6 @@ export class FileDependencyVisualizer {
             `node[fileName="${this.fileId}"]`,
           );
           fileNodes.addClass("collapsed");
-          fileNodes.addClass("symbol");
         }
       });
 
