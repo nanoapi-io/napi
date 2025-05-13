@@ -4,7 +4,10 @@ import Parser from "tree-sitter";
 export const C_STRUCT_TYPE = "struct";
 export const C_UNION_TYPE = "union";
 export const C_ENUM_TYPE = "enum";
-export const C_FUNCTION_TYPE = "function";
+export const C_FUNCTION_DEFINITION_TYPE = "function_definition";
+export const C_FUNCTION_SIGNATURE_TYPE = "function_signature";
+export const C_MACRO_FUNCTION_TYPE = "macro_function";
+export const C_MACRO_CONSTANT_TYPE = "macro_constant";
 export const C_VARIABLE_TYPE = "variable";
 export const C_TYPEDEF_TYPE = "typedef";
 
@@ -25,7 +28,10 @@ export type SymbolType =
   | typeof C_STRUCT_TYPE
   | typeof C_UNION_TYPE
   | typeof C_ENUM_TYPE
-  | typeof C_FUNCTION_TYPE
+  | typeof C_FUNCTION_DEFINITION_TYPE
+  | typeof C_FUNCTION_SIGNATURE_TYPE
+  | typeof C_MACRO_FUNCTION_TYPE
+  | typeof C_MACRO_CONSTANT_TYPE
   | typeof C_VARIABLE_TYPE
   | typeof C_TYPEDEF_TYPE;
 

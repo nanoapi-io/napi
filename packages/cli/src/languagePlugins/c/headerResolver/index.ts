@@ -24,7 +24,7 @@ export class CHeaderResolver {
     const query = C_DECLARATION_QUERY;
     const captures = query.captures(file.rootNode);
     for (const capture of captures) {
-      if (capture.name !== "decl") {
+      if (capture.name !== "decl" && capture.name !== "function_definition") {
         let idNode: Parser.SyntaxNode;
         if (capture.name !== "typedef") {
           idNode = capture.node.childForFieldName("name");
@@ -65,7 +65,11 @@ export class CHeaderResolver {
           }
         }
         const type =
-          currentNode.type === "function_declarator" ? "function" : "variable";
+          capture.name === "function_definition"
+            ? "function_definition"
+            : currentNode.type === "function_declarator"
+              ? "function_signature"
+              : "variable";
         const idNode = currentNode.childForFieldName("declarator");
         exportedSymbols.push({
           name: idNode.text,

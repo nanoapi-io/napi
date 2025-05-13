@@ -1,11 +1,17 @@
-import { CDependency, CDepFile, CDepSymbol } from "./types.js";
+import {
+  C_DEP_FUNCTION_TYPE,
+  CDependency,
+  CDepFile,
+  CDepSymbol,
+  CDepSymbolType,
+} from "./types.js";
 import { CSymbolRegistry } from "../symbolRegistry/index.js";
 import { CIncludeResolver } from "../includeResolver/index.js";
 import { CInvocationResolver } from "../invocationResolver/index.js";
 import { CFile, Symbol } from "../symbolRegistry/types.js";
 import { Invocations } from "../invocationResolver/types.js";
 import Parser from "tree-sitter";
-import { SymbolType } from "../headerResolver/types.js";
+import { C_VARIABLE_TYPE, SymbolType } from "../headerResolver/types.js";
 
 export class CDependencyFormatter {
   symbolRegistry: CSymbolRegistry;
@@ -20,6 +26,22 @@ export class CDependencyFormatter {
     this.#registry = this.symbolRegistry.getRegistry();
     this.includeResolver = new CIncludeResolver(this.symbolRegistry);
     this.invocationResolver = new CInvocationResolver(this.includeResolver);
+  }
+
+  #formatSymbolType(st: SymbolType): CDepSymbolType {
+    if (["struct", "enum", "union", "typedef", "variable"].includes(st)) {
+      return st as CDepSymbolType;
+    }
+    if (
+      ["function_signature", "function_definition", "macro_function"].includes(
+        st,
+      )
+    ) {
+      return C_DEP_FUNCTION_TYPE;
+    }
+    if (st === "macro_constant") {
+      return C_VARIABLE_TYPE as CDepSymbolType;
+    }
   }
 
   /**
@@ -86,7 +108,7 @@ export class CDependencyFormatter {
       if (!symbols[id]) {
         symbols[id] = {
           id: id,
-          type: symbol.declaration.type as SymbolType,
+          type: this.#formatSymbolType(symbol.declaration.type),
           lineCount:
             symbol.declaration.node.endPosition.row -
             symbol.declaration.node.startPosition.row,

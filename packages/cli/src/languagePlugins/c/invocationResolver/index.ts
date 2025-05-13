@@ -1,7 +1,11 @@
 import { Invocations } from "./types.js";
 import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.js";
 import { CIncludeResolver } from "../includeResolver/index.js";
-import { Symbol, Function } from "../symbolRegistry/types.js";
+import {
+  Symbol,
+  FunctionDefinition,
+  FunctionSignature,
+} from "../symbolRegistry/types.js";
 import Parser from "tree-sitter";
 import { cParser } from "../../../helpers/treeSitter/parsers.js";
 
@@ -66,14 +70,17 @@ export class CInvocationResolver {
   }
 
   getInvocationsForSymbol(symbol: Symbol) {
-    let filepath = symbol.declaration.filepath;
-    let node = symbol.declaration.node;
-    if (symbol instanceof Function) {
-      filepath = symbol.definitionPath;
-      node = symbol.definition;
-    }
+    const filepath = symbol.declaration.filepath;
+    const node = symbol.declaration.node;
     const name = symbol.name;
     const invocations = this.getInvocationsForNode(node, filepath, name);
+    const resolved = invocations.resolved;
+    if (symbol instanceof FunctionSignature && symbol.definition) {
+      resolved.set(symbol.name, symbol.definition);
+    }
+    if (symbol instanceof FunctionDefinition && symbol.signature) {
+      resolved.set(symbol.name, symbol.signature);
+    }
     return {
       resolved: invocations.resolved,
       unresolved: invocations.unresolved,
