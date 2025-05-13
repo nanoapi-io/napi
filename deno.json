@@ -1,5 +1,10 @@
 {
-  "workspace": ["./packages/app", "./packages/cli", "./packages/shared"],
+  "version": "1.0.7",
+  "workspace": [
+    "./packages/app",
+    "./packages/cli",
+    "./packages/shared"
+  ],
   "nodeModulesDir": "auto",
   "tasks": {
     "dev:app": "deno task --config packages/app/deno.json dev",
