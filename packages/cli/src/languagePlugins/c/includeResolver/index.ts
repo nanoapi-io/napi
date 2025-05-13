@@ -30,6 +30,11 @@ export class CIncludeResolver {
     if (corresponding2) {
       return this.symbolRegistry.get(corresponding2);
     }
+    // 3. Check wherever
+    const corresponding3 = filepaths.find((f) => f.endsWith(filepath));
+    if (corresponding3) {
+      return this.symbolRegistry.get(corresponding3);
+    }
     return undefined;
   }
 
