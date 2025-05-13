@@ -37,7 +37,7 @@ jobs:
           deno-version: "2.x"
 
       - name: Tests
-        run: deno task test
+        run: deno test -A
 
   compile:
     runs-on: ubuntu-latest

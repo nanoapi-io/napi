@@ -1,4 +1,5 @@
-import { describe, expect, test } from "vitest";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
 import { CSharpMetricsAnalyzer } from "./index.ts";
 import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";
 import path from "node:path";

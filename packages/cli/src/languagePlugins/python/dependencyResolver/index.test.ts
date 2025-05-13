@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
 import type Parser from "tree-sitter";
 import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";

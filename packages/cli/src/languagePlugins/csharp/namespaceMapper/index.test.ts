@@ -1,4 +1,5 @@
-import { describe, expect, test } from "vitest";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
 import { CSharpNamespaceMapper } from "./index.ts";
 import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";
 import path from "node:path";
@@ -159,14 +160,4 @@ describe("NamespaceMapper", () => {
       childrenNamespaces: [],
     });
   });
-
-  // test("should save the debug tree to a file", () => {
-  //   const debugTree = nsMapper.saveDebugTree("debugTree.json");
-  //   expect(debugTree).toMatchObject({
-  //     name: "",
-  //     type: "namespace",
-  //     children: expect.any(Array),
-  //   });
-  //   expect(debugTree.children.length > 0).toBe(true);
-  // });
 });

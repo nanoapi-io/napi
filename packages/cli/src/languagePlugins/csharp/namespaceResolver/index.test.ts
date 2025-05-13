@@ -1,4 +1,5 @@
-import { describe, expect, test } from "vitest";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
 import { CSharpNamespaceResolver, type File } from "./index.ts";
 import path from "node:path";
 import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";

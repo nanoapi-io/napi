@@ -1,4 +1,5 @@
-import { describe, expect, test } from "vitest";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
 import type Parser from "tree-sitter";
 import { PythonExportExtractor } from "./index.ts";
 import {
