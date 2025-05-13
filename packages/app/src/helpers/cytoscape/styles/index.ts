@@ -228,7 +228,7 @@ export function getCytoscapeStylesheet(
         "line-color": styles.edge.colors.default,
         "target-arrow-color": styles.edge.colors.default,
         "target-arrow-shape": "triangle",
-        "curve-style": "straight",
+        "curve-style": "bezier",
       },
     },
     {
