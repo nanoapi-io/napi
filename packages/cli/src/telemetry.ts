@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import os from "node:os";
 import { getOrCreateGlobalConfig } from "./config/globalConfig.ts";
-import denoJson from "../deno.json" with { type: "json" };
+import denoJson from "../../../deno.json" with { type: "json" };
 import process from "node:process";
 
 export enum TelemetryEvents {

@@ -1,4 +1,4 @@
-import localPackageJson from "../../../deno.json" with { type: "json" };
+import localPackageJson from "../../../../../deno.json" with { type: "json" };
 import process from "node:process";
 
 export async function checkVersionMiddleware() {
