@@ -153,6 +153,13 @@ export default function AuditInstancePage() {
     }
   }, [context.highlightedCytoscapeRef]);
 
+  // Hook to update the theme in the graph
+  useEffect(() => {
+    if (symbolVisualizer) {
+      symbolVisualizer.updateTheme(theme);
+    }
+  }, [theme]);
+
   return (
     <div className="relative w-full h-full">
       {/* This is the container for Cytoscape */}
