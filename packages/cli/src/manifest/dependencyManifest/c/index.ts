@@ -11,6 +11,7 @@ import {
   SymbolType,
 } from "@nanoapi.io/shared";
 import { CDependencyFormatter } from "../../../languagePlugins/c/dependencyFormatting/index.js";
+import { CMetricsAnalyzer } from "../../../languagePlugins/c/metrics/index.js";
 import Parser from "tree-sitter";
 import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.js";
 
@@ -36,6 +37,7 @@ export function generateCDependencyManifest(
   }
 
   const formatter = new CDependencyFormatter(parsedFiles);
+  const metricsAnalyzer = new CMetricsAnalyzer();
   const manifest: DependencyManifest = {};
   const filecount = parsedFiles.size;
   let i = 0;
@@ -46,39 +48,37 @@ export function generateCDependencyManifest(
     const symbols: Record<string, SymbolDependencyManifest> = {};
     for (const [symName, symbol] of Object.entries(cSyms)) {
       const symType = symbol.type;
-      const lineCount = symbol.lineCount;
-      const characterCount = symbol.characterCount;
       const dependencies = symbol.dependencies;
-      // TODO : metrics
+      const metrics = metricsAnalyzer.analyzeNode(symbol.node);
       symbols[symName] = {
         id: symName,
         type: symType as SymbolType,
         metrics: {
-          [metricCharacterCount]: characterCount,
-          [metricCodeCharacterCount]: 0, // TODO: fix this
-          [metricLinesCount]: lineCount,
-          [metricCodeLineCount]: 0, // TODO: fix this
+          [metricCharacterCount]: metrics.characterCount,
+          [metricCodeCharacterCount]: metrics.codeCharacterCount,
+          [metricLinesCount]: metrics.linesCount,
+          [metricCodeLineCount]: metrics.codeLinesCount,
           [metricDependencyCount]: Object.keys(dependencies).length,
           [metricDependentCount]: 0,
-          [metricCyclomaticComplexity]: 0, // TODO: fix this
+          [metricCyclomaticComplexity]: metrics.cyclomaticComplexity,
         },
         dependencies: dependencies,
         dependents: {},
       };
     }
-    // TODO : metrics
+    const metrics = metricsAnalyzer.analyzeNode(fm.rootNode);
     manifest[path] = {
       id: fm.id,
       filePath: fm.filePath,
       language: cLanguage,
       metrics: {
-        [metricCharacterCount]: fm.characterCount,
-        [metricCodeCharacterCount]: 0, // TODO: fix this
-        [metricLinesCount]: fm.lineCount,
-        [metricCodeLineCount]: 0, // TODO: fix this
+        [metricCharacterCount]: metrics.characterCount,
+        [metricCodeCharacterCount]: metrics.codeCharacterCount,
+        [metricLinesCount]: metrics.linesCount,
+        [metricCodeLineCount]: metrics.codeLinesCount,
         [metricDependencyCount]: Object.keys(fm.dependencies).length,
         [metricDependentCount]: 0,
-        [metricCyclomaticComplexity]: 0, // TODO: fix this
+        [metricCyclomaticComplexity]: metrics.cyclomaticComplexity,
       },
       dependencies: fm.dependencies,
       symbols: symbols,
