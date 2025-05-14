@@ -1,11 +1,12 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
-import { PythonModuleResolver } from "./index.js";
+import { beforeEach, describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { PythonModuleResolver } from "./index.ts";
 import {
   PYTHON_MODULE_TYPE,
   PYTHON_NAMESPACE_MODULE_TYPE,
   PYTHON_PACKAGE_MODULE_TYPE,
-} from "./types.js";
-import { sep } from "path";
+} from "./types.ts";
+import { sep } from "node:path";
 
 describe("PythonModuleResolver", () => {
   describe("Module Map Building", () => {
@@ -274,20 +275,23 @@ describe("PythonModuleResolver", () => {
       });
 
       test("should use cache for repeat lookups", () => {
+        const initialCacheSize = resolver["modulePathCache"].size;
+        expect(initialCacheSize).toBe(0);
+
         // First lookup should cache the result
         const moduleFirst = resolver.getModuleFromFilePath("pkg/module1.py");
         expect(moduleFirst.name).toBe("module1");
 
-        // Spy on the error throwing to ensure cache is used and we don't
-        // go through the resolution logic again
-        const mockThrow = vi.spyOn(global, "Error");
+        // Get the cache size before second lookup
+        const cacheSizeBefore = resolver["modulePathCache"].size;
+        expect(cacheSizeBefore).toBe(1);
 
         // Second lookup should use the cache
         const moduleSecond = resolver.getModuleFromFilePath("pkg/module1.py");
         expect(moduleSecond).toBe(moduleFirst); // Same instance
-        expect(mockThrow).not.toHaveBeenCalled();
 
-        mockThrow.mockRestore();
+        // Cache size should not have increased since we used the cached value
+        expect(resolver["modulePathCache"].size).toBe(1);
       });
     });
 
@@ -394,19 +398,19 @@ describe("PythonModuleResolver", () => {
       test("should use cache for repeated resolution", () => {
         const mainModule = resolver.getModuleFromFilePath("main.py");
 
-        // First resolution
+        // First resolution should cache the result
         const utils1 = resolver.resolveModule(mainModule, "utils");
         expect(utils1).toBeDefined();
 
-        // Create a spy to verify cache usage
-        const spy = vi.spyOn(resolver as never, "resolveAbsoluteImport");
+        // Get the cache size before second resolution
+        const cacheSizeBefore = resolver["importResolutionCache"].size;
+        expect(cacheSizeBefore).toBe(1);
 
-        // Second resolution of the same import should use cache
+        // Second resolution of the same import should use the cache
         const utils2 = resolver.resolveModule(mainModule, "utils");
         expect(utils2).toBe(utils1); // Same instance
-        expect(spy).not.toHaveBeenCalled();
-
-        spy.mockRestore();
+        // Cache size should not have increased since we used the cached value
+        expect(resolver["importResolutionCache"].size).toBe(1);
       });
     });
 
@@ -513,15 +517,15 @@ describe("PythonModuleResolver", () => {
         const module1 = resolver.resolveModule(submodule1, "..module1");
         expect(module1).toBeDefined();
 
-        // Create a spy to verify cache usage
-        const spy = vi.spyOn(resolver as never, "resolveRelativeModule");
+        // Get the cache size before second resolution
+        const cacheSizeBefore = resolver["importResolutionCache"].size;
+        expect(cacheSizeBefore).toBe(1);
 
         // Second resolution should use cache
         const module1Again = resolver.resolveModule(submodule1, "..module1");
         expect(module1Again).toBe(module1); // Same instance
-        expect(spy).not.toHaveBeenCalled();
-
-        spy.mockRestore();
+        // Cache size should not have increased since we used the cached value
+        expect(resolver["importResolutionCache"].size).toBe(1);
       });
     });
 
@@ -692,8 +696,9 @@ describe("PythonModuleResolver", () => {
         );
 
         // Get the internal module
-        const internalModule =
-          resolver.getModuleFromFilePath("pkg/_internal.py");
+        const internalModule = resolver.getModuleFromFilePath(
+          "pkg/_internal.py",
+        );
         expect(internalModule.name).toBe("_internal");
 
         // Should be able to resolve _name from outside

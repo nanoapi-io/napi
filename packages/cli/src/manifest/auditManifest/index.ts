@@ -1,8 +1,8 @@
-import z from "zod";
-import { localConfigSchema } from "../../config/localConfig.js";
+import type z from "zod";
+import type { localConfigSchema } from "../../config/localConfig.ts";
 import {
-  AuditAlert,
-  DependencyManifest,
+  type AuditAlert,
+  type DependencyManifest,
   metricCharacterCount,
   metricCodeCharacterCount,
   metricCodeLineCount,
@@ -10,12 +10,12 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-} from "@nanoapi.io/shared";
-import {
+} from "@napi/shared";
+import type {
   AuditManifest,
   FileAuditManifest,
   SymbolAuditManifest,
-} from "@nanoapi.io/shared";
+} from "@napi/shared";
 
 function getNumberSeverityLevel(
   value: number,
@@ -156,7 +156,7 @@ export function generateAuditManifest(
     }
 
     // Check #4: Cyclomatic Complexity per file
-    if (napiConfig.metrics.file.maxCyclomaticComplexity) {
+    if (napiConfig.metrics?.file?.maxCyclomaticComplexity) {
       const value = fileDependencyManifest.metrics[metricCyclomaticComplexity];
       const target = napiConfig.metrics.file.maxCyclomaticComplexity;
       if (value > target) {
@@ -165,7 +165,8 @@ export function generateAuditManifest(
           severity: getNumberSeverityLevel(value, target),
           message: {
             short: "Too complex",
-            long: `File exceeds maximum cyclomatic complexity (${value}/${target})`,
+            long:
+              `File exceeds maximum cyclomatic complexity (${value}/${target})`,
           },
           value: value.toString(),
           target: target.toString(),
@@ -190,7 +191,8 @@ export function generateAuditManifest(
             severity: getNumberSeverityLevel(value, target),
             message: {
               short: "Symbol too large",
-              long: `Symbol exceeds maximum character limit (${value}/${target})`,
+              long:
+                `Symbol exceeds maximum character limit (${value}/${target})`,
             },
             value: value.toString(),
             target: target.toString(),
@@ -207,7 +209,8 @@ export function generateAuditManifest(
             severity: getNumberSeverityLevel(value, target),
             message: {
               short: "Symbol too large",
-              long: `Symbol exceeds maximum character limit (${value}/${target})`,
+              long:
+                `Symbol exceeds maximum character limit (${value}/${target})`,
             },
             value: value.toString(),
             target: target.toString(),
@@ -262,7 +265,8 @@ export function generateAuditManifest(
             severity: getNumberSeverityLevel(value, target),
             message: {
               short: "Too many dependencies",
-              long: `Symbol exceeds maximum dependency count (${value}/${target})`,
+              long:
+                `Symbol exceeds maximum dependency count (${value}/${target})`,
             },
             value: value.toString(),
             target: target.toString(),
@@ -279,7 +283,8 @@ export function generateAuditManifest(
             severity: getNumberSeverityLevel(value, target),
             message: {
               short: "Too many dependents",
-              long: `Symbol exceeds maximum dependent count (${value}/${target})`,
+              long:
+                `Symbol exceeds maximum dependent count (${value}/${target})`,
             },
             value: value.toString(),
             target: target.toString(),
@@ -298,7 +303,8 @@ export function generateAuditManifest(
             severity: getNumberSeverityLevel(value, target),
             message: {
               short: "Symbol too complex",
-              long: `Symbol exceeds maximum cyclomatic complexity (${value}/${target})`,
+              long:
+                `Symbol exceeds maximum cyclomatic complexity (${value}/${target})`,
             },
             value: value.toString(),
             target: target.toString(),

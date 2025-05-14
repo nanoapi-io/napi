@@ -1,3 +1,3 @@
-export * from "./manifest/dependencyManifest/types.js";
-export * from "./manifest/auditManifest/types.js";
-export * from "./extraction/types.js";
+export * from "./manifest/dependencyManifest/types.ts";
+export * from "./manifest/auditManifest/types.ts";
+export * from "./extraction/types.ts";

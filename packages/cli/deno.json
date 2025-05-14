@@ -1,0 +1,27 @@
+{
+  "name": "@napi/cli",
+  "exports": "./src/index.ts",
+  "imports": {
+    "@napi/shared": "../shared/src/index.ts",
+    "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.0",
+    "@types/express": "npm:@types/express@^5.0.1",
+    "@types/yargs": "npm:@types/yargs@^17.0.33",
+    "express": "npm:express@^5.1.0",
+    "glob": "npm:glob@^11.0.2",
+    "http-proxy-middleware": "npm:http-proxy-middleware@^3.0.5",
+    "tree-sitter": "npm:tree-sitter@^0.22.4",
+    "tree-sitter-c-sharp": "npm:tree-sitter-c-sharp@^0.23.1",
+    "tree-sitter-python": "npm:tree-sitter-python@^0.23.6",
+    "uuid": "npm:uuid@^11.1.0",
+    "yargs": "npm:yargs@^17.7.2",
+    "zod": "npm:zod@^3.24.4"
+  },
+  "tasks": {
+    "dev": "NODE_ENV=development deno run --allow-all --watch src/index.ts",
+    "compile": "deno compile --allow-all --include=../app/dist --output=../../dist/napi src/index.ts",
+    "compile-linux": "deno compile --allow-all --include=../app/dist --output=../../dist/napi.linux --target=x86_64-unknown-linux-gnu src/index.ts",
+    "compile-macos": "deno compile --allow-all --include=../app/dist --output=../../dist/napi.macos --target=x86_64-apple-darwin src/index.ts",
+    "compile-windows": "deno compile --allow-all --include=../app/dist --output=../../dist/napi.exe --target=x86_64-pc-windows-msvc src/index.ts",
+    "test": "deno test --allow-all"
+  }
+}

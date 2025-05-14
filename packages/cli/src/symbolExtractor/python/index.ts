@@ -1,15 +1,15 @@
-import z from "zod";
-import { localConfigSchema } from "../../config/localConfig.js";
-import { ExtractedFilesMap } from "../types.js";
-import Parser from "tree-sitter";
-import { pythonParser } from "../../helpers/treeSitter/parsers.js";
-import { DependencyManifest } from "@nanoapi.io/shared";
-import { PythonExportExtractor } from "../../languagePlugins/python/exportExtractor/index.js";
-import { PythonImportExtractor } from "../../languagePlugins/python/importExtractor/index.js";
-import { PythonModuleResolver } from "../../languagePlugins/python/moduleResolver/index.js";
-import { PythonItemResolver } from "../../languagePlugins/python/itemResolver/index.js";
-import { PythonUsageResolver } from "../../languagePlugins/python/usageResolver/index.js";
-import { PythonSymbolExtractor } from "../../languagePlugins/python/symbolExtractor/index.js";
+import type z from "zod";
+import type { localConfigSchema } from "../../config/localConfig.ts";
+import type { ExtractedFilesMap } from "../types.ts";
+import type Parser from "tree-sitter";
+import { pythonParser } from "../../helpers/treeSitter/parsers.ts";
+import type { DependencyManifest } from "@napi/shared";
+import { PythonExportExtractor } from "../../languagePlugins/python/exportExtractor/index.ts";
+import { PythonImportExtractor } from "../../languagePlugins/python/importExtractor/index.ts";
+import { PythonModuleResolver } from "../../languagePlugins/python/moduleResolver/index.ts";
+import { PythonItemResolver } from "../../languagePlugins/python/itemResolver/index.ts";
+import { PythonUsageResolver } from "../../languagePlugins/python/usageResolver/index.ts";
+import { PythonSymbolExtractor } from "../../languagePlugins/python/symbolExtractor/index.ts";
 
 export function extractPythonSymbols(
   files: Map<string, { path: string; content: string }>,

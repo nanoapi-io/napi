@@ -1,11 +1,12 @@
-import { describe, expect, test } from "vitest";
-import { PythonImportExtractor } from "./index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { PythonImportExtractor } from "./index.ts";
 import {
-  ImportItem,
   FROM_IMPORT_STATEMENT_TYPE,
+  type ImportItem,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "./types.js";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+} from "./types.ts";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
 
 describe("Python Import Extractor", () => {
   const parser = pythonParser;
@@ -31,42 +32,28 @@ describe("Python Import Extractor", () => {
     expect(importStatements).toHaveLength(2);
 
     const firstImportStatement = importStatements[0];
-    expect(firstImportStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "import os" }),
-        type: NORMAL_IMPORT_STATEMENT_TYPE,
-      }),
-    );
+    expect(firstImportStatement.type).toEqual(NORMAL_IMPORT_STATEMENT_TYPE);
+    expect(firstImportStatement.node.text).toEqual("import os");
     expect(firstImportStatement.members).toHaveLength(1);
+
     const firstImportStatementMember = firstImportStatement.members[0];
-    expect(firstImportStatementMember).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "os" }),
-        identifierNode: expect.objectContaining({ text: "os" }),
-        aliasNode: undefined,
-        isWildcardImport: false,
-        items: undefined,
-      }),
-    );
+    expect(firstImportStatementMember.isWildcardImport).toEqual(false);
+    expect(firstImportStatementMember.items).toBeUndefined();
+    expect(firstImportStatementMember.node.text).toEqual("os");
+    expect(firstImportStatementMember.identifierNode.text).toEqual("os");
+    expect(firstImportStatementMember.aliasNode).toBeUndefined();
 
     const secondImportStatement = importStatements[1];
-    expect(secondImportStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "import sys" }),
-        type: NORMAL_IMPORT_STATEMENT_TYPE,
-      }),
-    );
+    expect(secondImportStatement.type).toEqual(NORMAL_IMPORT_STATEMENT_TYPE);
+    expect(secondImportStatement.node.text).toEqual("import sys");
     expect(secondImportStatement.members).toHaveLength(1);
+
     const secondImportStatementMember = secondImportStatement.members[0];
-    expect(secondImportStatementMember).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "sys" }),
-        identifierNode: expect.objectContaining({ text: "sys" }),
-        aliasNode: undefined,
-        isWildcardImport: false,
-        items: undefined,
-      }),
-    );
+    expect(secondImportStatementMember.isWildcardImport).toEqual(false);
+    expect(secondImportStatementMember.items).toBeUndefined();
+    expect(secondImportStatementMember.node.text).toEqual("sys");
+    expect(secondImportStatementMember.identifierNode.text).toEqual("sys");
+    expect(secondImportStatementMember.aliasNode).toBeUndefined();
   });
 
   test("should extract aliased normal import statements", () => {
@@ -87,25 +74,14 @@ describe("Python Import Extractor", () => {
     expect(importStatements).toHaveLength(1);
 
     const importStatement = importStatements[0];
-    expect(importStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({
-          text: "import os as operating_system",
-        }),
-        type: NORMAL_IMPORT_STATEMENT_TYPE,
-      }),
-    );
+    expect(importStatement.type).toEqual(NORMAL_IMPORT_STATEMENT_TYPE);
     expect(importStatement.members).toHaveLength(1);
     const importStatementMember = importStatement.members[0];
-    expect(importStatementMember).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "os as operating_system" }),
-        identifierNode: expect.objectContaining({ text: "os" }),
-        aliasNode: expect.objectContaining({ text: "operating_system" }),
-        isWildcardImport: false,
-        items: undefined,
-      }),
-    );
+    expect(importStatementMember.isWildcardImport).toEqual(false);
+    expect(importStatementMember.items).toBeUndefined();
+    expect(importStatementMember.node.text).toEqual("os as operating_system");
+    expect(importStatementMember.identifierNode.text).toEqual("os");
+    expect(importStatementMember.aliasNode?.text).toEqual("operating_system");
   });
 
   test("should extract multilple from import statements", () => {
@@ -129,76 +105,55 @@ describe("Python Import Extractor", () => {
     expect(importStatements).toHaveLength(2);
 
     const firstImportStatement = importStatements[0];
-    expect(firstImportStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({
-          text: "from os import path, environ",
-        }),
-        type: FROM_IMPORT_STATEMENT_TYPE,
-      }),
+    expect(firstImportStatement.type).toEqual(FROM_IMPORT_STATEMENT_TYPE);
+    expect(firstImportStatement.node.text).toEqual(
+      "from os import path, environ",
     );
     expect(firstImportStatement.members).toHaveLength(1);
+
     const firstImportStatementMember = firstImportStatement.members[0];
-    expect(firstImportStatementMember).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "os" }),
-        identifierNode: expect.objectContaining({ text: "os" }),
-        aliasNode: undefined,
-        isWildcardImport: false,
-      }),
-    );
+    expect(firstImportStatementMember.isWildcardImport).toEqual(false);
+    expect(firstImportStatementMember.node.text).toEqual("os");
+    expect(firstImportStatementMember.identifierNode.text).toEqual("os");
+    expect(firstImportStatementMember.aliasNode).toBeUndefined();
     expect(firstImportStatementMember.items).toHaveLength(2);
+
     const firstImportStatementMemberFirstSymbol = (
       firstImportStatementMember.items as ImportItem[]
     )[0];
-    expect(firstImportStatementMemberFirstSymbol).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "path" }),
-        identifierNode: expect.objectContaining({ text: "path" }),
-        aliasNode: undefined,
-      }),
+    expect(firstImportStatementMemberFirstSymbol.node.text).toEqual("path");
+    expect(firstImportStatementMemberFirstSymbol.identifierNode.text).toEqual(
+      "path",
     );
+    expect(firstImportStatementMemberFirstSymbol.aliasNode).toBeUndefined();
+
     const firstImportStatementMemberSecondSymbol = (
       firstImportStatementMember.items as ImportItem[]
     )[1];
-    expect(firstImportStatementMemberSecondSymbol).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "environ" }),
-        identifierNode: expect.objectContaining({ text: "environ" }),
-        aliasNode: undefined,
-      }),
+    expect(firstImportStatementMemberSecondSymbol.node.text).toEqual("environ");
+    expect(firstImportStatementMemberSecondSymbol.identifierNode.text).toEqual(
+      "environ",
     );
+    expect(firstImportStatementMemberSecondSymbol.aliasNode).toBeUndefined();
 
     const secondImportStatement = importStatements[1];
-    expect(secondImportStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({
-          text: "from sys import argv",
-        }),
-        type: FROM_IMPORT_STATEMENT_TYPE,
-      }),
-    );
+    expect(secondImportStatement.type).toEqual(FROM_IMPORT_STATEMENT_TYPE);
+    expect(secondImportStatement.node.text).toEqual("from sys import argv");
     expect(secondImportStatement.members).toHaveLength(1);
+
     const secondImportStatementMember = secondImportStatement.members[0];
-    expect(secondImportStatementMember).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "sys" }),
-        identifierNode: expect.objectContaining({ text: "sys" }),
-        aliasNode: undefined,
-        isWildcardImport: false,
-      }),
-    );
+    expect(secondImportStatementMember.isWildcardImport).toEqual(false);
+    expect(secondImportStatementMember.node.text).toEqual("sys");
+    expect(secondImportStatementMember.identifierNode.text).toEqual("sys");
+    expect(secondImportStatementMember.aliasNode).toBeUndefined();
     expect(secondImportStatementMember.items).toHaveLength(1);
+
     const secondImportStatementMemberSymbol = (
       secondImportStatementMember.items as ImportItem[]
     )[0];
-    expect(secondImportStatementMemberSymbol).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "argv" }),
-        identifierNode: expect.objectContaining({ text: "argv" }),
-        aliasNode: undefined,
-      }),
-    );
+    expect(secondImportStatementMemberSymbol.node.text).toEqual("argv");
+    expect(secondImportStatementMemberSymbol.node.text).toEqual("argv");
+    expect(secondImportStatementMemberSymbol.aliasNode).toBeUndefined();
   });
 
   test("should extract from import statements with aliases", () => {
@@ -220,36 +175,25 @@ describe("Python Import Extractor", () => {
     expect(importStatements).toHaveLength(1);
 
     const importStatement = importStatements[0];
-    expect(importStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({
-          text: "from os import path as os_path",
-        }),
-        type: FROM_IMPORT_STATEMENT_TYPE,
-      }),
+    expect(importStatement.type).toEqual(FROM_IMPORT_STATEMENT_TYPE);
+    expect(importStatement.node.text).toEqual(
+      "from os import path as os_path",
     );
     expect(importStatement.members).toHaveLength(1);
+
     const importStatementMember = importStatement.members[0];
-    expect(importStatementMember).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "os" }),
-        identifierNode: expect.objectContaining({ text: "os" }),
-        aliasNode: undefined,
-        isWildcardImport: false,
-      }),
-    );
-    // the except below fails. importStatementMember.items is undefined
+    expect(importStatementMember.isWildcardImport).toEqual(false);
+    expect(importStatementMember.node.text).toEqual("os");
+    expect(importStatementMember.identifierNode.text).toEqual("os");
+    expect(importStatementMember.aliasNode).toBeUndefined();
     expect(importStatementMember.items).toHaveLength(1);
+
     const importStatementMemberSymbol = (
       importStatementMember.items as ImportItem[]
     )[0];
-    expect(importStatementMemberSymbol).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "path as os_path" }),
-        identifierNode: expect.objectContaining({ text: "path" }),
-        aliasNode: expect.objectContaining({ text: "os_path" }),
-      }),
-    );
+    expect(importStatementMemberSymbol.node.text).toEqual("path as os_path");
+    expect(importStatementMemberSymbol.identifierNode.text).toEqual("path");
+    expect(importStatementMemberSymbol.aliasNode?.text).toEqual("os_path");
   });
 
   test("should extract from import statements with wildcard imports", () => {
@@ -271,23 +215,16 @@ describe("Python Import Extractor", () => {
     expect(importStatements).toHaveLength(1);
 
     const importStatement = importStatements[0];
-    expect(importStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "from os import *" }),
-        type: FROM_IMPORT_STATEMENT_TYPE,
-      }),
-    );
+    expect(importStatement.type).toEqual(FROM_IMPORT_STATEMENT_TYPE);
+    expect(importStatement.node.text).toEqual("from os import *");
     expect(importStatement.members).toHaveLength(1);
+
     const importStatementMember = importStatement.members[0];
-    expect(importStatementMember).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "os" }),
-        identifierNode: expect.objectContaining({ text: "os" }),
-        aliasNode: undefined,
-        isWildcardImport: true,
-        items: undefined,
-      }),
-    );
+    expect(importStatementMember.isWildcardImport).toEqual(true);
+    expect(importStatementMember.items).toBeUndefined();
+    expect(importStatementMember.node.text).toEqual("os");
+    expect(importStatementMember.identifierNode.text).toEqual("os");
+    expect(importStatementMember.aliasNode).toBeUndefined();
   });
 
   test("should handle mix of normal and from import statements", () => {
@@ -311,21 +248,13 @@ describe("Python Import Extractor", () => {
     expect(importStatements).toHaveLength(2);
 
     const firstImportStatement = importStatements[0];
-    expect(firstImportStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "import os" }),
-        type: NORMAL_IMPORT_STATEMENT_TYPE,
-      }),
-    );
+    expect(firstImportStatement.type).toEqual(NORMAL_IMPORT_STATEMENT_TYPE);
+    expect(firstImportStatement.node.text).toEqual("import os");
     expect(firstImportStatement.members).toHaveLength(1);
 
     const secondImportStatement = importStatements[1];
-    expect(secondImportStatement).toEqual(
-      expect.objectContaining({
-        node: expect.objectContaining({ text: "from sys import argv" }),
-        type: FROM_IMPORT_STATEMENT_TYPE,
-      }),
-    );
+    expect(secondImportStatement.type).toEqual(FROM_IMPORT_STATEMENT_TYPE);
+    expect(secondImportStatement.node.text).toEqual("from sys import argv");
     expect(secondImportStatement.members).toHaveLength(1);
   });
 });

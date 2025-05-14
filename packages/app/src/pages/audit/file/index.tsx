@@ -1,28 +1,36 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  useNavigate,
   useOutletContext,
   useParams,
-  useNavigate,
   useSearchParams,
 } from "react-router";
-import Controls from "../../../components/Cytoscape/Controls.js";
-import { ThemeContext } from "../../../contexts/ThemeContext.js";
-import { AuditContext } from "../base.js";
-import { CytoscapeSkeleton } from "../../../components/Cytoscape/Skeleton.js";
-import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.js";
-import { NapiNodeData } from "../../../helpers/cytoscape/fileDependencyVisualizer/types.js";
-import { Metric } from "@nanoapi.io/shared";
-import SymbolContextMenu from "../../../components/Cytoscape/contextMenu/SymbolContextMenu.js";
-import SymbolDetailsPane from "../../../components/SymbolDetailsPane.js";
-import FiltersExtension from "../../../components/Cytoscape/ControlExtensions/FiltersExtension.js";
-import MetricsExtension from "../../../components/Cytoscape/ControlExtensions/MetricsExtension.js";
+import Controls from "../../../components/controls/Controls.tsx";
+import type { AuditContext } from "../base.tsx";
+import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.ts";
+import type {
+  FileAuditManifest,
+  FileDependencyManifest,
+  Metric,
+  SymbolAuditManifest,
+  SymbolDependencyManifest,
+} from "@napi/shared";
+import MetricsExtension from "../../../components/controls/ControlExtensions/MetricsExtension.tsx";
+import { useTheme } from "../../../contexts/ThemeProvider.tsx";
+import FiltersExtension from "../../../components/controls/ControlExtensions/FiltersExtension.tsx";
+import SymbolContextMenu from "../../../components/contextMenu/SymbolContextMenu.tsx";
+import SymbolDetailsPane from "../../../components/detailsPanes/SymbolDetailsPane.tsx";
 
 export default function AuditFilePage() {
   const navigate = useNavigate();
+
+  const { theme } = useTheme();
+
   const params = useParams<{ file: string }>();
+
   const [searchParams, setSearchParams] = useSearchParams();
+
   const context = useOutletContext<AuditContext>();
-  const themeContext = useContext(ThemeContext);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState<boolean>(true);
@@ -45,63 +53,71 @@ export default function AuditFilePage() {
     setMetric(metric);
   }
 
-  const [contextMenuOpen, setContextMenuOpen] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({
-    x: 0,
-    y: 0,
-  });
-  const [contextMenuSymbolId, setContextMenuSymbolId] = useState<
-    string | undefined
+  const [contextMenu, setContextMenu] = useState<
+    {
+      position: { x: number; y: number };
+      fileDependencyManifest: FileDependencyManifest;
+      symbolDependencyManifest: SymbolDependencyManifest;
+    } | undefined
   >(undefined);
 
-  const [detailsPaneSymbolId, setDetailsPaneSymbolId] = useState<
-    string | undefined
+  const [detailsPane, setDetailsPane] = useState<
+    {
+      fileDependencyManifest: FileDependencyManifest;
+      symbolDependencyManifest: SymbolDependencyManifest;
+      fileAuditManifest: FileAuditManifest;
+      symbolAuditManifest: SymbolAuditManifest;
+    } | undefined
   >(undefined);
-
-  const [detailsPaneOpen, setDetailsPaneOpen] = useState(false);
 
   // On mount useEffect
   useEffect(() => {
-    if (
-      !params.file ||
-      context.busy ||
-      !context.dependencyManifest ||
-      !context.auditManifest
-    )
-      return;
-
     setBusy(true);
+
+    if (!params.file) {
+      return;
+    }
+
     const fileDependencyVisualizer = new FileDependencyVisualizer(
       containerRef.current as HTMLElement,
       params.file,
       context.dependencyManifest,
       context.auditManifest,
       {
-        theme: themeContext.theme,
+        theme: theme,
         defaultMetric: metric,
         onAfterNodeRightClick: (value: {
           position: { x: number; y: number };
-          data: NapiNodeData;
+          filePath: string;
+          symbolId: string;
         }) => {
-          if (value.data.customData.fileName !== params.file) {
-            // ignore clicks on nodes from other files
-            return;
-          }
-          setContextMenuPosition(value.position);
-          setContextMenuOpen(true);
-          setContextMenuSymbolId(value.data.customData.symbolName);
+          const fileDependencyManifest =
+            context.dependencyManifest[value.filePath];
+          const symbolDependencyManifest =
+            fileDependencyManifest.symbols[value.symbolId];
+          setContextMenu({
+            position: value.position,
+            fileDependencyManifest,
+            symbolDependencyManifest,
+          });
         },
-        onAfterNodeDblClick: (data: NapiNodeData) => {
-          navigate(
-            `/audit/${encodeURIComponent(
-              data.customData.fileName,
-            )}/${encodeURIComponent(data.customData.symbolName)}`,
+        onAfterNodeDblClick: (filePath: string, symbolId: string) => {
+          const urlEncodedFileName = encodeURIComponent(
+            filePath,
           );
+          const urlEncodedSymbolId = encodeURIComponent(
+            symbolId,
+          );
+          const urlEncodedSymbolName =
+            `/audit/${urlEncodedFileName}/${urlEncodedSymbolId}`;
+
+          navigate(urlEncodedSymbolName);
         },
       },
     );
 
     setFileVisualizer(fileDependencyVisualizer);
+
     setBusy(false);
 
     // Cleanup on unmount
@@ -121,20 +137,46 @@ export default function AuditFilePage() {
   // Hook to update highlight node in the graph
   useEffect(() => {
     if (fileVisualizer) {
-      if (context.highlightedNodeId) {
-        fileVisualizer.highlightNode(context.highlightedNodeId);
+      if (context.highlightedCytoscapeRef) {
+        fileVisualizer.highlightNode(context.highlightedCytoscapeRef);
       } else {
         fileVisualizer.unhighlightNodes();
       }
     }
-  }, [context.highlightedNodeId]);
+  }, [context.highlightedCytoscapeRef]);
 
   // Hook to update the theme in the graph
   useEffect(() => {
     if (fileVisualizer) {
-      fileVisualizer.updateTheme(themeContext.theme);
+      fileVisualizer.updateTheme(theme);
     }
-  }, [themeContext.theme]);
+  }, [theme]);
+
+  function handleFilterChange(
+    showExternal: boolean,
+    showVariables: boolean,
+    showFunctions: boolean,
+    showClasses: boolean,
+    showStructs: boolean,
+    showEnums: boolean,
+    showInterfaces: boolean,
+    showRecords: boolean,
+    showDelegates: boolean,
+  ) {
+    if (fileVisualizer) {
+      fileVisualizer.filterNodes(
+        showExternal,
+        showVariables,
+        showFunctions,
+        showClasses,
+        showStructs,
+        showEnums,
+        showInterfaces,
+        showRecords,
+        showDelegates,
+      );
+    }
+  }
 
   return (
     <div className="relative w-full h-full">
@@ -143,18 +185,16 @@ export default function AuditFilePage() {
       {/* Otherwise, Cytoscape will not render correctly */}
       <div ref={containerRef} className="absolute w-full h-full z-10" />
 
-      {(context.busy || busy || !fileVisualizer) && <CytoscapeSkeleton />}
-
-      {fileVisualizer && (
+      <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
         <Controls
           busy={context.busy || busy}
-          cy={fileVisualizer.cy}
-          onLayout={() => fileVisualizer.layoutGraph(fileVisualizer.cy)}
+          cy={fileVisualizer?.cy}
+          onLayout={() => fileVisualizer?.layoutGraph(fileVisualizer.cy)}
         >
           <FiltersExtension
             busy={false}
-            cy={fileVisualizer.cy}
-            onLayout={() => fileVisualizer.layoutGraph(fileVisualizer.cy)}
+            currentFileName={params.file}
+            onFilterChange={handleFilterChange}
           />
           <MetricsExtension
             busy={false}
@@ -164,34 +204,33 @@ export default function AuditFilePage() {
             }}
           />
         </Controls>
-      )}
+      </div>
 
-      {contextMenuSymbolId && (
-        <SymbolContextMenu
-          position={contextMenuPosition}
-          fileDependencyManifest={context.dependencyManifest[params.file]}
-          symbolId={contextMenuSymbolId}
-          open={contextMenuOpen}
-          onOpenChange={setContextMenuOpen}
-          setDetailsPaneOpen={(open) => {
-            setDetailsPaneOpen(open);
-            if (open) {
-              setDetailsPaneSymbolId(contextMenuSymbolId);
-            }
-          }}
-          setExtractionNodes={context.actions.updateExtractionNodes}
-        />
-      )}
+      <SymbolContextMenu
+        context={contextMenu}
+        onClose={() => setContextMenu(undefined)}
+        onOpenDetails={(filePath, symbolId) => {
+          const fileDependencyManifest = context.dependencyManifest[filePath];
+          const symbolDependencyManifest =
+            fileDependencyManifest.symbols[symbolId];
+          const fileAuditManifest = context.auditManifest[filePath];
+          const symbolAuditManifest = fileAuditManifest.symbols[symbolId];
+          setDetailsPane({
+            fileDependencyManifest,
+            symbolDependencyManifest,
+            fileAuditManifest,
+            symbolAuditManifest,
+          });
+        }}
+      />
 
-      {detailsPaneSymbolId && (
-        <SymbolDetailsPane
-          fileDependencyManifest={context.dependencyManifest[params.file]}
-          fileAuditManifest={context.auditManifest[params.file]}
-          symbolId={detailsPaneSymbolId}
-          open={detailsPaneOpen}
-          setOpen={setDetailsPaneOpen}
-        />
-      )}
+      <SymbolDetailsPane
+        context={detailsPane}
+        onClose={() => setDetailsPane(undefined)}
+        onAddSymbolsForExtraction={(filePath, symbolIds) => {
+          context.onAddSymbolsForExtraction(filePath, symbolIds);
+        }}
+      />
     </div>
   );
 }

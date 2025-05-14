@@ -1,7 +1,8 @@
-import { EventEmitter } from "events";
-import os from "os";
-import { getOrCreateGlobalConfig } from "./config/globalConfig.js";
-import packageJson from "../package.json" with { type: "json" };
+import { EventEmitter } from "node:events";
+import os from "node:os";
+import { getOrCreateGlobalConfig } from "./config/globalConfig.ts";
+import denoJson from "../../../deno.json" with { type: "json" };
+import process from "node:process";
 
 export enum TelemetryEvents {
   APP_START = "app_start",
@@ -22,11 +23,10 @@ export interface TelemetryEvent {
 }
 
 const telemetry = new EventEmitter();
-const TELEMETRY_ENDPOINT =
-  process.env.TELEMETRY_ENDPOINT ||
+const TELEMETRY_ENDPOINT = process.env.TELEMETRY_ENDPOINT ||
   "https://napi-watchdog-api-gateway-33ge7a49.nw.gateway.dev/telemetryHandler";
 
-telemetry.on("event", (data) => {
+telemetry.on("event", (data: TelemetryEvent) => {
   sendTelemetryData(data);
 });
 
@@ -62,16 +62,16 @@ async function sendTelemetryData(data: TelemetryEvent) {
   }
 }
 
-export async function trackEvent(
+export function trackEvent(
   eventId: TelemetryEvents,
   eventData: Record<string, unknown>,
 ) {
-  const config = await getOrCreateGlobalConfig();
+  const config = getOrCreateGlobalConfig();
 
   const telemetryPayload: TelemetryEvent = {
     userId: config.userId,
     os: os.platform(),
-    version: packageJson.version,
+    version: denoJson.version,
     eventId,
     data: eventData,
     timestamp: new Date().toISOString(),

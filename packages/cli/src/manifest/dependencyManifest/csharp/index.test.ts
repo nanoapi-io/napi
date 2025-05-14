@@ -1,11 +1,12 @@
-import { describe, test, expect } from "vitest";
-import { generateCSharpDependencyManifest } from "./index.js";
-import path from "path";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { generateCSharpDependencyManifest } from "./index.ts";
+import path from "node:path";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../../../languagePlugins/csharp/testFiles/index.js";
+} from "../../../languagePlugins/csharp/testFiles/index.ts";
 
 describe("generateCSharpDependencymanifest", () => {
   const parsedfiles = getCSharpFilesMap();

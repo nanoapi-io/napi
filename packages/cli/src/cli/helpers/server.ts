@@ -1,13 +1,13 @@
-import { exec } from "child_process";
+import { exec } from "node:child_process";
 import express from "express";
-import z from "zod";
-import { localConfigSchema } from "../../config/localConfig.js";
-import { getApi } from "../../api/index.js";
+import type z from "zod";
+import type { localConfigSchema } from "../../config/localConfig.ts";
+import { getApi } from "../../api/index.ts";
 import { createProxyMiddleware } from "http-proxy-middleware";
-import path from "path";
-import { entryPointDirname } from "../../index.js";
+import { app_dist } from "../../index.ts";
+import process from "node:process";
 
-async function findAvailablePort(port: number): Promise<number> {
+function findAvailablePort(port: number): Promise<number> {
   return new Promise((resolve, reject) => {
     const server = express().listen(port, () => {
       server.close(() => {
@@ -47,17 +47,16 @@ export async function runServer(
   app.use(api);
 
   if (process.env.NODE_ENV === "development") {
-    const targetServiceUrl =
-      process.env.APP_SERVICE_URL || "http://localhost:3001";
-    app.use(
-      "/",
-      createProxyMiddleware({
-        target: targetServiceUrl,
-        changeOrigin: true,
-      }),
+    const targetServiceUrl = "http://localhost:3001";
+    console.warn(
+      `Running in development mode, proxying all traffic to the app to ${targetServiceUrl}`,
     );
+    app.use(createProxyMiddleware({
+      target: targetServiceUrl,
+      changeOrigin: true,
+    }));
   } else {
-    app.use(express.static(path.join(entryPointDirname, "app_dist")));
+    app.use(express.static(app_dist));
   }
 
   const port = await findAvailablePort(3000);

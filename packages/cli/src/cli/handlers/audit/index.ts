@@ -1,6 +1,6 @@
-import viewHandler from "./view.js";
-import { Argv, InferredOptionTypes } from "yargs";
-import { globalOptions } from "../../helpers/options.js";
+import viewHandler from "./view.ts";
+import type { Argv, InferredOptionTypes } from "yargs";
+import type { globalOptions } from "../../helpers/options.ts";
 
 function builder(
   yargs: Argv<

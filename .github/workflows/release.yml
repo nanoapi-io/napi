@@ -8,9 +8,17 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
+        type: choice
         description: "Release type: patch, minor, major"
         required: true
-        default: patch
+        options:
+          - patch
+          - minor
+          - major
+      release_notes:
+        type: string
+        description: "Release notes"
+        required: true
 
 jobs:
   release:
@@ -28,24 +36,33 @@ jobs:
         with:
           token: ${{ steps.generate_token.outputs.token }}
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
         with:
-          node-version: "22"
+          deno-version: "2.x"
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Login with git
+      - name: Compile
         run: |
-          git config --global user.email "info@nanoapi.io"
-          git config --global user.name "nanoapi.io"
+          deno task compie:all
 
-      - name: Login to npm registry
-        run: npm set "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}"
+      - name: Bump version
+        id: bump_version
+        run: |
+          VERSION=$(deno run -A scripts/bump_version.ts ${{ inputs.release_type }} ${{ inputs.release_notes }})
+          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Run release-it for CLI
-        run: npm run release -- ${{ github.event.inputs.release_type }} --ci
-        env:
-          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ inputs.release_notes }}
+          tag_name: v${{ steps.bump_version.outputs.release_version }}
+          files: |
+            dist/*
+            CHANGELOG.md
+
+      - name: Commit and push changes
+        run: |
+          # Commit and push changes
+          git add CHANGELOG.md
+          git commit -m "[skip ci] update changelog for version ${{ steps.bump_version.outputs.release_version }}"
+          git push
