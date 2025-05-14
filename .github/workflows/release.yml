@@ -15,26 +15,26 @@ on:
           - patch
           - minor
           - major
-      release_notes:
-        type: string
-        description: "Release notes"
-        required: true
+      # release_notes:
+      #   type: string
+      #   description: "Release notes"
+      #   required: true
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - name: Generate token
-        id: generate_token
-        uses: tibdex/github-app-token@v1
-        with:
-          app_id: ${{ secrets.WORKFLOWS_GITHUB_APP_ID }}
-          private_key: ${{ secrets.WORKFLOWS_GITHUB_APP_PRIVATE_KEY }}
+      # - name: Generate token
+      #   id: generate_token
+      #   uses: tibdex/github-app-token@v1
+      #   with:
+      #     app_id: ${{ secrets.WORKFLOWS_GITHUB_APP_ID }}
+      #     private_key: ${{ secrets.WORKFLOWS_GITHUB_APP_PRIVATE_KEY }}
 
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          token: ${{ steps.generate_token.outputs.token }}
+        # with:
+        #   token: ${{ steps.generate_token.outputs.token }}
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
@@ -48,21 +48,21 @@ jobs:
       - name: Bump version
         id: bump_version
         run: |
-          VERSION=$(deno run -A scripts/bump_version.ts ${{ inputs.release_type }} ${{ inputs.release_notes }})
+          VERSION=$(deno run -A scripts/bump_version.ts ${{ inputs.release_type }})
           echo "release_version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
-          body: ${{ inputs.release_notes }}
           tag_name: v${{ steps.bump_version.outputs.release_version }}
           files: |
             dist/*
-            CHANGELOG.md
 
       - name: Commit and push changes
         run: |
           # Commit and push changes
-          git add CHANGELOG.md
-          git commit -m "[skip ci] update changelog for version ${{ steps.bump_version.outputs.release_version }}"
+          git config --global user.name "github-action"
+          git config --global user.email "github-action@nanoapi.io"
+          git add deno.json
+          git commit -m "[skip ci] update version ${{ steps.bump_version.outputs.release_version }}"
           git push
