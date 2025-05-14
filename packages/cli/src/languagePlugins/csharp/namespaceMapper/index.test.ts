@@ -1,8 +1,9 @@
-import { describe, test, expect } from "vitest";
-import { CSharpNamespaceMapper } from "./index.js";
-import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.js";
-import path from "path";
-import { File } from "../namespaceResolver/index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { CSharpNamespaceMapper } from "./index.ts";
+import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";
+import path from "node:path";
+import type { File } from "../namespaceResolver/index.ts";
 
 describe("NamespaceMapper", () => {
   const files: Map<string, File> = getCSharpFilesMap();
@@ -159,14 +160,4 @@ describe("NamespaceMapper", () => {
       childrenNamespaces: [],
     });
   });
-
-  // test("should save the debug tree to a file", () => {
-  //   const debugTree = nsMapper.saveDebugTree("debugTree.json");
-  //   expect(debugTree).toMatchObject({
-  //     name: "",
-  //     type: "namespace",
-  //     children: expect.any(Array),
-  //   });
-  //   expect(debugTree.children.length > 0).toBe(true);
-  // });
 });

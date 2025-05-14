@@ -1,7 +1,8 @@
-import { describe, test, expect } from "vitest";
-import { CMetricsAnalyzer } from "./index.js";
-import { getCFilesMap, cFilesFolder } from "../testFiles/index.js";
-import path from "path";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { CMetricsAnalyzer } from "./index.ts";
+import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
+import path from "node:path";
 
 describe("CMetricsAnalyzer", () => {
   const analyzer = new CMetricsAnalyzer();

@@ -1,11 +1,14 @@
 import Parser from "tree-sitter";
-import {
+import type {
   CSharpNamespaceMapper,
   NamespaceNode,
   SymbolNode,
-} from "../namespaceMapper/index.js";
-import { CSharpProjectMapper, GlobalUsings } from "../projectMapper/index.js";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+} from "../namespaceMapper/index.ts";
+import type {
+  CSharpProjectMapper,
+  GlobalUsings,
+} from "../projectMapper/index.ts";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 const namespaceDeclarationQuery = new Parser.Query(
   csharpParser.getLanguage(),

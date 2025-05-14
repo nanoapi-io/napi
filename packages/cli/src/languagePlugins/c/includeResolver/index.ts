@@ -1,9 +1,9 @@
-import { Inclusions } from "./types.js";
-import { C_INCLUDE_QUERY, C_STANDARD_INCLUDE_QUERY } from "./queries.js";
-import { CSymbolRegistry } from "../symbolRegistry/index.js";
-import Parser from "tree-sitter";
-import { CFile } from "../symbolRegistry/types.js";
-import path from "path";
+import type { Inclusions } from "./types.ts";
+import { C_INCLUDE_QUERY, C_STANDARD_INCLUDE_QUERY } from "./queries.ts";
+import type { CSymbolRegistry } from "../symbolRegistry/index.ts";
+import type Parser from "tree-sitter";
+import type { CFile } from "../symbolRegistry/types.ts";
+import path from "node:path";
 
 export class CIncludeResolver {
   symbolRegistry: Map<string, CFile>;
@@ -13,7 +13,7 @@ export class CIncludeResolver {
   constructor(symbolRegistry: CSymbolRegistry) {
     this.symbolRegistry = symbolRegistry.getRegistry();
     this.files = symbolRegistry.files;
-    this.#inclusions = undefined;
+    this.#inclusions = new Map();
   }
 
   #getFile(filepath: string, sourcepath: string): CFile | undefined {
@@ -87,10 +87,10 @@ export class CIncludeResolver {
     }
 
     for (const node of standardIncludeNodes) {
-      inclusions.standard.set(
-        node.node.childForFieldName("path").text,
-        node.node,
-      );
+      const child = node.node.childForFieldName("path");
+      if (child) {
+        inclusions.standard.set(child.text, node.node);
+      }
     }
 
     return inclusions;

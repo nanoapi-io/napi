@@ -1,6 +1,6 @@
-import { C_COMPLEXITY_QUERY, C_COMMENT_QUERY } from "./queries.js";
-import { CComplexityMetrics, CommentSpan, CodeCounts } from "./types.js";
-import Parser from "tree-sitter";
+import { C_COMMENT_QUERY, C_COMPLEXITY_QUERY } from "./queries.ts";
+import type { CComplexityMetrics, CodeCounts, CommentSpan } from "./types.ts";
+import type Parser from "tree-sitter";
 
 export class CMetricsAnalyzer {
   /**

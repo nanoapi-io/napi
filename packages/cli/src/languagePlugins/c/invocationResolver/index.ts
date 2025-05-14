@@ -1,13 +1,13 @@
-import { Invocations } from "./types.js";
-import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.js";
-import { CIncludeResolver } from "../includeResolver/index.js";
+import type { Invocations } from "./types.ts";
+import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.ts";
+import type { CIncludeResolver } from "../includeResolver/index.ts";
 import {
-  Symbol,
   FunctionDefinition,
   FunctionSignature,
-} from "../symbolRegistry/types.js";
-import Parser from "tree-sitter";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
+  type Symbol,
+} from "../symbolRegistry/types.ts";
+import type Parser from "tree-sitter";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export class CInvocationResolver {
   includeResolver: CIncludeResolver;

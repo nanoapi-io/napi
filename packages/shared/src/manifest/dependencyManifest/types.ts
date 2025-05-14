@@ -13,6 +13,15 @@ export const unionSymbolType = "union";
 /** Identifies the "typedef" instance type. */
 export const typedefSymbolType = "typedef";
 
+/** Identifies the "interface" instance type. */
+export const interfaceSymbolType = "interface";
+
+/** Identifies the "record" instance type. */
+export const recordSymbolType = "record";
+
+/** Identifies the "delegate" instance type. */
+export const delegateSymbolType = "delegate";
+
 /** Identifies the "function" instance type. */
 export const functionSymbolType = "function";
 
@@ -24,7 +33,10 @@ export const variableSymbolType = "variable";
  * - struct
  * - enum
  * - function
- * - variable */
+ * - variable
+ * - interface
+ * - record
+ * - delegate */
 export type SymbolType =
   | typeof classSymbolType
   | typeof functionSymbolType
@@ -32,7 +44,10 @@ export type SymbolType =
   | typeof structSymbolType
   | typeof enumSymbolType
   | typeof unionSymbolType
-  | typeof typedefSymbolType;
+  | typeof typedefSymbolType
+  | typeof interfaceSymbolType
+  | typeof recordSymbolType
+  | typeof delegateSymbolType;
 
 export const metricLinesCount = "linesCount";
 export const metricCodeLineCount = "codeLineCount";

@@ -1,12 +1,13 @@
-import { describe, expect, test } from "vitest";
-import Parser from "tree-sitter";
-import { PythonExportExtractor } from "./index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import type Parser from "tree-sitter";
+import { PythonExportExtractor } from "./index.ts";
 import {
   PYTHON_CLASS_TYPE,
   PYTHON_FUNCTION_TYPE,
   PYTHON_VARIABLE_TYPE,
-} from "./types.js";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
+} from "./types.ts";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
 
 describe("PythonExportExtractor", () => {
   const parser = pythonParser;
@@ -553,7 +554,7 @@ describe("PythonExportExtractor", () => {
     // The counter += 100 inside modify_global() should not be captured
     // even though it modifies the global variable
     const hasGlobalModification = counter?.nodes.some((node) =>
-      node.text.includes("counter += 100"),
+      node.text.includes("counter += 100")
     );
     expect(hasGlobalModification).toBeFalsy();
 

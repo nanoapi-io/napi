@@ -1,4 +1,4 @@
-import { PythonSymbolType } from "../exportExtractor/types.js";
+import type { PythonSymbolType } from "../exportExtractor/types.ts";
 
 /**
  * Represents a dependency on a specific module.
@@ -12,7 +12,7 @@ export interface ModuleDependency {
   /**
    * True if this module is a namespace module
    * Usefull to have because namespace modules are not files
-   * */
+   */
   isNamespaceModule: boolean;
   /** Symbols used from this module, mapping symbol ID to symbol name */
   symbols: Set<string>;

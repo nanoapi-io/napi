@@ -1,9 +1,12 @@
-import * as fs from "fs";
-import * as path from "path";
-import Parser from "tree-sitter";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+import fs from "node:fs";
+import path from "node:path";
+import type Parser from "tree-sitter";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
-export const csharpFilesFolder = path.join(__dirname, "csharpFiles");
+export const csharpFilesFolder = path.join(
+  import.meta.dirname as string,
+  "csharpFiles",
+);
 
 const csharpFilesMap = new Map<
   string,

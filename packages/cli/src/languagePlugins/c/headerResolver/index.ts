@@ -1,12 +1,12 @@
-import {
+import type {
   ExportedSymbol,
   StorageClassSpecifier,
   SymbolType,
   TypeQualifier,
-} from "./types.js";
-import { C_DECLARATION_QUERY } from "./queries.js";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
-import Parser from "tree-sitter";
+} from "./types.ts";
+import { C_DECLARATION_QUERY } from "./queries.ts";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
+import type Parser from "tree-sitter";
 
 export class CHeaderResolver {
   parser: Parser = cParser;
@@ -64,12 +64,11 @@ export class CHeaderResolver {
             currentNode = currentNode.childForFieldName("declarator");
           }
         }
-        const type =
-          capture.name === "function_definition"
-            ? "function_definition"
-            : currentNode.type === "function_declarator"
-              ? "function_signature"
-              : "variable";
+        const type = capture.name === "function_definition"
+          ? "function_definition"
+          : currentNode.type === "function_declarator"
+          ? "function_signature"
+          : "variable";
         const idNode = currentNode.childForFieldName("declarator");
         exportedSymbols.push({
           name: idNode.text,

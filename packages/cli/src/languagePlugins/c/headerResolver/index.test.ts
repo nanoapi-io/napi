@@ -1,7 +1,8 @@
-import { describe, test, expect } from "vitest";
-import { getCFilesMap, cFilesFolder } from "../testFiles/index.js";
-import { CHeaderResolver } from "./index.js";
-import path from "path";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
+import { CHeaderResolver } from "./index.ts";
+import path from "node:path";
 
 describe("CHeaderResolver", () => {
   const cFilesMap = getCFilesMap();

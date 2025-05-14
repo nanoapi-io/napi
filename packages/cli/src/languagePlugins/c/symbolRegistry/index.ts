@@ -1,16 +1,16 @@
-import { ExportedSymbol } from "../headerResolver/types.js";
-import { CHeaderResolver } from "../headerResolver/index.js";
+import type { ExportedSymbol } from "../headerResolver/types.ts";
+import { CHeaderResolver } from "../headerResolver/index.ts";
 import {
+  CFile,
   DataType,
   FunctionDefinition,
   FunctionSignature,
+  type Symbol,
   Typedef,
   Variable,
-  CFile,
-  Symbol,
-} from "./types.js";
-import { C_TYPEDEF_TYPE_QUERY } from "./queries.js";
-import Parser from "tree-sitter";
+} from "./types.ts";
+import { C_TYPEDEF_TYPE_QUERY } from "./queries.ts";
+import type Parser from "tree-sitter";
 
 export class CSymbolRegistry {
   headerResolver: CHeaderResolver;
@@ -76,7 +76,7 @@ export class CSymbolRegistry {
     this.#registry = new Map();
     // Iterate over all header files and build the registry
     const headerFiles = Array.from(this.files.values()).filter((file) =>
-      file.path.endsWith(".h"),
+      file.path.endsWith(".h")
     );
     for (const file of headerFiles) {
       const exportedSymbols = this.headerResolver.resolveSymbols(file);
@@ -101,7 +101,7 @@ export class CSymbolRegistry {
 
     // Iterate over all source files to find function definitions.
     const sourceFiles = Array.from(this.files.values()).filter((file) =>
-      file.path.endsWith(".c"),
+      file.path.endsWith(".c")
     );
     for (const file of sourceFiles) {
       // We still need to resolve the symbols in the source files
@@ -141,10 +141,12 @@ export class CSymbolRegistry {
 
     // Associate typedefs with their corresponding data types
     for (const [, header] of this.#registry.entries()) {
-      for (const symbol of header.symbols
-        .values()
-        .filter((s) => s instanceof Typedef)
-        .map((s) => s as Typedef)) {
+      for (
+        const symbol of header.symbols
+          .values()
+          .filter((s) => s instanceof Typedef)
+          .map((s) => s as Typedef)
+      ) {
         const typedefNode = symbol.declaration.node;
         const typeCaptures = C_TYPEDEF_TYPE_QUERY.captures(typedefNode);
         if (typeCaptures.length > 0) {

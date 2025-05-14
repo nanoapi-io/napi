@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as path from "path";
-import Parser from "tree-sitter";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import type Parser from "tree-sitter";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export const cFilesFolder = path.join(__dirname, "cFiles");
 const cFilesMap = new Map<

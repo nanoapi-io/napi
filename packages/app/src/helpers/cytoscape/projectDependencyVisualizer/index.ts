@@ -1,28 +1,16 @@
 import cytoscape, {
-  Collection,
-  EdgeDefinition,
-  EdgeSingular,
-  ElementDefinition,
-  EventObjectNode,
-  NodeDefinition,
-  NodeSingular,
-  StylesheetJson,
+  type Collection,
+  type EdgeSingular,
+  type EventObjectNode,
 } from "cytoscape";
-import { Core } from "cytoscape";
+import type { Core } from "cytoscape";
 import fcose from "cytoscape-fcose";
-import { DependencyManifest, AuditManifest, Metric } from "@nanoapi.io/shared";
-import tailwindConfig from "../../../../tailwind.config.js";
-import {
-  getCollapsedFileNodeLabel,
-  getExpandedFileNodeLabel,
-  getNodeWidthAndHeightFromLabel,
-} from "../label/index.js";
-import { NapiNodeData } from "./types.js";
-import {
-  getMetricLevelColor,
-  getMetricsSeverityForNode,
-} from "../metrics/index.js";
-import { mainLayout } from "../layout/index.js";
+import type { AuditManifest, DependencyManifest, Metric } from "@napi/shared";
+import type { NapiNodeData } from "../elements/types.ts";
+import { mainLayout } from "../layout/index.ts";
+import { getCytoscapeStylesheet } from "../styles/index.ts";
+import { getFileElementsInProject } from "../elements/project.ts";
+
 /**
  * ProjectDependencyVisualizer creates an interactive graph of project-level dependencies.
  *
@@ -52,15 +40,13 @@ export class ProjectDependencyVisualizer {
   private targetMetric: Metric | undefined;
   /** Currently selected node in the graph */
   private selectedNodeId: string | undefined;
-  /** Currently highlighted node in the graph */
-  private highlightedNodeId: string | undefined;
   /** Callback functions triggered by graph interactions */
   private externalCallbacks: {
     onAfterNodeClick: () => void;
-    onAfterNodeDblClick: (data: NapiNodeData) => void;
+    onAfterNodeDblClick: (filePath: string) => void;
     onAfterNodeRightClick: (data: {
       position: { x: number; y: number };
-      id: string;
+      filePath: string;
     }) => void;
   };
 
@@ -82,17 +68,14 @@ export class ProjectDependencyVisualizer {
       onAfterNodeClick?: () => void;
       onAfterNodeRightClick?: (data: {
         position: { x: number; y: number };
-        id: string;
+        filePath: string;
       }) => void;
-      onAfterNodeDblClick?: (data: NapiNodeData) => void;
+      onAfterNodeDblClick?: (filePath: string) => void;
     },
   ) {
     const defaultOptions = {
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeClick: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeDblClick: () => {},
-      // eslint-disable-next-line @typescript-eslint/no-empty-function
       onAfterNodeRightClick: () => {},
       theme: "light" as const,
       defaultMetric: undefined,
@@ -113,13 +96,17 @@ export class ProjectDependencyVisualizer {
     this.cy.mount(container);
     this.theme = mergedOptions.theme;
 
-    const elements = this.getElementsFromManifestos(
+    const elements = getFileElementsInProject(
       dependencyManifest,
       auditManifest,
     );
     this.cy.add(elements);
 
-    this.cy.style(this.getCyStyleSheet(this.theme));
+    const stylesheet = getCytoscapeStylesheet(
+      this.targetMetric,
+      this.theme,
+    );
+    this.cy.style(stylesheet);
 
     this.layoutGraph(this.cy);
 
@@ -133,7 +120,11 @@ export class ProjectDependencyVisualizer {
    */
   public updateTheme(theme: "light" | "dark") {
     this.theme = theme;
-    this.cy.style(this.getCyStyleSheet(this.theme));
+    const stylesheet = getCytoscapeStylesheet(
+      this.targetMetric,
+      this.theme,
+    );
+    this.cy.style(stylesheet);
   }
 
   /**
@@ -141,17 +132,24 @@ export class ProjectDependencyVisualizer {
    *
    * @param nodeId - The ID of the node to highlight
    */
-  public highlightNode(nodeId: string) {
-    this.highlightedNodeId = nodeId;
-    this.cy.style(this.getCyStyleSheet(this.theme));
+  public highlightNode(ref: { filePath: string; symbolId?: string }) {
+    const nodeId = ref.filePath;
+
+    const highlightedNode = this.cy.nodes(`node[id="${nodeId}"]`);
+    const allElements = this.cy.elements();
+    const otherElements = allElements.difference(highlightedNode);
+
+    otherElements.removeClass("highlighted");
+    highlightedNode.addClass("highlighted");
   }
 
   /**
    * Unhighlights all nodes in the graph
    */
   public unhighlightNodes() {
-    this.highlightedNodeId = undefined;
-    this.cy.style(this.getCyStyleSheet(this.theme));
+    const allElements = this.cy.elements();
+
+    allElements.removeClass("highlighted");
   }
 
   /**
@@ -162,9 +160,9 @@ export class ProjectDependencyVisualizer {
    */
   private createEventListeners() {
     this.cy.on("onetap", "node", (evt: EventObjectNode) => {
-      const isAlreadySelected = this.selectedNodeId === evt.target.id();
-
-      this.selectedNodeId = evt.target.id();
+      const nodeId = evt.target.id();
+      const isAlreadySelected = this.selectedNodeId === nodeId;
+      this.selectedNodeId = nodeId;
 
       const allElements = this.cy.elements();
 
@@ -194,29 +192,33 @@ export class ProjectDependencyVisualizer {
       this.cy.batch(() => {
         // remove all, clean state
         allElements.removeClass([
-          "background",
+          "file",
+          "collapsed",
+          "expanded",
           "selected",
-          "connected",
           "dependency",
           "dependent",
-          "highlighted",
+          "background",
         ]);
 
         if (!isAlreadySelected) {
-          // add relevant classes
           backgroundElements.addClass("background");
-          connectedNodes.addClass("connected");
+
+          connectedNodes.addClass("collapsed");
+          connectedNodes.addClass("file");
+
+          selectedNode.addClass("expanded");
+          selectedNode.addClass("selected");
+          selectedNode.addClass("file");
+
           dependencyEdges.addClass("dependency");
           dependentEdges.addClass("dependent");
-          selectedNode.addClass("selected");
 
           // layout the closed neighborhood
           focusedElements.layout(this.layout).run();
         } else {
           this.selectedNodeId = undefined;
         }
-
-        this.cy.style(this.getCyStyleSheet(this.theme));
       });
 
       this.externalCallbacks.onAfterNodeClick();
@@ -225,7 +227,7 @@ export class ProjectDependencyVisualizer {
     this.cy.on("dbltap", "node", (evt: EventObjectNode) => {
       const node = evt.target;
       const data = node.data() as NapiNodeData;
-      this.externalCallbacks.onAfterNodeDblClick(data);
+      this.externalCallbacks.onAfterNodeDblClick(data.id);
     });
 
     this.cy.on("cxttap", "node", (evt: EventObjectNode) => {
@@ -234,7 +236,7 @@ export class ProjectDependencyVisualizer {
 
       this.externalCallbacks.onAfterNodeRightClick({
         position: { x, y },
-        id: node.id(),
+        filePath: node.id(),
       });
     });
   }
@@ -257,257 +259,10 @@ export class ProjectDependencyVisualizer {
   public setTargetMetric(metric: Metric | undefined) {
     this.targetMetric = metric;
 
-    this.cy.style(this.getCyStyleSheet(this.theme));
-  }
-
-  /**
-   * Processes dependency and audit manifests to create graph elements (nodes and edges)
-   *
-   * @param dependencyManifest - Object containing dependency information for project files
-   * @param auditManifest - Object containing audit information for project files
-   * @returns Array of element definitions for Cytoscape
-   */
-  private getElementsFromManifestos(
-    dependencyManifest: DependencyManifest,
-    auditManifest: AuditManifest,
-  ): ElementDefinition[] {
-    const nodes = this.createNodes(dependencyManifest, auditManifest);
-    const edges = this.createEdges(dependencyManifest);
-
-    return [...nodes, ...edges];
-  }
-
-  /**
-   * Generates the stylesheet for Cytoscape graph visualization based on theme
-   *
-   * Includes styles for:
-   * - Base node and edge appearance
-   * - Selected nodes and their connections
-   * - Background elements
-   * - Dependency/dependent relationship highlighting
-   *
-   * @param theme - The current theme (light or dark)
-   * @returns StylesheetJson for Cytoscape
-   */
-  private getCyStyleSheet(theme: "light" | "dark") {
-    return [
-      {
-        selector: "node",
-        style: {
-          "text-wrap": "wrap",
-          color: tailwindConfig.theme.extend.colors.text[theme],
-          "border-width": (node: NodeSingular) => {
-            return this.highlightedNodeId === node.id() ? 10 : 6;
-          },
-          "border-color": (node: NodeSingular) => {
-            if (this.highlightedNodeId === node.id()) {
-              return "yellow";
-            }
-
-            if (this.targetMetric) {
-              return getMetricLevelColor(
-                this.theme,
-                node.data().customData.metricsSeverity[this.targetMetric],
-              );
-            }
-            return tailwindConfig.theme.extend.colors.primary[theme];
-          },
-          "background-color": (node: NodeSingular) => {
-            const data = node.data() as NapiNodeData;
-            if (this.targetMetric) {
-              return getMetricLevelColor(
-                this.theme,
-                data.customData.metricsSeverity[this.targetMetric],
-              );
-            }
-            return tailwindConfig.theme.extend.colors.primary[theme];
-          },
-          "background-opacity": 0.4,
-          shape: "circle",
-          "text-valign": "center",
-          "text-halign": "center",
-        },
-      },
-      {
-        selector: "node.background",
-        style: {
-          opacity: 0.2,
-        },
-      },
-      {
-        selector: "node.selected",
-        style: {
-          label: "data(customData.expanded.label)",
-          "background-color":
-            tailwindConfig.theme.extend.colors.background[theme],
-          "border-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "z-index": 2000,
-          shape: "roundrectangle",
-          width: "data(customData.expanded.width)",
-          height: "data(customData.expanded.height)",
-        },
-      },
-      {
-        selector: "node.connected",
-        style: {
-          label: "data(customData.collapsed.label)",
-          "background-color":
-            tailwindConfig.theme.extend.colors.background[theme],
-          "z-index": 1000,
-          shape: "roundrectangle",
-          width: "data(customData.collapsed.width)",
-          height: "data(customData.collapsed.height)",
-        },
-      },
-      {
-        selector: "edge",
-        style: {
-          width: 1,
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-shape": "triangle",
-          "curve-style": "straight",
-        },
-      },
-      {
-        selector: "edge.dependency",
-        style: {
-          width: 2,
-          "line-color": tailwindConfig.theme.extend.colors.primary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.primary[theme],
-        },
-      },
-      {
-        selector: "edge.dependent",
-        style: {
-          width: 2,
-          "line-color": tailwindConfig.theme.extend.colors.secondary[theme],
-          "target-arrow-color":
-            tailwindConfig.theme.extend.colors.secondary[theme],
-        },
-      },
-      {
-        selector: "edge.background",
-        style: {
-          "line-opacity": 0.1,
-        },
-      },
-      {
-        selector: ".hidden",
-        style: {
-          display: "none",
-        },
-      },
-    ] as StylesheetJson;
-  }
-
-  /**
-   * Creates node elements for the Cytoscape graph with proper styling and metrics
-   *
-   * Each node contains:
-   * - File identification
-   * - Metric data (LOC, character count, etc.)
-   * - Audit information (errors/warnings)
-   * - Visual properties for expanded/collapsed states
-   *
-   * @param dependencyManifest - Object containing dependency information for project files
-   * @param auditManifest - Object containing audit information for project files
-   * @returns Array of node definitions for Cytoscape
-   */
-  private createNodes(
-    dependencyManifest: DependencyManifest,
-    auditManifest: AuditManifest,
-  ) {
-    interface CustomNodeDefinition extends NodeDefinition {
-      data: NapiNodeData & object;
-    }
-
-    const nodes: CustomNodeDefinition[] = [];
-
-    Object.values(dependencyManifest).forEach((fileDependencyManifest) => {
-      const fileAuditManifest = auditManifest[fileDependencyManifest.id];
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const alertMessage: string[] = Object.values(
-        fileAuditManifest.alerts,
-      ).map((alert) => alert.message.short);
-
-      const expandedLabel = getExpandedFileNodeLabel({
-        fileName: fileDependencyManifest.id,
-        fileAuditManifest,
-      });
-      const { width: expandedWitdh, height: expandedHeight } =
-        getNodeWidthAndHeightFromLabel(expandedLabel);
-
-      const collapsedLabel = getCollapsedFileNodeLabel({
-        fileName: fileDependencyManifest.id,
-        fileAuditManifest,
-      });
-      const { width: collapsedWidth, height: collapsedHeight } =
-        getNodeWidthAndHeightFromLabel(collapsedLabel);
-
-      const metricsColors = getMetricsSeverityForNode(fileAuditManifest);
-
-      const nodeElement: CustomNodeDefinition = {
-        data: {
-          id: fileDependencyManifest.id,
-          // initial node position - will be updated by layout
-          position: { x: 0, y: 0 },
-          customData: {
-            fileName: fileDependencyManifest.id,
-            metricsSeverity: metricsColors,
-            expanded: {
-              label: expandedLabel,
-              width: expandedWitdh,
-              height: expandedHeight,
-            },
-            collapsed: {
-              label: collapsedLabel,
-              width: collapsedWidth,
-              height: collapsedHeight,
-            },
-          },
-        },
-      };
-
-      nodes.push(nodeElement);
-    });
-
-    return nodes;
-  }
-
-  /**
-   * Creates edge elements representing dependencies between files
-   *
-   * Filters out self-references and external dependencies to focus on
-   * internal project structure.
-   *
-   * @param dependencyManifest - Object containing dependency information for project files
-   * @returns Array of edge definitions for Cytoscape
-   */
-  private createEdges(dependencyManifest: DependencyManifest) {
-    const edges: EdgeDefinition[] = [];
-
-    Object.values(dependencyManifest).forEach((fileManifest) => {
-      for (const dependency of Object.values(fileManifest.dependencies)) {
-        if (dependency.isExternal) {
-          continue;
-        }
-
-        if (dependency.id === fileManifest.id) {
-          continue;
-        }
-
-        edges.push({
-          data: {
-            source: dependency.id,
-            target: fileManifest.id,
-          },
-        });
-      }
-    });
-
-    return edges;
+    const stylesheet = getCytoscapeStylesheet(
+      this.targetMetric,
+      this.theme,
+    );
+    this.cy.style(stylesheet);
   }
 }

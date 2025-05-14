@@ -1,14 +1,15 @@
-import { describe, test, expect } from "vitest";
-import { getCFilesMap, cFilesFolder } from "../testFiles/index.js";
-import { CSymbolRegistry } from "./index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
+import { CSymbolRegistry } from "./index.ts";
 import {
   DataType,
   FunctionDefinition,
   FunctionSignature,
-  Variable,
   Typedef,
-} from "./types.js";
-import path from "path";
+  Variable,
+} from "./types.ts";
+import path from "node:path";
 
 describe("CSymbolRegistry", () => {
   const cFilesMap = getCFilesMap();
@@ -52,7 +53,7 @@ describe("CSymbolRegistry", () => {
     expect((drink as Typedef).datatype).toBeDefined();
     expect((fries as Typedef).datatype).not.toBeDefined();
     expect((drink as Typedef).datatype).toBeInstanceOf(DataType);
-    expect((drink as Typedef).datatype.name).toBe("Drink_t");
+    expect((drink as Typedef).datatype?.name).toBe("Drink_t");
   });
 
   test("registers functions for burgers.h", () => {

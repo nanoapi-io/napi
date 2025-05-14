@@ -1,5 +1,5 @@
-import { ExportedSymbol } from "../headerResolver/types.js";
-import Parser from "tree-sitter";
+import type { ExportedSymbol } from "../headerResolver/types.ts";
+import type Parser from "tree-sitter";
 
 /** Interface representing a C symbol */
 export class Symbol {

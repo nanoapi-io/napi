@@ -1,15 +1,16 @@
-import { describe, test, expect, beforeEach } from "vitest";
-import Parser from "tree-sitter";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { PythonModuleResolver } from "../moduleResolver/index.js";
-import { PythonUsageResolver } from "../usageResolver/index.js";
-import { PythonImportExtractor } from "../importExtractor/index.js";
-import { PythonItemResolver } from "../itemResolver/index.js";
-import { PythonDependencyResolver } from "../dependencyResolver/index.js";
-import { FileDependencies } from "./types.js";
-import { PYTHON_VARIABLE_TYPE } from "../exportExtractor/types.js";
-import { PythonMetricsAnalyzer } from "../metricAnalyzer/index.js";
+import { beforeEach, describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import type Parser from "tree-sitter";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
+import { PythonExportExtractor } from "../exportExtractor/index.ts";
+import { PythonModuleResolver } from "../moduleResolver/index.ts";
+import { PythonUsageResolver } from "../usageResolver/index.ts";
+import { PythonImportExtractor } from "../importExtractor/index.ts";
+import { PythonItemResolver } from "../itemResolver/index.ts";
+import { PythonDependencyResolver } from "../dependencyResolver/index.ts";
+import type { FileDependencies } from "./types.ts";
+import { PYTHON_VARIABLE_TYPE } from "../exportExtractor/types.ts";
+import { PythonMetricsAnalyzer } from "../metricAnalyzer/index.ts";
 describe("DependencyResolver", () => {
   let parser: Parser;
   let exportExtractor: PythonExportExtractor;
@@ -235,8 +236,8 @@ my_list = [original_func(), another_func()]
   describe("Re-exporting modules", () => {
     test("should track both original and re-exporting modules as dependencies", () => {
       // Analyze dependencies for the consumer module
-      const dependencies: FileDependencies =
-        dependencyResolver.getFileDependencies("consumer.py");
+      const dependencies: FileDependencies = dependencyResolver
+        .getFileDependencies("consumer.py");
 
       // We expect the consumer to depend on both original.py and reexporter.py
       expect(dependencies.dependencies.size).toBe(2);
@@ -257,8 +258,10 @@ my_list = [original_func(), another_func()]
 
     test("should not track reexporter as dependency if it's not used", () => {
       // Analyze dependencies
-      const dependencies: FileDependencies =
-        dependencyResolver.getFileDependencies("direct_consumer.py");
+      const dependencies: FileDependencies = dependencyResolver
+        .getFileDependencies(
+          "direct_consumer.py",
+        );
 
       // Should only depend on original.py
       expect(dependencies.dependencies.size).toBe(1);
@@ -268,8 +271,10 @@ my_list = [original_func(), another_func()]
 
     test("should handle multiple levels of re-exports", () => {
       // Analyze dependencies
-      const dependencies: FileDependencies =
-        dependencyResolver.getFileDependencies("level3_consumer.py");
+      const dependencies: FileDependencies = dependencyResolver
+        .getFileDependencies(
+          "level3_consumer.py",
+        );
 
       // Should depend on all three modules in the chain
       expect(dependencies.dependencies.size).toBe(3);
@@ -292,8 +297,10 @@ my_list = [original_func(), another_func()]
   describe("Variable modifications", () => {
     test("should track dependencies in each variable modification", () => {
       // Analyze dependencies for the module with modified variables
-      const dependencies: FileDependencies =
-        dependencyResolver.getFileDependencies("modified_variables.py");
+      const dependencies: FileDependencies = dependencyResolver
+        .getFileDependencies(
+          "modified_variables.py",
+        );
 
       // Should depend on both original.py and another.py
       expect(dependencies.dependencies.size).toBe(2);
@@ -326,8 +333,10 @@ my_list = [original_func(), another_func()]
 
     test("should track dependencies in multiple function definitions", () => {
       // Analyze dependencies for the module with multiple function definitions
-      const dependencies: FileDependencies =
-        dependencyResolver.getFileDependencies("multi_function.py");
+      const dependencies: FileDependencies = dependencyResolver
+        .getFileDependencies(
+          "multi_function.py",
+        );
 
       // Should depend on both original.py and another.py
       expect(dependencies.dependencies.size).toBe(2);
@@ -348,8 +357,10 @@ my_list = [original_func(), another_func()]
 
     test("should handle sequential variable dependencies", () => {
       // Analyze dependencies for the module with sequential variable dependencies
-      const dependencies: FileDependencies =
-        dependencyResolver.getFileDependencies("sequential_vars.py");
+      const dependencies: FileDependencies = dependencyResolver
+        .getFileDependencies(
+          "sequential_vars.py",
+        );
 
       // Module should depend on both original.py and another.py
       expect(dependencies.dependencies.has("original.py")).toBeTruthy();
@@ -373,21 +384,23 @@ my_list = [original_func(), another_func()]
 
       // At least one variable should depend on another.py
       const hasAnotherDependency = variables.some((v) =>
-        v.dependencies.has("another.py"),
+        v.dependencies.has("another.py")
       );
       expect(hasAnotherDependency).toBeTruthy();
 
       // At least one variable should depend on original.py
       const hasOriginalDependency = variables.some((v) =>
-        v.dependencies.has("original.py"),
+        v.dependencies.has("original.py")
       );
       expect(hasOriginalDependency).toBeTruthy();
     });
 
     test("should handle complex list and dictionary variables", () => {
       // Analyze dependencies for the module with complex list and dictionary variables
-      const dependencies: FileDependencies =
-        dependencyResolver.getFileDependencies("complex_vars.py");
+      const dependencies: FileDependencies = dependencyResolver
+        .getFileDependencies(
+          "complex_vars.py",
+        );
 
       // Should depend on both original.py and another.py
       expect(dependencies.dependencies.size).toBe(2);

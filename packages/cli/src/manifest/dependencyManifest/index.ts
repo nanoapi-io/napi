@@ -1,17 +1,17 @@
-import { generatePythonDependencyManifest } from "./python/index.js";
-import { generateCSharpDependencyManifest } from "./csharp/index.js";
-import { generateCDependencyManifest } from "./c/index.js";
-import { localConfigSchema } from "../../config/localConfig.js";
-import z from "zod";
-import {
+import { generatePythonDependencyManifest } from "./python/index.ts";
+import { generateCSharpDependencyManifest } from "./csharp/index.ts";
+import { generateCDependencyManifest } from "./c/index.ts";
+import type { localConfigSchema } from "../../config/localConfig.ts";
+import type z from "zod";
+import type {
   DependencyManifest,
   SymbolDependencyManifest,
-} from "@nanoapi.io/shared";
+} from "@napi/shared";
 import {
-  pythonLanguage,
-  csharpLanguage,
   cLanguage,
-} from "../../helpers/treeSitter/parsers.js";
+  csharpLanguage,
+  pythonLanguage,
+} from "../../helpers/treeSitter/parsers.ts";
 
 const handlerMap: Record<
   string,
@@ -49,7 +49,7 @@ export function generateDependencyManifest(
 
   // Sort the keys of the dependency map and consider them all as lowercase
   const sortedKeys = Object.keys(depMap).sort((a, b) =>
-    a.localeCompare(b, undefined, { sensitivity: "base" }),
+    a.localeCompare(b, undefined, { sensitivity: "base" })
   );
   // Create a new object with sorted keys
   const sortedDepMap: DependencyManifest = {};
@@ -58,7 +58,7 @@ export function generateDependencyManifest(
 
     // Sort the symbols within each file manifest and consider them all as lowercase
     const sortedSymbols = Object.keys(depMap[key].symbols).sort((a, b) =>
-      a.localeCompare(b, undefined, { sensitivity: "base" }),
+      a.localeCompare(b, undefined, { sensitivity: "base" })
     );
 
     // Then put the symbols in a new object with sorted keys

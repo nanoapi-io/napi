@@ -1,3 +1,5 @@
+import { Buffer } from "node:buffer";
+
 export function removeIndexesFromSourceCode(
   sourceCode: string,
   indexesToRemove: { startIndex: number; endIndex: number }[],

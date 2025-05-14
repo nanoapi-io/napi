@@ -1,4 +1,4 @@
-import { Symbol } from "../symbolRegistry/types.js";
+import { Symbol } from "../symbolRegistry/types.ts";
 
 /** Interface representing the invoked symbols in a file */
 export interface Invocations {
