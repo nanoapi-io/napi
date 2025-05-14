@@ -10,7 +10,10 @@ export class CMetricsAnalyzer {
    */
   public analyzeNode(node: Parser.SyntaxNode): CComplexityMetrics {
     if (node.type === "preproc_function_def") {
-      node = node.childForFieldName("value");
+      const value = node.childForFieldName("value");
+      if (value) {
+        node = value;
+      }
     }
     const complexityCount = this.getComplexityCount(node);
     const linesCount = node.endPosition.row - node.startPosition.row + 1;

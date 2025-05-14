@@ -7,22 +7,40 @@ export class Symbol {
   name: string;
   /** The corresponding ExportedSymbol object */
   declaration: ExportedSymbol;
+  constructor(name: string, declaration: ExportedSymbol) {
+    this.name = name;
+    this.declaration = declaration;
+  }
 }
 
 /** Interface representing a C function signature */
 export class FunctionSignature extends Symbol {
   /** The definition of the function in a source file */
-  definition: FunctionDefinition;
+  definition?: FunctionDefinition;
   /** Whether the function is a macro or not */
   isMacro: boolean;
+  constructor(
+    name: string,
+    declaration: ExportedSymbol,
+    isMacro: boolean,
+  ) {
+    super(name, declaration);
+    this.isMacro = isMacro;
+    this.definition = undefined;
+  }
 }
 
 /** Interface representing a C function definition */
 export class FunctionDefinition extends Symbol {
   /** The declaration of the function in a header file */
-  signature: FunctionSignature;
+  signature?: FunctionSignature;
   /** Whether the function is a macro or not */
   isMacro: boolean;
+  constructor(name: string, declaration: ExportedSymbol, isMacro: boolean) {
+    super(name, declaration);
+    this.isMacro = isMacro;
+    this.signature = undefined;
+  }
 }
 
 /** Interface representing a C variable */
@@ -36,6 +54,10 @@ export class Typedef extends Symbol {
 export class Variable extends Symbol {
   /** Whether the variable is a macro or not */
   isMacro: boolean;
+  constructor(name: string, declaration: ExportedSymbol, isMacro: boolean) {
+    super(name, declaration);
+    this.isMacro = isMacro;
+  }
 }
 
 export const C_SOURCE_FILE = ".c";
@@ -53,4 +75,12 @@ export class CFile {
   symbols: Map<string, Symbol>;
   /** The type of the file (i.e. .c or .h) */
   type: CFileType;
+  constructor(
+    file: { path: string; rootNode: Parser.SyntaxNode },
+    filetype: CFileType,
+  ) {
+    this.file = file;
+    this.type = filetype;
+    this.symbols = new Map();
+  }
 }

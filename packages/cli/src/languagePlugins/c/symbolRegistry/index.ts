@@ -15,7 +15,7 @@ import type Parser from "tree-sitter";
 export class CSymbolRegistry {
   headerResolver: CHeaderResolver;
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
-  #registry: Map<string, CFile>;
+  #registry?: Map<string, CFile>;
 
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
@@ -31,40 +31,39 @@ export class CSymbolRegistry {
    */
   #convertSymbol(es: ExportedSymbol): Symbol {
     if (["struct", "enum", "union"].includes(es.type)) {
-      const symbol = new DataType();
-      symbol.name = es.name;
-      symbol.declaration = es;
-      return symbol;
+      return new DataType(
+        es.name,
+        es,
+      );
     }
     if (es.type === "typedef") {
-      const symbol = new Typedef();
-      symbol.name = es.name;
-      symbol.declaration = es;
-      return symbol;
+      return new Typedef(
+        es.name,
+        es,
+      );
     }
     if (es.type === "function_definition" || es.type === "macro_function") {
-      const symbol = new FunctionDefinition();
-      symbol.name = es.name;
-      symbol.declaration = es;
-      symbol.signature = null;
-      symbol.isMacro = es.node.type === "preproc_function_def";
-      return symbol;
+      return new FunctionDefinition(
+        es.name,
+        es,
+        es.node.type === "preproc_function_def",
+      );
     }
     if (es.type === "function_signature") {
-      const symbol = new FunctionSignature();
-      symbol.name = es.name;
-      symbol.declaration = es;
-      symbol.definition = null;
-      symbol.isMacro = es.node.type === "preproc_function_def";
-      return symbol;
+      return new FunctionSignature(
+        es.name,
+        es,
+        es.node.type === "preproc_function_def",
+      );
     }
     if (es.type === "variable" || es.type === "macro_constant") {
-      const symbol = new Variable();
-      symbol.name = es.name;
-      symbol.declaration = es;
-      symbol.isMacro = es.node.type === "preproc_def";
-      return symbol;
+      return new Variable(
+        es.name,
+        es,
+        es.node.type === "preproc_def",
+      );
     }
+    throw new Error(`Could not find symbol type for ${es.name} (${es.type})`);
   }
 
   /**
@@ -80,10 +79,7 @@ export class CSymbolRegistry {
     );
     for (const file of headerFiles) {
       const exportedSymbols = this.headerResolver.resolveSymbols(file);
-      const header = new CFile();
-      header.type = ".h";
-      header.file = file;
-      header.symbols = new Map();
+      const header = new CFile(file, ".h");
       for (const es of exportedSymbols) {
         const symbol = this.#convertSymbol(es);
         if (symbol instanceof DataType && !header.symbols.has(symbol.name)) {
@@ -108,10 +104,7 @@ export class CSymbolRegistry {
       // because they can depend on eachother.
       // However they are not global.
       const exportedSymbols = this.headerResolver.resolveSymbols(file);
-      const source = new CFile();
-      source.type = ".c";
-      source.file = file;
-      source.symbols = new Map();
+      const source = new CFile(file, ".c");
       for (const es of exportedSymbols) {
         const symbol = this.#convertSymbol(es);
         if (symbol instanceof DataType && !source.symbols.has(symbol.name)) {
@@ -173,6 +166,9 @@ export class CSymbolRegistry {
   getRegistry(): Map<string, CFile> {
     if (!this.#registry) {
       this.#buildRegistry();
+    }
+    if (!this.#registry) {
+      throw new Error("Couldn't build registry for project");
     }
     return this.#registry;
   }

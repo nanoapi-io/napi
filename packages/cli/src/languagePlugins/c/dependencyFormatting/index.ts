@@ -42,6 +42,7 @@ export class CDependencyFormatter {
     if (st === "macro_constant") {
       return C_VARIABLE_TYPE as CDepSymbolType;
     }
+    throw new Error(`Unknown symbol type: ${st}`);
   }
 
   /**
@@ -133,6 +134,9 @@ export class CDependencyFormatter {
       filepath,
     );
     const includes = this.includeResolver.getInclusions().get(filepath);
+    if (!includes) {
+      throw new Error(`File not found: ${filepath}`);
+    }
     const stdincludes = Array.from(includes.standard.keys());
     const invokedDependencies = this.#formatDependencies(fileDependencies);
     const stdDependencies = this.#formatStandardIncludes(stdincludes);

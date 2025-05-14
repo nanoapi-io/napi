@@ -4,6 +4,7 @@ import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
 import { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import { CIncludeResolver } from "../includeResolver/index.ts";
 import { CInvocationResolver } from "./index.ts";
+import type { Symbol } from "../symbolRegistry/types.ts";
 import path from "node:path";
 
 describe("CInvocationResolver", () => {
@@ -19,21 +20,21 @@ describe("CInvocationResolver", () => {
   const registry = symbolRegistry.getRegistry();
 
   test("resolves invocations for burgers.h", () => {
-    const symbols = registry.get(burgersh).symbols;
+    const symbols = registry.get(burgersh)?.symbols;
     if (!symbols) {
       throw new Error(`Symbol not found for: ${burgersh}`);
     }
-    const sauce = symbols.get("Sauce");
+    const sauce = symbols.get("Sauce") as Symbol;
     const sauceinvocations = invocationResolver.getInvocationsForSymbol(sauce);
     expect(sauceinvocations.resolved.size).toBe(1);
     expect(sauceinvocations.resolved.get("ClassicSauces")).toBeDefined();
 
-    const fries = symbols.get("Fries");
+    const fries = symbols.get("Fries") as Symbol;
     const friesinvocations = invocationResolver.getInvocationsForSymbol(fries);
     expect(friesinvocations.resolved.size).toBe(1);
     expect(friesinvocations.resolved.get("Sauce")).toBeDefined();
 
-    const burger = symbols.get("Burger");
+    const burger = symbols.get("Burger") as Symbol;
     const burgerinvocations = invocationResolver.getInvocationsForSymbol(
       burger,
     );
@@ -43,11 +44,11 @@ describe("CInvocationResolver", () => {
   });
 
   test("resolves invocations for burgers.c", () => {
-    const symbols = registry.get(burgersc).symbols;
+    const symbols = registry.get(burgersc)?.symbols;
     if (!symbols) {
       throw new Error(`Symbol not found for: ${burgersc}`);
     }
-    const create_burger = symbols.get("create_burger");
+    const create_burger = symbols.get("create_burger") as Symbol;
     const create_burger_invocations = invocationResolver
       .getInvocationsForSymbol(create_burger);
     const create_resolved = Array.from(
@@ -60,7 +61,7 @@ describe("CInvocationResolver", () => {
     expect(create_resolved).toContain("Sauce");
     expect(create_resolved).toContain("burger_count");
 
-    const destroy_burger = symbols.get("destroy_burger");
+    const destroy_burger = symbols.get("destroy_burger") as Symbol;
     const destroy_burger_invocations = invocationResolver
       .getInvocationsForSymbol(destroy_burger);
     const destroy_resolved = Array.from(
@@ -70,9 +71,12 @@ describe("CInvocationResolver", () => {
     expect(destroy_resolved).toContain("destroy_burger");
     expect(destroy_resolved).toContain("Burger");
 
-    const symbolsc = registry.get(burgersc).symbols;
+    const symbolsc = registry.get(burgersc)?.symbols;
+    if (!symbolsc) {
+      throw new Error(`Symbol not found for: ${burgersc}`);
+    }
 
-    const burgers = symbolsc.get("burgers");
+    const burgers = symbolsc.get("burgers") as Symbol;
     const burgers_invocations = invocationResolver.getInvocationsForSymbol(
       burgers,
     );
@@ -83,11 +87,11 @@ describe("CInvocationResolver", () => {
   });
 
   test("resolves invocations for personnel.c", () => {
-    const symbols = registry.get(personnelc).symbols;
+    const symbols = registry.get(personnelc)?.symbols;
     if (!symbols) {
       throw new Error(`Symbol not found for: ${personnelc}`);
     }
-    const create_employee = symbols.get("create_employee");
+    const create_employee = symbols.get("create_employee") as Symbol;
     const create_employee_invocations = invocationResolver
       .getInvocationsForSymbol(create_employee);
     const create_resolved = Array.from(
@@ -103,11 +107,11 @@ describe("CInvocationResolver", () => {
   });
 
   test("resolves invocations for main.c", () => {
-    const symbols = registry.get(main).symbols;
+    const symbols = registry.get(main)?.symbols;
     if (!symbols) {
       throw new Error(`Symbol not found for: ${main}`);
     }
-    const main_func = symbols.get("main");
+    const main_func = symbols.get("main") as Symbol;
     const main_invocations = invocationResolver.getInvocationsForSymbol(
       main_func,
     );
@@ -122,11 +126,11 @@ describe("CInvocationResolver", () => {
   });
 
   test("Crash Cases", () => {
-    const symbols = registry.get(crashcasesh).symbols;
+    const symbols = registry.get(crashcasesh)?.symbols;
     if (!symbols) {
       throw new Error(`Symbol not found for: ${crashcasesh}`);
     }
-    const crash = symbols.get("CpuFastFill");
+    const crash = symbols.get("CpuFastFill") as Symbol;
     const crash_invocations = invocationResolver.getInvocationsForSymbol(crash);
     const crash_resolved = Array.from(crash_invocations.resolved.keys());
     expect(crash_resolved.length).toBe(2);

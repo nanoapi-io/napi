@@ -3,7 +3,10 @@ import * as path from "node:path";
 import type Parser from "tree-sitter";
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
-export const cFilesFolder = path.join(__dirname, "cFiles");
+if (!import.meta.dirname) {
+  throw new Error("import.meta.dirname is not defined");
+}
+export const cFilesFolder = path.join(import.meta.dirname, "cFiles");
 const cFilesMap = new Map<
   string,
   { path: string; rootNode: Parser.SyntaxNode }

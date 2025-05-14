@@ -80,30 +80,32 @@ describe("CSymbolRegistry", () => {
     expect((max as FunctionDefinition).declaration.node.type).toBe(
       "preproc_function_def",
     );
-    expect((create as FunctionSignature).definition.declaration.node.type).toBe(
-      "function_definition",
-    );
+    expect((create as FunctionSignature).definition?.declaration.node.type)
+      .toBe(
+        "function_definition",
+      );
     expect(
-      (destroy as FunctionSignature).definition.declaration.node.type,
+      (destroy as FunctionSignature).definition?.declaration.node.type,
     ).toBe("function_definition");
-    expect((get as FunctionSignature).definition.declaration.node.type).toBe(
+    expect((get as FunctionSignature).definition?.declaration.node.type).toBe(
       "function_definition",
     );
     expect(
-      (cheapest as FunctionSignature).definition.declaration.node.type,
+      (cheapest as FunctionSignature).definition?.declaration.node.type,
     ).toBe("function_definition");
     expect((max as FunctionDefinition).declaration.filepath).toBe(burgersh);
-    expect((create as FunctionSignature).definition.declaration.filepath).toBe(
+    expect((create as FunctionSignature).definition?.declaration.filepath).toBe(
       burgersc,
     );
-    expect((destroy as FunctionSignature).definition.declaration.filepath).toBe(
-      burgersc,
-    );
-    expect((get as FunctionSignature).definition.declaration.filepath).toBe(
+    expect((destroy as FunctionSignature).definition?.declaration.filepath)
+      .toBe(
+        burgersc,
+      );
+    expect((get as FunctionSignature).definition?.declaration.filepath).toBe(
       burgersc,
     );
     expect(
-      (cheapest as FunctionSignature).definition.declaration.filepath,
+      (cheapest as FunctionSignature).definition?.declaration.filepath,
     ).toBe(burgersc);
   });
 

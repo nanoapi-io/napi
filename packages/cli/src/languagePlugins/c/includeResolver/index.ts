@@ -8,12 +8,11 @@ import path from "node:path";
 export class CIncludeResolver {
   symbolRegistry: Map<string, CFile>;
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
-  #inclusions: Map<string, Inclusions>;
+  #inclusions?: Map<string, Inclusions>;
 
   constructor(symbolRegistry: CSymbolRegistry) {
     this.symbolRegistry = symbolRegistry.getRegistry();
     this.files = symbolRegistry.files;
-    this.#inclusions = new Map();
   }
 
   #getFile(filepath: string, sourcepath: string): CFile | undefined {
