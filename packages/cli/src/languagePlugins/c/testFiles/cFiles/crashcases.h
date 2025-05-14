@@ -1,4 +1,3 @@
-
 #define CPU_FAST_SET_SRC_FIXED 0x01000000
 
 void CpuFastSet(const void *src, void *dest, unsigned int control);
