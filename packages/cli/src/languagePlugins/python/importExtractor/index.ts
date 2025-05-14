@@ -1,10 +1,10 @@
 import Parser from "tree-sitter";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
-  ImportMember,
-  ImportStatement,
+  type ImportMember,
+  type ImportStatement,
   NORMAL_IMPORT_STATEMENT_TYPE,
-} from "./types.js";
+} from "./types.ts";
 
 /**
  * PythonImportExtractor parses and extracts Python import statements (normal and from-import).

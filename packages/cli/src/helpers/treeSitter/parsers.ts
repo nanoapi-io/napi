@@ -1,4 +1,4 @@
-import Parser, { Language } from "tree-sitter";
+import Parser, { type Language } from "tree-sitter";
 import Python from "tree-sitter-python";
 import CSharp from "tree-sitter-c-sharp";
 import C from "tree-sitter-c";
@@ -16,10 +16,10 @@ cParser.setLanguage(C as Language);
 const cLanguage = C.name as "c";
 
 export {
-  pythonParser,
-  pythonLanguage,
-  csharpParser,
-  csharpLanguage,
-  cParser,
   cLanguage,
+  cParser,
+  csharpLanguage,
+  csharpParser,
+  pythonLanguage,
+  pythonParser,
 };

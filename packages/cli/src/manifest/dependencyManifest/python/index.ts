@@ -1,7 +1,9 @@
-import Parser from "tree-sitter";
+import type Parser from "tree-sitter";
 import {
-  DependencyManifest,
-  FileDependencyManifest,
+  type DependencyInfo,
+  type DependencyManifest,
+  type DependentInfo,
+  type FileDependencyManifest,
   metricCharacterCount,
   metricCodeCharacterCount,
   metricCodeLineCount,
@@ -9,20 +11,18 @@ import {
   metricDependencyCount,
   metricDependentCount,
   metricLinesCount,
-  SymbolDependencyManifest,
-  DependencyInfo,
-  DependentInfo,
-} from "@nanoapi.io/shared";
-import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor/index.js";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
-import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver/index.js";
-import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolver/index.js";
-import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver/index.js";
-import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver/index.js";
-import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor/index.js";
-import { localConfigSchema } from "../../../config/localConfig.js";
-import z from "zod";
-import { PythonMetricsAnalyzer } from "../../../languagePlugins/python/metricAnalyzer/index.js";
+  type SymbolDependencyManifest,
+} from "@napi/shared";
+import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor/index.ts";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
+import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver/index.ts";
+import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolver/index.ts";
+import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver/index.ts";
+import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver/index.ts";
+import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor/index.ts";
+import type { localConfigSchema } from "../../../config/localConfig.ts";
+import type z from "zod";
+import { PythonMetricsAnalyzer } from "../../../languagePlugins/python/metricAnalyzer/index.ts";
 
 /**
  * Builds dependent relationships in the manifest by traversing all dependencies
@@ -33,9 +33,11 @@ function generateDependentsForManifest(
   // Go through each file in the manifest
   for (const [fileId, fileManifest] of Object.entries(manifest)) {
     // Process file-level dependencies first
-    for (const [depFileId, depInfo] of Object.entries(
-      fileManifest.dependencies,
-    )) {
+    for (
+      const [depFileId, depInfo] of Object.entries(
+        fileManifest.dependencies,
+      )
+    ) {
       // Only proceed if it's an internal dependency and the target file actually exists in our manifest
       if (!depInfo.isExternal && manifest[depFileId]) {
         const depFile = manifest[depFileId];
@@ -73,9 +75,11 @@ function generateDependentsForManifest(
     // For each symbol in the file
     for (const [symbolId, symbolData] of Object.entries(fileManifest.symbols)) {
       // For each dependency that this symbol uses
-      for (const [depFileId, depInfo] of Object.entries(
-        symbolData.dependencies,
-      )) {
+      for (
+        const [depFileId, depInfo] of Object.entries(
+          symbolData.dependencies,
+        )
+      ) {
         // Only proceed if it's an internal dependency and the target file actually exists in our manifest
         if (!depInfo.isExternal && manifest[depFileId]) {
           const depFile = manifest[depFileId];

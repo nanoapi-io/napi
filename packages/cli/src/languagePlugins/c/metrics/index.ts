@@ -1,6 +1,6 @@
-import { C_COMPLEXITY_QUERY, C_COMMENT_QUERY } from "./queries.js";
-import { CComplexityMetrics, CommentSpan, CodeCounts } from "./types.js";
-import Parser from "tree-sitter";
+import { C_COMMENT_QUERY, C_COMPLEXITY_QUERY } from "./queries.ts";
+import type { CComplexityMetrics, CodeCounts, CommentSpan } from "./types.ts";
+import type Parser from "tree-sitter";
 
 export class CMetricsAnalyzer {
   /**
@@ -10,7 +10,10 @@ export class CMetricsAnalyzer {
    */
   public analyzeNode(node: Parser.SyntaxNode): CComplexityMetrics {
     if (node.type === "preproc_function_def") {
-      node = node.childForFieldName("value");
+      const value = node.childForFieldName("value");
+      if (value) {
+        node = value;
+      }
     }
     const complexityCount = this.getComplexityCount(node);
     const linesCount = node.endPosition.row - node.startPosition.row + 1;

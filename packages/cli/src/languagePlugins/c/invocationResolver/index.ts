@@ -1,13 +1,13 @@
-import { Invocations } from "./types.js";
-import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.js";
-import { CIncludeResolver } from "../includeResolver/index.js";
+import type { Invocations } from "./types.ts";
+import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.ts";
+import type { CIncludeResolver } from "../includeResolver/index.ts";
 import {
-  Symbol,
   FunctionDefinition,
   FunctionSignature,
-} from "../symbolRegistry/types.js";
-import Parser from "tree-sitter";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
+  type Symbol,
+} from "../symbolRegistry/types.ts";
+import type Parser from "tree-sitter";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export class CInvocationResolver {
   includeResolver: CIncludeResolver;
@@ -19,13 +19,13 @@ export class CInvocationResolver {
   getInvocationsForNode(
     node: Parser.SyntaxNode,
     filepath: string,
-    symbolname: string = undefined,
+    symbolname: string | undefined = undefined,
   ): Invocations {
     const availableSymbols = this.includeResolver
       .getInclusions()
-      .get(filepath).symbols;
-    const localSymbols =
-      this.includeResolver.symbolRegistry.get(filepath).symbols;
+      .get(filepath)?.symbols;
+    const localSymbols = this.includeResolver.symbolRegistry.get(filepath)
+      ?.symbols;
     const unresolved = new Set<string>();
     const resolved = new Map<string, Symbol>();
     const captures = C_INVOCATION_QUERY.captures(node);
@@ -35,10 +35,20 @@ export class CInvocationResolver {
       if (symbolname && name === symbolname) {
         continue;
       }
-      if (availableSymbols.has(name)) {
-        resolved.set(name, availableSymbols.get(name));
-      } else if (localSymbols.has(name)) {
-        resolved.set(name, localSymbols.get(name));
+      if (availableSymbols && availableSymbols.has(name)) {
+        const availableSymbol = availableSymbols.get(name);
+        if (!availableSymbol) {
+          unresolved.add(name);
+          continue;
+        }
+        resolved.set(name, availableSymbol);
+      } else if (localSymbols && localSymbols.has(name)) {
+        const localSymbol = localSymbols.get(name);
+        if (!localSymbol) {
+          unresolved.add(name);
+          continue;
+        }
+        resolved.set(name, localSymbol);
       } else {
         unresolved.add(name);
       }
@@ -88,7 +98,10 @@ export class CInvocationResolver {
   }
 
   getInvocationsForFile(filepath: string): Invocations {
-    const symbols = this.includeResolver.symbolRegistry.get(filepath).symbols;
+    let symbols = this.includeResolver.symbolRegistry.get(filepath)?.symbols;
+    if (!symbols) {
+      symbols = new Map();
+    }
     let unresolved = new Set<string>();
     const resolved = new Map<string, Symbol>();
     for (const symbol of symbols.values()) {

@@ -1,7 +1,8 @@
-import { describe, test, expect } from "vitest";
-import { getCFilesMap, cFilesFolder } from "../testFiles/index.js";
-import { CHeaderResolver } from "./index.js";
-import path from "path";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
+import { CHeaderResolver } from "./index.ts";
+import path from "node:path";
 
 describe("CHeaderResolver", () => {
   const cFilesMap = getCFilesMap();
@@ -25,6 +26,9 @@ describe("CHeaderResolver", () => {
   test("resolves structs", () => {
     const burger = exportedSymbols.find((symbol) => symbol.name === "Burger");
     expect(burger).toBeDefined();
+    if (!burger) {
+      throw new Error("burger is undefined");
+    }
     expect(burger.type).toBe("struct");
     expect(burger.specifiers).toEqual([]);
     expect(burger.qualifiers).toEqual([]);
@@ -36,6 +40,9 @@ describe("CHeaderResolver", () => {
   test("resolves unions", () => {
     const sauce = exportedSymbols.find((symbol) => symbol.name === "Sauce");
     expect(sauce).toBeDefined();
+    if (!sauce) {
+      throw new Error("sauce is undefined");
+    }
     expect(sauce.type).toBe("union");
     expect(sauce.specifiers).toEqual([]);
     expect(sauce.qualifiers).toEqual([]);
@@ -49,6 +56,9 @@ describe("CHeaderResolver", () => {
       (symbol) => symbol.name === "Condiment",
     );
     expect(condiment).toBeDefined();
+    if (!condiment) {
+      throw new Error("condiment is undefined");
+    }
     expect(condiment.type).toBe("enum");
     expect(condiment.specifiers).toEqual([]);
     expect(condiment.qualifiers).toEqual([]);
@@ -60,10 +70,16 @@ describe("CHeaderResolver", () => {
       (symbol) => symbol.name === "ClassicSauces",
     );
     expect(classicsauces).toBeDefined();
+    if (!classicsauces) {
+      throw new Error("classicsauces is undefined");
+    }
     expect(classicsauces.type).toBe("enum");
 
     const drink_t = exportedSymbols.find((symbol) => symbol.name === "Drink_t");
     expect(drink_t).toBeDefined();
+    if (!drink_t) {
+      throw new Error("drink_t is undefined");
+    }
     expect(drink_t.type).toBe("enum");
     expect(drink_t.specifiers).toEqual([]);
     expect(drink_t.qualifiers).toEqual([]);
@@ -77,6 +93,9 @@ describe("CHeaderResolver", () => {
       (symbol) => symbol.name === "classicBurger",
     );
     expect(classicburger).toBeDefined();
+    if (!classicburger) {
+      throw new Error("classicburger is undefined");
+    }
     expect(classicburger.type).toBe("variable");
     expect(classicburger.specifiers).toEqual([]);
     expect(classicburger.qualifiers).toEqual(["const"]);
@@ -88,6 +107,9 @@ describe("CHeaderResolver", () => {
       (symbol) => symbol.name === "burger_count",
     );
     expect(burger_count).toBeDefined();
+    if (!burger_count) {
+      throw new Error("burger_count is undefined");
+    }
     expect(burger_count.type).toBe("variable");
     expect(burger_count.specifiers).toEqual(["static"]);
     expect(burger_count.qualifiers).toEqual([]);
@@ -101,6 +123,9 @@ describe("CHeaderResolver", () => {
       (symbol) => symbol.name === "BURGERS_H",
     );
     expect(burgers_h).toBeDefined();
+    if (!burgers_h) {
+      throw new Error("burgers_h is undefined");
+    }
     expect(burgers_h.type).toBe("macro_constant");
     expect(burgers_h.specifiers).toEqual([]);
     expect(burgers_h.qualifiers).toEqual([]);
@@ -112,6 +137,9 @@ describe("CHeaderResolver", () => {
       (symbol) => symbol.name === "MAX_BURGERS",
     );
     expect(max_burgers).toBeDefined();
+    if (!max_burgers) {
+      throw new Error("max_burgers is undefined");
+    }
     expect(max_burgers.type).toBe("macro_constant");
     expect(max_burgers.specifiers).toEqual([]);
     expect(max_burgers.qualifiers).toEqual([]);
@@ -135,6 +163,9 @@ describe("CHeaderResolver", () => {
   test("resolves macro functions", () => {
     const max_macro = exportedSymbols.find((symbol) => symbol.name === "MAX");
     expect(max_macro).toBeDefined();
+    if (!max_macro) {
+      throw new Error("max_macro is undefined");
+    }
     expect(max_macro.type).toBe("macro_function");
     expect(max_macro.specifiers).toEqual([]);
     expect(max_macro.qualifiers).toEqual([]);
@@ -146,6 +177,9 @@ describe("CHeaderResolver", () => {
   test("resolves typedefs", () => {
     const fries = exportedSymbols.find((symbol) => symbol.name === "Fries");
     expect(fries).toBeDefined();
+    if (!fries) {
+      throw new Error("fries is undefined");
+    }
     expect(fries.type).toBe("typedef");
     expect(fries.specifiers).toEqual([]);
     expect(fries.qualifiers).toEqual([]);
@@ -155,6 +189,9 @@ describe("CHeaderResolver", () => {
 
     const drink = exportedSymbols.find((symbol) => symbol.name === "Drink");
     expect(drink).toBeDefined();
+    if (!drink) {
+      throw new Error("drink is undefined");
+    }
     expect(drink.type).toBe("typedef");
     expect(drink.specifiers).toEqual([]);
     expect(drink.qualifiers).toEqual([]);
@@ -169,6 +206,9 @@ describe("CHeaderResolver", () => {
 
     const sprite = ccexportedSymbols.find((s) => s.name === "Sprite");
     expect(sprite).toBeDefined();
+    if (!sprite) {
+      throw new Error("sprite is undefined");
+    }
     expect(sprite.type).toBe("struct");
     expect(sprite.specifiers).toEqual([]);
     expect(sprite.qualifiers).toEqual([]);
@@ -180,6 +220,9 @@ describe("CHeaderResolver", () => {
       (s) => s.name === "PlaceholderFunction",
     );
     expect(placeholderfunction).toBeDefined();
+    if (!placeholderfunction) {
+      throw new Error("placeholderfunction is undefined");
+    }
     expect(placeholderfunction.type).toBe("function_signature");
     expect(placeholderfunction.specifiers).toEqual([]);
     expect(placeholderfunction.qualifiers).toEqual([]);
@@ -191,6 +234,9 @@ describe("CHeaderResolver", () => {
       (s) => s.name === "gMovementTypeFuncs_WanderAround",
     );
     expect(gmtfwa).toBeDefined();
+    if (!gmtfwa) {
+      throw new Error("gmtfwa is undefined");
+    }
     expect(gmtfwa.type).toBe("variable");
     expect(gmtfwa.specifiers).toEqual([]);
     expect(gmtfwa.qualifiers).toEqual([]);

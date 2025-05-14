@@ -1,14 +1,15 @@
-import { describe, test, expect } from "vitest";
-import { getCFilesMap, cFilesFolder } from "../testFiles/index.js";
-import { CSymbolRegistry } from "./index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
+import { CSymbolRegistry } from "./index.ts";
 import {
   DataType,
   FunctionDefinition,
   FunctionSignature,
-  Variable,
   Typedef,
-} from "./types.js";
-import path from "path";
+  Variable,
+} from "./types.ts";
+import path from "node:path";
 
 describe("CSymbolRegistry", () => {
   const cFilesMap = getCFilesMap();
@@ -52,7 +53,7 @@ describe("CSymbolRegistry", () => {
     expect((drink as Typedef).datatype).toBeDefined();
     expect((fries as Typedef).datatype).not.toBeDefined();
     expect((drink as Typedef).datatype).toBeInstanceOf(DataType);
-    expect((drink as Typedef).datatype.name).toBe("Drink_t");
+    expect((drink as Typedef).datatype?.name).toBe("Drink_t");
   });
 
   test("registers functions for burgers.h", () => {
@@ -79,30 +80,32 @@ describe("CSymbolRegistry", () => {
     expect((max as FunctionDefinition).declaration.node.type).toBe(
       "preproc_function_def",
     );
-    expect((create as FunctionSignature).definition.declaration.node.type).toBe(
-      "function_definition",
-    );
+    expect((create as FunctionSignature).definition?.declaration.node.type)
+      .toBe(
+        "function_definition",
+      );
     expect(
-      (destroy as FunctionSignature).definition.declaration.node.type,
+      (destroy as FunctionSignature).definition?.declaration.node.type,
     ).toBe("function_definition");
-    expect((get as FunctionSignature).definition.declaration.node.type).toBe(
+    expect((get as FunctionSignature).definition?.declaration.node.type).toBe(
       "function_definition",
     );
     expect(
-      (cheapest as FunctionSignature).definition.declaration.node.type,
+      (cheapest as FunctionSignature).definition?.declaration.node.type,
     ).toBe("function_definition");
     expect((max as FunctionDefinition).declaration.filepath).toBe(burgersh);
-    expect((create as FunctionSignature).definition.declaration.filepath).toBe(
+    expect((create as FunctionSignature).definition?.declaration.filepath).toBe(
       burgersc,
     );
-    expect((destroy as FunctionSignature).definition.declaration.filepath).toBe(
-      burgersc,
-    );
-    expect((get as FunctionSignature).definition.declaration.filepath).toBe(
+    expect((destroy as FunctionSignature).definition?.declaration.filepath)
+      .toBe(
+        burgersc,
+      );
+    expect((get as FunctionSignature).definition?.declaration.filepath).toBe(
       burgersc,
     );
     expect(
-      (cheapest as FunctionSignature).definition.declaration.filepath,
+      (cheapest as FunctionSignature).definition?.declaration.filepath,
     ).toBe(burgersc);
   });
 

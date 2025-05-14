@@ -1,19 +1,19 @@
 import {
-  DependencyManifest,
-  metricLinesCount,
+  type DependencyManifest,
   metricCharacterCount,
-  metricCodeLineCount,
   metricCodeCharacterCount,
+  metricCodeLineCount,
+  metricCyclomaticComplexity,
   metricDependencyCount,
   metricDependentCount,
-  metricCyclomaticComplexity,
-  SymbolDependencyManifest,
-  SymbolType,
-} from "@nanoapi.io/shared";
-import { CDependencyFormatter } from "../../../languagePlugins/c/dependencyFormatting/index.js";
-import { CMetricsAnalyzer } from "../../../languagePlugins/c/metrics/index.js";
-import Parser from "tree-sitter";
-import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.js";
+  metricLinesCount,
+  type SymbolDependencyManifest,
+  type SymbolType,
+} from "@napi/shared";
+import { CDependencyFormatter } from "../../../languagePlugins/c/dependencyFormatting/index.ts";
+import { CMetricsAnalyzer } from "../../../languagePlugins/c/metrics/index.ts";
+import type Parser from "tree-sitter";
+import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export function generateCDependencyManifest(
   files: Map<string, { path: string; content: string }>,

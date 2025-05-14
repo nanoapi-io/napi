@@ -1,4 +1,4 @@
-import { FcoseLayoutOptions } from "cytoscape-fcose";
+import type { FcoseLayoutOptions } from "cytoscape-fcose";
 
 /**
  * Main layout configuration for dependency visualization graphs.

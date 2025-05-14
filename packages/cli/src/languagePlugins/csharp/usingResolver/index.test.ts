@@ -1,23 +1,24 @@
-import { describe, test, expect } from "vitest";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
 import {
   CSharpUsingResolver,
+  ExternalSymbol,
   GLOBAL_USING,
+  InternalSymbol,
   LOCAL_USING,
   USING_ALIAS,
-  USING_STATIC,
   USING_CURRENT,
-  ExternalSymbol,
-  InternalSymbol,
-} from "./index.js";
-import { CSharpNamespaceMapper } from "../namespaceMapper/index.js";
+  USING_STATIC,
+} from "./index.ts";
+import { CSharpNamespaceMapper } from "../namespaceMapper/index.ts";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../testFiles/index.js";
-import path from "path";
-import { File } from "../namespaceResolver/index.js";
-import { CSharpProjectMapper } from "../projectMapper/index.js";
+} from "../testFiles/index.ts";
+import path from "node:path";
+import type { File } from "../namespaceResolver/index.ts";
+import { CSharpProjectMapper } from "../projectMapper/index.ts";
 
 describe("UsingResolver", () => {
   const parsedfiles: Map<string, File> = getCSharpFilesMap();

@@ -1,9 +1,18 @@
-import Parser from "tree-sitter";
-import { CSharpProjectMapper, DotNetProject } from "../projectMapper/index.js";
-import { CSharpNamespaceMapper, SymbolNode } from "../namespaceMapper/index.js";
-import { CSharpUsingResolver, UsingDirective } from "../usingResolver/index.js";
-import { DependencyManifest } from "@nanoapi.io/shared";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+import type Parser from "tree-sitter";
+import {
+  CSharpProjectMapper,
+  type DotNetProject,
+} from "../projectMapper/index.ts";
+import {
+  CSharpNamespaceMapper,
+  type SymbolNode,
+} from "../namespaceMapper/index.ts";
+import {
+  CSharpUsingResolver,
+  type UsingDirective,
+} from "../usingResolver/index.ts";
+import type { DependencyManifest } from "@napi/shared";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 /**
  * Represents an extracted file containing a symbol.
@@ -65,12 +74,11 @@ export class CSharpExtractor {
    */
   private findDependencies(symbol: SymbolNode): SymbolNode[] {
     const dependencies: SymbolNode[] = [];
-    const symbolfullname =
-      symbol.namespace !== ""
-        ? symbol.namespace + "." + symbol.name
-        : symbol.name;
-    const symbolDependencies =
-      this.manifest[symbol.filepath]?.symbols[symbolfullname].dependencies;
+    const symbolfullname = symbol.namespace !== ""
+      ? symbol.namespace + "." + symbol.name
+      : symbol.name;
+    const symbolDependencies = this.manifest[symbol.filepath]
+      ?.symbols[symbolfullname].dependencies;
     if (symbolDependencies) {
       for (const dependency of Object.values(symbolDependencies)) {
         for (const depsymbol of Object.values(dependency.symbols)) {
@@ -119,9 +127,11 @@ export class CSharpExtractor {
     const usingDirectives = file.imports
       .map((directive) => directive.node.text)
       .join("\n");
-    const namespaceDirective =
-      file.namespace !== "" ? `namespace ${file.namespace};` : "";
-    const content = `${usingDirectives}\n${namespaceDirective}\n${file.symbol.node.text}\n`;
+    const namespaceDirective = file.namespace !== ""
+      ? `namespace ${file.namespace};`
+      : "";
+    const content =
+      `${usingDirectives}\n${namespaceDirective}\n${file.symbol.node.text}\n`;
     return content;
   }
 

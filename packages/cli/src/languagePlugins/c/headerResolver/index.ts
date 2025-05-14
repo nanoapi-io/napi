@@ -1,12 +1,12 @@
-import {
+import type {
   ExportedSymbol,
   StorageClassSpecifier,
   SymbolType,
   TypeQualifier,
-} from "./types.js";
-import { C_DECLARATION_QUERY } from "./queries.js";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
-import Parser from "tree-sitter";
+} from "./types.ts";
+import { C_DECLARATION_QUERY } from "./queries.ts";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
+import type Parser from "tree-sitter";
 
 export class CHeaderResolver {
   parser: Parser = cParser;
@@ -27,9 +27,17 @@ export class CHeaderResolver {
       if (capture.name !== "decl" && capture.name !== "function_definition") {
         let idNode: Parser.SyntaxNode;
         if (capture.name !== "typedef") {
-          idNode = capture.node.childForFieldName("name");
+          if (!capture.node.childForFieldName("name")) {
+            throw new Error(`Couldn't find name for ${capture.node.text}`);
+          }
+          idNode = capture.node.childForFieldName("name") as Parser.SyntaxNode;
         } else {
-          idNode = capture.node.childForFieldName("declarator");
+          if (!capture.node.childForFieldName("declarator")) {
+            throw new Error(`Couldn't find name for ${capture.node.text}`);
+          }
+          idNode = capture.node.childForFieldName(
+            "declarator",
+          ) as Parser.SyntaxNode;
         }
         if (!idNode) {
           continue;
@@ -56,21 +64,37 @@ export class CHeaderResolver {
         // (e.g. in pointers or arrays)
         while (
           !currentNode.childForFieldName("declarator") ||
-          currentNode.childForFieldName("declarator").type !== "identifier"
+          currentNode.childForFieldName("declarator")?.type !== "identifier"
         ) {
           if (!currentNode.childForFieldName("declarator")) {
+            if (!currentNode.firstNamedChild) {
+              throw new Error(
+                `Could not find a named child for ${currentNode.text}`,
+              );
+            }
             currentNode = currentNode.firstNamedChild;
           } else {
-            currentNode = currentNode.childForFieldName("declarator");
+            if (!currentNode.childForFieldName("declarator")) {
+              throw new Error(
+                `Could not find a declarator for ${currentNode.text}`,
+              );
+            }
+            currentNode = currentNode.childForFieldName(
+              "declarator",
+            ) as Parser.SyntaxNode;
           }
         }
-        const type =
-          capture.name === "function_definition"
-            ? "function_definition"
-            : currentNode.type === "function_declarator"
-              ? "function_signature"
-              : "variable";
+        const type = capture.name === "function_definition"
+          ? "function_definition"
+          : currentNode.type === "function_declarator"
+          ? "function_signature"
+          : "variable";
         const idNode = currentNode.childForFieldName("declarator");
+        if (!idNode) {
+          throw new Error(
+            `Couldn't find identifier node for symbol :\n${capture.node.text}`,
+          );
+        }
         exportedSymbols.push({
           name: idNode.text,
           type: type as SymbolType,

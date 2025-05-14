@@ -1,13 +1,14 @@
-import { describe, expect, test } from "vitest";
-import { CSharpProjectMapper } from "./index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { CSharpProjectMapper } from "./index.ts";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
   getCsprojFilesMap,
-} from "../testFiles/index.js";
-import { CSharpUsingResolver } from "../usingResolver/index.js";
-import { CSharpNamespaceMapper } from "../namespaceMapper/index.js";
-import path from "path";
+} from "../testFiles/index.ts";
+import { CSharpUsingResolver } from "../usingResolver/index.ts";
+import { CSharpNamespaceMapper } from "../namespaceMapper/index.ts";
+import path from "node:path";
 
 describe("CSharpProjectMapper", () => {
   const csprojfiles = getCsprojFilesMap();

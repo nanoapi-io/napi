@@ -1,7 +1,8 @@
-import { describe, expect, test } from "vitest";
-import { CSharpNamespaceResolver, File } from "./index.js";
-import path from "path";
-import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { CSharpNamespaceResolver, type File } from "./index.ts";
+import path from "node:path";
+import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";
 
 describe("NamespaceResolver", () => {
   const files: Map<string, File> = getCSharpFilesMap();

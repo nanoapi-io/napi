@@ -1,13 +1,14 @@
-import { describe, test, expect, beforeEach } from "vitest";
-import Parser from "tree-sitter";
-import { pythonParser } from "../../../helpers/treeSitter/parsers.js";
-import { PythonExportExtractor } from "../exportExtractor/index.js";
-import { PythonModuleResolver } from "../moduleResolver/index.js";
-import { PythonUsageResolver } from "./index.js";
-import { PythonImportExtractor } from "../importExtractor/index.js";
-import { PythonModule } from "../moduleResolver/types.js";
-import { InternalUsage } from "./types.js";
-import { PythonSymbol } from "../exportExtractor/types.js";
+import { beforeEach, describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import type Parser from "tree-sitter";
+import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
+import { PythonExportExtractor } from "../exportExtractor/index.ts";
+import { PythonModuleResolver } from "../moduleResolver/index.ts";
+import { PythonUsageResolver } from "./index.ts";
+import { PythonImportExtractor } from "../importExtractor/index.ts";
+import type { PythonModule } from "../moduleResolver/types.ts";
+import type { InternalUsage } from "./types.ts";
+import type { PythonSymbol } from "../exportExtractor/types.ts";
 
 describe("USageResolver, getUsageNode", () => {
   let parser: Parser;
@@ -646,8 +647,9 @@ def consumer_func():
       expect(hasSubmod).toBeTruthy();
 
       // Get the submodule function
-      const submodExportResult =
-        exportExtractor.getSymbols("package/submod.py");
+      const submodExportResult = exportExtractor.getSymbols(
+        "package/submod.py",
+      );
       const submodFunc = submodExportResult.symbols.find(
         (s) => s.identifierNode.text === "submod_func",
       ) as PythonSymbol;
@@ -700,8 +702,9 @@ def consumer_func():
       targetFile.path,
     );
     const exportExtractor = new PythonExportExtractor(parser, files);
-    const { symbols: originalSymbols } =
-      exportExtractor.getSymbols("original.py");
+    const { symbols: originalSymbols } = exportExtractor.getSymbols(
+      "original.py",
+    );
     const moduleResolver = new PythonModuleResolver(
       new Set(files.keys()),
       "3.10",

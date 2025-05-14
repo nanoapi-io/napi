@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export const C_INVOCATION_QUERY = new Parser.Query(
   cParser.getLanguage(),

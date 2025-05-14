@@ -1,20 +1,16 @@
-import React, { useContext } from "react";
+/// <reference lib="dom" />
+
+import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
-import { Theme } from "@radix-ui/themes";
-import "react-toastify/dist/ReactToastify.css";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router";
+import BaseAuditPage from "./pages/audit/base.tsx";
+import AuditPage from "./pages/audit/index.tsx";
+import AuditFilePage from "./pages/audit/file/index.tsx";
+import AuditInstancePage from "./pages/audit/file/instance/index.tsx";
+import { Toaster } from "./components/shadcn/Toaster.tsx";
+import { ThemeProvider } from "./contexts/ThemeProvider.tsx";
 
-import "@radix-ui/themes/styles.css";
-import "./index.css";
-import { createHashRouter, RouterProvider, Navigate } from "react-router";
-import { ToastContainer } from "react-toastify";
-import { ThemeContext, ThemeProvider } from "./contexts/ThemeContext.js";
-import BaseAuditPage from "./pages/audit/base.js";
-import AuditPage from "./pages/audit/index.js";
-import AuditFilePage from "./pages/audit/file/index.js";
-import AuditInstancePage from "./pages/audit/file/instance/index.js";
-import { ViewNames } from "./hooks/types.js";
-
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: "/",
     element: <Navigate to="/audit" replace />,
@@ -26,17 +22,14 @@ const router = createHashRouter([
       {
         path: "/audit",
         element: <AuditPage />,
-        handle: { viewName: ViewNames.PROJECT },
       },
       {
         path: "/audit/:file",
         element: <AuditFilePage />,
-        handle: { viewName: ViewNames.FILE },
       },
       {
         path: "/audit/:file/:instance",
         element: <AuditInstancePage />,
-        handle: { viewName: ViewNames.INSTANCE },
       },
     ],
   },
@@ -48,23 +41,11 @@ if (!rootElement) {
   throw new Error("Root element not found");
 }
 
-function Main() {
-  const themeContext = useContext(ThemeContext);
-
-  return (
-    <Theme appearance={themeContext.theme}>
-      <div className="font-jakarta">
-        <ToastContainer theme={themeContext.theme} />
-        <RouterProvider router={router} />
-      </div>
-    </Theme>
-  );
-}
-
 ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
+  <StrictMode>
     <ThemeProvider>
-      <Main />
+      <RouterProvider router={router} />
+      <Toaster />
     </ThemeProvider>
-  </React.StrictMode>,
+  </StrictMode>,
 );

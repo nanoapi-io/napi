@@ -1,5 +1,5 @@
 import Parser from "tree-sitter";
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 // Tree-sitter query to find complexity-related nodes
 export const C_COMPLEXITY_QUERY = new Parser.Query(

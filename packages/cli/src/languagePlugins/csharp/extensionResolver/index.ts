@@ -1,9 +1,9 @@
-import {
-  SymbolNode,
-  NamespaceNode,
+import type {
   CSharpNamespaceMapper,
-} from "../namespaceMapper/index.js";
-import { csharpParser } from "../../../helpers/treeSitter/parsers.js";
+  NamespaceNode,
+  SymbolNode,
+} from "../namespaceMapper/index.ts";
+import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 import Parser from "tree-sitter";
 
 const extensionMethodQuery = new Parser.Query(
@@ -105,8 +105,8 @@ export class CSharpExtensionResolver {
         const index = methodName.indexOf("<");
         methodName = methodName.substring(0, index);
       }
-      const methodType =
-        methodNode.childForFieldName("returns")?.text || "void";
+      const methodType = methodNode.childForFieldName("returns")?.text ||
+        "void";
       const parameters = methodNode.childrenForFieldName("parameters");
       let extendedType = "void";
       parameters.forEach((param) => {
@@ -120,8 +120,9 @@ export class CSharpExtensionResolver {
         name: methodName,
         type: methodType,
         extendedType: extendedType,
-        typeParameters:
-          typeParameterNames.length > 0 ? typeParameterNames : undefined,
+        typeParameters: typeParameterNames.length > 0
+          ? typeParameterNames
+          : undefined,
       });
     }
     return extensions;

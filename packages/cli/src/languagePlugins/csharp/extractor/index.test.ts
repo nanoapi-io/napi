@@ -1,12 +1,13 @@
-import { describe, test, expect } from "vitest";
-import { CSharpExtractor } from "./index.js";
+import { describe, test } from "@std/testing/bdd";
+import { expect } from "@std/expect";
+import { CSharpExtractor } from "./index.ts";
 import {
+  csharpFilesFolder,
   getCSharpFilesMap,
   getCsprojFilesMap,
-  csharpFilesFolder,
-} from "../testFiles/index.js";
-import { generateCSharpDependencyManifest } from "../../../manifest/dependencyManifest/csharp/index.js";
-import path from "path";
+} from "../testFiles/index.ts";
+import { generateCSharpDependencyManifest } from "../../../manifest/dependencyManifest/csharp/index.ts";
+import path from "node:path";
 
 describe("CSharpExtractor", () => {
   const parsedfiles = getCSharpFilesMap();
@@ -36,12 +37,12 @@ describe("CSharpExtractor", () => {
       twonamespacesonefilepath,
       "ChickenBurger.Salad",
     );
-    expect(salad.length).toBe(1);
-    const saladfile = salad[0];
-    expect(saladfile.name).toBe("Salad");
-    expect(saladfile.namespace).toBe("ChickenBurger");
-    expect(saladfile.subproject.name).toBe("TestFiles");
-    expect(saladfile.symbol).toMatchObject({
+    expect(salad?.length).toBe(1);
+    const saladfile = salad?.[0];
+    expect(saladfile?.name).toBe("Salad");
+    expect(saladfile?.namespace).toBe("ChickenBurger");
+    expect(saladfile?.subproject.name).toBe("TestFiles");
+    expect(saladfile?.symbol).toMatchObject({
       name: "Salad",
       type: "class",
       namespace: "ChickenBurger",
@@ -61,14 +62,21 @@ describe("CSharpExtractor", () => {
     const project = extractor.projectMapper.findSubprojectForFile(
       path.join(csharpFilesFolder, "Program.cs"),
     );
+    if (!project) {
+      throw new Error("Project not found");
+    }
     const usingDirectives = extractor.generateGlobalUsings(project);
     expect(usingDirectives.startsWith("global using System.IO;")).toBe(true);
 
     const subproject = extractor.projectMapper.findSubprojectForFile(
       path.join(csharpFilesFolder, "Subfolder/GlobalUsings.cs"),
     );
-    const subprojectUsingDirectives =
-      extractor.generateGlobalUsings(subproject);
+    if (!subproject) {
+      throw new Error("Subproject not found");
+    }
+    const subprojectUsingDirectives = extractor.generateGlobalUsings(
+      subproject,
+    );
     expect(subprojectUsingDirectives.includes("global using System;")).toBe(
       true,
     );
@@ -82,7 +90,7 @@ describe("CSharpExtractor", () => {
     const symbols = extracted?.map((file) =>
       file.symbol.namespace !== ""
         ? file.symbol.namespace + "." + file.symbol.name
-        : file.symbol.name,
+        : file.symbol.name
     );
     expect(symbols).not.toContain("OuterNamespace.OuterInnerClass");
     expect(symbols).toContain("OuterNamespace.OuterClass");

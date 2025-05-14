@@ -1,17 +1,17 @@
 import {
   C_DEP_FUNCTION_TYPE,
-  CDependency,
-  CDepFile,
-  CDepSymbol,
-  CDepSymbolType,
-} from "./types.js";
-import { CSymbolRegistry } from "../symbolRegistry/index.js";
-import { CIncludeResolver } from "../includeResolver/index.js";
-import { CInvocationResolver } from "../invocationResolver/index.js";
-import { CFile, Symbol } from "../symbolRegistry/types.js";
-import { Invocations } from "../invocationResolver/types.js";
-import Parser from "tree-sitter";
-import { C_VARIABLE_TYPE, SymbolType } from "../headerResolver/types.js";
+  type CDependency,
+  type CDepFile,
+  type CDepSymbol,
+  type CDepSymbolType,
+} from "./types.ts";
+import { CSymbolRegistry } from "../symbolRegistry/index.ts";
+import { CIncludeResolver } from "../includeResolver/index.ts";
+import { CInvocationResolver } from "../invocationResolver/index.ts";
+import type { CFile, Symbol } from "../symbolRegistry/types.ts";
+import type { Invocations } from "../invocationResolver/types.ts";
+import type Parser from "tree-sitter";
+import { C_VARIABLE_TYPE, type SymbolType } from "../headerResolver/types.ts";
 
 export class CDependencyFormatter {
   symbolRegistry: CSymbolRegistry;
@@ -42,6 +42,7 @@ export class CDependencyFormatter {
     if (st === "macro_constant") {
       return C_VARIABLE_TYPE as CDepSymbolType;
     }
+    throw new Error(`Unknown symbol type: ${st}`);
   }
 
   /**
@@ -103,17 +104,16 @@ export class CDependencyFormatter {
     const symbols: Record<string, CDepSymbol> = {};
     for (const [symName, symbol] of fileSymbols) {
       const id = symName;
-      const dependencies =
-        this.invocationResolver.getInvocationsForSymbol(symbol);
+      const dependencies = this.invocationResolver.getInvocationsForSymbol(
+        symbol,
+      );
       if (!symbols[id]) {
         symbols[id] = {
           id: id,
           type: this.#formatSymbolType(symbol.declaration.type),
-          lineCount:
-            symbol.declaration.node.endPosition.row -
+          lineCount: symbol.declaration.node.endPosition.row -
             symbol.declaration.node.startPosition.row,
-          characterCount:
-            symbol.declaration.node.endIndex -
+          characterCount: symbol.declaration.node.endIndex -
             symbol.declaration.node.startIndex,
           node: symbol.declaration.node,
           dependents: {},
@@ -130,9 +130,13 @@ export class CDependencyFormatter {
       throw new Error(`File not found: ${filepath}`);
     }
     const fileSymbols = file.symbols;
-    const fileDependencies =
-      this.invocationResolver.getInvocationsForFile(filepath);
+    const fileDependencies = this.invocationResolver.getInvocationsForFile(
+      filepath,
+    );
     const includes = this.includeResolver.getInclusions().get(filepath);
+    if (!includes) {
+      throw new Error(`File not found: ${filepath}`);
+    }
     const stdincludes = Array.from(includes.standard.keys());
     const invokedDependencies = this.#formatDependencies(fileDependencies);
     const stdDependencies = this.#formatStandardIncludes(stdincludes);

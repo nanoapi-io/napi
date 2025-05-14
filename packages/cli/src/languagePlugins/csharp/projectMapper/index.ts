@@ -1,10 +1,10 @@
-import path from "path";
-import {
+import path from "node:path";
+import type {
   ExternalSymbol,
   InternalSymbol,
   ResolvedImports,
   UsingDirective,
-} from "../usingResolver/index.js";
+} from "../usingResolver/index.ts";
 
 /**
  * Represents a .NET project.

@@ -1,11 +1,11 @@
-import {
+import type {
   C_ENUM_TYPE,
-  C_UNION_TYPE,
   C_STRUCT_TYPE,
   C_TYPEDEF_TYPE,
+  C_UNION_TYPE,
   C_VARIABLE_TYPE,
-} from "../headerResolver/types.js";
-import Parser from "tree-sitter";
+} from "../headerResolver/types.ts";
+import type Parser from "tree-sitter";
 
 /**
  * Represents a dependency in a C file

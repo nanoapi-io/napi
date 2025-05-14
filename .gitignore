@@ -13,3 +13,4 @@ examples/csharp/EndpointExample/bin
 auditResponse.json
 .extracted/
 napi-output/
+coverage/

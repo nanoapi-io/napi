@@ -1,4 +1,4 @@
-import { cParser } from "../../../helpers/treeSitter/parsers.js";
+import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 import Parser from "tree-sitter";
 
 /** Query that catches every declaration including macros in a header file

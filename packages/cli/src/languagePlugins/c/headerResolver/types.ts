@@ -1,4 +1,4 @@
-import Parser from "tree-sitter";
+import type Parser from "tree-sitter";
 
 // Constants representing different types of symbols in C
 export const C_STRUCT_TYPE = "struct";

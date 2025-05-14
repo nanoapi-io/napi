@@ -1,5 +1,5 @@
-import Parser from "tree-sitter";
-import { Symbol } from "../symbolRegistry/types.js";
+import type Parser from "tree-sitter";
+import type { Symbol } from "../symbolRegistry/types.ts";
 
 /** Interface representing the #include statements of a file */
 export interface Inclusions {
