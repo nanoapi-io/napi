@@ -43,7 +43,7 @@ jobs:
 
       - name: Compile
         run: |
-          deno task compie:all
+          deno task compile:all
 
       - name: Bump version
         id: bump_version
