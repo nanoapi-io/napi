@@ -1,4 +1,4 @@
-import Parser from "tree-sitter";
+import Parser from "npm:tree-sitter";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";
 import { PythonModuleResolver } from "../moduleResolver/index.ts";
 import { PythonItemResolver } from "../itemResolver/index.ts";

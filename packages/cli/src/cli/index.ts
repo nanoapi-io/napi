@@ -1,6 +1,9 @@
-import yargs from "yargs";
-import { hideBin } from "yargs/helpers";
-import { checkVersionMiddleware } from "./helpers/checkVersion.ts";
+import yargs from "npm:yargs";
+import { hideBin } from "npm:yargs/helpers";
+import {
+  checkVersionMiddleware,
+  getCurrentVersion,
+} from "./helpers/checkVersion.ts";
 import { globalOptions } from "./helpers/options.ts";
 import initCommand from "./handlers/init/index.ts";
 import auditCommand from "./handlers/audit/index.ts";
@@ -14,11 +17,19 @@ export function initCli() {
 
   yargs(hideBin(process.argv))
     .scriptName("napi")
+    .usage("Usage: $0 <command> [options]")
     .middleware(async () => {
       await checkVersionMiddleware();
     })
     .options(globalOptions)
     .command(initCommand)
     .command(auditCommand)
+    .demandCommand(1, "You need to specify a command")
+    .strict()
+    .help()
+    .alias("help", "h")
+    .version(getCurrentVersion())
+    .alias("version", "v")
+    .epilogue("For more information, visit https://github.com/nanoapi-io/napi")
     .parse();
 }

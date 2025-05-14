@@ -1,4 +1,4 @@
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import {
   type DependencyInfo,
   type DependencyManifest,
@@ -21,7 +21,7 @@ import { PythonDependencyResolver } from "../../../languagePlugins/python/depend
 import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver/index.ts";
 import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor/index.ts";
 import type { localConfigSchema } from "../../../config/localConfig.ts";
-import type z from "zod";
+import type z from "npm:zod";
 import { PythonMetricsAnalyzer } from "../../../languagePlugins/python/metricAnalyzer/index.ts";
 
 /**

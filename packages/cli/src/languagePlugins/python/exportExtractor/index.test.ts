@@ -1,6 +1,6 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { PythonExportExtractor } from "./index.ts";
 import {
   PYTHON_CLASS_TYPE,

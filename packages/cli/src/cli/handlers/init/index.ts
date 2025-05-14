@@ -2,11 +2,11 @@ import {
   createConfig,
   getConfigFromWorkDir,
 } from "../../../config/localConfig.ts";
-import type { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
+import type { ArgumentsCamelCase, InferredOptionTypes } from "npm:yargs";
 import type { globalOptions } from "../../helpers/options.ts";
 import { TelemetryEvents, trackEvent } from "../../../telemetry.ts";
 import { generateConfig } from "./prompts.ts";
-import { confirm } from "@inquirer/prompts";
+import { confirm } from "npm:@inquirer/prompts";
 
 async function handler(
   argv: ArgumentsCamelCase<InferredOptionTypes<typeof globalOptions>>,

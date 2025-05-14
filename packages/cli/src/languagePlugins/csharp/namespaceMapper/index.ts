@@ -1,4 +1,4 @@
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import {
   CSharpNamespaceResolver,
   type SymbolType,

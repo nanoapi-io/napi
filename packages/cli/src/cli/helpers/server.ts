@@ -1,9 +1,9 @@
 import { exec } from "node:child_process";
-import express from "express";
-import type z from "zod";
+import express from "npm:express";
+import type z from "npm:zod";
 import type { localConfigSchema } from "../../config/localConfig.ts";
 import { getApi } from "../../api/index.ts";
-import { createProxyMiddleware } from "http-proxy-middleware";
+import { createProxyMiddleware } from "npm:http-proxy-middleware";
 import { app_dist } from "../../index.ts";
 import process from "node:process";
 

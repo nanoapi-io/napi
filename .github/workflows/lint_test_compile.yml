@@ -9,12 +9,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: "2.x"
+
+      - name: Install dependencies
+        run: |
+          deno install --allow-scripts
 
       - name: Deno check
         run: deno check
@@ -29,12 +33,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: denoland/setup-deno@v2
         with:
           deno-version: "2.x"
+
+      - name: Install dependencies
+        run: |
+          deno install --allow-scripts
 
       - name: Tests
         run: deno test -A
@@ -43,12 +51,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: denoland/setup-deno@v2
         with:
           deno-version: "2.x"
+
+      - name: Install dependencies
+        run: |
+          deno install --allow-scripts
 
       - name: Compile
         run: deno task compile:all

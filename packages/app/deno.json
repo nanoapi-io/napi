@@ -36,9 +36,9 @@
     "vite": "npm:vite@^6.3.5"
   },
   "tasks": {
-    "dev": "NODE_ENV=development && deno run --allow-all npm:vite",
-    "build": "deno run --allow-all npm:vite build",
-    "start": "deno run --allow-all npm:vite preview"
+    "dev": "NODE_ENV=development && deno run -A npm:vite",
+    "build": "deno run -A npm:vite build",
+    "start": "deno run -A npm:vite preview"
   },
   "compilerOptions": {
     "jsx": "react-jsx"

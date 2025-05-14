@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export const csharpFilesFolder = path.join(

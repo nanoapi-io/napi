@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
-import { z } from "zod";
+import { z } from "npm:zod";
 import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json" with {
   type: "json",
 };

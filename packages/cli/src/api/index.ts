@@ -1,5 +1,5 @@
-import { json, Router } from "express";
-import type { z } from "zod";
+import { json, Router } from "npm:express";
+import type { z } from "npm:zod";
 import type { localConfigSchema } from "../config/localConfig.ts";
 import {
   getFilesFromDirectory,

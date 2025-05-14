@@ -13,7 +13,7 @@ import {
 } from "../testFiles/index.ts";
 import path from "node:path";
 import { CSharpInvocationResolver } from "./index.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { CSharpProjectMapper } from "../projectMapper/index.ts";
 
 describe("InvocationResolver", () => {

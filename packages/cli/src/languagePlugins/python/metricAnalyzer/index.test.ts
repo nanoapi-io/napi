@@ -1,6 +1,6 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { PythonMetricsAnalyzer } from "./index.ts";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";
 import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";

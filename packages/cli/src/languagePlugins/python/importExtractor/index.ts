@@ -1,4 +1,4 @@
-import Parser from "tree-sitter";
+import Parser from "npm:tree-sitter";
 import {
   FROM_IMPORT_STATEMENT_TYPE,
   type ImportMember,

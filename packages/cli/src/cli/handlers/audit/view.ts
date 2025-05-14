@@ -1,4 +1,4 @@
-import type { ArgumentsCamelCase, InferredOptionTypes } from "yargs";
+import type { ArgumentsCamelCase, InferredOptionTypes } from "npm:yargs";
 import type { globalOptions } from "../../helpers/options.ts";
 import { TelemetryEvents, trackEvent } from "../../../telemetry.ts";
 import { getConfigFromWorkDir } from "../../../config/localConfig.ts";

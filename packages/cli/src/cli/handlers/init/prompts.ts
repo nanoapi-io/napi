@@ -1,12 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
-import type z from "zod";
+import type z from "npm:zod";
 import type { localConfigSchema } from "../../../config/localConfig.ts";
 import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with {
   type: "json",
 };
 import { confirm, input, number, search, select } from "@inquirer/prompts";
-import { globSync } from "glob";
+import { globSync } from "npm:glob";
 import {
   csharpLanguage,
   pythonLanguage,

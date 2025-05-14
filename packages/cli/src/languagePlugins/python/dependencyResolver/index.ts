@@ -1,4 +1,4 @@
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import type { PythonExportExtractor } from "../exportExtractor/index.ts";
 import type { PythonUsageResolver } from "../usageResolver/index.ts";
 import type { ExternalUsage, InternalUsage } from "../usageResolver/types.ts";

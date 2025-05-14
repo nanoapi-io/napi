@@ -5,7 +5,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { globSync } from "glob";
+import { globSync } from "npm:glob";
 import { dirname, join } from "node:path";
 import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.ts";
 

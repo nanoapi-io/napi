@@ -4,17 +4,7 @@ permissions:
   contents: write
   packages: write
 
-on:
-  workflow_dispatch:
-    inputs:
-      release_type:
-        type: choice
-        description: "Release type: patch, minor, major"
-        required: true
-        options:
-          - patch
-          - minor
-          - major
+on: [workflow_dispatch]
 
 jobs:
   release:
@@ -36,20 +26,24 @@ jobs:
         with:
           deno-version: "2.x"
 
+      - name: Get new version and bump deno.json
+        id: get_version
+        run: |
+          VERSION=$(deno run -A scripts/get_version.ts)
+          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          deno install --allow-scripts
+
       - name: Compile
         run: |
           deno task compile:all
 
-      - name: Get new version and bump deno.json
-        id: bump_version
-        run: |
-          VERSION=$(deno run -A scripts/bump_version.ts ${{ inputs.release_type }})
-          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump_version.outputs.release_version }}
+          tag_name: v${{ steps.get_version.outputs.release_version }}
           files: |
             dist/*
 
@@ -60,7 +54,7 @@ jobs:
 
       - name: Commit changes
         run: |
-          git commit deno.json -m "[skip ci] update version ${{ steps.bump_version.outputs.release_version }}"
+          git commit deno.json -m "[skip ci] update version ${{ steps.get_version.outputs.release_version }}"
 
       - name: Push changes
         run: |

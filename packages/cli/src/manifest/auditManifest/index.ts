@@ -1,4 +1,4 @@
-import type z from "zod";
+import type z from "npm:zod";
 import type { localConfigSchema } from "../../config/localConfig.ts";
 import {
   type AuditAlert,

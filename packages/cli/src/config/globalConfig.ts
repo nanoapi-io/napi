@@ -1,8 +1,8 @@
 import os from "node:os";
 import path from "node:path";
 import fs from "node:fs";
-import { v4 } from "uuid";
-import { z } from "zod";
+import { v4 } from "npm:uuid";
+import { z } from "npm:zod";
 import process from "node:process";
 
 const globalConfigSchema = z.object({

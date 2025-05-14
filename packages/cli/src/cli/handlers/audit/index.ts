@@ -1,5 +1,5 @@
 import viewHandler from "./view.ts";
-import type { Argv, InferredOptionTypes } from "yargs";
+import type { Argv, InferredOptionTypes } from "npm:yargs";
 import type { globalOptions } from "../../helpers/options.ts";
 
 function builder(

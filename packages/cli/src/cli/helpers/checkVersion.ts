@@ -1,9 +1,13 @@
 import localPackageJson from "../../../../../deno.json" with { type: "json" };
 import process from "node:process";
-import { Octokit } from "octokit";
+import { Octokit } from "npm:octokit";
+
+export function getCurrentVersion() {
+  return localPackageJson.version;
+}
 
 export async function checkVersionMiddleware() {
-  const currentVersion = localPackageJson.version;
+  const currentVersion = getCurrentVersion();
 
   const owner = "nanoapi-io";
   const repo = "napi";
@@ -15,14 +19,14 @@ export async function checkVersionMiddleware() {
       owner,
       repo,
     });
-  
+
     const tagName = release.data.tag_name;
-  
+
     const latestVersion = tagName.replace(/^v/, "");
-  
+
     if (currentVersion !== latestVersion) {
       console.error(
-      `
+        `
 You are using version ${currentVersion}. 
 The latest version is ${latestVersion}. 
 Please update to the latest version.
