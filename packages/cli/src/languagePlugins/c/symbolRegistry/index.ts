@@ -2,17 +2,14 @@ import { ExportedSymbol } from "../headerResolver/types.js";
 import { CHeaderResolver } from "../headerResolver/index.js";
 import {
   DataType,
-  Function,
+  FunctionDefinition,
+  FunctionSignature,
   Typedef,
   Variable,
   CFile,
   Symbol,
 } from "./types.js";
-import {
-  StorageClassSpecifier,
-  TypeQualifier,
-} from "../headerResolver/types.js";
-import { C_FUNCTION_DEF_QUERY, C_TYPEDEF_TYPE_QUERY } from "./queries.js";
+import { C_TYPEDEF_TYPE_QUERY } from "./queries.js";
 import Parser from "tree-sitter";
 
 export class CSymbolRegistry {
@@ -45,16 +42,23 @@ export class CSymbolRegistry {
       symbol.declaration = es;
       return symbol;
     }
-    if (es.type === "function") {
-      const symbol = new Function();
+    if (es.type === "function_definition" || es.type === "macro_function") {
+      const symbol = new FunctionDefinition();
       symbol.name = es.name;
       symbol.declaration = es;
-      symbol.definition = es.node;
-      symbol.definitionPath = es.filepath;
+      symbol.signature = null;
       symbol.isMacro = es.node.type === "preproc_function_def";
       return symbol;
     }
-    if (es.type === "variable") {
+    if (es.type === "function_signature") {
+      const symbol = new FunctionSignature();
+      symbol.name = es.name;
+      symbol.declaration = es;
+      symbol.definition = null;
+      symbol.isMacro = es.node.type === "preproc_function_def";
+      return symbol;
+    }
+    if (es.type === "variable" || es.type === "macro_constant") {
       const symbol = new Variable();
       symbol.name = es.name;
       symbol.declaration = es;
@@ -118,60 +122,21 @@ export class CSymbolRegistry {
         } else {
           source.symbols.set(symbol.name, symbol);
         }
-      }
-      // Add the source file to the registry
-      this.#registry.set(file.path, source);
-
-      // Look for function definitions in the source file
-      const query = C_FUNCTION_DEF_QUERY;
-      const captures = query.captures(file.rootNode);
-      for (const capture of captures) {
-        let currentNode = capture.node;
-        // Traverse the tree to find the identifier node
-        // cf. header resolver.
-        while (
-          currentNode.childForFieldName("declarator").type !== "identifier"
-        ) {
-          currentNode = currentNode.childForFieldName("declarator");
-        }
-        const name = currentNode.childForFieldName("declarator").text;
-        let foundInRegistry = false;
-        for (const [, header] of this.#registry.entries()) {
-          if (header.symbols.has(name)) {
-            const symbol = header.symbols.get(name);
-            if (symbol instanceof Function) {
-              symbol.definitionPath = file.path;
-              symbol.definition = capture.node;
-              foundInRegistry = true;
+        // Associate function definitions with their corresponding signatures.
+        if (symbol instanceof FunctionDefinition) {
+          for (const [, header] of this.#registry.entries()) {
+            if (header.symbols.has(symbol.name)) {
+              const signature = header.symbols.get(symbol.name);
+              if (signature instanceof FunctionSignature) {
+                symbol.signature = signature;
+                signature.definition = symbol;
+              }
             }
           }
         }
-        if (!foundInRegistry) {
-          // If the function is not found in the registry, add it to the source file
-          const symbol = new Function();
-          const specifiers = capture.node.children
-            .filter((child) => child.type === "storage_class_specifier")
-            .map((child) => child.text);
-          const qualifiers = capture.node.children
-            .filter((child) => child.type === "type_qualifier")
-            .map((child) => child.text);
-          const idNode = capture.node.childForFieldName("declarator");
-          symbol.name = name;
-          symbol.declaration = {
-            name,
-            type: "function",
-            node: capture.node,
-            identifierNode: idNode,
-            filepath: file.path,
-            specifiers: specifiers as StorageClassSpecifier[],
-            qualifiers: qualifiers as TypeQualifier[],
-          };
-          symbol.definitionPath = file.path;
-          symbol.definition = capture.node;
-          symbol.isMacro = capture.node.type === "preproc_function_def";
-          source.symbols.set(name, symbol);
-        }
       }
+      // Add the source file to the registry
+      this.#registry.set(file.path, source);
     }
 
     // Associate typedefs with their corresponding data types

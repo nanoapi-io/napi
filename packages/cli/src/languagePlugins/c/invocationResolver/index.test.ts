@@ -12,7 +12,8 @@ describe("CInvocationResolver", () => {
   const invocationResolver = new CInvocationResolver(includeResolver);
   const burgersh = path.join(cFilesFolder, "burgers.h");
   const burgersc = path.join(cFilesFolder, "burgers.c");
-  const personnelh = path.join(cFilesFolder, "personnel.h");
+  const personnelc = path.join(cFilesFolder, "personnel.c");
+  const crashcasesh = path.join(cFilesFolder, "crashcases.h");
   const main = path.join(cFilesFolder, "main.c");
   const registry = symbolRegistry.getRegistry();
 
@@ -40,7 +41,7 @@ describe("CInvocationResolver", () => {
   });
 
   test("resolves invocations for burgers.c", () => {
-    const symbols = registry.get(burgersh).symbols;
+    const symbols = registry.get(burgersc).symbols;
     if (!symbols) {
       throw new Error(`Symbol not found for: ${burgersc}`);
     }
@@ -50,7 +51,8 @@ describe("CInvocationResolver", () => {
     const create_resolved = Array.from(
       create_burger_invocations.resolved.keys(),
     );
-    expect(create_resolved.length).toBe(4);
+    expect(create_resolved.length).toBe(5);
+    expect(create_resolved).toContain("create_burger");
     expect(create_resolved).toContain("Burger");
     expect(create_resolved).toContain("Condiment");
     expect(create_resolved).toContain("Sauce");
@@ -62,7 +64,8 @@ describe("CInvocationResolver", () => {
     const destroy_resolved = Array.from(
       destroy_burger_invocations.resolved.keys(),
     );
-    expect(destroy_resolved.length).toBe(1);
+    expect(destroy_resolved.length).toBe(2);
+    expect(destroy_resolved).toContain("destroy_burger");
     expect(destroy_resolved).toContain("Burger");
 
     const symbolsc = registry.get(burgersc).symbols;
@@ -77,9 +80,9 @@ describe("CInvocationResolver", () => {
   });
 
   test("resolves invocations for personnel.c", () => {
-    const symbols = registry.get(personnelh).symbols;
+    const symbols = registry.get(personnelc).symbols;
     if (!symbols) {
-      throw new Error(`Symbol not found for: ${personnelh}`);
+      throw new Error(`Symbol not found for: ${personnelc}`);
     }
     const create_employee = symbols.get("create_employee");
     const create_employee_invocations =
@@ -87,7 +90,8 @@ describe("CInvocationResolver", () => {
     const create_resolved = Array.from(
       create_employee_invocations.resolved.keys(),
     );
-    expect(create_resolved.length).toBe(5);
+    expect(create_resolved.length).toBe(6);
+    expect(create_resolved).toContain("create_employee");
     expect(create_resolved).toContain("Employee");
     expect(create_resolved).toContain("Department");
     expect(create_resolved).toContain("MAX_EMPLOYEES");
@@ -111,5 +115,18 @@ describe("CInvocationResolver", () => {
     expect(main_resolved).toContain("Employee");
     expect(main_resolved).toContain("Condiment");
     expect(main_resolved).toContain("Sauce");
+  });
+
+  test("Crash Cases", () => {
+    const symbols = registry.get(crashcasesh).symbols;
+    if (!symbols) {
+      throw new Error(`Symbol not found for: ${crashcasesh}`);
+    }
+    const crash = symbols.get("CpuFastFill");
+    const crash_invocations = invocationResolver.getInvocationsForSymbol(crash);
+    const crash_resolved = Array.from(crash_invocations.resolved.keys());
+    expect(crash_resolved.length).toBe(2);
+    expect(crash_resolved).toContain("CpuFastSet");
+    expect(crash_resolved).toContain("CPU_FAST_SET_SRC_FIXED");
   });
 });

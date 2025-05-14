@@ -5,12 +5,13 @@ import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json
 import {
   csharpLanguage,
   pythonLanguage,
+  cLanguage,
 } from "../helpers/treeSitter/parsers.js";
 
 const pythonVersions = Object.keys(pythonStdlibList);
 
 export const localConfigSchema = z.object({
-  language: z.enum([pythonLanguage, csharpLanguage]),
+  language: z.enum([pythonLanguage, csharpLanguage, cLanguage]),
   [pythonLanguage]: z
     .object({
       version: z

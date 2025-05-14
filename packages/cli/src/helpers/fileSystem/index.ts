@@ -1,12 +1,17 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "fs";
 import { globSync } from "glob";
 import { dirname, join } from "path";
-import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.js";
+import {
+  cLanguage,
+  csharpLanguage,
+  pythonLanguage,
+} from "../treeSitter/parsers.js";
 
 export function getExtensionsForLanguage(language: string) {
   const supportedLanguages = {
     [pythonLanguage]: ["py"],
     [csharpLanguage]: ["cs", "csproj"],
+    [cLanguage]: ["c", "h"],
   };
 
   const supportedLanguage = supportedLanguages[language];

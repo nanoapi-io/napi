@@ -21,8 +21,8 @@ describe("CIncludeResolver", () => {
     expect(bhinclusions.filepath).toBe(burgersh);
     expect(bhinclusions.symbols.size).toBe(0);
     expect(bhinclusions.internal.length).toBe(0);
-    expect(bhinclusions.standard.length).toBe(1);
-    expect(bhinclusions.standard[0].text.trim()).toBe("#include <stdbool.h>");
+    expect(bhinclusions.standard.size).toBe(1);
+    expect(Array.from(bhinclusions.standard.keys())[0]).toBe("<stdbool.h>");
   });
 
   test("resolves inclusions for burgers.c", () => {
@@ -34,11 +34,11 @@ describe("CIncludeResolver", () => {
     expect(bcinclusions.symbols.size).toBe(16);
     expect(bcinclusions.internal.length).toBe(1);
     expect(bcinclusions.internal[0]).toBe("burgers.h");
-    expect(bcinclusions.standard.length).toBe(3);
-    const stdincludes = bcinclusions.standard.map((node) => node.text.trim());
-    expect(stdincludes).toContain("#include <stdio.h>");
-    expect(stdincludes).toContain("#include <stdlib.h>");
-    expect(stdincludes).toContain("#include <string.h>");
+    expect(bcinclusions.standard.size).toBe(4);
+    const stdincludes = Array.from(bcinclusions.standard.keys());
+    expect(stdincludes).toContain("<stdio.h>");
+    expect(stdincludes).toContain("<stdlib.h>");
+    expect(stdincludes).toContain("<string.h>");
   });
 
   test("resolves inclusions for main.c", () => {
@@ -51,8 +51,8 @@ describe("CIncludeResolver", () => {
     expect(maininclusions.internal.length).toBe(2);
     expect(maininclusions.internal).toContain("burgers.h");
     expect(maininclusions.internal).toContain("personnel.h");
-    expect(maininclusions.standard.length).toBe(1);
-    const stdincludes = maininclusions.standard.map((node) => node.text.trim());
-    expect(stdincludes).toContain("#include <stdio.h>");
+    expect(maininclusions.standard.size).toBe(2);
+    const stdincludes = Array.from(maininclusions.standard.keys());
+    expect(stdincludes).toContain("<stdio.h>");
   });
 });

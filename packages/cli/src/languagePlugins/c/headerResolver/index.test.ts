@@ -7,9 +7,14 @@ describe("CHeaderResolver", () => {
   const cFilesMap = getCFilesMap();
   const resolver = new CHeaderResolver();
   const burgers = path.join(cFilesFolder, "burgers.h");
+  const crashcases = path.join(cFilesFolder, "crashcases.h");
   const file = cFilesMap.get(burgers);
   if (!file) {
     throw new Error(`File not found: ${burgers}`);
+  }
+  const ccfile = cFilesMap.get(crashcases);
+  if (!ccfile) {
+    throw new Error(`File not found: ${crashcases}`);
   }
   const exportedSymbols = resolver.resolveSymbols(file);
 
@@ -67,7 +72,7 @@ describe("CHeaderResolver", () => {
     expect(drink_t.filepath).toBe(burgers);
   });
 
-  test("resolves variables and constant macros", () => {
+  test("resolves variables", () => {
     const classicburger = exportedSymbols.find(
       (symbol) => symbol.name === "classicBurger",
     );
@@ -89,12 +94,14 @@ describe("CHeaderResolver", () => {
     expect(burger_count.node.type).toBe("declaration");
     expect(burger_count.identifierNode.type).toBe("identifier");
     expect(burger_count.filepath).toBe(burgers);
+  });
 
+  test("resolves macro constants", () => {
     const burgers_h = exportedSymbols.find(
       (symbol) => symbol.name === "BURGERS_H",
     );
     expect(burgers_h).toBeDefined();
-    expect(burgers_h.type).toBe("variable");
+    expect(burgers_h.type).toBe("macro_constant");
     expect(burgers_h.specifiers).toEqual([]);
     expect(burgers_h.qualifiers).toEqual([]);
     expect(burgers_h.node.type).toBe("preproc_def");
@@ -105,7 +112,7 @@ describe("CHeaderResolver", () => {
       (symbol) => symbol.name === "MAX_BURGERS",
     );
     expect(max_burgers).toBeDefined();
-    expect(max_burgers.type).toBe("variable");
+    expect(max_burgers.type).toBe("macro_constant");
     expect(max_burgers.specifiers).toEqual([]);
     expect(max_burgers.qualifiers).toEqual([]);
     expect(max_burgers.node.type).toBe("preproc_def");
@@ -113,20 +120,22 @@ describe("CHeaderResolver", () => {
     expect(max_burgers.filepath).toBe(burgers);
   });
 
-  test("resolves functions and macros", () => {
+  test("resolves function signatures", () => {
     const function_names = exportedSymbols
-      .filter((symbol) => symbol.type === "function")
+      .filter((symbol) => symbol.type === "function_signature")
       .map((symbol) => symbol.name);
-    expect(function_names).toHaveLength(5);
+    expect(function_names).toHaveLength(4);
     expect(function_names).toContain("get_burger_by_id");
     expect(function_names).toContain("get_cheapest_burger");
     expect(function_names).toContain("create_burger");
     expect(function_names).toContain("destroy_burger");
-    expect(function_names).toContain("MAX");
+    expect(function_names).not.toContain("MAX");
+  });
 
+  test("resolves macro functions", () => {
     const max_macro = exportedSymbols.find((symbol) => symbol.name === "MAX");
     expect(max_macro).toBeDefined();
-    expect(max_macro.type).toBe("function");
+    expect(max_macro.type).toBe("macro_function");
     expect(max_macro.specifiers).toEqual([]);
     expect(max_macro.qualifiers).toEqual([]);
     expect(max_macro.node.type).toBe("preproc_function_def");
@@ -152,5 +161,41 @@ describe("CHeaderResolver", () => {
     expect(drink.node.type).toBe("type_definition");
     expect(drink.identifierNode.type).toBe("type_identifier");
     expect(drink.filepath).toBe(burgers);
+  });
+
+  test("Crash Cases", () => {
+    const ccexportedSymbols = resolver.resolveSymbols(ccfile);
+    expect(ccexportedSymbols).toBeDefined();
+
+    const sprite = ccexportedSymbols.find((s) => s.name === "Sprite");
+    expect(sprite).toBeDefined();
+    expect(sprite.type).toBe("struct");
+    expect(sprite.specifiers).toEqual([]);
+    expect(sprite.qualifiers).toEqual([]);
+    expect(sprite.node.type).toBe("struct_specifier");
+    expect(sprite.identifierNode.type).toBe("type_identifier");
+    expect(sprite.filepath).toBe(crashcases);
+
+    const placeholderfunction = ccexportedSymbols.find(
+      (s) => s.name === "PlaceholderFunction",
+    );
+    expect(placeholderfunction).toBeDefined();
+    expect(placeholderfunction.type).toBe("function_signature");
+    expect(placeholderfunction.specifiers).toEqual([]);
+    expect(placeholderfunction.qualifiers).toEqual([]);
+    expect(placeholderfunction.node.type).toBe("declaration");
+    expect(placeholderfunction.identifierNode.type).toBe("identifier");
+    expect(placeholderfunction.filepath).toBe(crashcases);
+
+    const gmtfwa = ccexportedSymbols.find(
+      (s) => s.name === "gMovementTypeFuncs_WanderAround",
+    );
+    expect(gmtfwa).toBeDefined();
+    expect(gmtfwa.type).toBe("variable");
+    expect(gmtfwa.specifiers).toEqual([]);
+    expect(gmtfwa.qualifiers).toEqual([]);
+    expect(gmtfwa.node.type).toBe("declaration");
+    expect(gmtfwa.identifierNode.type).toBe("identifier");
+    expect(gmtfwa.filepath).toBe(crashcases);
   });
 });

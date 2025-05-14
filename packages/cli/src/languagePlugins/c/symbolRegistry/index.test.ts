@@ -1,7 +1,13 @@
 import { describe, test, expect } from "vitest";
 import { getCFilesMap, cFilesFolder } from "../testFiles/index.js";
 import { CSymbolRegistry } from "./index.js";
-import { DataType, Function, Variable, Typedef } from "./types.js";
+import {
+  DataType,
+  FunctionDefinition,
+  FunctionSignature,
+  Variable,
+  Typedef,
+} from "./types.js";
 import path from "path";
 
 describe("CSymbolRegistry", () => {
@@ -60,26 +66,44 @@ describe("CSymbolRegistry", () => {
     expect(destroy).toBeDefined();
     expect(get).toBeDefined();
     expect(cheapest).toBeDefined();
-    expect(max).toBeInstanceOf(Function);
-    expect(create).toBeInstanceOf(Function);
-    expect(destroy).toBeInstanceOf(Function);
-    expect(get).toBeInstanceOf(Function);
-    expect(cheapest).toBeInstanceOf(Function);
-    expect((max as Function).isMacro).toBe(true);
-    expect((create as Function).isMacro).toBe(false);
-    expect((destroy as Function).isMacro).toBe(false);
-    expect((get as Function).isMacro).toBe(false);
-    expect((cheapest as Function).isMacro).toBe(false);
-    expect((max as Function).definition.type).toBe("preproc_function_def");
-    expect((create as Function).definition.type).toBe("function_definition");
-    expect((destroy as Function).definition.type).toBe("function_definition");
-    expect((get as Function).definition.type).toBe("function_definition");
-    expect((cheapest as Function).definition.type).toBe("function_definition");
-    expect((max as Function).definitionPath).toBe(burgersh);
-    expect((create as Function).definitionPath).toBe(burgersc);
-    expect((destroy as Function).definitionPath).toBe(burgersc);
-    expect((get as Function).definitionPath).toBe(burgersc);
-    expect((cheapest as Function).definitionPath).toBe(burgersc);
+    expect(max).toBeInstanceOf(FunctionDefinition);
+    expect(create).toBeInstanceOf(FunctionSignature);
+    expect(destroy).toBeInstanceOf(FunctionSignature);
+    expect(get).toBeInstanceOf(FunctionSignature);
+    expect(cheapest).toBeInstanceOf(FunctionSignature);
+    expect((max as FunctionDefinition).isMacro).toBe(true);
+    expect((create as FunctionSignature).isMacro).toBe(false);
+    expect((destroy as FunctionSignature).isMacro).toBe(false);
+    expect((get as FunctionSignature).isMacro).toBe(false);
+    expect((cheapest as FunctionSignature).isMacro).toBe(false);
+    expect((max as FunctionDefinition).declaration.node.type).toBe(
+      "preproc_function_def",
+    );
+    expect((create as FunctionSignature).definition.declaration.node.type).toBe(
+      "function_definition",
+    );
+    expect(
+      (destroy as FunctionSignature).definition.declaration.node.type,
+    ).toBe("function_definition");
+    expect((get as FunctionSignature).definition.declaration.node.type).toBe(
+      "function_definition",
+    );
+    expect(
+      (cheapest as FunctionSignature).definition.declaration.node.type,
+    ).toBe("function_definition");
+    expect((max as FunctionDefinition).declaration.filepath).toBe(burgersh);
+    expect((create as FunctionSignature).definition.declaration.filepath).toBe(
+      burgersc,
+    );
+    expect((destroy as FunctionSignature).definition.declaration.filepath).toBe(
+      burgersc,
+    );
+    expect((get as FunctionSignature).definition.declaration.filepath).toBe(
+      burgersc,
+    );
+    expect(
+      (cheapest as FunctionSignature).definition.declaration.filepath,
+    ).toBe(burgersc);
   });
 
   test("registers variables for burgers.h", () => {
@@ -99,7 +123,7 @@ describe("CSymbolRegistry", () => {
 
   test("registers symbols for burgers.c", () => {
     expect(csymbols.type).toBe(".c");
-    expect(csymbols.symbols.size).toBe(1);
+    expect(csymbols.symbols.size).toBe(5);
   });
 
   test("registers variables for burgers.c", () => {
@@ -119,11 +143,13 @@ describe("CSymbolRegistry", () => {
     expect(mainsymbols.symbols.size).toBe(1);
     const mainfunc = mainsymbols.symbols.get("main");
     expect(mainfunc).toBeDefined();
-    expect(mainfunc).toBeInstanceOf(Function);
-    expect((mainfunc as Function).isMacro).toBe(false);
-    expect((mainfunc as Function).definition.type).toBe("function_definition");
-    expect((mainfunc as Function).definitionPath).toBe(main);
-    expect((mainfunc as Function).declaration.node.type).toBe(
+    expect(mainfunc).toBeInstanceOf(FunctionDefinition);
+    expect((mainfunc as FunctionDefinition).isMacro).toBe(false);
+    expect((mainfunc as FunctionDefinition).declaration.node.type).toBe(
+      "function_definition",
+    );
+    expect((mainfunc as FunctionDefinition).declaration.filepath).toBe(main);
+    expect((mainfunc as FunctionDefinition).declaration.node.type).toBe(
       "function_definition",
     );
   });

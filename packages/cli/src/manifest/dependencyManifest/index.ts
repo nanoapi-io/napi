@@ -1,5 +1,6 @@
 import { generatePythonDependencyManifest } from "./python/index.js";
 import { generateCSharpDependencyManifest } from "./csharp/index.js";
+import { generateCDependencyManifest } from "./c/index.js";
 import { localConfigSchema } from "../../config/localConfig.js";
 import z from "zod";
 import {
@@ -9,6 +10,7 @@ import {
 import {
   pythonLanguage,
   csharpLanguage,
+  cLanguage,
 } from "../../helpers/treeSitter/parsers.js";
 
 const handlerMap: Record<
@@ -20,6 +22,7 @@ const handlerMap: Record<
 > = {
   [pythonLanguage]: generatePythonDependencyManifest,
   [csharpLanguage]: generateCSharpDependencyManifest,
+  [cLanguage]: generateCDependencyManifest,
 };
 
 export class UnsupportedLanguageError extends Error {

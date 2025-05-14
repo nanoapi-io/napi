@@ -9,12 +9,18 @@ export class Symbol {
   declaration: ExportedSymbol;
 }
 
-/** Interface representing a C function */
-export class Function extends Symbol {
+/** Interface representing a C function signature */
+export class FunctionSignature extends Symbol {
   /** The definition of the function in a source file */
-  definition: Parser.SyntaxNode;
-  /** The path to the definition of the function */
-  definitionPath: string;
+  definition: FunctionDefinition;
+  /** Whether the function is a macro or not */
+  isMacro: boolean;
+}
+
+/** Interface representing a C function definition */
+export class FunctionDefinition extends Symbol {
+  /** The declaration of the function in a header file */
+  signature: FunctionSignature;
   /** Whether the function is a macro or not */
   isMacro: boolean;
 }

@@ -8,3 +8,10 @@ export const C_INVOCATION_QUERY = new Parser.Query(
   (identifier) @id
   `, // The nuclear option, but unlike C# we can afford to do it.
 );
+
+export const C_MACRO_CONTENT_QUERY = new Parser.Query(
+  cParser.getLanguage(),
+  `
+  (preproc_arg) @macro
+  `,
+);
