@@ -1,6 +1,6 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-// import { checkVersionMiddleware } from "./helpers/checkNpmVersion.ts";
+import { checkVersionMiddleware } from "./helpers/checkVersion.ts";
 import { globalOptions } from "./helpers/options.ts";
 import initCommand from "./handlers/init/index.ts";
 import auditCommand from "./handlers/audit/index.ts";
@@ -14,9 +14,9 @@ export function initCli() {
 
   yargs(hideBin(process.argv))
     .scriptName("napi")
-    // .middleware(async () => {
-    //   await checkVersionMiddleware();
-    // })
+    .middleware(async () => {
+      await checkVersionMiddleware();
+    })
     .options(globalOptions)
     .command(initCommand)
     .command(auditCommand)
