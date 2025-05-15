@@ -3,9 +3,8 @@ import express from "npm:express";
 import type z from "npm:zod";
 import type { localConfigSchema } from "../../config/localConfig.ts";
 import { getApi } from "../../api/index.ts";
-import { createProxyMiddleware } from "npm:http-proxy-middleware";
-import { app_dist } from "../../index.ts";
 import process from "node:process";
+import { getFrontentApp } from "../../frontend/index.ts";
 
 function findAvailablePort(port: number): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -46,22 +45,13 @@ export async function runServer(
   const api = getApi(workdir, napiConfig);
   app.use(api);
 
-  if (process.env.NODE_ENV === "development") {
-    const targetServiceUrl = "http://localhost:3001";
-    console.warn(
-      `Running in development mode, proxying all traffic to the app to ${targetServiceUrl}`,
-    );
-    app.use(createProxyMiddleware({
-      target: targetServiceUrl,
-      changeOrigin: true,
-    }));
-  } else {
-    app.use(express.static(app_dist));
-  }
+  // Keep last to handle SPA routing
+  const frontentApp = getFrontentApp();
+  app.use(frontentApp);
 
   const port = await findAvailablePort(3000);
   app.listen(port, () => {
-    const url = `http://localhost:${port}#/${route}`;
+    const url = `http://localhost:${port}/${route}`;
     console.info("Press Ctrl+C to stop the server");
     console.info(`Server started at ${url}`);
     if (process.env.NODE_ENV !== "development") {

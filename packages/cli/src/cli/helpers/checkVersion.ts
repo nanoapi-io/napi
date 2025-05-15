@@ -22,7 +22,7 @@ export async function checkVersionMiddleware() {
 
     const tagName = release.data.tag_name;
 
-    const latestVersion = tagName.replace(/^v/, "d");
+    const latestVersion = tagName.replace(/^v/, "");
 
     if (currentVersion !== latestVersion) {
       console.error(
