@@ -21,7 +21,7 @@ BACKUP_PATH="$INSTALL_PATH.bak"
 # Check if the executable already exists
 if [ -f "$INSTALL_PATH" ]; then
     echo "Existing version found, creating a backup..."
-    mv "$INSTALL_PATH" "$BACKUP_PATH"
+    sudo mv "$INSTALL_PATH" "$BACKUP_PATH"
 else
     echo "No existing version found, proceeding with installation."
 fi
@@ -43,6 +43,6 @@ if [ $? -eq 0 ]; then
 else
     # If the installation failed, restore the backup
     echo "Update failed! Restoring the old version..."
-    mv "$BACKUP_PATH" "$INSTALL_PATH"
+    sudo mv "$BACKUP_PATH" "$INSTALL_PATH"
     echo "Restored the old version. Please try again later."
 fi

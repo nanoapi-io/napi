@@ -22,18 +22,23 @@ export async function checkVersionMiddleware() {
 
     const tagName = release.data.tag_name;
 
-    const latestVersion = tagName.replace(/^v/, "");
+    const latestVersion = tagName.replace(/^v/, "d");
 
     if (currentVersion !== latestVersion) {
       console.error(
         `
 You are using version ${currentVersion}. 
 The latest version is ${latestVersion}. 
-Please update to the latest version.
+Please update to the latest version to continue using napi.
 
-You can update the version by running one of the following commands:
+You can update the version by running the following command:
 
-You can get the latest version here: ${release.data.html_url}
+\`\`\`bash
+curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.sh | bash
+\`\`\`
+
+Or you can download and install them manually from here:
+${release.data.html_url}
       `,
       );
       process.exit(1);
