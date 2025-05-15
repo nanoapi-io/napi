@@ -1,7 +1,7 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { generateCSharpDependencyManifest } from "./index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 import {
   csharpFilesFolder,
   getCSharpFilesMap,
@@ -19,13 +19,13 @@ describe("generateCSharpDependencymanifest", () => {
     files.set(filePath, { path, content });
   }
   const manifest = generateCSharpDependencyManifest(files);
-  const burgers = path.join(csharpFilesFolder, "2Namespaces1File.cs");
-  const models = path.join(csharpFilesFolder, "Models.cs");
-  const namespaced = path.join(csharpFilesFolder, "Namespaced.cs");
-  const nested = path.join(csharpFilesFolder, "Nested.cs");
-  const program = path.join(csharpFilesFolder, "Program.cs");
-  const semiNamespaced = path.join(csharpFilesFolder, "SemiNamespaced.cs");
-  const usage = path.join(csharpFilesFolder, "Usage.cs");
+  const burgers = join(csharpFilesFolder, "2Namespaces1File.cs");
+  const models = join(csharpFilesFolder, "Models.cs");
+  const namespaced = join(csharpFilesFolder, "Namespaced.cs");
+  const nested = join(csharpFilesFolder, "Nested.cs");
+  const program = join(csharpFilesFolder, "Program.cs");
+  const semiNamespaced = join(csharpFilesFolder, "SemiNamespaced.cs");
+  const usage = join(csharpFilesFolder, "Usage.cs");
 
   test("Correctly identifies files", () => {
     expect(Object.keys(manifest).length).toBe(9);

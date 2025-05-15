@@ -1,39 +1,42 @@
-import { exec } from "node:child_process";
-import express from "npm:express";
 import type z from "npm:zod";
 import type { localConfigSchema } from "../../config/localConfig.ts";
 import { getApi } from "../../api/index.ts";
-import process from "node:process";
-import { getFrontentApp } from "../../frontend/index.ts";
+import { getFrontendApp } from "../../frontend/index.ts";
+import { Application } from "@oak/oak/application";
 
 function findAvailablePort(port: number): Promise<number> {
   return new Promise((resolve, reject) => {
-    const server = express().listen(port, () => {
-      server.close(() => {
-        resolve(port);
-      });
-    });
-
-    server.on("error", (err: NodeJS.ErrnoException) => {
-      if (err.code === "EADDRINUSE") {
+    try {
+      const listener = Deno.listen({ port });
+      listener.close();
+      resolve(port);
+    } catch (err) {
+      if (err instanceof Deno.errors.AddrInUse) {
+        // Port is in use, try the next one
         resolve(findAvailablePort(port + 1));
       } else {
         reject(err);
       }
-    });
+    }
   });
 }
 
 function openInBrowser(url: string) {
-  let start = "";
-  if (process.platform === "darwin") {
-    start = "open";
-  } else if (process.platform === "win32") {
-    start = "start";
+  let command = "";
+  let args: string[] = [];
+
+  if (Deno.build.os === "darwin") {
+    command = "open";
+    args = [url];
+  } else if (Deno.build.os === "windows") {
+    command = "cmd";
+    args = ["/c", "start", url];
   } else {
-    start = "xdg-open";
+    command = "xdg-open";
+    args = [url];
   }
-  exec(`${start} ${url}`);
+
+  new Deno.Command(command, { args }).spawn();
 }
 
 export async function runServer(
@@ -41,21 +44,22 @@ export async function runServer(
   napiConfig: z.infer<typeof localConfigSchema>,
   route: string,
 ) {
-  const app = express();
+  const app = new Application();
   const api = getApi(workdir, napiConfig);
-  app.use(api);
+  app.use(api.routes());
 
   // Keep last to handle SPA routing
-  const frontentApp = getFrontentApp();
-  app.use(frontentApp);
+  const frontendApp = getFrontendApp();
+  app.use(frontendApp.routes());
 
   const port = await findAvailablePort(3000);
-  app.listen(port, () => {
-    const url = `http://localhost:${port}/${route}`;
-    console.info("Press Ctrl+C to stop the server");
-    console.info(`Server started at ${url}`);
-    if (process.env.NODE_ENV !== "development") {
-      openInBrowser(url);
-    }
-  });
+
+  const url = `http://localhost:${port}/${route}`;
+  console.info("Press Ctrl+C to stop the server");
+  console.info(`Server started at ${url}`);
+  if (Deno.env.get("NODE_ENV") !== "development") {
+    openInBrowser(url);
+  }
+
+  app.listen({ port });
 }

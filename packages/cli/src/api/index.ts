@@ -1,5 +1,5 @@
-import { json, Router } from "npm:express";
-import type { z } from "npm:zod";
+import { Router } from "@oak/oak";
+import type { z } from "zod";
 import type { localConfigSchema } from "../config/localConfig.ts";
 import {
   getFilesFromDirectory,
@@ -9,7 +9,7 @@ import { getExtensionsForLanguage } from "../helpers/fileSystem/index.ts";
 import { generateDependencyManifest } from "../manifest/dependencyManifest/index.ts";
 import { generateAuditManifest } from "../manifest/auditManifest/index.ts";
 import { extractSymbols } from "../symbolExtractor/index.ts";
-import { join } from "node:path";
+import { join } from "@std/path";
 import { extractSymbolPayloadSchema } from "./types.ts";
 
 export function getApi(
@@ -28,30 +28,31 @@ export function getApi(
   const dependencyManifest = generateDependencyManifest(files, napiConfig);
   const auditManifest = generateAuditManifest(dependencyManifest, napiConfig);
 
-  const api = Router();
+  const api = new Router();
 
-  api.use(json());
-
-  api.get("/api/config", (_, res) => {
-    res.json(napiConfig);
+  api.get("/api/config", (ctx) => {
+    ctx.response.body = napiConfig;
   });
 
-  api.get("/api/dependency-manifest", (_, res) => {
-    res.json(dependencyManifest);
+  api.get("/api/dependency-manifest", (ctx) => {
+    ctx.response.body = dependencyManifest;
   });
 
-  api.get("/api/audit-manifest", (_, res) => {
-    res.json(auditManifest);
+  api.get("/api/audit-manifest", (ctx) => {
+    ctx.response.body = auditManifest;
   });
 
-  api.post("/api/extractSymbol", (req, res) => {
-    const parsedPayload = extractSymbolPayloadSchema.safeParse(req.body);
+  api.post("/api/extractSymbol", async (ctx) => {
+    const body = await ctx.request.body.json();
+
+    const parsedPayload = extractSymbolPayloadSchema.safeParse(body);
 
     if (!parsedPayload.success) {
-      res.status(400).json({
+      ctx.response.status = 400;
+      ctx.response.body = {
         success: false,
         error: parsedPayload.error,
-      });
+      };
       return;
     }
 
@@ -73,9 +74,10 @@ export function getApi(
     const outputDir = join(workDir, napiConfig.outDir);
     writeFilesToDirectory(extractedFileMap, outputDir);
 
-    res.status(200).json({
+    ctx.response.status = 200;
+    ctx.response.body = {
       success: true,
-    });
+    };
   });
 
   return api;
