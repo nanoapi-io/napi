@@ -1,4 +1,4 @@
-import path from "node:path";
+import { basename, dirname, join, SEPARATOR } from "@std/path";
 import type {
   ExternalSymbol,
   InternalSymbol,
@@ -76,8 +76,8 @@ export class CSharpProjectMapper {
     const subprojects: DotNetProject[] = [];
     for (const [csprojPath, csprojContent] of csprojFiles) {
       const subproject: DotNetProject = {
-        rootFolder: path.dirname(csprojPath),
-        name: path.basename(csprojPath, ".csproj"),
+        rootFolder: dirname(csprojPath),
+        name: basename(csprojPath, ".csproj"),
         csprojPath,
         csprojContent: csprojContent.content,
         globalUsings: { internal: [], external: [], directives: [] },
@@ -98,23 +98,23 @@ export class CSharpProjectMapper {
         "No .csproj files found. Make sure to include .csproj files along with .cs files in .napirc and that such files exist in your project.",
       );
     }
-    const splitPaths = filepaths.map((filepath) => filepath.split(path.sep));
+    const splitPaths = filepaths.map((filepath) => filepath.split(SEPARATOR));
     const commonPath = splitPaths[0].slice();
     for (let i = 0; i < commonPath.length; i++) {
       for (let j = 1; j < splitPaths.length; j++) {
         if (splitPaths[j][i] !== commonPath[i]) {
           commonPath.splice(i);
-          let rootFolder = path.join(...commonPath);
-          if (filepaths[0].startsWith(path.sep)) {
-            rootFolder = path.sep + rootFolder;
+          let rootFolder = join(...commonPath);
+          if (filepaths[0].startsWith(SEPARATOR)) {
+            rootFolder = SEPARATOR + rootFolder;
           }
           return rootFolder;
         }
       }
     }
-    let rootFolder = path.join(...commonPath);
-    if (filepaths[0].startsWith(path.sep)) {
-      rootFolder = path.sep + rootFolder;
+    let rootFolder = join(...commonPath);
+    if (filepaths[0].startsWith(SEPARATOR)) {
+      rootFolder = SEPARATOR + rootFolder;
     }
     return rootFolder;
   }

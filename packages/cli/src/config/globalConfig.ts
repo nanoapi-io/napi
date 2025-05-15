@@ -1,9 +1,5 @@
-import os from "node:os";
-import path from "node:path";
-import fs from "node:fs";
-import { v4 } from "npm:uuid";
+import { dirname, join } from "@std/path";
 import { z } from "npm:zod";
-import process from "node:process";
 
 const globalConfigSchema = z.object({
   userId: z.string(),
@@ -11,16 +7,24 @@ const globalConfigSchema = z.object({
 
 function getConfigPath() {
   const appName = "napi";
-  const homeDir = os.homedir();
+  // const homeDir = os.homedir();
 
-  if (os.platform() === "win32") {
+  if (Deno.build.os === "windows") {
     // Windows: Use %APPDATA%
-    const appData = process.env.APPDATA ||
-      path.join(homeDir, "AppData", "Roaming");
-    return path.join(appData, appName, "config.json");
-  } else if (os.platform() === "darwin") {
+    const homeDir = Deno.env.get("USERPROFILE");
+    if (!homeDir) {
+      throw new Error("USERPROFILE environment variable not found");
+    }
+    const appData = Deno.env.get("APPDATA") ||
+      join(homeDir, "AppData", "Roaming");
+    return join(appData, appName, "config.json");
+  } else if (Deno.build.os === "darwin") {
     // macOS: Use ~/Library/Application Support
-    return path.join(
+    const homeDir = Deno.env.get("HOME");
+    if (!homeDir) {
+      throw new Error("HOME environment variable not found");
+    }
+    return join(
       homeDir,
       "Library",
       "Application Support",
@@ -29,23 +33,29 @@ function getConfigPath() {
     );
   } else {
     // Linux and others: Use ~/.config
-    const configDir = process.env.XDG_CONFIG_HOME ||
-      path.join(homeDir, ".config");
-    return path.join(configDir, appName, "config.json");
+    const homeDir = Deno.env.get("HOME");
+    if (!homeDir) {
+      throw new Error("HOME environment variable not found");
+    }
+    const configDir = Deno.env.get("XDG_CONFIG_HOME") ||
+      join(homeDir, ".config");
+    return join(configDir, appName, "config.json");
   }
 }
 
 function createNewConfig(configPath: string) {
   const config = {
-    userId: v4(),
+    userId: crypto.randomUUID(),
   };
 
   try {
-    const configDir = path.dirname(configPath);
-    if (!fs.existsSync(configDir)) {
-      fs.mkdirSync(configDir, { recursive: true });
+    const configDir = dirname(configPath);
+    try {
+      Deno.statSync(configDir);
+    } catch {
+      Deno.mkdirSync(configDir, { recursive: true });
     }
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    Deno.writeTextFileSync(configPath, JSON.stringify(config, null, 2));
   } catch (error) {
     console.error(`Failed to write config: ${error}`);
   }
@@ -59,8 +69,16 @@ export function getOrCreateGlobalConfig() {
   let config: z.infer<typeof globalConfigSchema>;
 
   try {
-    if (fs.existsSync(configPath)) {
-      const content = fs.readFileSync(configPath, "utf-8");
+    let exists = false;
+    try {
+      Deno.statSync(configPath);
+      exists = true;
+    } catch {
+      // File doesn't exist
+    }
+
+    if (exists) {
+      const content = Deno.readTextFileSync(configPath);
 
       try {
         config = globalConfigSchema.parse(JSON.parse(content));

@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
+import { join, normalize, relative } from "@std/path";
 import type z from "npm:zod";
 import type { localConfigSchema } from "../../../config/localConfig.ts";
 import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with {
@@ -94,20 +93,20 @@ function getProjectStructureOverview(workDir: string): string[] {
 
   try {
     const traverseDirectory = (dir: string, depth: number) => {
-      const entries = fs.readdirSync(dir);
+      const entries = Deno.readDirSync(dir);
 
       for (const entry of entries) {
         // Skip node_modules and .git directories
-        if (entry === "node_modules" || entry === ".git") {
+        if (entry.name === "node_modules" || entry.name === ".git") {
           continue;
         }
 
-        const fullPath = path.join(dir, entry);
-        const relativePath = path.relative(workDir, fullPath);
+        const fullPath = join(dir, entry.name);
+        const relativePath = relative(workDir, fullPath);
 
         try {
-          const stat = fs.statSync(fullPath);
-          const isDirectory = stat.isDirectory();
+          const stat = Deno.statSync(fullPath);
+          const isDirectory = stat.isDirectory;
 
           const indentation = "  ".repeat(depth);
           const icon = isDirectory ? "📂" : "📄";
@@ -533,19 +532,21 @@ export async function generateConfig(
 
       try {
         // Check if the path is valid by attempting to normalize it
-        const normalizedPath = path.normalize(path.join(workDir, value));
+        const normalizedPath = normalize(join(workDir, value));
 
         // Ensure the path is within the project directory (prevent directory traversal)
-        if (!normalizedPath.startsWith(path.normalize(workDir))) {
+        if (!normalizedPath.startsWith(normalize(workDir))) {
           return "Output directory must be within the project directory";
         }
 
         // Check if the directory exists but is a file
-        if (
-          fs.existsSync(normalizedPath) &&
-          !fs.statSync(normalizedPath).isDirectory()
-        ) {
-          return "A file with this name already exists. Please choose a different name";
+        try {
+          const stat = Deno.statSync(normalizedPath);
+          if (stat && !stat.isDirectory) {
+            return "A file with this name already exists. Please choose a different name";
+          }
+        } catch (_error) {
+          // Path doesn't exist yet, which is fine
         }
 
         return true;

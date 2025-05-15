@@ -6,7 +6,7 @@ import {
   PYTHON_NAMESPACE_MODULE_TYPE,
   PYTHON_PACKAGE_MODULE_TYPE,
 } from "./types.ts";
-import { sep } from "node:path";
+import { SEPARATOR } from "@std/path";
 
 describe("PythonModuleResolver", () => {
   describe("Module Map Building", () => {
@@ -220,7 +220,7 @@ describe("PythonModuleResolver", () => {
       });
 
       test("should handle package path with trailing separator", () => {
-        const pkgModule = resolver.getModuleFromFilePath(`pkg${sep}`);
+        const pkgModule = resolver.getModuleFromFilePath(`pkg${SEPARATOR}`);
         expect(pkgModule.name).toBe("pkg");
         expect(pkgModule.fullName).toBe("pkg");
       });
@@ -548,7 +548,7 @@ describe("PythonModuleResolver", () => {
 
       test("should handle mixed path separators", () => {
         // Test with a mix of forward and backward slashes
-        const mixedPath = "pkg/subpkg\\submodule1.py".replace(/\\/g, sep);
+        const mixedPath = "pkg/subpkg\\submodule1.py".replace(/\\/g, SEPARATOR);
         const module = resolver.getModuleFromFilePath(mixedPath);
         expect(module.name).toBe("submodule1");
         expect(module.fullName).toBe("pkg.subpkg.submodule1");

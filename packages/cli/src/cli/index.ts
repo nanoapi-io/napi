@@ -1,5 +1,4 @@
 import yargs from "npm:yargs";
-import { hideBin } from "npm:yargs/helpers";
 import {
   checkVersionMiddleware,
   getCurrentVersion,
@@ -8,14 +7,13 @@ import { globalOptions } from "./helpers/options.ts";
 import initCommand from "./handlers/init/index.ts";
 import auditCommand from "./handlers/audit/index.ts";
 import { TelemetryEvents, trackEvent } from "../telemetry.ts";
-import process from "node:process";
 
 export function initCli() {
   trackEvent(TelemetryEvents.APP_START, {
     message: "Napi started",
   });
 
-  yargs(hideBin(process.argv))
+  yargs(Deno.args)
     .scriptName("napi")
     .usage("Usage: $0 <command> [options]")
     .middleware(async () => {

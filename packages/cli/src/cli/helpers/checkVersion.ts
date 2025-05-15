@@ -1,6 +1,4 @@
 import localPackageJson from "../../../../../deno.json" with { type: "json" };
-import process from "node:process";
-import { Octokit } from "npm:octokit";
 
 export function getCurrentVersion() {
   return localPackageJson.version;
@@ -9,23 +7,31 @@ export function getCurrentVersion() {
 export async function checkVersionMiddleware() {
   const currentVersion = getCurrentVersion();
 
-  const owner = "nanoapi-io";
-  const repo = "napi";
-
-  const octokit = new Octokit();
-
   try {
-    const release = await octokit.rest.repos.getLatestRelease({
-      owner,
-      repo,
-    });
+    // Simple fetch with timeout to prevent blocking
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const tagName = release.data.tag_name;
+    const response = await fetch(
+      "https://api.github.com/repos/nanoapi-io/napi/releases/latest",
+      {
+        signal: controller.signal,
+        headers: { "Accept": "application/vnd.github.v3+json" },
+      },
+    );
+    clearTimeout(timeoutId);
 
-    const latestVersion = tagName.replace(/^v/, "");
+    if (!response.ok) {
+      throw new Error(
+        `GitHub API returned ${response.status}: ${response.statusText}`,
+      );
+    }
+
+    const data = await response.json();
+    const latestVersion = data.tag_name.replace(/^v/, "");
 
     if (currentVersion !== latestVersion) {
-      console.error(
+      console.warn(
         `
 You are using version ${currentVersion}. 
 The latest version is ${latestVersion}. 
@@ -38,14 +44,17 @@ curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/ins
 \`\`\`
 
 Or you can download and install them manually from here:
-${release.data.html_url}
+${data.html_url}
       `,
       );
-      process.exit(1);
+      // Don't exit, just warn the user
     }
   } catch (err) {
     console.warn(
-      `Failed to fetch latest version, ignoring version check. Error: ${err}`,
+      `Failed to check for updates: ${
+        err instanceof Error ? err.message : "Unknown error"
+      }`,
     );
+    // Continue execution without blocking
   }
 }

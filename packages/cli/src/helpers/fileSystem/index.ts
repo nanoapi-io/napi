@@ -1,12 +1,5 @@
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
 import { globSync } from "npm:glob";
-import { dirname, join } from "node:path";
+import { dirname, join } from "@std/path";
 import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.ts";
 
 export function getExtensionsForLanguage(language: string) {
@@ -67,7 +60,7 @@ export function getFilesFromDirectory(
 
     if (include) {
       const fullPath = join(dir, relativeFilePath);
-      const fileContent = readFileSync(fullPath, "utf-8");
+      const fileContent = Deno.readTextFileSync(fullPath);
       files.set(relativeFilePath, {
         path: relativeFilePath,
         content: fileContent,
@@ -91,14 +84,16 @@ export function writeFilesToDirectory(
   dir: string,
 ) {
   // empty the directory first
-  if (existsSync(dir)) {
-    rmSync(dir, { recursive: true });
+  try {
+    Deno.removeSync(dir, { recursive: true });
+  } catch {
+    // directory doesn't exist
   }
-  mkdirSync(dir, { recursive: true });
+  Deno.mkdirSync(dir, { recursive: true });
 
   for (const { path, content } of files.values()) {
     const fullPath = join(dir, path);
-    mkdirSync(dirname(fullPath), { recursive: true });
-    writeFileSync(fullPath, content);
+    Deno.mkdirSync(dirname(fullPath), { recursive: true });
+    Deno.writeTextFileSync(fullPath, content);
   }
 }

@@ -1,8 +1,5 @@
-import { EventEmitter } from "node:events";
-import os from "node:os";
 import { getOrCreateGlobalConfig } from "./config/globalConfig.ts";
 import denoJson from "../../../deno.json" with { type: "json" };
-import process from "node:process";
 
 export enum TelemetryEvents {
   APP_START = "app_start",
@@ -22,13 +19,8 @@ export interface TelemetryEvent {
   timestamp: string;
 }
 
-const telemetry = new EventEmitter();
-const TELEMETRY_ENDPOINT = process.env.TELEMETRY_ENDPOINT ||
+const TELEMETRY_ENDPOINT = Deno.env.get("TELEMETRY_ENDPOINT") ||
   "https://napi-watchdog-api-gateway-33ge7a49.nw.gateway.dev/telemetryHandler";
-
-telemetry.on("event", (data: TelemetryEvent) => {
-  sendTelemetryData(data);
-});
 
 async function sendTelemetryData(data: TelemetryEvent) {
   const controller = new AbortController();
@@ -36,7 +28,7 @@ async function sendTelemetryData(data: TelemetryEvent) {
   const timeoutId = setTimeout(() => controller.abort(), timeoutSeconds * 1000);
 
   try {
-    if (process.env.NODE_ENV !== "development") {
+    if (Deno.env.get("NODE_ENV") !== "development") {
       const response = await fetch(TELEMETRY_ENDPOINT, {
         method: "POST",
         headers: {
@@ -70,12 +62,13 @@ export function trackEvent(
 
   const telemetryPayload: TelemetryEvent = {
     userId: config.userId,
-    os: os.platform(),
+    os: Deno.build.os,
     version: denoJson.version,
     eventId,
     data: eventData,
     timestamp: new Date().toISOString(),
   };
 
-  telemetry.emit("event", telemetryPayload);
+  // Directly send the telemetry data without using EventEmitter
+  sendTelemetryData(telemetryPayload);
 }

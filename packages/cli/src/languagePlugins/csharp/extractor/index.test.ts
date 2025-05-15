@@ -7,7 +7,7 @@ import {
   getCsprojFilesMap,
 } from "../testFiles/index.ts";
 import { generateCSharpDependencyManifest } from "../../../manifest/dependencyManifest/csharp/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CSharpExtractor", () => {
   const parsedfiles = getCSharpFilesMap();
@@ -22,12 +22,12 @@ describe("CSharpExtractor", () => {
   const manifest = generateCSharpDependencyManifest(files);
   const extractor = new CSharpExtractor(files, manifest);
 
-  const programpath = path.join(csharpFilesFolder, "Program.cs");
-  const twonamespacesonefilepath = path.join(
+  const programpath = join(csharpFilesFolder, "Program.cs");
+  const twonamespacesonefilepath = join(
     csharpFilesFolder,
     "2Namespaces1File.cs",
   );
-  const seminamespacedpath = path.join(csharpFilesFolder, "SemiNamespaced.cs");
+  const seminamespacedpath = join(csharpFilesFolder, "SemiNamespaced.cs");
 
   test("should extract symbols correctly", () => {
     expect(
@@ -60,7 +60,7 @@ describe("CSharpExtractor", () => {
 
   test("should extract global using directives", () => {
     const project = extractor.projectMapper.findSubprojectForFile(
-      path.join(csharpFilesFolder, "Program.cs"),
+      join(csharpFilesFolder, "Program.cs"),
     );
     if (!project) {
       throw new Error("Project not found");
@@ -69,7 +69,7 @@ describe("CSharpExtractor", () => {
     expect(usingDirectives.startsWith("global using System.IO;")).toBe(true);
 
     const subproject = extractor.projectMapper.findSubprojectForFile(
-      path.join(csharpFilesFolder, "Subfolder/GlobalUsings.cs"),
+      join(csharpFilesFolder, "Subfolder/GlobalUsings.cs"),
     );
     if (!subproject) {
       throw new Error("Subproject not found");

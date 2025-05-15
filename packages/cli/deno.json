@@ -4,16 +4,13 @@
   "imports": {
     "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.1",
     "@napi/shared": "../shared/src/index.ts",
-    "@types/express": "npm:@types/express@^5.0.1",
+    "@oak/oak": "jsr:@oak/oak@^17.1.4",
+    "@std/path": "jsr:@std/path@^1.0.9",
     "@types/yargs": "npm:@types/yargs@^17.0.33",
-    "express": "npm:express@^5.1.0",
     "glob": "npm:glob@^11.0.2",
-    "http-proxy-middleware": "npm:http-proxy-middleware@^3.0.5",
-    "octokit": "npm:octokit@^4.1.3",
     "tree-sitter": "npm:tree-sitter@^0.22.4",
     "tree-sitter-c-sharp": "npm:tree-sitter-c-sharp@^0.23.1",
     "tree-sitter-python": "npm:tree-sitter-python@^0.23.6",
-    "uuid": "npm:uuid@^11.1.0",
     "yargs": "npm:yargs@^17.7.2",
     "zod": "npm:zod@^3.24.4"
   },
