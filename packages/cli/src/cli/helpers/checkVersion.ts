@@ -47,11 +47,12 @@ Or you can download and install them manually from here:
 ${data.html_url}
       `,
       );
-      // Don't exit, just warn the user
+      // Force the user to update to the latest version
+      Deno.exit(1);
     }
   } catch (err) {
     console.warn(
-      `Failed to check for updates: ${
+      `Skipping version check. Failed to check for updates: ${
         err instanceof Error ? err.message : "Unknown error"
       }`,
     );

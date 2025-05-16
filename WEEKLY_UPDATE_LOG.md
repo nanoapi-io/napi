@@ -5,7 +5,47 @@ in the NAPI project on a weekly basis. It serves as a quick reference for team
 members and users to stay informed about the project's progress and recent
 developments.
 
-## Week of April 21-27, 2024
+## April 27th to May 16th, 2024
+
+### Deno Migration & Performance Optimization
+
+- Migrate from Node to Deno for improved performance and ease of development
+- Replaced Node.js dependencies with native Deno modules, reducing bundle size
+  and performance
+- Migrated from Express to Oak framework (JSR:@oak/oak) for improved Deno
+  compatibility
+- Eliminated external dependencies (uuid, express, http-proxy-middleware,
+  octokit) for built-in Deno modules
+- Switched to JSR registry for standard libraries (@std/path@^1.0.9) to leverage
+  Deno's ecosystem
+
+### Build System & Deployment
+
+- Change release from npm registry to Deno executables published on GitHub
+- Created convenience installation scripts
+- Streamlined GitHub Actions release workflow to reduce complexity and build
+  times
+- Enhanced installation instructions in README to facilitate installation
+
+### API & Development Experience
+
+- Refactored version checking to use native fetch API with timeout control (5s)
+  to prevent blocking the use of the tool when being rate limited by GitHub API
+- Updated version checking to check against our GitHub release instead of npm
+  registry
+- Implemented platform-specific browser launching with Deno.Command for better
+  cross-OS compatibility
+- Enhanced port detection using Deno's native networking APIs
+
+### Frontend
+
+- Improved API integration between frontend and backend components
+- Optimized frontend routing to work seamlessly with Oak middleware
+- Move from bare Radix UI component to more comprehensive Shadcn/UI component
+- Simplify some UX flow
+- Improve highlighting logic from the file explorer to the graph
+
+## April 21st to 27th, 2024
 
 ### Feature Improvements
 
