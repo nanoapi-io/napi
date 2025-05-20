@@ -151,6 +151,7 @@ export class CSymbolRegistry {
               const dataType = header.symbols.get(typeName);
               if (dataType instanceof DataType) {
                 symbol.datatype = dataType;
+                dataType.typedefs.set(symbol.name, symbol);
               }
             }
           }
