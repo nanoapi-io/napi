@@ -2,6 +2,7 @@ import type { Invocations } from "./types.ts";
 import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.ts";
 import type { CIncludeResolver } from "../includeResolver/index.ts";
 import {
+  DataType,
   FunctionDefinition,
   FunctionSignature,
   type Symbol,
@@ -90,6 +91,12 @@ export class CInvocationResolver {
     }
     if (symbol instanceof FunctionDefinition && symbol.signature) {
       resolved.set(symbol.name, symbol.signature);
+    }
+    if (symbol instanceof DataType) {
+      const typedefs = symbol.typedefs;
+      for (const [key, value] of typedefs) {
+        resolved.set(key, value);
+      }
     }
     return {
       resolved: invocations.resolved,

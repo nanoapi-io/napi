@@ -44,7 +44,13 @@ export class FunctionDefinition extends Symbol {
 }
 
 /** Interface representing a C variable */
-export class DataType extends Symbol {}
+export class DataType extends Symbol {
+  typedefs: Map<string, Typedef>;
+  constructor(name: string, declaration: ExportedSymbol) {
+    super(name, declaration);
+    this.typedefs = new Map();
+  }
+}
 
 /** Interface representing a C typedef */
 export class Typedef extends Symbol {

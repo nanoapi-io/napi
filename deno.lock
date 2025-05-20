@@ -52,6 +52,7 @@
     "npm:tree-sitter@~0.22.4": "0.22.4",
     "npm:tw-animate-css@^1.2.9": "1.2.9",
     "npm:uuid@^11.1.0": "11.1.0",
+    "npm:vite@*": "6.3.5_picomatch@4.0.2_@types+node@22.12.0",
     "npm:vite@^6.3.5": "6.3.5_picomatch@4.0.2_@types+node@22.12.0",
     "npm:yargs@^17.7.2": "17.7.2",
     "npm:zod@^3.24.4": "3.24.4"
