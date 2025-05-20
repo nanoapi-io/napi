@@ -1,6 +1,7 @@
 import type { ExtractedFilesMap } from "./types.ts";
 import { extractPythonSymbols } from "./python/index.ts";
 import { extractCSharpSymbols } from "./csharp/index.ts";
+import { extractCSymbols } from "./c/index.ts";
 import type { localConfigSchema } from "../config/localConfig.ts";
 import type z from "zod";
 import type { DependencyManifest } from "@napi/shared";
@@ -16,6 +17,7 @@ const handlerMap: Record<
 > = {
   python: extractPythonSymbols,
   "c-sharp": extractCSharpSymbols,
+  c: extractCSymbols,
 };
 
 export class UnsupportedLanguageError extends Error {
