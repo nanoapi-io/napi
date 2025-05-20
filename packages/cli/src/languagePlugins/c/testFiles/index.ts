@@ -47,3 +47,18 @@ export function getCFilesMap(): Map<
   findCFiles(cFilesFolder);
   return cFilesMap;
 }
+
+export function getCFilesContentMap(): Map<
+  string,
+  { path: string; content: string }
+> {
+  findCFiles(cFilesFolder);
+  const contentMap = new Map<string, { path: string; content: string }>();
+  for (const [filePath, file] of cFilesMap) {
+    contentMap.set(filePath, {
+      path: file.path,
+      content: file.rootNode.text,
+    });
+  }
+  return contentMap;
+}
