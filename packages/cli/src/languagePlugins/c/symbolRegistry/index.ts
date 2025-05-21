@@ -3,6 +3,7 @@ import { CHeaderResolver } from "../headerResolver/index.ts";
 import {
   CFile,
   DataType,
+  Enum,
   FunctionDefinition,
   FunctionSignature,
   type Symbol,
@@ -30,8 +31,14 @@ export class CSymbolRegistry {
    * @returns The converted Symbol.
    */
   #convertSymbol(es: ExportedSymbol): Symbol {
-    if (["struct", "enum", "union"].includes(es.type)) {
+    if (["struct", "union"].includes(es.type)) {
       return new DataType(
+        es.name,
+        es,
+      );
+    }
+    if (es.type === "enum") {
+      return new Enum(
         es.name,
         es,
       );
@@ -90,6 +97,11 @@ export class CSymbolRegistry {
         } else {
           header.symbols.set(symbol.name, symbol);
         }
+        if (symbol instanceof Enum) {
+          for (const [, enumMember] of symbol.members) {
+            header.symbols.set(enumMember.name, enumMember);
+          }
+        }
       }
       // Add the header file to the registry
       this.#registry.set(file.path, header);
@@ -114,6 +126,11 @@ export class CSymbolRegistry {
           source.symbols.set(symbol.name, symbol);
         } else {
           source.symbols.set(symbol.name, symbol);
+        }
+        if (symbol instanceof Enum) {
+          for (const [name, enumMember] of symbol.members) {
+            source.symbols.set(name, enumMember);
+          }
         }
         // Associate function definitions with their corresponding signatures.
         if (symbol instanceof FunctionDefinition) {

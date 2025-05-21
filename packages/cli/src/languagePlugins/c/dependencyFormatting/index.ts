@@ -8,7 +8,11 @@ import {
 import { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import { CIncludeResolver } from "../includeResolver/index.ts";
 import { CInvocationResolver } from "../invocationResolver/index.ts";
-import type { CFile, Symbol } from "../symbolRegistry/types.ts";
+import {
+  type CFile,
+  EnumMember,
+  type Symbol,
+} from "../symbolRegistry/types.ts";
 import type { Invocations } from "../invocationResolver/types.ts";
 import type Parser from "tree-sitter";
 import { C_VARIABLE_TYPE, type SymbolType } from "../headerResolver/types.ts";
@@ -66,17 +70,6 @@ export class CDependencyFormatter {
         };
       }
       dependencies[filepath].symbols[id] = id;
-      // if (symbol instanceof Function) {
-      //   const defpath = symbol.definitionPath;
-      //   if (!dependencies[defpath]) {
-      //     dependencies[defpath] = {
-      //       id: defpath,
-      //       isExternal: false,
-      //       symbols: {},
-      //     };
-      //   }
-      //   dependencies[defpath].symbols[id] = id;
-      // }
     }
     return dependencies;
   }
@@ -107,7 +100,7 @@ export class CDependencyFormatter {
       const dependencies = this.invocationResolver.getInvocationsForSymbol(
         symbol,
       );
-      if (!symbols[id]) {
+      if (!symbols[id] && !(symbol instanceof EnumMember)) {
         symbols[id] = {
           id: id,
           type: this.#formatSymbolType(symbol.declaration.type),

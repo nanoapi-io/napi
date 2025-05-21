@@ -116,7 +116,7 @@ describe("CInvocationResolver", () => {
       main_func,
     );
     const main_resolved = Array.from(main_invocations.resolved.keys());
-    expect(main_resolved.length).toBe(7);
+    expect(main_resolved.length).toBe(9);
     expect(main_resolved).toContain("create_burger");
     expect(main_resolved).toContain("Burger");
     expect(main_resolved).toContain("create_employee");

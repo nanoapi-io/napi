@@ -1,4 +1,7 @@
-import type { ExportedSymbol } from "../headerResolver/types.ts";
+import {
+  C_VARIABLE_TYPE,
+  type ExportedSymbol,
+} from "../headerResolver/types.ts";
 import type Parser from "tree-sitter";
 
 /** Interface representing a C symbol */
@@ -63,6 +66,49 @@ export class Variable extends Symbol {
   constructor(name: string, declaration: ExportedSymbol, isMacro: boolean) {
     super(name, declaration);
     this.isMacro = isMacro;
+  }
+}
+
+export class EnumMember extends Symbol {
+  parent: Enum;
+  constructor(name: string, declaration: ExportedSymbol, parent: Enum) {
+    super(name, declaration);
+    this.parent = parent;
+  }
+}
+
+export class Enum extends DataType {
+  members: Map<string, EnumMember>;
+  constructor(name: string, declaration: ExportedSymbol) {
+    super(name, declaration);
+    const enumerators = declaration.node.childForFieldName("body");
+    this.members = new Map();
+    if (enumerators) {
+      for (
+        const enumerator of enumerators.children.filter((c) =>
+          c.type === "enumerator"
+        )
+      ) {
+        const idNode = enumerator.childForFieldName("name");
+        if (!idNode) {
+          continue;
+        }
+        const member = new EnumMember(
+          idNode.text,
+          {
+            name: idNode.text,
+            type: C_VARIABLE_TYPE,
+            filepath: declaration.filepath,
+            specifiers: [],
+            qualifiers: ["const"],
+            node: enumerator,
+            identifierNode: idNode,
+          },
+          this,
+        );
+        this.members.set(enumerator.text, member);
+      }
+    }
   }
 }
 

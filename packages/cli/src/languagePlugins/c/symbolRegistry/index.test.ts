@@ -27,7 +27,7 @@ describe("CSymbolRegistry", () => {
 
   test("registers symbols for burgers.h", () => {
     expect(hsymbols.type).toBe(".h");
-    expect(hsymbols.symbols.size).toBe(16);
+    expect(hsymbols.symbols.size).toBe(32);
   });
 
   test("registers datatypes for burgers.h", () => {
@@ -41,6 +41,26 @@ describe("CSymbolRegistry", () => {
     expect(hsymbols.symbols.get("Condiment")).toBeInstanceOf(DataType);
     expect(hsymbols.symbols.get("ClassicSauces")).toBeInstanceOf(DataType);
     expect(hsymbols.symbols.get("Drink_t")).toBeInstanceOf(DataType);
+  });
+
+  test("registers enum members for burgers.h", () => {
+    console.log(Array.from(hsymbols.symbols.keys()));
+    expect(hsymbols.symbols.get("NONE")).toBeDefined();
+    expect(hsymbols.symbols.get("SALAD")).toBeDefined();
+    expect(hsymbols.symbols.get("TOMATO")).toBeDefined();
+    expect(hsymbols.symbols.get("ONION")).toBeDefined();
+    expect(hsymbols.symbols.get("CHEESE")).toBeDefined();
+    expect(hsymbols.symbols.get("PICKLE")).toBeDefined();
+    expect(hsymbols.symbols.get("KETCHUP")).toBeDefined();
+    expect(hsymbols.symbols.get("MUSTARD")).toBeDefined();
+    expect(hsymbols.symbols.get("BBQ")).toBeDefined();
+    expect(hsymbols.symbols.get("MAYO")).toBeDefined();
+    expect(hsymbols.symbols.get("SPICY")).toBeDefined();
+    expect(hsymbols.symbols.get("COKE")).toBeDefined();
+    expect(hsymbols.symbols.get("ICED_TEA")).toBeDefined();
+    expect(hsymbols.symbols.get("LEMONADE")).toBeDefined();
+    expect(hsymbols.symbols.get("WATER")).toBeDefined();
+    expect(hsymbols.symbols.get("COFFEE")).toBeDefined();
   });
 
   test("registers typedefs for burgers.h", () => {

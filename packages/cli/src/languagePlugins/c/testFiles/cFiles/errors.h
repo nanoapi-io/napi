@@ -2,6 +2,7 @@
 enum {
     ONE, TWO, THREE, VIVA, L, ALGERIE
 };
+int xbox = ONE;
 
 // Non-standard typedef
 struct Salut_t {
