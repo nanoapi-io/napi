@@ -15,8 +15,6 @@ export const C_UNNAMED_DATATYPE_QUERY = new Parser.Query(
   [
     (struct_specifier
     !name) @struct
-    (enum_specifier
-    !name) @enum
     (union_specifier
     !name) @union
   ])
@@ -24,8 +22,6 @@ export const C_UNNAMED_DATATYPE_QUERY = new Parser.Query(
   [
     (struct_specifier
     !name) @struct
-    (enum_specifier
-    !name) @enum
     (union_specifier
     !name) @union
   ])

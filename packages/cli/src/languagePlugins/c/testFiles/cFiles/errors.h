@@ -4,6 +4,10 @@ enum {
 };
 int xbox = ONE;
 
+struct {
+    int useless; // USELESS?
+};
+
 // Non-standard typedef
 struct Salut_t {
 	int id;
