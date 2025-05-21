@@ -44,7 +44,6 @@ describe("CSymbolRegistry", () => {
   });
 
   test("registers enum members for burgers.h", () => {
-    console.log(Array.from(hsymbols.symbols.keys()));
     expect(hsymbols.symbols.get("NONE")).toBeDefined();
     expect(hsymbols.symbols.get("SALAD")).toBeDefined();
     expect(hsymbols.symbols.get("TOMATO")).toBeDefined();

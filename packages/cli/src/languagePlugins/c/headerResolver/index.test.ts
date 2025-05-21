@@ -9,6 +9,7 @@ describe("CHeaderResolver", () => {
   const resolver = new CHeaderResolver();
   const burgers = path.join(cFilesFolder, "burgers.h");
   const crashcases = path.join(cFilesFolder, "crashcases.h");
+  const errorsh = path.join(cFilesFolder, "errors.h");
   const file = cFilesMap.get(burgers);
   if (!file) {
     throw new Error(`File not found: ${burgers}`);
@@ -16,6 +17,10 @@ describe("CHeaderResolver", () => {
   const ccfile = cFilesMap.get(crashcases);
   if (!ccfile) {
     throw new Error(`File not found: ${crashcases}`);
+  }
+  const errorsfile = cFilesMap.get(errorsh);
+  if (!errorsfile) {
+    throw new Error(`File not found: ${errorsh}`);
   }
   const exportedSymbols = resolver.resolveSymbols(file);
 
@@ -33,6 +38,9 @@ describe("CHeaderResolver", () => {
     expect(burger.specifiers).toEqual([]);
     expect(burger.qualifiers).toEqual([]);
     expect(burger.node.type).toBe("struct_specifier");
+    if (!burger.identifierNode) {
+      throw new Error("burger.identifierNode is undefined");
+    }
     expect(burger.identifierNode.type).toBe("type_identifier");
     expect(burger.filepath).toBe(burgers);
   });
@@ -47,6 +55,9 @@ describe("CHeaderResolver", () => {
     expect(sauce.specifiers).toEqual([]);
     expect(sauce.qualifiers).toEqual([]);
     expect(sauce.node.type).toBe("union_specifier");
+    if (!sauce.identifierNode) {
+      throw new Error("sauce.identifierNode is undefined");
+    }
     expect(sauce.identifierNode.type).toBe("type_identifier");
     expect(sauce.filepath).toBe(burgers);
   });
@@ -63,6 +74,9 @@ describe("CHeaderResolver", () => {
     expect(condiment.specifiers).toEqual([]);
     expect(condiment.qualifiers).toEqual([]);
     expect(condiment.node.type).toBe("enum_specifier");
+    if (!condiment.identifierNode) {
+      throw new Error("condiment.identifierNode is undefined");
+    }
     expect(condiment.identifierNode.type).toBe("type_identifier");
     expect(condiment.filepath).toBe(burgers);
 
@@ -84,6 +98,9 @@ describe("CHeaderResolver", () => {
     expect(drink_t.specifiers).toEqual([]);
     expect(drink_t.qualifiers).toEqual([]);
     expect(drink_t.node.type).toBe("enum_specifier");
+    if (!drink_t.identifierNode) {
+      throw new Error("drink_t.identifierNode is undefined");
+    }
     expect(drink_t.identifierNode.type).toBe("type_identifier");
     expect(drink_t.filepath).toBe(burgers);
   });
@@ -100,6 +117,9 @@ describe("CHeaderResolver", () => {
     expect(classicburger.specifiers).toEqual([]);
     expect(classicburger.qualifiers).toEqual(["const"]);
     expect(classicburger.node.type).toBe("declaration");
+    if (!classicburger.identifierNode) {
+      throw new Error("classicburger.identifierNode is undefined");
+    }
     expect(classicburger.identifierNode.type).toBe("identifier");
     expect(classicburger.filepath).toBe(burgers);
 
@@ -114,6 +134,9 @@ describe("CHeaderResolver", () => {
     expect(burger_count.specifiers).toEqual(["static"]);
     expect(burger_count.qualifiers).toEqual([]);
     expect(burger_count.node.type).toBe("declaration");
+    if (!burger_count.identifierNode) {
+      throw new Error("burger_count.identifierNode is undefined");
+    }
     expect(burger_count.identifierNode.type).toBe("identifier");
     expect(burger_count.filepath).toBe(burgers);
   });
@@ -130,6 +153,9 @@ describe("CHeaderResolver", () => {
     expect(burgers_h.specifiers).toEqual([]);
     expect(burgers_h.qualifiers).toEqual([]);
     expect(burgers_h.node.type).toBe("preproc_def");
+    if (!burgers_h.identifierNode) {
+      throw new Error("burgers_h.identifierNode is undefined");
+    }
     expect(burgers_h.identifierNode.type).toBe("identifier");
     expect(burgers_h.filepath).toBe(burgers);
 
@@ -144,6 +170,9 @@ describe("CHeaderResolver", () => {
     expect(max_burgers.specifiers).toEqual([]);
     expect(max_burgers.qualifiers).toEqual([]);
     expect(max_burgers.node.type).toBe("preproc_def");
+    if (!max_burgers.identifierNode) {
+      throw new Error("max_burgers.identifierNode is undefined");
+    }
     expect(max_burgers.identifierNode.type).toBe("identifier");
     expect(max_burgers.filepath).toBe(burgers);
   });
@@ -170,6 +199,9 @@ describe("CHeaderResolver", () => {
     expect(max_macro.specifiers).toEqual([]);
     expect(max_macro.qualifiers).toEqual([]);
     expect(max_macro.node.type).toBe("preproc_function_def");
+    if (!max_macro.identifierNode) {
+      throw new Error("max_macro.identifierNode is undefined");
+    }
     expect(max_macro.identifierNode.type).toBe("identifier");
     expect(max_macro.filepath).toBe(burgers);
   });
@@ -184,6 +216,9 @@ describe("CHeaderResolver", () => {
     expect(fries.specifiers).toEqual([]);
     expect(fries.qualifiers).toEqual([]);
     expect(fries.node.type).toBe("type_definition");
+    if (!fries.identifierNode) {
+      throw new Error("fries.identifierNode is undefined");
+    }
     expect(fries.identifierNode.type).toBe("type_identifier");
     expect(fries.filepath).toBe(burgers);
 
@@ -196,6 +231,9 @@ describe("CHeaderResolver", () => {
     expect(drink.specifiers).toEqual([]);
     expect(drink.qualifiers).toEqual([]);
     expect(drink.node.type).toBe("type_definition");
+    if (!drink.identifierNode) {
+      throw new Error("drink.identifierNode is undefined");
+    }
     expect(drink.identifierNode.type).toBe("type_identifier");
     expect(drink.filepath).toBe(burgers);
   });
@@ -213,6 +251,9 @@ describe("CHeaderResolver", () => {
     expect(sprite.specifiers).toEqual([]);
     expect(sprite.qualifiers).toEqual([]);
     expect(sprite.node.type).toBe("struct_specifier");
+    if (!sprite.identifierNode) {
+      throw new Error("sprite.identifierNode is undefined");
+    }
     expect(sprite.identifierNode.type).toBe("type_identifier");
     expect(sprite.filepath).toBe(crashcases);
 
@@ -227,6 +268,9 @@ describe("CHeaderResolver", () => {
     expect(placeholderfunction.specifiers).toEqual([]);
     expect(placeholderfunction.qualifiers).toEqual([]);
     expect(placeholderfunction.node.type).toBe("declaration");
+    if (!placeholderfunction.identifierNode) {
+      throw new Error("placeholderfunction.identifierNode is undefined");
+    }
     expect(placeholderfunction.identifierNode.type).toBe("identifier");
     expect(placeholderfunction.filepath).toBe(crashcases);
 
@@ -241,7 +285,17 @@ describe("CHeaderResolver", () => {
     expect(gmtfwa.specifiers).toEqual([]);
     expect(gmtfwa.qualifiers).toEqual([]);
     expect(gmtfwa.node.type).toBe("declaration");
+    if (!gmtfwa.identifierNode) {
+      throw new Error("gmtfwa.identifierNode is undefined");
+    }
     expect(gmtfwa.identifierNode.type).toBe("identifier");
     expect(gmtfwa.filepath).toBe(crashcases);
+  });
+
+  test("resolves unnamed types", () => {
+    const exportedErrorSymbols = resolver.resolveSymbols(errorsfile);
+    expect(exportedErrorSymbols).toBeDefined();
+    const symbolNames = exportedErrorSymbols.map((symbol) => symbol.name);
+    expect(symbolNames).toContain("#NAPI_UNNAMED_ENUM_0");
   });
 });

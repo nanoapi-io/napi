@@ -10,6 +10,7 @@ import type Parser from "tree-sitter";
 
 export class CHeaderResolver {
   parser: Parser = cParser;
+  #unnamedSymbolCounter = 0;
 
   /**
    * Resolves the symbols in a C header file.
@@ -25,25 +26,23 @@ export class CHeaderResolver {
     const captures = query.captures(file.rootNode);
     for (const capture of captures) {
       if (capture.name !== "decl" && capture.name !== "function_definition") {
-        let idNode: Parser.SyntaxNode;
+        let idNode: Parser.SyntaxNode | null;
         if (capture.name !== "typedef") {
-          if (!capture.node.childForFieldName("name")) {
-            throw new Error(`Couldn't find name for ${capture.node.text}`);
-          }
-          idNode = capture.node.childForFieldName("name") as Parser.SyntaxNode;
+          idNode = capture.node.childForFieldName("name");
         } else {
-          if (!capture.node.childForFieldName("declarator")) {
-            throw new Error(`Couldn't find name for ${capture.node.text}`);
-          }
           idNode = capture.node.childForFieldName(
             "declarator",
-          ) as Parser.SyntaxNode;
+          );
         }
+        let name: string;
         if (!idNode) {
-          continue;
+          name = `#NAPI_UNNAMED_${capture.name.toUpperCase()}_${this
+            .#unnamedSymbolCounter++}`;
+        } else {
+          name = idNode.text;
         }
         exportedSymbols.push({
-          name: idNode.text,
+          name: name,
           type: capture.name as SymbolType,
           node: capture.node,
           identifierNode: idNode,
