@@ -10,9 +10,12 @@ export const C_DECLARATION_QUERY = new Parser.Query(
   (translation_unit
   [
     (declaration) @decl
-    (struct_specifier) @struct
-    (enum_specifier) @enum
-    (union_specifier) @union
+    (struct_specifier
+    name: (_)) @struct
+    (enum_specifier
+    name: (_)) @enum
+    (union_specifier
+    name: (_)) @union
     (function_definition) @function_definition
     (type_definition
     	type:[
@@ -39,9 +42,12 @@ export const C_DECLARATION_QUERY = new Parser.Query(
   (preproc_ifdef
   [
     (declaration) @decl
-    (struct_specifier) @struct
-    (enum_specifier) @enum
-    (union_specifier) @union
+    (struct_specifier
+    name: (_)) @struct
+    (enum_specifier
+    name: (_)) @enum
+    (union_specifier
+    name: (_)) @union
     (function_definition) @function_definition
     (type_definition
     	type:[
