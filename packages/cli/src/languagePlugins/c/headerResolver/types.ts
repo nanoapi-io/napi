@@ -61,7 +61,7 @@ export interface ExportedSymbol {
   /** The syntax node corresponding to the symbol */
   node: Parser.SyntaxNode;
   /** The syntax node corresponding to the identifier */
-  identifierNode: Parser.SyntaxNode;
+  identifierNode: Parser.SyntaxNode | null;
   /** The path of the symbol's file */
   filepath: string;
 }

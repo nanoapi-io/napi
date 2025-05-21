@@ -3,6 +3,7 @@ import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.ts";
 import type { CIncludeResolver } from "../includeResolver/index.ts";
 import {
   DataType,
+  EnumMember,
   FunctionDefinition,
   FunctionSignature,
   type Symbol,
@@ -96,6 +97,16 @@ export class CInvocationResolver {
       const typedefs = symbol.typedefs;
       for (const [key, value] of typedefs) {
         resolved.set(key, value);
+      }
+    }
+    // Replace enum members with their parent enum
+    for (const [key, value] of resolved) {
+      if (value instanceof EnumMember) {
+        const parent = value.parent;
+        if (!resolved.has(parent.name) && parent.name !== symbol.name) {
+          resolved.set(parent.name, parent);
+        }
+        resolved.delete(key);
       }
     }
     return {

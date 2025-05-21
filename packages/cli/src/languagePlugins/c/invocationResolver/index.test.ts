@@ -16,6 +16,7 @@ describe("CInvocationResolver", () => {
   const burgersc = path.join(cFilesFolder, "burgers.c");
   const personnelc = path.join(cFilesFolder, "personnel.c");
   const crashcasesh = path.join(cFilesFolder, "crashcases.h");
+  const errorsh = path.join(cFilesFolder, "errors.h");
   const main = path.join(cFilesFolder, "main.c");
   const registry = symbolRegistry.getRegistry();
 
@@ -116,7 +117,7 @@ describe("CInvocationResolver", () => {
       main_func,
     );
     const main_resolved = Array.from(main_invocations.resolved.keys());
-    expect(main_resolved.length).toBe(7);
+    expect(main_resolved.length).toBe(9);
     expect(main_resolved).toContain("create_burger");
     expect(main_resolved).toContain("Burger");
     expect(main_resolved).toContain("create_employee");
@@ -136,5 +137,17 @@ describe("CInvocationResolver", () => {
     expect(crash_resolved.length).toBe(2);
     expect(crash_resolved).toContain("CpuFastSet");
     expect(crash_resolved).toContain("CPU_FAST_SET_SRC_FIXED");
+  });
+
+  test("Errors", () => {
+    const symbols = registry.get(errorsh)?.symbols;
+    if (!symbols) {
+      throw new Error(`Symbol not found for: ${errorsh}`);
+    }
+    const xbox = symbols.get("xbox") as Symbol;
+    const xbox_invocations = invocationResolver.getInvocationsForSymbol(xbox);
+    const xbox_resolved = Array.from(xbox_invocations.resolved.keys());
+    expect(xbox_resolved.length).toBe(1);
+    expect(xbox_resolved).toContain("#NAPI_UNNAMED_ENUM_0");
   });
 });
