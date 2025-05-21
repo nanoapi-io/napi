@@ -14,6 +14,7 @@ import { CDependencyFormatter } from "../../../languagePlugins/c/dependencyForma
 import { CMetricsAnalyzer } from "../../../languagePlugins/c/metrics/index.ts";
 import type Parser from "tree-sitter";
 import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.ts";
+import { CWarningManager } from "../../../languagePlugins/c/warnings/index.ts";
 
 export function generateCDependencyManifest(
   files: Map<string, { path: string; content: string }>,
@@ -36,6 +37,13 @@ export function generateCDependencyManifest(
     }
   }
 
+  const warningManager = new CWarningManager(parsedFiles);
+  if (warningManager.diagnostics.length > 0) {
+    console.warn(`⚠️ ${warningManager.diagnostics.length} warnings found:`);
+    for (const warning of warningManager.diagnostics) {
+      console.warn(warning.message);
+    }
+  }
   const formatter = new CDependencyFormatter(parsedFiles);
   const metricsAnalyzer = new CMetricsAnalyzer();
   const manifest: DependencyManifest = {};
