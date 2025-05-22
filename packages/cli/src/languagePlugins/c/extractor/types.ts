@@ -1,5 +1,5 @@
 import type { Symbol } from "../symbolRegistry/types.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 
 export interface ExportedFile {
   symbols: Map<string, Symbol>;

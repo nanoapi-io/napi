@@ -1,6 +1,5 @@
-import path from "node:path";
-import fs from "node:fs";
-import { z } from "zod";
+import { join } from "@std/path";
+import { z } from "npm:zod";
 import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json" with {
   type: "json",
 };
@@ -62,13 +61,15 @@ export const localConfigSchema = z.object({
 const napiConfigFileName = ".napirc";
 
 export function getConfigFromWorkDir(workdir: string) {
-  const napircPath = path.join(workdir, napiConfigFileName);
+  const napircPath = join(workdir, napiConfigFileName);
 
-  if (!fs.existsSync(napircPath)) {
+  try {
+    Deno.statSync(napircPath);
+  } catch {
     throw new Error(`${napiConfigFileName} not found in ${workdir}`);
   }
 
-  const napircContent = fs.readFileSync(napircPath, "utf-8");
+  const napircContent = Deno.readTextFileSync(napircPath);
 
   const result = localConfigSchema.safeParse(JSON.parse(napircContent));
 
@@ -85,6 +86,6 @@ export function createConfig(
   napiConfig: z.infer<typeof localConfigSchema>,
   workdir: string,
 ) {
-  const napircPath = path.join(workdir, napiConfigFileName);
-  fs.writeFileSync(napircPath, JSON.stringify(napiConfig, null, 2));
+  const napircPath = join(workdir, napiConfigFileName);
+  Deno.writeTextFileSync(napircPath, JSON.stringify(napiConfig, null, 2));
 }

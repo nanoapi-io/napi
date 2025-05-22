@@ -1,5 +1,5 @@
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
-import Parser from "tree-sitter";
+import Parser from "npm:tree-sitter";
 
 /** Query that catches every declaration including macros in a header file
  * Does not catch function definitions

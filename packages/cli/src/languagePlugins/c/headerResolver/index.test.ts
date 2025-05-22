@@ -2,14 +2,14 @@ import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
 import { CHeaderResolver } from "./index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CHeaderResolver", () => {
   const cFilesMap = getCFilesMap();
   const resolver = new CHeaderResolver();
-  const burgers = path.join(cFilesFolder, "burgers.h");
-  const crashcases = path.join(cFilesFolder, "crashcases.h");
-  const errorsh = path.join(cFilesFolder, "errors.h");
+  const burgers = join(cFilesFolder, "burgers.h");
+  const crashcases = join(cFilesFolder, "crashcases.h");
+  const errorsh = join(cFilesFolder, "errors.h");
   const file = cFilesMap.get(burgers);
   if (!file) {
     throw new Error(`File not found: ${burgers}`);

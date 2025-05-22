@@ -7,7 +7,7 @@ import {
   CSharpNamespaceMapper,
   type SymbolNode,
 } from "../namespaceMapper/index.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import {
   CSharpUsingResolver,
   type ResolvedImports,

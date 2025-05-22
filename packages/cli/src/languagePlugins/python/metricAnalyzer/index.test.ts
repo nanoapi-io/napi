@@ -1,6 +1,6 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { PythonMetricsAnalyzer } from "./index.ts";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";
 import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
@@ -131,10 +131,10 @@ def logical_function(a, b, c):
 class TestClass:
     def __init__(self, value):
         self.value = value
-        
+
     def simple_method(self):
         return self.value
-        
+
     def complex_method(self, factor):
         if factor > 0:
             return self.value * factor
@@ -164,10 +164,10 @@ class TestClass:
     const code = `
 def commented_function():
     # This is a comment
-    
+
     # Another comment
     value = 42  # Inline comment
-    
+
     # Final comment
     return value
 `;

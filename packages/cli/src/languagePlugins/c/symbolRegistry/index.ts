@@ -11,7 +11,7 @@ import {
   Variable,
 } from "./types.ts";
 import { C_TYPEDEF_TYPE_QUERY } from "./queries.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 
 export class CSymbolRegistry {
   headerResolver: CHeaderResolver;

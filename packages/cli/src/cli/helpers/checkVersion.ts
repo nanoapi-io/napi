@@ -1,42 +1,61 @@
 import localPackageJson from "../../../../../deno.json" with { type: "json" };
-import process from "node:process";
-import { Octokit } from "octokit";
+
+export function getCurrentVersion() {
+  return localPackageJson.version;
+}
 
 export async function checkVersionMiddleware() {
-  const currentVersion = localPackageJson.version;
-
-  const owner = "nanoapi-io";
-  const repo = "napi";
-
-  const octokit = new Octokit();
+  const currentVersion = getCurrentVersion();
 
   try {
-    const release = await octokit.rest.repos.getLatestRelease({
-      owner,
-      repo,
-    });
+    // Simple fetch with timeout to prevent blocking
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const tagName = release.data.tag_name;
+    const response = await fetch(
+      "https://api.github.com/repos/nanoapi-io/napi/releases/latest",
+      {
+        signal: controller.signal,
+        headers: { "Accept": "application/vnd.github.v3+json" },
+      },
+    );
+    clearTimeout(timeoutId);
 
-    const latestVersion = tagName.replace(/^v/, "");
+    if (!response.ok) {
+      throw new Error(
+        `GitHub API returned ${response.status}: ${response.statusText}`,
+      );
+    }
+
+    const data = await response.json();
+    const latestVersion = data.tag_name.replace(/^v/, "");
 
     if (currentVersion !== latestVersion) {
-      console.error(
+      console.warn(
         `
-You are using version ${currentVersion}. 
-The latest version is ${latestVersion}. 
-Please update to the latest version.
+You are using version ${currentVersion}.
+The latest version is ${latestVersion}.
+Please update to the latest version to continue using napi.
 
-You can update the version by running one of the following commands:
+You can update the version by running the following command:
 
-You can get the latest version here: ${release.data.html_url}
+\`\`\`bash
+curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.sh | bash
+\`\`\`
+
+Or you can download and install them manually from here:
+${data.html_url}
       `,
       );
-      process.exit(1);
+      // Force the user to update to the latest version
+      Deno.exit(1);
     }
   } catch (err) {
     console.warn(
-      `Failed to fetch latest version, ignoring version check. Error: ${err}`,
+      `Skipping version check. Failed to check for updates: ${
+        err instanceof Error ? err.message : "Unknown error"
+      }`,
     );
+    // Continue execution without blocking
   }
 }

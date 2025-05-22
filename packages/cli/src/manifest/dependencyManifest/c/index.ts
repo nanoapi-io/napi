@@ -12,7 +12,7 @@ import {
 } from "@napi/shared";
 import { CDependencyFormatter } from "../../../languagePlugins/c/dependencyFormatting/index.ts";
 import { CMetricsAnalyzer } from "../../../languagePlugins/c/metrics/index.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.ts";
 import { CWarningManager } from "../../../languagePlugins/c/warnings/index.ts";
 

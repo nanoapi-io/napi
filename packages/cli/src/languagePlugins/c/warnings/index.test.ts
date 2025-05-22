@@ -2,7 +2,7 @@ import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { CWarningManager } from "./index.ts";
 import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CWarningManager", () => {
   const files = getCFilesMap();
@@ -19,10 +19,10 @@ describe("CWarningManager", () => {
 
   test("diagnostics are in correct files", () => {
     expect(diagnostics[0].filename).toBe(
-      path.join(cFilesFolder, "errors.h"),
+      join(cFilesFolder, "errors.h"),
     );
     expect(diagnostics[1].filename).toBe(
-      path.join(cFilesFolder, "errors.h"),
+      join(cFilesFolder, "errors.h"),
     );
   });
 });

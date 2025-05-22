@@ -17,7 +17,7 @@ concerns before they become hundred-million-dollar problems. The added benefit?
 No more black-box tools running on your code and the confidence of a 100%
 determinstic tool.
 
-![NanoAPI UI Overview](/media/hero-app.jpeg)
+![NanoAPI UI Overview](/media/hero-app.png)
 
 ## Features
 
@@ -65,19 +65,24 @@ For the latest updates, visit our [project board](/projects).
 
 ## Installation
 
-> [!IMPORTANT]
-> `napi` works out of the box on both mac and linux systems. To use this tool on
-> Windows, you will need to install
-> [WSL (Windows Subsystem for Linux)](https://learn.microsoft.com/en-us/windows/wsl/install)
-> and run the CLI commands from there.
+`napi` works out of the box on both mac and linux systems.
 
-Ensure you have Node.js (>=22) and npm installed.
+To use this tool on Windows, you will need to install and run the CLI commands
+from there.
 
-https://nodejs.org/en
+[WSL (Windows Subsystem for Linux)](https://learn.microsoft.com/en-us/windows/wsl/install)
+
+To install `napi`, you can use our installation script:
 
 ```bash
-npm install -g @nanoapi.io/napi
+curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.sh | bash
 ```
+
+Our download and install manually from:
+
+https://github.com/nanoapi-io/napi/releases/latest
+
+This will download and install the latest version of `napi` to your system.
 
 ## CLI Usage
 

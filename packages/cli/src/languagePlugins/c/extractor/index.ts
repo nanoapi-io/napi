@@ -1,7 +1,7 @@
 import type { DependencyManifest } from "@napi/shared";
 import { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import { CIncludeResolver } from "../includeResolver/index.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 import type { CFile, Symbol } from "../symbolRegistry/types.ts";
 import type { ExportedFile } from "./types.ts";

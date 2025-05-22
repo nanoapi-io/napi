@@ -2,15 +2,15 @@ import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { cFilesFolder, getCFilesContentMap } from "../testFiles/index.ts";
 import { CExtractor } from "./index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 import { generateCDependencyManifest } from "../../../manifest/dependencyManifest/c/index.ts";
 
 describe("CExtractor", () => {
   const cContentMap = getCFilesContentMap();
   const manifest = generateCDependencyManifest(cContentMap);
   const extractor = new CExtractor(cContentMap, manifest);
-  const burgers = path.join(cFilesFolder, "burgers.h");
-  const burgersc = path.join(cFilesFolder, "burgers.c");
+  const burgers = join(cFilesFolder, "burgers.h");
+  const burgersc = join(cFilesFolder, "burgers.c");
   test("extracts create_burger", () => {
     const symbolsToExtract = new Map<
       string,

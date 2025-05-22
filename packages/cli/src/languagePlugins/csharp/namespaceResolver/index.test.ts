@@ -1,7 +1,7 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { CSharpNamespaceResolver, type File } from "./index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";
 
 describe("NamespaceResolver", () => {
@@ -10,7 +10,7 @@ describe("NamespaceResolver", () => {
 
   test("2Namespaces1File.cs", () => {
     const file = files.get(
-      path.join(csharpFilesFolder, "2Namespaces1File.cs"),
+      join(csharpFilesFolder, "2Namespaces1File.cs"),
     ) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
@@ -34,7 +34,7 @@ describe("NamespaceResolver", () => {
   });
 
   test("Models.cs", () => {
-    const file = files.get(path.join(csharpFilesFolder, "Models.cs")) as File;
+    const file = files.get(join(csharpFilesFolder, "Models.cs")) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
@@ -52,9 +52,7 @@ describe("NamespaceResolver", () => {
   });
 
   test("Namespaced.cs", () => {
-    const file = files.get(
-      path.join(csharpFilesFolder, "Namespaced.cs"),
-    ) as File;
+    const file = files.get(join(csharpFilesFolder, "Namespaced.cs")) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
@@ -72,7 +70,7 @@ describe("NamespaceResolver", () => {
   });
 
   test("Nested.cs", () => {
-    const file = files.get(path.join(csharpFilesFolder, "Nested.cs")) as File;
+    const file = files.get(join(csharpFilesFolder, "Nested.cs")) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([
       {
@@ -103,7 +101,7 @@ describe("NamespaceResolver", () => {
 
   test("SemiNamespaced.cs", () => {
     const file = files.get(
-      path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+      join(csharpFilesFolder, "SemiNamespaced.cs"),
     ) as File;
     const namespaces = nsResolver.getNamespacesFromFile(file);
     expect(namespaces).toMatchObject([

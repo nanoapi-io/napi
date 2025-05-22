@@ -1,9 +1,8 @@
-import fs from "node:fs";
-import path from "node:path";
-import type Parser from "tree-sitter";
+import { extname, join } from "@std/path";
+import type Parser from "npm:tree-sitter";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
-export const csharpFilesFolder = path.join(
+export const csharpFilesFolder = join(
   import.meta.dirname as string,
   "csharpFiles",
 );
@@ -19,11 +18,11 @@ const csprojFiles = new Map<string, { path: string; content: string }>();
  * @param dir - The directory to search in.
  */
 function findCSharpFiles(dir: string) {
-  const files = fs.readdirSync(dir);
+  const files = Deno.readDirSync(dir);
   files.forEach((file) => {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
+    const fullPath = join(dir, file.name);
+    const stat = Deno.statSync(fullPath);
+    if (stat.isDirectory) {
       if (
         !fullPath.includes(".extracted") &&
         !fullPath.includes("bin") &&
@@ -31,8 +30,8 @@ function findCSharpFiles(dir: string) {
       ) {
         findCSharpFiles(fullPath);
       }
-    } else if (path.extname(fullPath) === ".cs") {
-      const content = fs.readFileSync(fullPath, "utf8");
+    } else if (extname(fullPath) === ".cs") {
+      const content = Deno.readTextFileSync(fullPath);
       const tree = csharpParser.parse(content);
       csharpFilesMap.set(fullPath, { path: fullPath, rootNode: tree.rootNode });
     }
@@ -44,11 +43,11 @@ function findCSharpFiles(dir: string) {
  * @param dir - The directory to search in.
  */
 function findCsprojFiles(dir: string): void {
-  const files = fs.readdirSync(dir);
+  const files = Deno.readDirSync(dir);
   files.forEach((file) => {
-    const fullPath = path.join(dir, file);
-    const stat = fs.statSync(fullPath);
-    if (stat.isDirectory()) {
+    const fullPath = join(dir, file.name);
+    const stat = Deno.statSync(fullPath);
+    if (stat.isDirectory) {
       if (
         !fullPath.includes(".extracted") &&
         !fullPath.includes("bin") &&
@@ -56,8 +55,8 @@ function findCsprojFiles(dir: string): void {
       ) {
         findCsprojFiles(fullPath);
       }
-    } else if (path.extname(fullPath) === ".csproj") {
-      const content = fs.readFileSync(fullPath, "utf8");
+    } else if (extname(fullPath) === ".csproj") {
+      const content = Deno.readTextFileSync(fullPath);
       csprojFiles.set(fullPath, { path: fullPath, content: content });
     }
   });

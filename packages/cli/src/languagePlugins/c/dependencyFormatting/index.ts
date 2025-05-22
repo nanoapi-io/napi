@@ -14,7 +14,7 @@ import {
   type Symbol,
 } from "../symbolRegistry/types.ts";
 import type { Invocations } from "../invocationResolver/types.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { C_VARIABLE_TYPE, type SymbolType } from "../headerResolver/types.ts";
 
 export class CDependencyFormatter {

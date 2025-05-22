@@ -6,7 +6,7 @@ import {
   getCSharpFilesMap,
   getCsprojFilesMap,
 } from "../testFiles/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 import type { File } from "../namespaceResolver/index.ts";
 
 describe("Dependency formatting", () => {
@@ -15,7 +15,7 @@ describe("Dependency formatting", () => {
   const formatter = new CSharpDependencyFormatter(parsedfiles, csprojfiles);
 
   test("SemiNamespaced.cs", () => {
-    const snpath = path.join(csharpFilesFolder, "SemiNamespaced.cs");
+    const snpath = join(csharpFilesFolder, "SemiNamespaced.cs");
     const seminamespaced = formatter.formatFile(snpath);
     expect(seminamespaced).toBeDefined();
     if (!seminamespaced) return;

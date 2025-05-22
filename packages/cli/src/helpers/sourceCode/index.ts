@@ -1,5 +1,3 @@
-import { Buffer } from "node:buffer";
-
 export function removeIndexesFromSourceCode(
   sourceCode: string,
   indexesToRemove: { startIndex: number; endIndex: number }[],
@@ -19,20 +17,19 @@ export function removeIndexesFromSourceCode(
     }
   }
 
-  // Convert the source string to a Buffer (UTF-8 encoded).
-  const buffer = Buffer.from(sourceCode, "utf-8");
-  const resultBuffers: Buffer[] = [];
+  // Use native string manipulation instead of Buffer
+  let result = "";
   let lastIndex = 0;
 
   // Iterate over merged ranges in ascending order.
   mergedRanges.forEach(({ startIndex, endIndex }) => {
     // Append content from the end of the previous range to the start of the current range.
-    resultBuffers.push(buffer.subarray(lastIndex, startIndex));
+    result += sourceCode.substring(lastIndex, startIndex);
     lastIndex = endIndex;
   });
-  // Append any remaining content after the last range.
-  resultBuffers.push(buffer.subarray(lastIndex));
 
-  // Concatenate the result buffers and decode back to a string.
-  return Buffer.concat(resultBuffers).toString("utf-8");
+  // Append any remaining content after the last range.
+  result += sourceCode.substring(lastIndex);
+
+  return result;
 }

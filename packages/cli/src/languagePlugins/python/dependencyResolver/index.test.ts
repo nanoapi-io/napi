@@ -1,6 +1,6 @@
 import { beforeEach, describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";
 import { PythonModuleResolver } from "../moduleResolver/index.ts";
@@ -148,7 +148,7 @@ from original import original_func
 # First definition with dependency on original
 def multi_func():
     return original_func()
-    
+
 from another import another_func
 
 # Second definition with dependency on another

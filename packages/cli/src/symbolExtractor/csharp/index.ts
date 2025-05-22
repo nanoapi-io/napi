@@ -1,5 +1,5 @@
-import type { z } from "zod";
-import path from "node:path";
+import type { z } from "npm:zod";
+import { join, SEPARATOR } from "@std/path";
 import type { localConfigSchema } from "../../config/localConfig.ts";
 import type { ExtractedFilesMap } from "../types.ts";
 import {
@@ -8,7 +8,7 @@ import {
 } from "../../languagePlugins/csharp/extractor/index.ts";
 import type { DependencyManifest } from "@napi/shared";
 import type { DotNetProject } from "../../languagePlugins/csharp/projectMapper/index.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { csharpParser } from "../../helpers/treeSitter/parsers.ts";
 import { CSharpNamespaceMapper } from "../../languagePlugins/csharp/namespaceMapper/index.ts";
 import { CSharpProjectMapper } from "../../languagePlugins/csharp/projectMapper/index.ts";
@@ -69,7 +69,7 @@ export function extractCSharpSymbols(
               path: subproject.csprojPath,
               content: subproject.csprojContent,
             });
-            const globalUsingsPath = path.join(
+            const globalUsingsPath = join(
               subproject.rootFolder,
               "GlobalUsings.cs",
             );
@@ -124,14 +124,14 @@ export function extractCSharpSymbols(
       subprojects.push(subproject);
     }
     // File path for the extracted file
-    const fakeprojectpath = subproject.name.split(".").join(path.sep);
+    const fakeprojectpath = subproject.name.split(".").join(SEPARATOR);
     const spindex = namespace.split(".").indexOf(subproject.name);
     const nspath = namespace
       .split(".")
       .slice(spindex !== -1 ? spindex : 0)
-      .join(path.sep)
+      .join(SEPARATOR)
       .replace(fakeprojectpath, subproject.name);
-    const key = path.join(
+    const key = join(
       spindex !== -1 || nspath.startsWith(subproject.name)
         ? ""
         : subproject.name,
@@ -149,8 +149,8 @@ export function extractCSharpSymbols(
   }
   // Add the .csproj and GlobalUsings.cs files for each subproject
   for (const subproject of subprojects) {
-    const projectPath = path.join(subproject.name, `${subproject.name}.csproj`);
-    const globalUsingPath = path.join(subproject.name, "GlobalUsings.cs");
+    const projectPath = join(subproject.name, `${subproject.name}.csproj`);
+    const globalUsingPath = join(subproject.name, "GlobalUsings.cs");
     if (!extractedFilesMap.has(projectPath)) {
       // Add the project files to the output map
       extractedFilesMap.set(projectPath, {

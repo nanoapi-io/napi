@@ -1,9 +1,8 @@
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import {
   CSharpNamespaceResolver,
   type SymbolType,
 } from "../namespaceResolver/index.ts";
-import fs from "node:fs";
 
 /**
  * Interface representing a namespace node in the namespace tree.
@@ -239,7 +238,7 @@ export class CSharpNamespaceMapper {
    */
   saveDebugTree(filepath: string): DebugNode {
     const debugTree: DebugNode = this.#convertNodeToDebug(this.nsTree);
-    fs.writeFileSync(filepath, JSON.stringify(debugTree, null, 2));
+    Deno.writeTextFileSync(filepath, JSON.stringify(debugTree, null, 2));
     return debugTree;
   }
 

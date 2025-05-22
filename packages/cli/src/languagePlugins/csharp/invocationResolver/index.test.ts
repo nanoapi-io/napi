@@ -11,9 +11,9 @@ import {
   getCSharpFilesMap,
   getCsprojFilesMap,
 } from "../testFiles/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 import { CSharpInvocationResolver } from "./index.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { CSharpProjectMapper } from "../projectMapper/index.ts";
 
 describe("InvocationResolver", () => {
@@ -29,7 +29,7 @@ describe("InvocationResolver", () => {
 
   test("Invocation resolution", () => {
     const usedFiles = invResolver.getInvocationsFromFile(
-      path.join(csharpFilesFolder, "Program.cs"),
+      join(csharpFilesFolder, "Program.cs"),
     );
     const resolved = usedFiles.resolvedSymbols.map((s) =>
       s.namespace !== "" ? s.namespace + "." + s.name : s.name
@@ -56,39 +56,39 @@ describe("InvocationResolver", () => {
     const myclass: SymbolNode = {
       name: "MyClass",
       type: "class",
-      filepath: path.join(csharpFilesFolder, "Namespaced.cs"),
+      filepath: join(csharpFilesFolder, "Namespaced.cs"),
       namespace: "MyNamespace",
       node: {} as Parser.SyntaxNode,
     };
     const headcrab: SymbolNode = {
       name: "HeadCrab",
       type: "class",
-      filepath: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+      filepath: join(csharpFilesFolder, "SemiNamespaced.cs"),
       namespace: "",
       node: {} as Parser.SyntaxNode,
     };
     const iorder: SymbolNode = {
       name: "IOrder",
       type: "interface",
-      filepath: path.join(csharpFilesFolder, "Models.cs"),
+      filepath: join(csharpFilesFolder, "Models.cs"),
       namespace: "MyApp.Models",
       node: {} as Parser.SyntaxNode,
     };
     expect(
       invResolver.isUsedInFile(
-        path.join(csharpFilesFolder, "Program.cs"),
+        join(csharpFilesFolder, "Program.cs"),
         myclass,
       ),
     ).toBe(true);
     expect(
       invResolver.isUsedInFile(
-        path.join(csharpFilesFolder, "Program.cs"),
+        join(csharpFilesFolder, "Program.cs"),
         headcrab,
       ),
     ).toBe(true);
     expect(
       invResolver.isUsedInFile(
-        path.join(csharpFilesFolder, "Program.cs"),
+        join(csharpFilesFolder, "Program.cs"),
         iorder,
       ),
     ).toBe(false);
@@ -97,7 +97,7 @@ describe("InvocationResolver", () => {
   test("Same-file dependencies", () => {
     const seminamespaced = nsResolver.getNamespacesFromFile(
       parsedfiles.get(
-        path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+        join(csharpFilesFolder, "SemiNamespaced.cs"),
       ) as File,
     );
     const headcrabnode = seminamespaced[0].exports.find(
@@ -105,7 +105,7 @@ describe("InvocationResolver", () => {
     )?.node as Parser.SyntaxNode;
     const hcinvocations = invResolver.getInvocationsFromNode(
       headcrabnode,
-      path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+      join(csharpFilesFolder, "SemiNamespaced.cs"),
     );
     expect(hcinvocations).toMatchObject({
       resolvedSymbols: [
@@ -120,7 +120,7 @@ describe("InvocationResolver", () => {
   });
 
   test("Finds useless using directives", () => {
-    const filepath = path.join(csharpFilesFolder, "2Namespaces1File.cs");
+    const filepath = join(csharpFilesFolder, "2Namespaces1File.cs");
     const usingDirectives = invResolver.usingResolver.parseUsingDirectives(
       filepath,
     );
@@ -131,7 +131,7 @@ describe("InvocationResolver", () => {
         .length,
     ).toBe(1);
 
-    const programpath = path.join(csharpFilesFolder, "Program.cs");
+    const programpath = join(csharpFilesFolder, "Program.cs");
     const programUsingDirectives = invResolver.usingResolver
       .parseUsingDirectives(programpath);
     const programInvocations = invResolver.getInvocationsFromFile(programpath);
@@ -142,7 +142,7 @@ describe("InvocationResolver", () => {
       ).length,
     ).toBe(6);
 
-    const usagepath = path.join(csharpFilesFolder, "Usage.cs");
+    const usagepath = join(csharpFilesFolder, "Usage.cs");
     const usageUsingDirectives = invResolver.usingResolver.parseUsingDirectives(
       usagepath,
     );
@@ -154,7 +154,7 @@ describe("InvocationResolver", () => {
       ).length,
     ).toBe(4);
 
-    const globalusingpath = path.join(
+    const globalusingpath = join(
       csharpFilesFolder,
       "Subfolder/GlobalUsings.cs",
     );

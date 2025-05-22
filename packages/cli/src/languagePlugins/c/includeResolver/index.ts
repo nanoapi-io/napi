@@ -1,9 +1,9 @@
 import type { Inclusions } from "./types.ts";
 import { C_INCLUDE_QUERY, C_STANDARD_INCLUDE_QUERY } from "./queries.ts";
 import type { CSymbolRegistry } from "../symbolRegistry/index.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import type { CFile } from "../symbolRegistry/types.ts";
-import path from "node:path";
+import { dirname, join } from "@std/path";
 
 export class CIncludeResolver {
   symbolRegistry: Map<string, CFile>;
@@ -18,8 +18,8 @@ export class CIncludeResolver {
   #getFile(filepath: string, sourcepath: string): CFile | undefined {
     const filepaths = Array.from(this.symbolRegistry.keys());
     // 1. Check current file's directory
-    const sourceDir = path.dirname(sourcepath);
-    const pathfromrelative = path.join(sourceDir, filepath);
+    const sourceDir = dirname(sourcepath);
+    const pathfromrelative = join(sourceDir, filepath);
     const corresponding1 = filepaths.find((f) => f === pathfromrelative);
     if (corresponding1) {
       return this.symbolRegistry.get(corresponding1);

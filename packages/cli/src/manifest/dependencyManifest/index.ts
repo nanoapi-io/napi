@@ -2,7 +2,7 @@ import { generatePythonDependencyManifest } from "./python/index.ts";
 import { generateCSharpDependencyManifest } from "./csharp/index.ts";
 import { generateCDependencyManifest } from "./c/index.ts";
 import type { localConfigSchema } from "../../config/localConfig.ts";
-import type z from "zod";
+import type z from "npm:zod";
 import type {
   DependencyManifest,
   SymbolDependencyManifest,

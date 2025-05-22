@@ -1,6 +1,4 @@
 {
   "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit"
-  }
+  "editor.defaultFormatter": "denoland.vscode-deno"
 }

@@ -4,64 +4,37 @@ permissions:
   contents: write
   packages: write
 
-on:
-  workflow_dispatch:
-    inputs:
-      release_type:
-        type: choice
-        description: "Release type: patch, minor, major"
-        required: true
-        options:
-          - patch
-          - minor
-          - major
+on: [workflow_dispatch]
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
-        id: app-token
-        with:
-          app-id: ${{ secrets.WORKFLOWS_GITHUB_APP_ID }}
-          private-key: ${{ secrets.WORKFLOWS_GITHUB_APP_PRIVATE_KEY }}
-
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: "2.x"
 
+      - name: Get new version and bump deno.json
+        id: get_version
+        run: |
+          VERSION=$(deno run -A scripts/get_version.ts)
+          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: |
+          deno install --allow-scripts
+
       - name: Compile
         run: |
           deno task compile:all
 
-      - name: Get new version and bump deno.json
-        id: bump_version
-        run: |
-          VERSION=$(deno run -A scripts/bump_version.ts ${{ inputs.release_type }})
-          echo "release_version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.bump_version.outputs.release_version }}
+          tag_name: v${{ steps.get_version.outputs.release_version }}
           files: |
             dist/*
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-action"
-          git config --global user.email "github-action@nanoapi.io"
-
-      - name: Commit changes
-        run: |
-          git commit deno.json -m "[skip ci] update version ${{ steps.bump_version.outputs.release_version }}"
-
-      - name: Push changes
-        run: |
-          git push

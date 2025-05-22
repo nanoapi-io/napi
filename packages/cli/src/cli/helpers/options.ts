@@ -1,10 +1,9 @@
-import type { PositionalOptionsType } from "yargs";
-import process from "node:process";
+import type { PositionalOptionsType } from "npm:yargs";
 
 export const globalOptions = {
   workdir: {
     type: "string" as PositionalOptionsType,
-    default: process.cwd(),
+    default: Deno.cwd(),
     alias: "wd",
     description: "working directory",
   },

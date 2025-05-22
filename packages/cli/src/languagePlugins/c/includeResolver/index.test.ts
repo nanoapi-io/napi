@@ -3,15 +3,15 @@ import { expect } from "@std/expect";
 import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
 import { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import { CIncludeResolver } from "./index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CIncludeResolver", () => {
   const cFilesMap = getCFilesMap();
   const registry = new CSymbolRegistry(cFilesMap);
   const includeResolver = new CIncludeResolver(registry);
-  const burgersh = path.join(cFilesFolder, "burgers.h");
-  const burgersc = path.join(cFilesFolder, "burgers.c");
-  const main = path.join(cFilesFolder, "main.c");
+  const burgersh = join(cFilesFolder, "burgers.h");
+  const burgersc = join(cFilesFolder, "burgers.c");
+  const main = join(cFilesFolder, "main.c");
   const inclusions = includeResolver.getInclusions();
 
   test("resolves inclusions for burgers.h", () => {

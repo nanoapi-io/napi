@@ -2,7 +2,7 @@ import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { CSharpNamespaceMapper } from "./index.ts";
 import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 import type { File } from "../namespaceResolver/index.ts";
 
 describe("NamespaceMapper", () => {
@@ -22,15 +22,15 @@ describe("NamespaceMapper", () => {
       expect.arrayContaining([
         expect.objectContaining({
           name: "Freeman",
-          filepath: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+          filepath: join(csharpFilesFolder, "SemiNamespaced.cs"),
         }),
         expect.objectContaining({
           name: "HeadCrab",
-          filepath: path.join(csharpFilesFolder, "SemiNamespaced.cs"),
+          filepath: join(csharpFilesFolder, "SemiNamespaced.cs"),
         }),
         expect.objectContaining({
           name: "Usage",
-          filepath: path.join(csharpFilesFolder, "Usage.cs"),
+          filepath: join(csharpFilesFolder, "Usage.cs"),
         }),
       ]),
     );
@@ -118,17 +118,17 @@ describe("NamespaceMapper", () => {
     const order = nsMapper.findClassInTree(nsTree, "Order");
     expect(order).toMatchObject({
       name: "Order",
-      filepath: path.join(csharpFilesFolder, "Models.cs"),
+      filepath: join(csharpFilesFolder, "Models.cs"),
     });
     const innerClass = nsMapper.findClassInTree(nsTree, "InnerClass");
     expect(innerClass).toMatchObject({
       name: "InnerClass",
-      filepath: path.join(csharpFilesFolder, "Nested.cs"),
+      filepath: join(csharpFilesFolder, "Nested.cs"),
     });
     const chickenbun = nsMapper.findClassInTree(nsTree, "ChickenBurger.Bun");
     expect(chickenbun).toMatchObject({
       name: "Bun",
-      filepath: path.join(csharpFilesFolder, "2Namespaces1File.cs"),
+      filepath: join(csharpFilesFolder, "2Namespaces1File.cs"),
     });
   });
 

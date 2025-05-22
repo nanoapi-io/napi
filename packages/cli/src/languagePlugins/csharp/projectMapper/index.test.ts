@@ -8,7 +8,7 @@ import {
 } from "../testFiles/index.ts";
 import { CSharpUsingResolver } from "../usingResolver/index.ts";
 import { CSharpNamespaceMapper } from "../namespaceMapper/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CSharpProjectMapper", () => {
   const csprojfiles = getCsprojFilesMap();
@@ -23,8 +23,8 @@ describe("CSharpProjectMapper", () => {
 
   const nsmapper = new CSharpNamespaceMapper(parsedfiles);
   const usingResolver = new CSharpUsingResolver(nsmapper, projectMapper);
-  const usagecsFile = path.join(csharpFilesFolder, "Usage.cs");
-  const globalusingcsFile = path.join(
+  const usagecsFile = join(csharpFilesFolder, "Usage.cs");
+  const globalusingcsFile = join(
     csharpFilesFolder,
     "Subfolder/GlobalUsings.cs",
   );

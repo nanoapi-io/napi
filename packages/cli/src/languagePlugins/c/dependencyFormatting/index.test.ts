@@ -2,15 +2,15 @@ import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
 import { CDependencyFormatter } from "./index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CDependencyFormatter", () => {
   const cFilesMap = getCFilesMap();
   const depFormatter = new CDependencyFormatter(cFilesMap);
-  const burgersh = path.join(cFilesFolder, "burgers.h");
-  const burgersc = path.join(cFilesFolder, "burgers.c");
-  const personnelh = path.join(cFilesFolder, "personnel.h");
-  const main = path.join(cFilesFolder, "main.c");
+  const burgersh = join(cFilesFolder, "burgers.h");
+  const burgersc = join(cFilesFolder, "burgers.c");
+  const personnelh = join(cFilesFolder, "personnel.h");
+  const main = join(cFilesFolder, "main.c");
 
   test("main.c", () => {
     const fmain = depFormatter.formatFile(main);

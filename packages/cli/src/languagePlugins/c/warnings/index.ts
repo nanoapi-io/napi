@@ -3,7 +3,7 @@ import {
   TreeSitterError,
   UnnamedDatatypeWarning,
 } from "./types.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { C_ERROR_QUERY, C_UNNAMED_DATATYPE_QUERY } from "./queries.ts";
 
 export class CWarningManager {

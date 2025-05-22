@@ -1,6 +1,6 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { PythonSymbolExtractor } from "./index.ts";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";
 import { PythonModuleResolver } from "../moduleResolver/index.ts";
@@ -13,7 +13,7 @@ import {
   pythonParser,
 } from "../../../helpers/treeSitter/parsers.ts";
 import type { localConfigSchema } from "../../../config/localConfig.ts";
-import type z from "zod";
+import type z from "npm:zod";
 import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python/index.ts";
 
 describe("PythonSymbolExtractor", () => {
@@ -111,7 +111,7 @@ from utils import Helper
 class MyClass:
     def __init__(self):
         self.helper = Helper()
-    
+
     def do_something(self):
         return self.helper.help()
 
@@ -157,7 +157,7 @@ from utils import Helper
 class MyClass:
     def __init__(self):
         self.helper = Helper()
-    
+
     def do_something(self):
         return self.helper.help()
 `.trim(),

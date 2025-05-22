@@ -16,7 +16,7 @@ import {
   getCSharpFilesMap,
   getCsprojFilesMap,
 } from "../testFiles/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 import type { File } from "../namespaceResolver/index.ts";
 import { CSharpProjectMapper } from "../projectMapper/index.ts";
 
@@ -29,7 +29,7 @@ describe("UsingResolver", () => {
 
   test("Directive simple parsing", () => {
     const usingDirectives = resolver.parseUsingDirectives(
-      path.join(csharpFilesFolder, "Usage.cs"),
+      join(csharpFilesFolder, "Usage.cs"),
     );
     expect(usingDirectives).toMatchObject([
       {
@@ -62,7 +62,7 @@ describe("UsingResolver", () => {
   });
   test("Directive resolving", () => {
     const resolved = resolver.resolveUsingDirectives(
-      path.join(csharpFilesFolder, "Usage.cs"),
+      join(csharpFilesFolder, "Usage.cs"),
     );
     expect(resolved).toMatchObject({
       internal: [
@@ -115,7 +115,7 @@ describe("UsingResolver", () => {
   });
 
   test("Class resolution", () => {
-    const filepath = path.join(csharpFilesFolder, "Usage.cs");
+    const filepath = join(csharpFilesFolder, "Usage.cs");
     const imports = resolver.resolveUsingDirectives(filepath);
     const user = resolver.findClassInImports(imports, "User", filepath);
     expect(user).toMatchObject({
@@ -138,7 +138,7 @@ describe("UsingResolver", () => {
   });
 
   test("Current namespace resolution", () => {
-    const filepath = path.join(csharpFilesFolder, "Models.cs");
+    const filepath = join(csharpFilesFolder, "Models.cs");
     const imports = resolver.resolveUsingDirectives(filepath).internal;
     expect(imports).toMatchObject([
       {
@@ -161,7 +161,7 @@ describe("UsingResolver", () => {
   });
 
   test("instanceof functions correctly", () => {
-    const filepath = path.join(csharpFilesFolder, "Usage.cs");
+    const filepath = join(csharpFilesFolder, "Usage.cs");
     const directives = resolver.parseUsingDirectives(filepath);
     expect(
       directives.filter(
@@ -174,7 +174,7 @@ describe("UsingResolver", () => {
       ).length,
     ).toBe(2);
 
-    const programpath = path.join(csharpFilesFolder, "Program.cs");
+    const programpath = join(csharpFilesFolder, "Program.cs");
     const progDirectives = resolver.parseUsingDirectives(programpath);
     expect(
       progDirectives.filter(

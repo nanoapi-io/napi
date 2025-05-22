@@ -5,19 +5,19 @@ import { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import { CIncludeResolver } from "../includeResolver/index.ts";
 import { CInvocationResolver } from "./index.ts";
 import type { Symbol } from "../symbolRegistry/types.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CInvocationResolver", () => {
   const cFilesMap = getCFilesMap();
   const symbolRegistry = new CSymbolRegistry(cFilesMap);
   const includeResolver = new CIncludeResolver(symbolRegistry);
   const invocationResolver = new CInvocationResolver(includeResolver);
-  const burgersh = path.join(cFilesFolder, "burgers.h");
-  const burgersc = path.join(cFilesFolder, "burgers.c");
-  const personnelc = path.join(cFilesFolder, "personnel.c");
-  const crashcasesh = path.join(cFilesFolder, "crashcases.h");
-  const errorsh = path.join(cFilesFolder, "errors.h");
-  const main = path.join(cFilesFolder, "main.c");
+  const burgersh = join(cFilesFolder, "burgers.h");
+  const burgersc = join(cFilesFolder, "burgers.c");
+  const personnelc = join(cFilesFolder, "personnel.c");
+  const crashcasesh = join(cFilesFolder, "crashcases.h");
+  const errorsh = join(cFilesFolder, "errors.h");
+  const main = join(cFilesFolder, "main.c");
   const registry = symbolRegistry.getRegistry();
 
   test("resolves invocations for burgers.h", () => {

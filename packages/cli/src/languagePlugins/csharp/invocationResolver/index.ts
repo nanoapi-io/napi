@@ -1,4 +1,4 @@
-import Parser from "tree-sitter";
+import Parser from "npm:tree-sitter";
 import type { File } from "../namespaceResolver/index.ts";
 import type {
   CSharpNamespaceMapper,

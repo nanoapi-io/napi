@@ -1,4 +1,4 @@
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import type { Symbol } from "../symbolRegistry/types.ts";
 
 /** Interface representing the #include statements of a file */

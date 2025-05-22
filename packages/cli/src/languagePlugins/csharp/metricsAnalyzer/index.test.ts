@@ -2,14 +2,14 @@ import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
 import { CSharpMetricsAnalyzer } from "./index.ts";
 import { csharpFilesFolder, getCSharpFilesMap } from "../testFiles/index.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CSharpMetricsAnalyzer", () => {
   const analyzer = new CSharpMetricsAnalyzer();
   const files = getCSharpFilesMap();
 
   const analyzeFile = (filePath: string) => {
-    const absolutePath = path.join(csharpFilesFolder, filePath);
+    const absolutePath = join(csharpFilesFolder, filePath);
     const file = files.get(absolutePath);
     if (!file) {
       throw new Error(`File not found: ${absolutePath}`);

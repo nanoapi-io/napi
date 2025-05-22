@@ -9,13 +9,13 @@ import {
   Typedef,
   Variable,
 } from "./types.ts";
-import path from "node:path";
+import { join } from "@std/path";
 
 describe("CSymbolRegistry", () => {
   const cFilesMap = getCFilesMap();
   const registry = new CSymbolRegistry(cFilesMap).getRegistry();
-  const burgersh = path.join(cFilesFolder, "burgers.h");
-  const burgersc = path.join(cFilesFolder, "burgers.c");
+  const burgersh = join(cFilesFolder, "burgers.h");
+  const burgersc = join(cFilesFolder, "burgers.c");
   const hsymbols = registry.get(burgersh);
   if (!hsymbols) {
     throw new Error(`File not found: ${burgersh}`);
@@ -156,7 +156,7 @@ describe("CSymbolRegistry", () => {
   });
 
   test("registers main", () => {
-    const main = path.join(cFilesFolder, "main.c");
+    const main = join(cFilesFolder, "main.c");
     const mainsymbols = registry.get(main);
     if (!mainsymbols) {
       throw new Error(`File not found: ${main}`);

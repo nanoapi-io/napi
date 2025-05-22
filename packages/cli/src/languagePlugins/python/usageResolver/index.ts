@@ -20,7 +20,7 @@ import {
   type PythonModule,
 } from "../moduleResolver/types.ts";
 import type { PythonExportExtractor } from "../exportExtractor/index.ts";
-import Parser from "tree-sitter";
+import Parser from "npm:tree-sitter";
 import type { PythonSymbol } from "../exportExtractor/types.ts";
 import type { ExternalUsage, InternalUsage } from "./types.ts";
 

@@ -8,7 +8,7 @@ import {
   FunctionSignature,
   type Symbol,
 } from "../symbolRegistry/types.ts";
-import type Parser from "tree-sitter";
+import type Parser from "npm:tree-sitter";
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export class CInvocationResolver {
