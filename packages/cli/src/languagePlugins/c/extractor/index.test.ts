@@ -11,6 +11,8 @@ describe("CExtractor", () => {
   const extractor = new CExtractor(cContentMap, manifest);
   const burgers = join(cFilesFolder, "burgers.h");
   const burgersc = join(cFilesFolder, "burgers.c");
+  const main = join(cFilesFolder, "main.c");
+  const all = join(cFilesFolder, "all.h");
   test("extracts create_burger", () => {
     const symbolsToExtract = new Map<
       string,
@@ -66,5 +68,20 @@ describe("CExtractor", () => {
     expect(newManifest[burgers].symbols["BURGERS_H"]).toBeDefined();
     // Expected symbols to be removed
     expect(Object.keys(newManifest[burgers].symbols).length).toBe(3);
+  });
+
+  test("keeps all.h", () => {
+    const symbolsToExtract = new Map<
+      string,
+      { filePath: string; symbols: Set<string> }
+    >();
+    symbolsToExtract.set(main, {
+      filePath: main,
+      symbols: new Set(["main"]),
+    });
+    const extractedFiles = extractor.extractSymbols(symbolsToExtract);
+    expect(extractedFiles.size).toBe(6);
+    const newManifest = generateCDependencyManifest(extractedFiles);
+    expect(newManifest[all]).toBeDefined();
   });
 });

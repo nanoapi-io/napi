@@ -7,11 +7,13 @@ import type { CFile, Symbol } from "../symbolRegistry/types.ts";
 import type { ExportedFile } from "./types.ts";
 import { C_DECLARATION_QUERY } from "../headerResolver/queries.ts";
 import { C_IFDEF_QUERY } from "./queries.ts";
+import { CInvocationResolver } from "../invocationResolver/index.ts";
 
 export class CExtractor {
   manifest: DependencyManifest;
   registry: Map<string, CFile>;
   includeResolver: CIncludeResolver;
+  invocationResolver: CInvocationResolver;
 
   constructor(
     files: Map<string, { path: string; content: string }>,
@@ -31,6 +33,7 @@ export class CExtractor {
     const symbolRegistry = new CSymbolRegistry(parsedFiles);
     this.registry = symbolRegistry.getRegistry();
     this.includeResolver = new CIncludeResolver(symbolRegistry);
+    this.invocationResolver = new CInvocationResolver(this.includeResolver);
   }
 
   /**
@@ -116,6 +119,31 @@ export class CExtractor {
       const symbolName = symbol.name;
       if (!exportedFile.symbols.has(symbolName)) {
         exportedFile.symbols.set(symbolName, symbol);
+      }
+      // Keep the files that recursively lead to a symbol we need
+      const invocations = this.invocationResolver.getInvocationsForSymbol(
+        symbol,
+      );
+      const filestokeep = invocations.resolved.values().map((s) =>
+        s.includefile
+      );
+      for (const f of filestokeep) {
+        if (!exportedFiles.has(f.file.path)) {
+          const ifdefs = C_IFDEF_QUERY.captures(f.file.rootNode).map((n) =>
+            n.node.text
+          );
+          const definesToKeep = ifdefs.map((i) => f.symbols.get(i)!)
+            .filter((i) => i);
+          const symbols = new Map<string, Symbol>();
+          for (const define of definesToKeep) {
+            symbols.set(define.name, define);
+          }
+          exportedFiles.set(f.file.path, {
+            symbols,
+            originalFile: f.file,
+            strippedFile: f.file,
+          });
+        }
       }
     }
     return exportedFiles;
