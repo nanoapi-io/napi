@@ -92,19 +92,13 @@ export class CIncludeResolver {
             s instanceof FunctionDefinition
           ).map(([, s]) => s as FunctionDefinition),
         );
-        console.log(`funcdefs for ${file.file.path}: ${funcdefs}`);
         for (const funcdef of funcdefs) {
           if (inclusions.symbols.has(funcdef.name)) {
             const symbol = inclusions.symbols.get(funcdef.name);
             if (symbol && symbol instanceof FunctionSignature) {
-              console.log(
-                `Found signature for ${funcdef.name} in ${symbol.declaration.filepath}`,
-              );
               funcdef.signature = symbol;
               symbol.definition = funcdef;
             }
-          } else {
-            console.log(`Did not find signature for ${funcdef.name}`);
           }
         }
       }
