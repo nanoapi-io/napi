@@ -12,6 +12,7 @@ describe("CIncludeResolver", () => {
   const includeResolver = new CIncludeResolver(registry);
   const burgersh = join(cFilesFolder, "burgers.h");
   const burgersc = join(cFilesFolder, "burgers.c");
+  const allh = join(cFilesFolder, "all.h");
   const main = join(cFilesFolder, "main.c");
   const inclusions = includeResolver.getInclusions();
 
@@ -50,6 +51,8 @@ describe("CIncludeResolver", () => {
     }
     expect(maininclusions.filepath).toBe(main);
     expect(maininclusions.symbols.size).toBe(32 + 17);
+    expect(maininclusions.symbols.get("create_burger")?.includefile.file.path)
+      .toBe(allh);
     expect(maininclusions.internal.children.size).toBe(1);
     expect(maininclusions.internal.children.get("burgers.h")).not.toBeDefined();
     expect(maininclusions.internal.children.get("personnel.h")).not

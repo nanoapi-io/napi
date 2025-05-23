@@ -43,7 +43,7 @@ export class CInvocationResolver {
           unresolved.add(name);
           continue;
         }
-        resolved.set(name, availableSymbol);
+        resolved.set(name, availableSymbol.symbol);
       } else if (localSymbols && localSymbols.has(name)) {
         const localSymbol = localSymbols.get(name);
         if (!localSymbol) {

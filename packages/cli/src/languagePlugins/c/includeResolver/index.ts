@@ -81,7 +81,10 @@ export class CIncludeResolver {
       if (includedfile && !visitedFiles.has(includedfile.file.path)) {
         // Add the included file's symbols to the current file's symbols
         for (const [name, symbol] of includedfile.symbols) {
-          inclusions.symbols.set(name, symbol);
+          inclusions.symbols.set(name, {
+            symbol: symbol,
+            includefile: includedfile,
+          });
         }
         // Recursively resolve inclusions for the included file
         const nestedInclusions = this.#resolveInclusions(
@@ -89,7 +92,10 @@ export class CIncludeResolver {
           visitedFiles,
         );
         for (const [name, symbol] of nestedInclusions.symbols) {
-          inclusions.symbols.set(name, symbol);
+          inclusions.symbols.set(name, {
+            symbol: symbol.symbol,
+            includefile: includedfile,
+          });
         }
         inclusions.internal.children.set(path, {
           name: path,
@@ -107,9 +113,9 @@ export class CIncludeResolver {
         for (const funcdef of funcdefs) {
           if (inclusions.symbols.has(funcdef.name)) {
             const symbol = inclusions.symbols.get(funcdef.name);
-            if (symbol && symbol instanceof FunctionSignature) {
-              funcdef.signature = symbol;
-              symbol.definition = funcdef;
+            if (symbol && symbol.symbol instanceof FunctionSignature) {
+              funcdef.signature = symbol.symbol;
+              symbol.symbol.definition = funcdef;
             }
           }
         }
