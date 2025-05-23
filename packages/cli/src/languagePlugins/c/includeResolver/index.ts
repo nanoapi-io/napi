@@ -13,10 +13,12 @@ export class CIncludeResolver {
   symbolRegistry: Map<string, CFile>;
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   #inclusions?: Map<string, Inclusions>;
+  #inclusionCache: Map<CFile, Inclusions>;
 
   constructor(symbolRegistry: CSymbolRegistry) {
     this.symbolRegistry = symbolRegistry.getRegistry();
     this.files = symbolRegistry.files;
+    this.#inclusionCache = new Map();
   }
 
   #getFile(filepath: string, sourcepath: string): CFile | undefined {
@@ -59,6 +61,11 @@ export class CIncludeResolver {
 
     // Add the current file to the visited set to prevent infinite recursion
     visitedFiles.add(file.file.path);
+
+    // Check for file in cache
+    if (this.#inclusionCache.has(file)) {
+      return this.#inclusionCache.get(file)!;
+    }
 
     const includeNodes = C_INCLUDE_QUERY.captures(file.file.rootNode);
     const standardIncludeNodes = C_STANDARD_INCLUDE_QUERY.captures(
@@ -111,6 +118,8 @@ export class CIncludeResolver {
       }
     }
 
+    // Save inclusions in cache
+    this.#inclusionCache.set(file, inclusions);
     return inclusions;
   }
 
