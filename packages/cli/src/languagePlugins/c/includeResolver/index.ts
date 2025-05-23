@@ -55,7 +55,10 @@ export class CIncludeResolver {
     const inclusions: Inclusions = {
       filepath: file.file.path,
       symbols: new Map(),
-      internal: [],
+      internal: {
+        name: ".",
+        children: new Map(),
+      },
       standard: new Map(),
     };
 
@@ -74,7 +77,6 @@ export class CIncludeResolver {
 
     for (const node of includeNodes) {
       const path = node.node.text;
-      inclusions.internal.push(path);
       const includedfile = this.#getFile(path, file.file.path);
       if (includedfile && !visitedFiles.has(includedfile.file.path)) {
         // Add the included file's symbols to the current file's symbols
@@ -89,7 +91,10 @@ export class CIncludeResolver {
         for (const [name, symbol] of nestedInclusions.symbols) {
           inclusions.symbols.set(name, symbol);
         }
-        inclusions.internal.push(...nestedInclusions.internal);
+        inclusions.internal.children.set(path, {
+          name: path,
+          children: nestedInclusions.internal.children,
+        });
         for (const node of nestedInclusions.standard) {
           inclusions.standard.set(node[0], node[1]);
         }
