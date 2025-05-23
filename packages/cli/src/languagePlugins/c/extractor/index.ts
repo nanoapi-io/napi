@@ -100,7 +100,8 @@ export class CExtractor {
         const ifdefs = C_IFDEF_QUERY.captures(originalFile.rootNode).map((n) =>
           n.node.text
         );
-        const definesToKeep = ifdefs.map((i) => fileInRegistry.symbols.get(i)!);
+        const definesToKeep = ifdefs.map((i) => fileInRegistry.symbols.get(i)!)
+          .filter((i) => i);
         const symbols = new Map<string, Symbol>();
         for (const define of definesToKeep) {
           symbols.set(define.name, define);
