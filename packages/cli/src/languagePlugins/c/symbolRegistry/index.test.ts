@@ -99,33 +99,10 @@ describe("CSymbolRegistry", () => {
     expect((max as FunctionDefinition).declaration.node.type).toBe(
       "preproc_function_def",
     );
-    expect((create as FunctionSignature).definition?.declaration.node.type)
-      .toBe(
-        "function_definition",
-      );
-    expect(
-      (destroy as FunctionSignature).definition?.declaration.node.type,
-    ).toBe("function_definition");
-    expect((get as FunctionSignature).definition?.declaration.node.type).toBe(
-      "function_definition",
-    );
-    expect(
-      (cheapest as FunctionSignature).definition?.declaration.node.type,
-    ).toBe("function_definition");
-    expect((max as FunctionDefinition).declaration.filepath).toBe(burgersh);
-    expect((create as FunctionSignature).definition?.declaration.filepath).toBe(
-      burgersc,
-    );
-    expect((destroy as FunctionSignature).definition?.declaration.filepath)
-      .toBe(
-        burgersc,
-      );
-    expect((get as FunctionSignature).definition?.declaration.filepath).toBe(
-      burgersc,
-    );
-    expect(
-      (cheapest as FunctionSignature).definition?.declaration.filepath,
-    ).toBe(burgersc);
+    expect((create as FunctionSignature).definition).not.toBeDefined();
+    expect((destroy as FunctionSignature).definition).not.toBeDefined();
+    expect((get as FunctionSignature).definition).not.toBeDefined();
+    expect((cheapest as FunctionSignature).definition).not.toBeDefined();
   });
 
   test("registers variables for burgers.h", () => {

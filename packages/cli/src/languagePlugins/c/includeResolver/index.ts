@@ -2,7 +2,11 @@ import type { Inclusions } from "./types.ts";
 import { C_INCLUDE_QUERY, C_STANDARD_INCLUDE_QUERY } from "./queries.ts";
 import type { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import type Parser from "npm:tree-sitter";
-import type { CFile } from "../symbolRegistry/types.ts";
+import {
+  type CFile,
+  FunctionDefinition,
+  FunctionSignature,
+} from "../symbolRegistry/types.ts";
 import { dirname, join } from "@std/path";
 
 export class CIncludeResolver {
@@ -43,28 +47,28 @@ export class CIncludeResolver {
    * @returns The inclusions of the file.
    */
   #resolveInclusions(
-    file: { path: string; rootNode: Parser.SyntaxNode },
+    file: CFile,
     visitedFiles = new Set<string>(),
   ): Inclusions {
     const inclusions: Inclusions = {
-      filepath: file.path,
+      filepath: file.file.path,
       symbols: new Map(),
       internal: [],
       standard: new Map(),
     };
 
     // Add the current file to the visited set to prevent infinite recursion
-    visitedFiles.add(file.path);
+    visitedFiles.add(file.file.path);
 
-    const includeNodes = C_INCLUDE_QUERY.captures(file.rootNode);
+    const includeNodes = C_INCLUDE_QUERY.captures(file.file.rootNode);
     const standardIncludeNodes = C_STANDARD_INCLUDE_QUERY.captures(
-      file.rootNode,
+      file.file.rootNode,
     );
 
     for (const node of includeNodes) {
       const path = node.node.text;
       inclusions.internal.push(path);
-      const includedfile = this.#getFile(path, file.path);
+      const includedfile = this.#getFile(path, file.file.path);
       if (includedfile && !visitedFiles.has(includedfile.file.path)) {
         // Add the included file's symbols to the current file's symbols
         for (const [name, symbol] of includedfile.symbols) {
@@ -72,7 +76,7 @@ export class CIncludeResolver {
         }
         // Recursively resolve inclusions for the included file
         const nestedInclusions = this.#resolveInclusions(
-          includedfile.file,
+          includedfile,
           visitedFiles,
         );
         for (const [name, symbol] of nestedInclusions.symbols) {
@@ -81,6 +85,27 @@ export class CIncludeResolver {
         inclusions.internal.push(...nestedInclusions.internal);
         for (const node of nestedInclusions.standard) {
           inclusions.standard.set(node[0], node[1]);
+        }
+        // Associate function definitions to their signatures
+        const funcdefs = Array.from(
+          file.symbols.entries().filter(([, s]) =>
+            s instanceof FunctionDefinition
+          ).map(([, s]) => s as FunctionDefinition),
+        );
+        console.log(`funcdefs for ${file.file.path}: ${funcdefs}`);
+        for (const funcdef of funcdefs) {
+          if (inclusions.symbols.has(funcdef.name)) {
+            const symbol = inclusions.symbols.get(funcdef.name);
+            if (symbol && symbol instanceof FunctionSignature) {
+              console.log(
+                `Found signature for ${funcdef.name} in ${symbol.declaration.filepath}`,
+              );
+              funcdef.signature = symbol;
+              symbol.definition = funcdef;
+            }
+          } else {
+            console.log(`Did not find signature for ${funcdef.name}`);
+          }
         }
       }
     }
@@ -102,9 +127,9 @@ export class CIncludeResolver {
   getInclusions() {
     if (!this.#inclusions) {
       this.#inclusions = new Map();
-      for (const file of this.files.values()) {
+      for (const file of this.symbolRegistry.values()) {
         const inclusions = this.#resolveInclusions(file);
-        this.#inclusions.set(file.path, inclusions);
+        this.#inclusions.set(file.file.path, inclusions);
       }
     }
     return this.#inclusions;

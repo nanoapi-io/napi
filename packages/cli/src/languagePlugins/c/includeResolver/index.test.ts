@@ -4,6 +4,7 @@ import { cFilesFolder, getCFilesMap } from "../testFiles/index.ts";
 import { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import { CIncludeResolver } from "./index.ts";
 import { join } from "@std/path";
+import type { FunctionSignature } from "../symbolRegistry/types.ts";
 
 describe("CIncludeResolver", () => {
   const cFilesMap = getCFilesMap();
@@ -55,5 +56,20 @@ describe("CIncludeResolver", () => {
     expect(maininclusions.standard.size).toBe(2);
     const stdincludes = Array.from(maininclusions.standard.keys());
     expect(stdincludes).toContain("<stdio.h>");
+  });
+
+  test("finds signatures for functions", () => {
+    const burgers = registry.getRegistry().get(burgersh)?.symbols;
+    if (!burgers) {
+      throw new Error(`File not found: ${burgersh}`);
+    }
+    const create_burger = burgers.get("create_burger") as FunctionSignature;
+    const destroy = burgers.get("destroy_burger") as FunctionSignature;
+    const get = burgers.get("get_burger_by_id") as FunctionSignature;
+    const cheapest = burgers.get("get_cheapest_burger") as FunctionSignature;
+    expect(create_burger.definition).toBeDefined();
+    expect(destroy.definition).toBeDefined();
+    expect(get.definition).toBeDefined();
+    expect(cheapest.definition).toBeDefined();
   });
 });

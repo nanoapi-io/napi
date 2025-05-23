@@ -132,18 +132,6 @@ export class CSymbolRegistry {
             source.symbols.set(name, enumMember);
           }
         }
-        // Associate function definitions with their corresponding signatures.
-        if (symbol instanceof FunctionDefinition) {
-          for (const [, header] of this.#registry.entries()) {
-            if (header.symbols.has(symbol.name)) {
-              const signature = header.symbols.get(symbol.name);
-              if (signature instanceof FunctionSignature) {
-                symbol.signature = signature;
-                signature.definition = symbol;
-              }
-            }
-          }
-        }
       }
       // Add the source file to the registry
       this.#registry.set(file.path, source);
