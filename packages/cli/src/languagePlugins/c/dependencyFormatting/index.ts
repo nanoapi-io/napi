@@ -60,7 +60,7 @@ export class CDependencyFormatter {
     const dependencies: Record<string, CDependency> = {};
     const resolved = fileDependencies.resolved;
     for (const [symName, symbol] of resolved) {
-      const filepath = symbol.declaration.filepath;
+      const filepath = symbol.symbol.declaration.filepath;
       const id = symName;
       if (!dependencies[filepath]) {
         dependencies[filepath] = {
