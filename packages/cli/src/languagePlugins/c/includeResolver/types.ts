@@ -27,6 +27,10 @@ export interface IncludedSymbol {
 export interface InclusionNode {
   /** The path to the inclusion relative to its parent, or "." if root */
   name: string;
+  /** The complete file path */
+  filepath: string;
   /** The inclusions it contains, relative to itself */
   children: Map<string, InclusionNode>;
+  /** The parent of the node */
+  parent?: InclusionNode;
 }

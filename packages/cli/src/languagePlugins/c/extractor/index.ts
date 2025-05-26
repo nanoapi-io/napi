@@ -133,9 +133,14 @@ export class CExtractor {
       const invocations = this.invocationResolver.getInvocationsForSymbol(
         symbol,
       );
-      const filestokeep = invocations.resolved.values().map((s) =>
-        s.includefile
-      );
+      const filestokeep = Array.from(
+        invocations.resolved.values().map((s) =>
+          this.includeResolver.findInclusionChain(
+            symbol.declaration.filepath,
+            s.symbol,
+          )
+        ).filter((c) => c !== undefined),
+      ).flatMap((c) => c.flatMap((f) => this.registry.get(f)!));
       for (const f of filestokeep) {
         if (!exportedFiles.has(f.file.path)) {
           const ifdefs = C_IFDEF_QUERY.captures(f.file.rootNode).map((n) =>

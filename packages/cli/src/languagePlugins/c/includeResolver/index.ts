@@ -1,4 +1,4 @@
-import type { Inclusions } from "./types.ts";
+import type { InclusionNode, Inclusions } from "./types.ts";
 import { C_INCLUDE_QUERY, C_STANDARD_INCLUDE_QUERY } from "./queries.ts";
 import type { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import type Parser from "npm:tree-sitter";
@@ -6,6 +6,7 @@ import {
   type CFile,
   FunctionDefinition,
   FunctionSignature,
+  type Symbol,
 } from "../symbolRegistry/types.ts";
 import { dirname, join } from "@std/path";
 
@@ -51,6 +52,43 @@ export class CIncludeResolver {
   }
 
   /**
+   * Looks for a chain of inclusions starting from the given file
+   * that leads to the given symbol.
+   * @param file The file to start the search from.
+   * @param symbol The symbol to search for.
+   * @returns An array of file paths representing the chain of inclusions.
+   */
+  findInclusionChain(
+    start: string,
+    symbol: Symbol,
+  ): string[] | undefined {
+    const inclusions = this.getInclusions().get(start);
+    if (!inclusions) {
+      return undefined;
+    }
+    const chain: string[] = [];
+    // Look inside the tree for a node that has a filepath that matches the symbol's file path
+    const findInclusion = (node: InclusionNode): boolean => {
+      if (node.filepath === symbol.declaration.filepath) {
+        chain.push(node.filepath);
+        return true;
+      }
+      for (const child of node.children.values()) {
+        if (findInclusion(child)) {
+          chain.push(node.filepath);
+          return true;
+        }
+      }
+      return false;
+    };
+    if (findInclusion(inclusions.internal)) {
+      chain.reverse(); // Reverse to get the chain from start to symbol
+      return chain;
+    }
+    return undefined;
+  }
+
+  /**
    * Resolves the inclusions of a file.
    * @param file The file to resolve inclusions for.
    * @returns The inclusions of the file.
@@ -65,6 +103,7 @@ export class CIncludeResolver {
       internal: {
         name: ".",
         children: new Map(),
+        filepath: file.file.path,
       },
       standard: new Map(),
     };
@@ -111,7 +150,9 @@ export class CIncludeResolver {
         }
         inclusions.internal.children.set(path, {
           name: path,
+          filepath: includedfile.file.path,
           children: nestedInclusions.internal.children,
+          parent: inclusions.internal,
         });
         for (const node of nestedInclusions.standard) {
           inclusions.standard.set(node[0], node[1]);
