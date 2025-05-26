@@ -1,3 +1,5 @@
+// Code segments taken from the Pokémon Fire Red/Leaf Green decomp project
+// https://github.com/pret/pokefirered
 #include <stdbool.h>
 
 #define BARD_SONG_LENGTH 14
