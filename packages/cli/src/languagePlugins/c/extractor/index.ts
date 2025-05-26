@@ -165,22 +165,55 @@ export class CExtractor {
   #stripFiles(files: Map<string, ExportedFile>) {
     for (const [, file] of files) {
       const rootNode = file.originalFile.rootNode;
-      const matches = C_DECLARATION_QUERY.captures(rootNode);
+      const originalText = rootNode.text; // Original file content
       const symbolsToKeep = new Set(
-        file.symbols.values().map((s) => s.declaration.node.text),
+        file.symbols.values().map((s) => s.declaration.node),
       );
-      const symbolsToRemove = new Set<string>();
+      const symbolsToRemove = new Set<Parser.SyntaxNode>();
+      const matches = C_DECLARATION_QUERY.captures(rootNode);
+
       for (const match of matches) {
-        const symbolNode = match.node.text;
+        const symbolNode = match.node;
         if (!symbolsToKeep.has(symbolNode)) {
           symbolsToRemove.add(symbolNode);
         }
       }
-      let filetext = rootNode.text;
-      for (const symbolNode of symbolsToRemove) {
-        filetext = filetext.replace(symbolNode, "");
-      }
-      const strippedFile = cParser.parse(filetext);
+
+      // Helper function to recursively filter nodes
+      const filterNodes = (node: Parser.SyntaxNode): string => {
+        if (symbolsToRemove.has(node)) {
+          return ""; // Skip this node
+        }
+
+        // If the node has children, process them recursively
+        if (["translation_unit", "preproc_ifdef"].includes(node.type)) {
+          let result = "";
+          let lastEndIndex = node.startIndex;
+
+          for (const child of node.children) {
+            // Append the text between the last node and the current child
+            result += originalText.slice(lastEndIndex, child.startIndex);
+            result += filterNodes(child); // Process the child
+            lastEndIndex = child.endIndex;
+          }
+
+          // Append the text after the last child
+          result += originalText.slice(lastEndIndex, node.endIndex);
+          return result;
+        }
+
+        // If the node has no children, return its text
+        return originalText.slice(node.startIndex, node.endIndex);
+      };
+
+      // Rebuild the file content by filtering nodes
+      const newFileContent = filterNodes(rootNode);
+
+      // Compactify the file content
+      const compactedContent = this.#compactifyFile(newFileContent);
+
+      // Parse the new content and update the stripped file
+      const strippedFile = cParser.parse(compactedContent);
       file.strippedFile = {
         path: file.originalFile.path,
         rootNode: strippedFile.rootNode,
