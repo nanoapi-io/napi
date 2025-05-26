@@ -13,14 +13,16 @@ export class CIncludeResolver {
   symbolRegistry: Map<string, CFile>;
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
   unresolvedDirectives: Map<string, Set<string>>;
+  includeDirs: string[] = [];
   #inclusions?: Map<string, Inclusions>;
   #inclusionCache: Map<CFile, Inclusions>;
 
-  constructor(symbolRegistry: CSymbolRegistry) {
+  constructor(symbolRegistry: CSymbolRegistry, includeDirs: string[] = []) {
     this.symbolRegistry = symbolRegistry.getRegistry();
     this.files = symbolRegistry.files;
     this.#inclusionCache = new Map();
     this.unresolvedDirectives = new Map();
+    this.includeDirs = includeDirs;
   }
 
   getFile(filepath: string, sourcepath: string): CFile | undefined {
@@ -32,18 +34,19 @@ export class CIncludeResolver {
     if (corresponding1) {
       return this.symbolRegistry.get(corresponding1);
     }
-    // 2. Check from workspace root
+    // 2. Check include directories
+    for (const dir of this.includeDirs) {
+      const pathfrominclude = join(dir, filepath);
+      const corresponding = filepaths.find((f) => f === pathfrominclude);
+      if (corresponding) {
+        return this.symbolRegistry.get(corresponding);
+      }
+    }
+    // 3. Check from workspace root
     const corresponding2 = filepaths.find((f) => f === filepath);
     if (corresponding2) {
       return this.symbolRegistry.get(corresponding2);
     }
-    // // 3. Check wherever
-    // const corresponding3 = filepaths.find((f) =>
-    //   f.endsWith(SEPARATOR + filepath)
-    // );
-    // if (corresponding3) {
-    //   return this.symbolRegistry.get(corresponding3);
-    // }
     return undefined;
   }
 

@@ -1,14 +1,18 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { cFilesFolder, getCFilesContentMap } from "../testFiles/index.ts";
+import {
+  cFilesFolder,
+  dummyLocalConfig,
+  getCFilesContentMap,
+} from "../testFiles/index.ts";
 import { CExtractor } from "./index.ts";
 import { join } from "@std/path";
 import { generateCDependencyManifest } from "../../../manifest/dependencyManifest/c/index.ts";
 
 describe("CExtractor", () => {
   const cContentMap = getCFilesContentMap();
-  const manifest = generateCDependencyManifest(cContentMap);
-  const extractor = new CExtractor(cContentMap, manifest);
+  const manifest = generateCDependencyManifest(cContentMap, dummyLocalConfig);
+  const extractor = new CExtractor(cContentMap, manifest, dummyLocalConfig);
   const burgers = join(cFilesFolder, "burgers.h");
   const burgersc = join(cFilesFolder, "burgers.c");
   const main = join(cFilesFolder, "main.c");
@@ -25,7 +29,10 @@ describe("CExtractor", () => {
     });
     const extractedFiles = extractor.extractSymbols(symbolsToExtract);
     expect(extractedFiles.size).toBe(2);
-    const newManifest = generateCDependencyManifest(extractedFiles);
+    const newManifest = generateCDependencyManifest(
+      extractedFiles,
+      dummyLocalConfig,
+    );
     expect(newManifest[burgers]).toBeDefined();
     expect(newManifest[burgersc]).toBeDefined();
     // Expected symbols to be kept
@@ -61,7 +68,10 @@ describe("CExtractor", () => {
     });
     const extractedFiles = extractor.extractSymbols(symbolsToExtract);
     expect(extractedFiles.size).toBe(1);
-    const newManifest = generateCDependencyManifest(extractedFiles);
+    const newManifest = generateCDependencyManifest(
+      extractedFiles,
+      dummyLocalConfig,
+    );
     expect(newManifest[burgers]).toBeDefined();
     // Expected symbols to be kept
     expect(newManifest[burgers].symbols["Drink_t"]).toBeDefined();
@@ -82,7 +92,10 @@ describe("CExtractor", () => {
     });
     const extractedFiles = extractor.extractSymbols(symbolsToExtract);
     expect(extractedFiles.size).toBe(6);
-    const newManifest = generateCDependencyManifest(extractedFiles);
+    const newManifest = generateCDependencyManifest(
+      extractedFiles,
+      dummyLocalConfig,
+    );
     expect(newManifest[all]).toBeDefined();
   });
 

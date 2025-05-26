@@ -25,10 +25,14 @@ export class CDependencyFormatter {
 
   constructor(
     files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    includeDirs: string[] = [],
   ) {
     this.symbolRegistry = new CSymbolRegistry(files);
     this.#registry = this.symbolRegistry.getRegistry();
-    this.includeResolver = new CIncludeResolver(this.symbolRegistry);
+    this.includeResolver = new CIncludeResolver(
+      this.symbolRegistry,
+      includeDirs,
+    );
     this.invocationResolver = new CInvocationResolver(this.includeResolver);
   }
 

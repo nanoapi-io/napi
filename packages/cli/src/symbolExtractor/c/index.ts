@@ -11,7 +11,7 @@ export function extractCSymbols(
   _napiConfig: z.infer<typeof localConfigSchema>,
 ): ExtractedFilesMap {
   console.time(`Extracted ${symbolsToExtract.size} symbol(s)`);
-  const extractor = new CExtractor(files, dependencyManifest);
+  const extractor = new CExtractor(files, dependencyManifest, _napiConfig);
   const extractedFiles = extractor.extractSymbols(symbolsToExtract);
   console.timeEnd(`Extracted ${symbolsToExtract.size} symbol(s)`);
   return extractedFiles;

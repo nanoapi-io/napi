@@ -8,6 +8,9 @@ import type { ExportedFile } from "./types.ts";
 import { C_DECLARATION_QUERY } from "../headerResolver/queries.ts";
 import { C_IFDEF_QUERY } from "./queries.ts";
 import { CInvocationResolver } from "../invocationResolver/index.ts";
+import type z from "npm:zod";
+import type { localConfigSchema } from "../../../config/localConfig.ts";
+import { join } from "@std/path";
 
 export class CExtractor {
   manifest: DependencyManifest;
@@ -18,6 +21,7 @@ export class CExtractor {
   constructor(
     files: Map<string, { path: string; content: string }>,
     manifest: DependencyManifest,
+    napiConfig: z.infer<typeof localConfigSchema>,
   ) {
     this.manifest = manifest;
     const parsedFiles = new Map<
@@ -32,7 +36,12 @@ export class CExtractor {
     }
     const symbolRegistry = new CSymbolRegistry(parsedFiles);
     this.registry = symbolRegistry.getRegistry();
-    this.includeResolver = new CIncludeResolver(symbolRegistry);
+    const outDir = napiConfig.outDir;
+    const includeDirs = napiConfig["c"]?.includedirs ?? [];
+    if (outDir) {
+      includeDirs.push(...includeDirs.map((i) => join(outDir, i)));
+    }
+    this.includeResolver = new CIncludeResolver(symbolRegistry, includeDirs);
     this.invocationResolver = new CInvocationResolver(this.includeResolver);
   }
 
@@ -158,19 +167,18 @@ export class CExtractor {
       const rootNode = file.originalFile.rootNode;
       const matches = C_DECLARATION_QUERY.captures(rootNode);
       const symbolsToKeep = new Set(
-        file.symbols.values().map((s) => s.declaration.node),
+        file.symbols.values().map((s) => s.declaration.node.text),
       );
-      const symbolsToRemove = new Set<Parser.SyntaxNode>();
+      const symbolsToRemove = new Set<string>();
       for (const match of matches) {
-        const symbolNode = match.node;
+        const symbolNode = match.node.text;
         if (!symbolsToKeep.has(symbolNode)) {
           symbolsToRemove.add(symbolNode);
         }
       }
       let filetext = rootNode.text;
       for (const symbolNode of symbolsToRemove) {
-        const symbolText = symbolNode.text;
-        filetext = filetext.replace(symbolText, "");
+        filetext = filetext.replace(symbolNode, "");
       }
       const strippedFile = cParser.parse(filetext);
       file.strippedFile = {
@@ -191,7 +199,10 @@ export class CExtractor {
       newproject.set(key, value.strippedFile);
     }
     const newregistry = new CSymbolRegistry(newproject);
-    const newincluderes = new CIncludeResolver(newregistry);
+    const newincluderes = new CIncludeResolver(
+      newregistry,
+      this.includeResolver.includeDirs,
+    );
     newincluderes.getInclusions();
     for (const [key, value] of files) {
       const unresolved = newincluderes.unresolvedDirectives.get(key);
@@ -200,9 +211,19 @@ export class CExtractor {
         for (const path of unresolved) {
           filetext = filetext.replace(`#include "${path}"`, "");
         }
+        filetext = this.#compactifyFile(filetext);
         value.strippedFile.rootNode = cParser.parse(filetext).rootNode;
       }
     }
+  }
+
+  #compactifyFile(
+    filetext: string,
+  ): string {
+    // Remove empty lines and useless semicolons
+    filetext = filetext.replace(/^\s*;\s*$/gm, ""); // Remove empty lines with semicolons
+    filetext = filetext.replace(/^\s*[\r\n]+/gm, "\n"); // Remove empty lines
+    return filetext;
   }
 
   /**
