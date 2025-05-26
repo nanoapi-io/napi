@@ -10,6 +10,7 @@ describe("CHeaderResolver", () => {
   const burgers = join(cFilesFolder, "burgers.h");
   const crashcases = join(cFilesFolder, "crashcases.h");
   const errorsh = join(cFilesFolder, "errors.h");
+  const oldmanh = join(cFilesFolder, "oldman.h");
   const file = cFilesMap.get(burgers);
   if (!file) {
     throw new Error(`File not found: ${burgers}`);
@@ -297,5 +298,28 @@ describe("CHeaderResolver", () => {
     expect(exportedErrorSymbols).toBeDefined();
     const symbolNames = exportedErrorSymbols.map((symbol) => symbol.name);
     expect(symbolNames).toContain("#NAPI_UNNAMED_ENUM_0");
+  });
+
+  test("resolves typedefs with same name as associated struct", () => {
+    const oldmanSymbols = resolver.resolveSymbols(
+      cFilesMap.get(oldmanh)!,
+    );
+    expect(oldmanSymbols).toBeDefined();
+    const oldmen = oldmanSymbols.filter((s) => s.name === "OldMan");
+    expect(oldmen).toHaveLength(2);
+    const oldman = oldmen.find((s) => s.type === "typedef");
+    expect(oldman).toBeDefined();
+    if (!oldman) {
+      throw new Error("OldMan is undefined");
+    }
+    expect(oldman.type).toBe("typedef");
+    expect(oldman.specifiers).toEqual([]);
+    expect(oldman.qualifiers).toEqual([]);
+    expect(oldman.node.type).toBe("type_definition");
+    if (!oldman.identifierNode) {
+      throw new Error("oldman.identifierNode is undefined");
+    }
+    expect(oldman.identifierNode.type).toBe("type_identifier");
+    expect(oldman.filepath).toBe(oldmanh);
   });
 });

@@ -89,11 +89,13 @@ export class CSymbolRegistry {
       const header = new CFile(file, ".h");
       for (const es of exportedSymbols) {
         const symbol = this.#convertSymbol(es);
-        if (symbol instanceof DataType && !header.symbols.has(symbol.name)) {
+        if (symbol instanceof DataType) {
           // Typedefs get priority over structs if they both have the same name
           // That is because if they both have the same name, that means that the typedef
           // also includes the struct's definition
-          header.symbols.set(symbol.name, symbol);
+          if (!header.symbols.has(symbol.name)) {
+            header.symbols.set(symbol.name, symbol);
+          }
         } else {
           header.symbols.set(symbol.name, symbol);
         }

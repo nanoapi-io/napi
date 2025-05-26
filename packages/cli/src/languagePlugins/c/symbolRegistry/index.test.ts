@@ -16,6 +16,7 @@ describe("CSymbolRegistry", () => {
   const registry = new CSymbolRegistry(cFilesMap).getRegistry();
   const burgersh = join(cFilesFolder, "burgers.h");
   const burgersc = join(cFilesFolder, "burgers.c");
+  const oldmanh = join(cFilesFolder, "oldman.h");
   const hsymbols = registry.get(burgersh);
   if (!hsymbols) {
     throw new Error(`File not found: ${burgersh}`);
@@ -151,5 +152,21 @@ describe("CSymbolRegistry", () => {
     expect((mainfunc as FunctionDefinition).declaration.node.type).toBe(
       "function_definition",
     );
+  });
+
+  test("prioritizes typedefs", () => {
+    const oldmanSymbols = registry.get(oldmanh);
+    if (!oldmanSymbols) {
+      throw new Error(`File not found: ${oldmanh}`);
+    }
+    expect(oldmanSymbols.type).toBe(".h");
+    expect(oldmanSymbols.symbols.size).toBe(14);
+    const oldman = oldmanSymbols.symbols.get("OldMan");
+    expect(oldman).toBeDefined();
+    expect(oldman).toBeInstanceOf(Typedef);
+    expect((oldman as Typedef).datatype).not.toBeDefined();
+    expect((oldman as Typedef).name).toBe("OldMan");
+    expect((oldman as Typedef).declaration.node.type).toBe("type_definition");
+    expect((oldman as Typedef).declaration.filepath).toBe(oldmanh);
   });
 });
