@@ -12,6 +12,7 @@ import { dirname, join } from "@std/path";
 export class CIncludeResolver {
   symbolRegistry: Map<string, CFile>;
   files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>;
+  unresolvedDirectives: Map<string, Set<string>>;
   #inclusions?: Map<string, Inclusions>;
   #inclusionCache: Map<CFile, Inclusions>;
 
@@ -19,9 +20,10 @@ export class CIncludeResolver {
     this.symbolRegistry = symbolRegistry.getRegistry();
     this.files = symbolRegistry.files;
     this.#inclusionCache = new Map();
+    this.unresolvedDirectives = new Map();
   }
 
-  #getFile(filepath: string, sourcepath: string): CFile | undefined {
+  getFile(filepath: string, sourcepath: string): CFile | undefined {
     const filepaths = Array.from(this.symbolRegistry.keys());
     // 1. Check current file's directory
     const sourceDir = dirname(sourcepath);
@@ -35,11 +37,13 @@ export class CIncludeResolver {
     if (corresponding2) {
       return this.symbolRegistry.get(corresponding2);
     }
-    // 3. Check wherever
-    const corresponding3 = filepaths.find((f) => f.endsWith(filepath));
-    if (corresponding3) {
-      return this.symbolRegistry.get(corresponding3);
-    }
+    // // 3. Check wherever
+    // const corresponding3 = filepaths.find((f) =>
+    //   f.endsWith(SEPARATOR + filepath)
+    // );
+    // if (corresponding3) {
+    //   return this.symbolRegistry.get(corresponding3);
+    // }
     return undefined;
   }
 
@@ -77,8 +81,13 @@ export class CIncludeResolver {
 
     for (const node of includeNodes) {
       const path = node.node.text;
-      const includedfile = this.#getFile(path, file.file.path);
-      if (includedfile && !visitedFiles.has(includedfile.file.path)) {
+      const includedfile = this.getFile(path, file.file.path);
+      if (!includedfile) {
+        if (!this.unresolvedDirectives.has(file.file.path)) {
+          this.unresolvedDirectives.set(file.file.path, new Set());
+        }
+        this.unresolvedDirectives.get(file.file.path)?.add(path);
+      } else if (!visitedFiles.has(includedfile.file.path)) {
         // Add the included file's symbols to the current file's symbols
         for (const [name, symbol] of includedfile.symbols) {
           inclusions.symbols.set(name, {

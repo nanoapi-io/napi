@@ -13,6 +13,7 @@ describe("CExtractor", () => {
   const burgersc = join(cFilesFolder, "burgers.c");
   const main = join(cFilesFolder, "main.c");
   const all = join(cFilesFolder, "all.h");
+  const errorsh = join(cFilesFolder, "errors.h");
   test("extracts create_burger", () => {
     const symbolsToExtract = new Map<
       string,
@@ -83,5 +84,24 @@ describe("CExtractor", () => {
     expect(extractedFiles.size).toBe(6);
     const newManifest = generateCDependencyManifest(extractedFiles);
     expect(newManifest[all]).toBeDefined();
+  });
+
+  test("deletes impossible include", () => {
+    const symbolsToExtract = new Map<
+      string,
+      { filePath: string; symbols: Set<string> }
+    >();
+    symbolsToExtract.set(errorsh, {
+      filePath: errorsh,
+      symbols: new Set(["typedef"]),
+    });
+    const extractedFiles = extractor.extractSymbols(symbolsToExtract);
+    expect(extractedFiles.size).toBe(1);
+    expect(extractedFiles.get(errorsh)).toBeDefined();
+    expect(
+      extractedFiles.get(errorsh)?.content.includes(
+        `#include "thisfiledoesnotexist.h"`,
+      ),
+    ).toBe(false);
   });
 });

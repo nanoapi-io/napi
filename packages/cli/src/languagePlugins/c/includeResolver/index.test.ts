@@ -14,6 +14,7 @@ describe("CIncludeResolver", () => {
   const burgersc = join(cFilesFolder, "burgers.c");
   const allh = join(cFilesFolder, "all.h");
   const main = join(cFilesFolder, "main.c");
+  const errorsh = join(cFilesFolder, "errors.h");
   const inclusions = includeResolver.getInclusions();
 
   test("resolves inclusions for burgers.h", () => {
@@ -79,5 +80,13 @@ describe("CIncludeResolver", () => {
     expect(destroy.definition).toBeDefined();
     expect(get.definition).toBeDefined();
     expect(cheapest.definition).toBeDefined();
+  });
+
+  test("correctly registers inexistant files", () => {
+    const unresolvedIncludes = includeResolver.unresolvedDirectives.get(
+      errorsh,
+    );
+    expect(unresolvedIncludes).toBeDefined();
+    expect(unresolvedIncludes).toContainEqual("thisfiledoesnotexist.h");
   });
 });

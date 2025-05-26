@@ -180,6 +180,31 @@ export class CExtractor {
     }
   }
 
+  #removeDeletedIncludes(
+    files: Map<string, ExportedFile>,
+  ) {
+    const newproject: Map<
+      string,
+      { path: string; rootNode: Parser.SyntaxNode }
+    > = new Map();
+    for (const [key, value] of files) {
+      newproject.set(key, value.strippedFile);
+    }
+    const newregistry = new CSymbolRegistry(newproject);
+    const newincluderes = new CIncludeResolver(newregistry);
+    newincluderes.getInclusions();
+    for (const [key, value] of files) {
+      const unresolved = newincluderes.unresolvedDirectives.get(key);
+      if (unresolved) {
+        let filetext = value.strippedFile.rootNode.text;
+        for (const path of unresolved) {
+          filetext = filetext.replace(`#include "${path}"`, "");
+        }
+        value.strippedFile.rootNode = cParser.parse(filetext).rootNode;
+      }
+    }
+  }
+
   /**
    * Finds the dependencies for a map of symbols.
    * @param symbolsMap - A map of file paths to their corresponding symbols.
@@ -225,6 +250,7 @@ export class CExtractor {
     const symbolsToExtract = this.#findDependenciesForMap(symbolsMap);
     const filesToExport = this.#buildFileMap(symbolsToExtract);
     this.#stripFiles(filesToExport);
+    this.#removeDeletedIncludes(filesToExport);
     const exportedFiles = new Map<string, { path: string; content: string }>();
     for (const [filePath, file] of filesToExport) {
       const content = file.strippedFile.rootNode.text;
