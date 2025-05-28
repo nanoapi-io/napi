@@ -1,5 +1,4 @@
-#include "burgers.h"
-#include "personnel.h"
+#include "all.h"
 #include <stdio.h>
 
 int main(void) {

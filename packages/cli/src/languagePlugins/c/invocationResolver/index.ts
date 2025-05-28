@@ -2,6 +2,7 @@ import type { Invocations } from "./types.ts";
 import { C_INVOCATION_QUERY, C_MACRO_CONTENT_QUERY } from "./queries.ts";
 import type { CIncludeResolver } from "../includeResolver/index.ts";
 import {
+  type CFile,
   DataType,
   EnumMember,
   FunctionDefinition,
@@ -10,6 +11,7 @@ import {
 } from "../symbolRegistry/types.ts";
 import type Parser from "npm:tree-sitter";
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
+import type { IncludedSymbol } from "../includeResolver/types.ts";
 
 export class CInvocationResolver {
   includeResolver: CIncludeResolver;
@@ -26,10 +28,10 @@ export class CInvocationResolver {
     const availableSymbols = this.includeResolver
       .getInclusions()
       .get(filepath)?.symbols;
-    const localSymbols = this.includeResolver.symbolRegistry.get(filepath)
-      ?.symbols;
+    const currentfile = this.includeResolver.symbolRegistry.get(filepath)!;
+    const localSymbols = currentfile.symbols;
     const unresolved = new Set<string>();
-    const resolved = new Map<string, Symbol>();
+    const resolved = new Map<string, IncludedSymbol>();
     const captures = C_INVOCATION_QUERY.captures(node);
     for (const capture of captures) {
       const name = capture.node.text;
@@ -50,7 +52,10 @@ export class CInvocationResolver {
           unresolved.add(name);
           continue;
         }
-        resolved.set(name, localSymbol);
+        resolved.set(name, {
+          includefile: currentfile,
+          symbol: localSymbol,
+        });
       } else {
         unresolved.add(name);
       }
@@ -81,6 +86,17 @@ export class CInvocationResolver {
     };
   }
 
+  #getSymbolFile(symbol: Symbol): CFile {
+    const file = this.includeResolver.symbolRegistry.get(
+      symbol.declaration.filepath,
+    );
+    if (!file) {
+      throw Error(`File ${symbol.declaration.filepath} not found!`);
+      // Exclamation point because that's really out of the ordinary
+    }
+    return file;
+  }
+
   getInvocationsForSymbol(symbol: Symbol) {
     const filepath = symbol.declaration.filepath;
     const node = symbol.declaration.node;
@@ -88,23 +104,35 @@ export class CInvocationResolver {
     const invocations = this.getInvocationsForNode(node, filepath, name);
     const resolved = invocations.resolved;
     if (symbol instanceof FunctionSignature && symbol.definition) {
-      resolved.set(symbol.name, symbol.definition);
+      resolved.set(symbol.name, {
+        includefile: this.#getSymbolFile(symbol.definition),
+        symbol: symbol.definition,
+      });
     }
     if (symbol instanceof FunctionDefinition && symbol.signature) {
-      resolved.set(symbol.name, symbol.signature);
+      resolved.set(symbol.name, {
+        includefile: this.#getSymbolFile(symbol.signature),
+        symbol: symbol.signature,
+      });
     }
     if (symbol instanceof DataType) {
       const typedefs = symbol.typedefs;
       for (const [key, value] of typedefs) {
-        resolved.set(key, value);
+        resolved.set(key, {
+          includefile: this.#getSymbolFile(value),
+          symbol: value,
+        });
       }
     }
     // Replace enum members with their parent enum
     for (const [key, value] of resolved) {
-      if (value instanceof EnumMember) {
-        const parent = value.parent;
+      if (value.symbol instanceof EnumMember) {
+        const parent = value.symbol.parent;
         if (!resolved.has(parent.name) && parent.name !== symbol.name) {
-          resolved.set(parent.name, parent);
+          resolved.set(parent.name, {
+            includefile: value.includefile,
+            symbol: parent,
+          });
         }
         resolved.delete(key);
       }
@@ -121,7 +149,7 @@ export class CInvocationResolver {
       symbols = new Map();
     }
     let unresolved = new Set<string>();
-    const resolved = new Map<string, Symbol>();
+    const resolved = new Map<string, IncludedSymbol>();
     for (const symbol of symbols.values()) {
       const invocations = this.getInvocationsForSymbol(symbol);
       unresolved = new Set([...unresolved, ...invocations.unresolved]);

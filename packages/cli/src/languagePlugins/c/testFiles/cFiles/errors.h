@@ -1,3 +1,5 @@
+#include "thisfiledoesnotexist.h"
+
 // Unnamed enum
 enum {
     ONE, TWO, THREE, VIVA, L, ALGERIE

@@ -15,9 +15,12 @@ import { CMetricsAnalyzer } from "../../../languagePlugins/c/metrics/index.ts";
 import type Parser from "npm:tree-sitter";
 import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.ts";
 import { CWarningManager } from "../../../languagePlugins/c/warnings/index.ts";
+import type { localConfigSchema } from "../../../config/localConfig.ts";
+import type z from "npm:zod";
 
 export function generateCDependencyManifest(
   files: Map<string, { path: string; content: string }>,
+  napiConfig: z.infer<typeof localConfigSchema>,
 ): DependencyManifest {
   console.time("generateCDependencyManifest");
   console.info("Processing project...");
@@ -44,7 +47,8 @@ export function generateCDependencyManifest(
       console.warn(warning.message);
     }
   }
-  const formatter = new CDependencyFormatter(parsedFiles);
+  const includeDirs = napiConfig[cLanguage]?.includedirs ?? [];
+  const formatter = new CDependencyFormatter(parsedFiles, includeDirs);
   const metricsAnalyzer = new CMetricsAnalyzer();
   const manifest: DependencyManifest = {};
   const filecount = parsedFiles.size;

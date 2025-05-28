@@ -1,16 +1,23 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import { cFilesFolder, getCFilesContentMap } from "../testFiles/index.ts";
+import {
+  cFilesFolder,
+  dummyLocalConfig,
+  getCFilesContentMap,
+} from "../testFiles/index.ts";
 import { CExtractor } from "./index.ts";
 import { join } from "@std/path";
 import { generateCDependencyManifest } from "../../../manifest/dependencyManifest/c/index.ts";
 
 describe("CExtractor", () => {
   const cContentMap = getCFilesContentMap();
-  const manifest = generateCDependencyManifest(cContentMap);
-  const extractor = new CExtractor(cContentMap, manifest);
+  const manifest = generateCDependencyManifest(cContentMap, dummyLocalConfig);
+  const extractor = new CExtractor(cContentMap, manifest, dummyLocalConfig);
   const burgers = join(cFilesFolder, "burgers.h");
   const burgersc = join(cFilesFolder, "burgers.c");
+  const main = join(cFilesFolder, "main.c");
+  const all = join(cFilesFolder, "all.h");
+  const errorsh = join(cFilesFolder, "errors.h");
   test("extracts create_burger", () => {
     const symbolsToExtract = new Map<
       string,
@@ -22,7 +29,10 @@ describe("CExtractor", () => {
     });
     const extractedFiles = extractor.extractSymbols(symbolsToExtract);
     expect(extractedFiles.size).toBe(2);
-    const newManifest = generateCDependencyManifest(extractedFiles);
+    const newManifest = generateCDependencyManifest(
+      extractedFiles,
+      dummyLocalConfig,
+    );
     expect(newManifest[burgers]).toBeDefined();
     expect(newManifest[burgersc]).toBeDefined();
     // Expected symbols to be kept
@@ -58,7 +68,10 @@ describe("CExtractor", () => {
     });
     const extractedFiles = extractor.extractSymbols(symbolsToExtract);
     expect(extractedFiles.size).toBe(1);
-    const newManifest = generateCDependencyManifest(extractedFiles);
+    const newManifest = generateCDependencyManifest(
+      extractedFiles,
+      dummyLocalConfig,
+    );
     expect(newManifest[burgers]).toBeDefined();
     // Expected symbols to be kept
     expect(newManifest[burgers].symbols["Drink_t"]).toBeDefined();
@@ -66,5 +79,42 @@ describe("CExtractor", () => {
     expect(newManifest[burgers].symbols["BURGERS_H"]).toBeDefined();
     // Expected symbols to be removed
     expect(Object.keys(newManifest[burgers].symbols).length).toBe(3);
+  });
+
+  test("keeps all.h", () => {
+    const symbolsToExtract = new Map<
+      string,
+      { filePath: string; symbols: Set<string> }
+    >();
+    symbolsToExtract.set(main, {
+      filePath: main,
+      symbols: new Set(["main"]),
+    });
+    const extractedFiles = extractor.extractSymbols(symbolsToExtract);
+    expect(extractedFiles.size).toBe(6);
+    const newManifest = generateCDependencyManifest(
+      extractedFiles,
+      dummyLocalConfig,
+    );
+    expect(newManifest[all]).toBeDefined();
+  });
+
+  test("deletes impossible include", () => {
+    const symbolsToExtract = new Map<
+      string,
+      { filePath: string; symbols: Set<string> }
+    >();
+    symbolsToExtract.set(errorsh, {
+      filePath: errorsh,
+      symbols: new Set(["typedef"]),
+    });
+    const extractedFiles = extractor.extractSymbols(symbolsToExtract);
+    expect(extractedFiles.size).toBe(1);
+    expect(extractedFiles.get(errorsh)).toBeDefined();
+    expect(
+      extractedFiles.get(errorsh)?.content.includes(
+        `#include "thisfiledoesnotexist.h"`,
+      ),
+    ).toBe(false);
   });
 });

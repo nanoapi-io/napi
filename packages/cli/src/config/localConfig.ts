@@ -25,6 +25,11 @@ export const localConfigSchema = z.object({
         .optional(),
     })
     .optional(), // python specific config
+  [cLanguage]: z
+    .object({
+      includedirs: z.array(z.string()).optional(),
+    })
+    .optional(), // c specific config
   project: z.object({
     include: z.array(z.string()),
     exclude: z.array(z.string()).optional(),

@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import { extname, join } from "@std/path";
 import type Parser from "tree-sitter";
-import { cParser } from "../../../helpers/treeSitter/parsers.ts";
+import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 if (!import.meta.dirname) {
   throw new Error("import.meta.dirname is not defined");
@@ -62,3 +62,15 @@ export function getCFilesContentMap(): Map<
   }
   return contentMap;
 }
+
+export const dummyLocalConfig = {
+  language: cLanguage,
+  project: {
+    include: [],
+    exclude: [],
+  },
+  outDir: "./dist",
+  c: {
+    includedirs: [],
+  },
+};

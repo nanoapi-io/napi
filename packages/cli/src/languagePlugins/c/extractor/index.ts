@@ -7,15 +7,21 @@ import type { CFile, Symbol } from "../symbolRegistry/types.ts";
 import type { ExportedFile } from "./types.ts";
 import { C_DECLARATION_QUERY } from "../headerResolver/queries.ts";
 import { C_IFDEF_QUERY } from "./queries.ts";
+import { CInvocationResolver } from "../invocationResolver/index.ts";
+import type z from "npm:zod";
+import type { localConfigSchema } from "../../../config/localConfig.ts";
+import { join } from "@std/path";
 
 export class CExtractor {
   manifest: DependencyManifest;
   registry: Map<string, CFile>;
   includeResolver: CIncludeResolver;
+  invocationResolver: CInvocationResolver;
 
   constructor(
     files: Map<string, { path: string; content: string }>,
     manifest: DependencyManifest,
+    napiConfig: z.infer<typeof localConfigSchema>,
   ) {
     this.manifest = manifest;
     const parsedFiles = new Map<
@@ -30,7 +36,13 @@ export class CExtractor {
     }
     const symbolRegistry = new CSymbolRegistry(parsedFiles);
     this.registry = symbolRegistry.getRegistry();
-    this.includeResolver = new CIncludeResolver(symbolRegistry);
+    const outDir = napiConfig.outDir;
+    const includeDirs = napiConfig["c"]?.includedirs ?? [];
+    if (outDir) {
+      includeDirs.push(...includeDirs.map((i) => join(outDir, i)));
+    }
+    this.includeResolver = new CIncludeResolver(symbolRegistry, includeDirs);
+    this.invocationResolver = new CInvocationResolver(this.includeResolver);
   }
 
   /**
@@ -100,7 +112,8 @@ export class CExtractor {
         const ifdefs = C_IFDEF_QUERY.captures(originalFile.rootNode).map((n) =>
           n.node.text
         );
-        const definesToKeep = ifdefs.map((i) => fileInRegistry.symbols.get(i)!);
+        const definesToKeep = ifdefs.map((i) => fileInRegistry.symbols.get(i)!)
+          .filter((i) => i);
         const symbols = new Map<string, Symbol>();
         for (const define of definesToKeep) {
           symbols.set(define.name, define);
@@ -116,6 +129,36 @@ export class CExtractor {
       if (!exportedFile.symbols.has(symbolName)) {
         exportedFile.symbols.set(symbolName, symbol);
       }
+      // Keep the files that recursively lead to a symbol we need
+      const invocations = this.invocationResolver.getInvocationsForSymbol(
+        symbol,
+      );
+      const filestokeep = Array.from(
+        invocations.resolved.values().map((s) =>
+          this.includeResolver.findInclusionChain(
+            symbol.declaration.filepath,
+            s.symbol,
+          )
+        ).filter((c) => c !== undefined),
+      ).flatMap((c) => c.flatMap((f) => this.registry.get(f)!));
+      for (const f of filestokeep) {
+        if (!exportedFiles.has(f.file.path)) {
+          const ifdefs = C_IFDEF_QUERY.captures(f.file.rootNode).map((n) =>
+            n.node.text
+          );
+          const definesToKeep = ifdefs.map((i) => f.symbols.get(i)!)
+            .filter((i) => i);
+          const symbols = new Map<string, Symbol>();
+          for (const define of definesToKeep) {
+            symbols.set(define.name, define);
+          }
+          exportedFiles.set(f.file.path, {
+            symbols,
+            originalFile: f.file,
+            strippedFile: f.file,
+          });
+        }
+      }
     }
     return exportedFiles;
   }
@@ -127,28 +170,98 @@ export class CExtractor {
   #stripFiles(files: Map<string, ExportedFile>) {
     for (const [, file] of files) {
       const rootNode = file.originalFile.rootNode;
-      const matches = C_DECLARATION_QUERY.captures(rootNode);
+      const originalText = rootNode.text; // Original file content
       const symbolsToKeep = new Set(
         file.symbols.values().map((s) => s.declaration.node),
       );
       const symbolsToRemove = new Set<Parser.SyntaxNode>();
+      const matches = C_DECLARATION_QUERY.captures(rootNode);
+
       for (const match of matches) {
         const symbolNode = match.node;
         if (!symbolsToKeep.has(symbolNode)) {
           symbolsToRemove.add(symbolNode);
         }
       }
-      let filetext = rootNode.text;
-      for (const symbolNode of symbolsToRemove) {
-        const symbolText = symbolNode.text;
-        filetext = filetext.replace(symbolText, "");
-      }
-      const strippedFile = cParser.parse(filetext);
+
+      // Helper function to recursively filter nodes
+      const filterNodes = (node: Parser.SyntaxNode): string => {
+        if (symbolsToRemove.has(node)) {
+          return ""; // Skip this node
+        }
+
+        // If the node has children, process them recursively
+        if (["translation_unit", "preproc_ifdef"].includes(node.type)) {
+          let result = "";
+          let lastEndIndex = node.startIndex;
+
+          for (const child of node.children) {
+            // Append the text between the last node and the current child
+            result += originalText.slice(lastEndIndex, child.startIndex);
+            result += filterNodes(child); // Process the child
+            lastEndIndex = child.endIndex;
+          }
+
+          // Append the text after the last child
+          result += originalText.slice(lastEndIndex, node.endIndex);
+          return result;
+        }
+
+        // If the node has no children, return its text
+        return originalText.slice(node.startIndex, node.endIndex);
+      };
+
+      // Rebuild the file content by filtering nodes
+      const newFileContent = filterNodes(rootNode);
+
+      // Compactify the file content
+      const compactedContent = this.#compactifyFile(newFileContent);
+
+      // Parse the new content and update the stripped file
+      const strippedFile = cParser.parse(compactedContent);
       file.strippedFile = {
         path: file.originalFile.path,
         rootNode: strippedFile.rootNode,
       };
     }
+  }
+
+  #removeDeletedIncludes(
+    files: Map<string, ExportedFile>,
+  ) {
+    const newproject: Map<
+      string,
+      { path: string; rootNode: Parser.SyntaxNode }
+    > = new Map();
+    for (const [key, value] of files) {
+      newproject.set(key, value.strippedFile);
+    }
+    const newregistry = new CSymbolRegistry(newproject);
+    const newincluderes = new CIncludeResolver(
+      newregistry,
+      this.includeResolver.includeDirs,
+    );
+    newincluderes.getInclusions();
+    for (const [key, value] of files) {
+      const unresolved = newincluderes.unresolvedDirectives.get(key);
+      if (unresolved) {
+        let filetext = value.strippedFile.rootNode.text;
+        for (const path of unresolved) {
+          filetext = filetext.replace(`#include "${path}"`, "");
+        }
+        filetext = this.#compactifyFile(filetext);
+        value.strippedFile.rootNode = cParser.parse(filetext).rootNode;
+      }
+    }
+  }
+
+  #compactifyFile(
+    filetext: string,
+  ): string {
+    // Remove empty lines and useless semicolons
+    filetext = filetext.replace(/^\s*;\s*$/gm, ""); // Remove empty lines with semicolons
+    filetext = filetext.replace(/^\s*[\r\n]+/gm, "\n"); // Remove empty lines
+    return filetext;
   }
 
   /**
@@ -196,6 +309,7 @@ export class CExtractor {
     const symbolsToExtract = this.#findDependenciesForMap(symbolsMap);
     const filesToExport = this.#buildFileMap(symbolsToExtract);
     this.#stripFiles(filesToExport);
+    this.#removeDeletedIncludes(filesToExport);
     const exportedFiles = new Map<string, { path: string; content: string }>();
     for (const [filePath, file] of filesToExport) {
       const content = file.strippedFile.rootNode.text;

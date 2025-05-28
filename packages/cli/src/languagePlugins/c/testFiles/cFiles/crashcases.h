@@ -1,3 +1,6 @@
+// Code segments taken from the Pokémon Fire Red/Leaf Green decomp project
+// https://github.com/pret/pokefirered
+
 #define CPU_FAST_SET_SRC_FIXED 0x01000000
 
 void CpuFastSet(const void *src, void *dest, unsigned int control);
