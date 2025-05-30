@@ -1,5 +1,6 @@
 import { generatePythonDependencyManifest } from "./python/index.ts";
 import { generateCSharpDependencyManifest } from "./csharp/index.ts";
+import { generateCDependencyManifest } from "./c/index.ts";
 import type { localConfigSchema } from "../../config/localConfig.ts";
 import type z from "npm:zod";
 import type {
@@ -7,6 +8,7 @@ import type {
   SymbolDependencyManifest,
 } from "@napi/shared";
 import {
+  cLanguage,
   csharpLanguage,
   pythonLanguage,
 } from "../../helpers/treeSitter/parsers.ts";
@@ -21,6 +23,7 @@ const handlerMap: Record<
 > = {
   [pythonLanguage]: generatePythonDependencyManifest,
   [csharpLanguage]: generateCSharpDependencyManifest,
+  [cLanguage]: generateCDependencyManifest,
 };
 
 export class UnsupportedLanguageError extends Error {

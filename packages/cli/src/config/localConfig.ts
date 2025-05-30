@@ -4,6 +4,7 @@ import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json
   type: "json",
 };
 import {
+  cLanguage,
   csharpLanguage,
   pythonLanguage,
 } from "../helpers/treeSitter/parsers.ts";
@@ -11,7 +12,7 @@ import {
 const pythonVersions = Object.keys(pythonStdlibList);
 
 export const localConfigSchema = z.object({
-  language: z.enum([pythonLanguage, csharpLanguage]),
+  language: z.enum([pythonLanguage, csharpLanguage, cLanguage]),
   [pythonLanguage]: z
     .object({
       version: z
@@ -24,6 +25,11 @@ export const localConfigSchema = z.object({
         .optional(),
     })
     .optional(), // python specific config
+  [cLanguage]: z
+    .object({
+      includedirs: z.array(z.string()).optional(),
+    })
+    .optional(), // c specific config
   project: z.object({
     include: z.array(z.string()),
     exclude: z.array(z.string()).optional(),

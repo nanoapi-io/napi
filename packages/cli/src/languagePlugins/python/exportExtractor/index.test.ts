@@ -185,9 +185,9 @@ describe("PythonExportExtractor", () => {
     const code = `
     def my_function():
         pass
-        
+
     # Some comment in between
-    
+
     def my_function(a, b):
         return a + b
     `;
@@ -218,9 +218,9 @@ describe("PythonExportExtractor", () => {
     class MyClass:
         def method1(self):
             pass
-            
+
     # Some comment in between
-    
+
     class MyClass:
         def method2(self):
             pass
@@ -316,17 +316,17 @@ describe("PythonExportExtractor", () => {
   test("should handle mixed symbol types and multiple modifications", () => {
     const code = `
     x = 10
-    
+
     def func():
         pass
-    
+
     x += 5
-    
+
     class MyClass:
         pass
-    
+
     x = 20
-    
+
     def func(a):
         return a
     `;
@@ -452,7 +452,7 @@ describe("PythonExportExtractor", () => {
     const code = `
     class Person:
         pass
-        
+
     person = Person()
     person.name = "John"
     person.age = 30
@@ -497,21 +497,21 @@ describe("PythonExportExtractor", () => {
     const code = `
     # Module-level variable
     counter = 0
-    
+
     def increment():
         # Local variable with same name as module-level one
         counter = 0
         counter += 1
         return counter
-        
+
     # Module-level modification
     counter += 10
-    
+
     def modify_global():
         global counter
         # This modifies the module-level variable
         counter += 100
-        
+
     # Another module-level variable
     total = 50
     `;
@@ -568,30 +568,30 @@ describe("PythonExportExtractor", () => {
     const code = `
     # Module-level variable
     data = []
-    
+
     class DataProcessor:
         # Class variable with same name
         data = {}
-        
+
         def __init__(self):
             # Instance variable
             self.data = []
-            
+
         def process(self):
             # Local variable
             data = []
             data.append("processed")
             return data
-            
+
         @classmethod
         def reset(cls):
             # Modifying class variable
             cls.data = {}
-            
+
     # Module-level modification
     data.append("module")
     data = data + ["level"]
-    
+
     # Another module-level variable
     config = {}
     `;
@@ -642,26 +642,26 @@ describe("PythonExportExtractor", () => {
     const code = `
     # Module-level variable
     count = 0
-    
+
     class Counter:
         # Class variable
         count = 0
-        
+
         def __init__(self, initial=0):
             # Instance variable
             self.count = initial
-            
+
         def increment(self):
             # Local method operation
             count = 0  # Local variable shadowing
             count += 1
             self.count += 1
-            
+
         @classmethod
         def increment_class(cls):
             # Class variable operation
             cls.count += 1
-            
+
         @staticmethod
         def process():
             # Local function operation
@@ -671,28 +671,28 @@ describe("PythonExportExtractor", () => {
                 count *= 2
                 return count
             return nested()
-            
+
     # Another module-level function
     def operate():
         # Local variable
         count = 5
-        
+
         # Nested function
         def nested_modifier():
             nonlocal count
             count += 5
-            
+
             # Double-nested function
             def deep_nested():
                 # Local to deep_nested
                 count = 1000
                 return count
-                
+
             return deep_nested()
-            
+
         nested_modifier()
         return count
-    
+
     # Module-level modifications
     count += 1
     count *= 2
@@ -759,16 +759,16 @@ describe("PythonExportExtractor", () => {
     const code = `
     import os
     from celery import Celery
-    
+
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Project.settings")
     app = Celery("Project")
     app.config_from_object("django.conf:settings", namespace="CELERY")
     app.conf.update(app.conf.get("CELERY_CONFIG"))
     app.autodiscover_tasks()
-    
+
     app.conf.task_queue_max_priority = 10
     app.conf.task_default_priority = 5
-    
+
     app.conf.beat_schedule = {
         "task1": {
             "task": "module.tasks.task1",
@@ -823,7 +823,7 @@ describe("PythonExportExtractor", () => {
     from flask import Flask
     from flask_cors import CORS
     from config import Config
-    
+
     server = Flask(__name__)
     server.config.from_object(Config)
     server.config.update({
@@ -831,14 +831,14 @@ describe("PythonExportExtractor", () => {
         "SECRET_KEY": "dev-key",
     })
     server.register_blueprint(api_bp, url_prefix="/api")
-    
+
     CORS(server)
-    
+
     server.logger.setLevel("INFO")
     server.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
-    
+
     server.session_interface = CustomSessionInterface()
-    
+
     server.route_map = {
         "home": "/",
         "dashboard": "/dashboard",
@@ -849,11 +849,11 @@ describe("PythonExportExtractor", () => {
             "notifications": "/settings/notifications",
         }
     }
-    
+
     @server.before_request
     def before_request():
         pass
-        
+
     if __name__ == "__main__":
         server.run(host="0.0.0.0", port=5000)
     `;
@@ -907,21 +907,21 @@ describe("PythonExportExtractor", () => {
     data = {}
     data["key1"] = "value1"
     data["key2"] = "value2"
-    
+
     # Nested subscript operations
     config = {"db": {}}
     config["db"]["host"] = "localhost"
     config["db"]["port"] = 5432
-    
+
     # Attribute + subscript operations
     class Storage:
         def __init__(self):
             self.items = {}
-    
+
     storage = Storage()
     storage.items["item1"] = {"name": "Item 1", "price": 10}
     storage.items["item2"] = {"name": "Item 2", "price": 20}
-    
+
     # Mixed operations
     options = {}
     options["debug"] = True

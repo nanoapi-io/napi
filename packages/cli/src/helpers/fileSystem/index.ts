@@ -1,11 +1,16 @@
 import { globSync } from "npm:glob";
 import { dirname, join } from "@std/path";
-import { csharpLanguage, pythonLanguage } from "../treeSitter/parsers.ts";
+import {
+  cLanguage,
+  csharpLanguage,
+  pythonLanguage,
+} from "../treeSitter/parsers.ts";
 
 export function getExtensionsForLanguage(language: string) {
   const supportedLanguages: Record<string, string[]> = {
     [pythonLanguage]: ["py"],
     [csharpLanguage]: ["cs", "csproj"],
+    [cLanguage]: ["c", "h"],
   };
 
   const supportedLanguage = supportedLanguages[language];
