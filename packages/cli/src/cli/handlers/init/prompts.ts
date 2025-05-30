@@ -7,6 +7,7 @@ import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/outpu
 import { confirm, input, number, search, select } from "@inquirer/prompts";
 import { globSync } from "npm:glob";
 import {
+  cLanguage,
   csharpLanguage,
   pythonLanguage,
 } from "../../../helpers/treeSitter/parsers.ts";
@@ -146,7 +147,7 @@ async function collectIncludePatterns(
 Include patterns define which files NanoAPI will process and analyze.
 
 Examples:
-- '**/*.py' for all Python files    
+- '**/*.py' for all Python files
 - 'src/**' for all files in src directory
 - '*.py' for all Python files in the root directory
 `,
@@ -500,6 +501,7 @@ export async function generateConfig(
     choices: [
       { name: "Python", value: pythonLanguage },
       { name: "C#", value: csharpLanguage },
+      { name: "C", value: cLanguage },
     ],
   });
 

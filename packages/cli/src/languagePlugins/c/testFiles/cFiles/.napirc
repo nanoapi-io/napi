@@ -1,0 +1,42 @@
+{
+  "language": "c",
+  "project": {
+    "include": [
+      "**/*.c",
+      "**/*.h"
+    ],
+    "exclude": [
+      ".git/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/bin/**",
+      "**/obj/**",
+      "**/packages/**",
+      "**/.vs/**",
+      "**/TestResults/**",
+      "**/*.user",
+      "**/*.suo",
+      "**/.nuget/**",
+      "**/artifacts/**",
+      "**/packages/**",
+      "**/util/**",
+      "**/test/**",
+      "**/perf/**",
+      "**/napi_out/**",
+      "**/rapports/**"
+    ]
+  },
+  "outDir": "napi_out",
+  "metrics": {
+    "file": {
+      "maxChar": 100000,
+      "maxLine": 1000,
+      "maxDep": 10
+    },
+    "symbol": {
+      "maxChar": 50000,
+      "maxLine": 500,
+      "maxDep": 5
+    }
+  }
+}

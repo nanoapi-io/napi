@@ -7,6 +7,12 @@ export const structSymbolType = "struct";
 /** Identifies the "enum" instance type. */
 export const enumSymbolType = "enum";
 
+/** Identifies the "union" instance type. */
+export const unionSymbolType = "union";
+
+/** Identifies the "typedef" instance type. */
+export const typedefSymbolType = "typedef";
+
 /** Identifies the "interface" instance type. */
 export const interfaceSymbolType = "interface";
 
@@ -37,6 +43,8 @@ export type SymbolType =
   | typeof variableSymbolType
   | typeof structSymbolType
   | typeof enumSymbolType
+  | typeof unionSymbolType
+  | typeof typedefSymbolType
   | typeof interfaceSymbolType
   | typeof recordSymbolType
   | typeof delegateSymbolType;

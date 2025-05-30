@@ -148,7 +148,7 @@ from original import original_func
 # First definition with dependency on original
 def multi_func():
     return original_func()
-    
+
 from another import another_func
 
 # Second definition with dependency on another

@@ -33,8 +33,8 @@ export async function checkVersionMiddleware() {
     if (currentVersion !== latestVersion) {
       console.warn(
         `
-You are using version ${currentVersion}. 
-The latest version is ${latestVersion}. 
+You are using version ${currentVersion}.
+The latest version is ${latestVersion}.
 Please update to the latest version to continue using napi.
 
 You can update the version by running the following command:

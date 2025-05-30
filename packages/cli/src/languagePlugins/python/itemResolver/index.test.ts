@@ -103,7 +103,7 @@ describe("PythonItemResolver", () => {
           rootNode: pythonParser.parse(`
             from .level1 import *
             from .direct import direct_func
-            
+
             __all__ = ['direct_func', 'level1_func', 'level2_deep_func']
           `).rootNode,
         },
@@ -124,10 +124,10 @@ describe("PythonItemResolver", () => {
           path: "nested_all_pkg/level1.py",
           rootNode: pythonParser.parse(`
             from .level2 import *
-            
+
             def level1_func(): pass
             def level1_hidden(): pass
-            
+
             __all__ = ['level1_func', 'level2_deep_func']
           `).rootNode,
         },
@@ -140,7 +140,7 @@ describe("PythonItemResolver", () => {
             def level2_func(): pass
             def level2_deep_func(): pass
             def level2_hidden(): pass
-            
+
             __all__ = ['level2_func', 'level2_deep_func']
           `).rootNode,
         },
@@ -238,12 +238,12 @@ describe("PythonItemResolver", () => {
           path: "precedence.py",
           rootNode: pythonParser.parse(`
             # Define a local symbol
-            def duplicate(): 
+            def duplicate():
                 return "local"
-                
+
             # Import a symbol with same name - this should be shadowed
             from moduleA import CONSTANT as duplicate
-            
+
             # Wildcard import - should not override existing names
             from moduleB import *
           `).rootNode,
@@ -256,10 +256,10 @@ describe("PythonItemResolver", () => {
           rootNode: pythonParser.parse(`
             # First wildcard import
             from moduleA import *
-            
+
             # Second wildcard import
             from moduleB import *
-            
+
             # Third explicit import - should override any previous wildcards
             from moduleA import foo as bar
           `).rootNode,
@@ -323,7 +323,7 @@ describe("PythonItemResolver", () => {
           path: "usePackage.py",
           rootNode: pythonParser.parse(`
             from package import *
-            
+
             # This should be available from the wildcard import
             deep_nested_func()
           `).rootNode,
@@ -338,7 +338,7 @@ describe("PythonItemResolver", () => {
             def public_func(): pass
             def another_func(): pass
             def _private_func(): pass
-            
+
             __all__ = ['public_func']
           `).rootNode,
         },
@@ -380,7 +380,7 @@ describe("PythonItemResolver", () => {
           path: "importPrivate.py",
           rootNode: pythonParser.parse(`
             from privateSymbols import *
-            
+
             # Should only import public symbols through wildcard
           `).rootNode,
         },
@@ -391,7 +391,7 @@ describe("PythonItemResolver", () => {
           path: "explicitPrivate.py",
           rootNode: pythonParser.parse(`
             from privateSymbols import _private_function, PUBLIC_CONSTANT
-            
+
             # Explicit imports can include private symbols
           `).rootNode,
         },
@@ -404,7 +404,7 @@ describe("PythonItemResolver", () => {
           rootNode: pythonParser.parse(`
             def regular_func(): pass
             def _private_func(): pass
-            
+
             # Explicitly export a private symbol through __all__
             __all__ = ['regular_func', '_private_func']
           `).rootNode,
@@ -416,7 +416,7 @@ describe("PythonItemResolver", () => {
           path: "importAllOverride.py",
           rootNode: pythonParser.parse(`
             from allOverride import *
-            
+
             # Should import both regular_func and _private_func because they're in __all__
           `).rootNode,
         },
@@ -500,7 +500,7 @@ describe("PythonItemResolver", () => {
           rootNode: pythonParser.parse(`
             from multi_wildcard1 import *
             from multi_wildcard2 import *
-            
+
             # Should have unique1, unique2, and common (from multi_wildcard1 since it comes first)
           `).rootNode,
         },

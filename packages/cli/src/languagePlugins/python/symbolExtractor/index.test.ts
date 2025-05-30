@@ -111,7 +111,7 @@ from utils import Helper
 class MyClass:
     def __init__(self):
         self.helper = Helper()
-    
+
     def do_something(self):
         return self.helper.help()
 
@@ -157,7 +157,7 @@ from utils import Helper
 class MyClass:
     def __init__(self):
         self.helper = Helper()
-    
+
     def do_something(self):
         return self.helper.help()
 `.trim(),
