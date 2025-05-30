@@ -3,7 +3,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../../shadcn/Tooltip.tsx";
+} from "../../../../shadcn/Tooltip.tsx";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -11,8 +11,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../shadcn/Dropdownmenu.tsx";
-import { Button } from "../../shadcn/Button.tsx";
+} from "../../../../shadcn/Dropdownmenu.tsx";
+import { Button } from "../../../../shadcn/Button.tsx";
 import { Funnel } from "lucide-react";
 
 export default function FiltersExtension(props: {

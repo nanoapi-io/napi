@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
-import { Button } from "../shadcn/Button.tsx";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../shadcn/Tooltip.tsx";
+import { Button } from "../../../shadcn/Button.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../../shadcn/Tooltip.tsx";
 import type { Core } from "cytoscape";
 import { Focus, Network, ZoomIn, ZoomOut } from "lucide-react";
 

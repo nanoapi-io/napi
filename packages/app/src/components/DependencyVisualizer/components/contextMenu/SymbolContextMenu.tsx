@@ -1,5 +1,8 @@
-import { Link } from "react-router";
-import type { FileDependencyManifest } from "@napi/shared";
+import { Link, useSearchParams } from "react-router";
+import type {
+  FileDependencyManifest,
+  SymbolDependencyManifest,
+} from "@napi/shared";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,18 +10,28 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../shadcn/Dropdownmenu.tsx";
+} from "../../../shadcn/Dropdownmenu.tsx";
 import { PanelRight, SearchCode } from "lucide-react";
 import DisplayNameWithTooltip from "../DisplayNameWithTootip.tsx";
 
-export default function FileContextMenu(props: {
+export default function SymbolContextMenu(props: {
   context: {
     position: { x: number; y: number };
     fileDependencyManifest: FileDependencyManifest;
+    symbolDependencyManifest: SymbolDependencyManifest;
   } | undefined;
   onClose: () => void;
-  onOpenDetails: (filePath: string) => void;
+  onOpenDetails: (filePath: string, symbolId: string) => void;
 }) {
+  const [searchParams] = useSearchParams();
+
+  function getToSymbolLink(filePath: string, symbolId: string) {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("fileId", filePath);
+    newSearchParams.set("instanceId", symbolId);
+    return `?${newSearchParams.toString()}`;
+  }
+
   return (
     <div
       className="absolute z-50"
@@ -36,8 +49,9 @@ export default function FileContextMenu(props: {
         <DropdownMenuContent>
           <DropdownMenuLabel>
             <DisplayNameWithTooltip
-              name={props.context?.fileDependencyManifest.filePath || ""}
+              name={`${props.context?.symbolDependencyManifest.id} (${props.context?.symbolDependencyManifest.type})`}
               maxChar={30}
+              truncateBefore
             />
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -46,6 +60,7 @@ export default function FileContextMenu(props: {
               props.context?.fileDependencyManifest &&
               props.onOpenDetails(
                 props.context?.fileDependencyManifest.filePath,
+                props.context?.symbolDependencyManifest.id,
               )}
           >
             <div className="flex items-center space-x-2">
@@ -55,15 +70,14 @@ export default function FileContextMenu(props: {
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link
-              to={`/audit/${
-                encodeURIComponent(
-                  props.context?.fileDependencyManifest.filePath || "",
-                )
-              }`}
+              to={getToSymbolLink(
+                props.context?.fileDependencyManifest.filePath || "",
+                props.context?.symbolDependencyManifest.id || "",
+              )}
             >
               <div className="flex items-center space-x-2">
                 <SearchCode />
-                <div>Inspect symbols</div>
+                <div>Inspect symbol</div>
               </div>
             </Link>
           </DropdownMenuItem>

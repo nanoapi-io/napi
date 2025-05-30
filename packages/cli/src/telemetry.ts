@@ -2,12 +2,11 @@ import { getOrCreateGlobalConfig } from "./config/globalConfig.ts";
 import denoJson from "../../../deno.json" with { type: "json" };
 
 export enum TelemetryEvents {
-  APP_START = "app_start",
+  CLI_START = "app_start",
   CLI_INIT_COMMAND = "cli_init_command",
-  CLI_AUDIT_VIEW_COMMAND = "cli_audit_view_command",
-
-  API_REQUEST_CONGIG = "api_request_config",
-  API_REQUEST_AUDIT_VIEW = "api_request_audit_view",
+  CLI_MANIFEST_GENERATE_COMMAND = "cli_manifest_generate_command",
+  CLI_MANIFEST_VIEW_COMMAND = "cli_manifest_view_command",
+  CLI_EXTRACT_COMMAND = "cli_extract_command",
 }
 
 export interface TelemetryEvent {

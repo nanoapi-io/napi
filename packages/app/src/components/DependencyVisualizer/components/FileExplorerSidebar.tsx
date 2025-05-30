@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Outlet, useParams } from "react-router";
-import {
-  getAuditManifest,
-  getDependencyManifest,
-  runExtraction,
-} from "../../service/api/index.ts";
+import { Link } from "react-router";
 import type {
   AuditManifest,
   DependencyManifest,
@@ -16,25 +11,16 @@ import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarProvider,
   SidebarRail,
-  SidebarTrigger,
-} from "../../components/shadcn/Sidebar.tsx";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "../../components/shadcn/Breadcrumb.tsx";
-import { Button } from "../../components/shadcn/Button.tsx";
-import { Skeleton } from "../../components/shadcn/Skeleton.tsx";
-import { Input } from "../../components/shadcn/Input.tsx";
+} from "../../shadcn/Sidebar.tsx";
+import { Button } from "../../shadcn/Button.tsx";
+import { Skeleton } from "../../shadcn/Skeleton.tsx";
+import { Input } from "../../shadcn/Input.tsx";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../../components/shadcn/Tooltip.tsx";
+} from "../../shadcn/Tooltip.tsx";
 import {
   ChevronDown,
   ChevronRight,
@@ -42,283 +28,25 @@ import {
   Code,
   File,
   Loader,
-  Moon,
   Pickaxe,
   ScanEye,
   SearchCode,
-  Sun,
 } from "lucide-react";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
-} from "../../components/shadcn/Resizable.tsx";
-import { ScrollArea, ScrollBar } from "../../components/shadcn/Scrollarea.tsx";
-import { useToast } from "../../components/shadcn/hooks/use-toast.tsx";
-import { useTheme } from "../../contexts/ThemeProvider.tsx";
+} from "../../shadcn/Resizable.tsx";
+import { ScrollArea, ScrollBar } from "../../shadcn/Scrollarea.tsx";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/shadcn/Card.tsx";
-import DisplayNameWithTooltip from "../../components/DisplayNameWithTootip.tsx";
+} from "../../shadcn/Card.tsx";
+import DisplayNameWithTooltip from "./DisplayNameWithTootip.tsx";
 
-export interface AuditContext {
-  busy: boolean;
-  dependencyManifest: DependencyManifest;
-  auditManifest: AuditManifest;
-  highlightedCytoscapeRef: {
-    filePath: string;
-    symbolId: string | undefined;
-  } | undefined;
-  onAddSymbolsForExtraction: (
-    filePath: string,
-    symbolIds: string[],
-  ) => void;
-}
-
-export default function BaseAuditPage() {
-  const { theme, setTheme } = useTheme();
-
-  const { file, instance } = useParams();
-
-  const { toast } = useToast();
-
-  const [busy, setBusy] = useState<boolean>(true);
-
-  const [auditManifest, setAuditManifest] = useState<AuditManifest>({});
-  const [dependencyManifest, setDependencyManifest] = useState<
-    DependencyManifest
-  >({});
-
-  const [highlightedCytoscapeRef, setHighlightedCytoscapeRef] = useState<
-    {
-      filePath: string;
-      symbolId: string | undefined;
-    } | undefined
-  >(undefined);
-
-  const [symbolsToExtract, setSymbolsToExtract] = useState<SymbolsToExtract>(
-    [],
-  );
-
-  async function extractSymbols() {
-    setBusy(true);
-    const extractionToast = toast({
-      title: "Extracting symbols",
-      description: "This may take a while...",
-    });
-    try {
-      await runExtraction(symbolsToExtract);
-      extractionToast.update({
-        id: extractionToast.id,
-        description: "Symbols extracted successfully",
-      });
-    } catch (_error) {
-      extractionToast.update({
-        id: extractionToast.id,
-        description: "Failed to extract symbols",
-        variant: "destructive",
-      });
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  useEffect(() => {
-    async function handleOnLoad() {
-      setBusy(true);
-      const allPromiseToast = toast({
-        title: "Loading manifests",
-        description: "This may take a while...",
-      });
-      try {
-        const dependencyManifestPromise = getDependencyManifest();
-        const auditManifestPromise = getAuditManifest();
-
-        const allPromise = Promise.all([
-          dependencyManifestPromise,
-          auditManifestPromise,
-        ]);
-
-        const [dependencyManifest, auditManifest] = await allPromise;
-
-        setDependencyManifest(dependencyManifest);
-        setAuditManifest(auditManifest);
-
-        allPromiseToast.update({
-          id: allPromiseToast.id,
-          description: "Manifests loaded successfully",
-        });
-      } catch (_error) {
-        allPromiseToast.update({
-          id: allPromiseToast.id,
-          description: "Failed to load manifests",
-          variant: "destructive",
-        });
-      } finally {
-        setBusy(false);
-      }
-    }
-
-    handleOnLoad();
-  }, []);
-
-  return (
-    <SidebarProvider
-      defaultOpen
-      className="h-screen w-screen"
-      style={{ "--sidebar-width": "30rem" } as React.CSSProperties}
-    >
-      <FileExplorerSidebar
-        busy={busy}
-        dependencyManifest={dependencyManifest}
-        auditManifest={auditManifest}
-        onHighlightInCytoscape={(node) => {
-          if (!node.fileId) return;
-          const newRef = {
-            filePath: node.fileId,
-            symbolId: node.symbolId,
-          };
-          // If the new ref is the same as the current ref, we un set it (unhighlight)
-          if (
-            highlightedCytoscapeRef?.filePath === newRef.filePath &&
-            highlightedCytoscapeRef?.symbolId === newRef.symbolId
-          ) {
-            setHighlightedCytoscapeRef(undefined);
-          } else {
-            setHighlightedCytoscapeRef(newRef);
-          }
-        }}
-        toDetails={(node: ExplorerNodeData) => {
-          if (node.symbolId && node.fileId) {
-            return `/audit/${encodeURIComponent(node.fileId)}/${
-              encodeURIComponent(node.symbolId)
-            }`;
-          } else if (node.fileId) {
-            return `/audit/${encodeURIComponent(node.fileId)}`;
-          } else {
-            return "/audit";
-          }
-        }}
-        symbolsToExtract={symbolsToExtract}
-        onUpdateSymbolsToExtract={setSymbolsToExtract}
-        onExtractSymbols={extractSymbols}
-      />
-      <div className="h-full w-full flex flex-col overflow-hidden">
-        <div className="flex items-center py-2 justify-between">
-          <div className="flex items-center gap-2 ml-2">
-            <SidebarTrigger />
-            <BreadcrumbNav
-              toProjectLink={() => "/audit"}
-              fileId={file}
-              toFileIdLink={(fileId) => `/audit/${encodeURIComponent(fileId)}`}
-              instanceId={instance}
-              toInstanceIdLink={(fileId, instanceId) =>
-                `/audit/${encodeURIComponent(fileId)}/${
-                  encodeURIComponent(instanceId)
-                }`}
-            />
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            className="mr-2"
-          >
-            {theme === "light" ? <Moon /> : <Sun />}
-          </Button>
-        </div>
-        <div className="grow w-full border-t">
-          <Outlet
-            context={{
-              busy,
-              dependencyManifest,
-              auditManifest,
-              highlightedCytoscapeRef,
-              onAddSymbolsForExtraction: (filePath, symbolIds) => {
-                const newSymbolsToExtract = [...symbolsToExtract];
-                for (const symbolId of symbolIds) {
-                  // Check if there's an existing entry for this file
-                  const existingIndex = newSymbolsToExtract.findIndex(
-                    (s) => s.filePath === filePath,
-                  );
-
-                  if (existingIndex === -1) {
-                    // No existing entry for this file, create a new one
-                    newSymbolsToExtract.push({ filePath, symbols: [symbolId] });
-                  } else {
-                    // File exists, check if symbol is already included
-                    if (
-                      !newSymbolsToExtract[existingIndex].symbols.includes(
-                        symbolId,
-                      )
-                    ) {
-                      newSymbolsToExtract[existingIndex].symbols.push(symbolId);
-                    }
-                  }
-                }
-                setSymbolsToExtract(newSymbolsToExtract);
-              },
-            } as AuditContext}
-          />
-        </div>
-      </div>
-    </SidebarProvider>
-  );
-}
-
-function BreadcrumbNav(props: {
-  toProjectLink: () => string;
-  fileId: string | undefined;
-  toFileIdLink: (fileId: string) => string;
-  instanceId: string | undefined;
-  toInstanceIdLink: (fileId: string, instanceId: string) => string;
-}) {
-  return (
-    <Breadcrumb>
-      <BreadcrumbList>
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link to={props.toProjectLink()}>Project</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        {props.fileId && (
-          <>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={props.toFileIdLink(props.fileId)}>
-                  {props.fileId}
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {props.instanceId && (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbLink asChild>
-                    <Link
-                      to={props.toInstanceIdLink(
-                        props.fileId,
-                        props.instanceId,
-                      )}
-                    >
-                      {props.instanceId}
-                    </Link>
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-              </>
-            )}
-          </>
-        )}
-      </BreadcrumbList>
-    </Breadcrumb>
-  );
-}
-
-interface ExplorerNodeData {
+export interface ExplorerNodeData {
   id: string;
   displayName: string;
   fileId?: string;
@@ -326,7 +54,7 @@ interface ExplorerNodeData {
   children: Map<string, ExplorerNodeData>;
 }
 
-function FileExplorerSidebar(props: {
+export function FileExplorerSidebar(props: {
   busy: boolean;
   dependencyManifest: DependencyManifest;
   auditManifest: AuditManifest;

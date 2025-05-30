@@ -1,26 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useOutletContext, useSearchParams } from "react-router";
-import Controls from "../../components/controls/Controls.tsx";
-import MetricsExtension from "../../components/controls/ControlExtensions/MetricsExtension.tsx";
-import FileContextMenu from "../../components/contextMenu/FileContextMenu.tsx";
-import type { AuditContext } from "./base.tsx";
-import FileDetailsPane from "../../components/detailsPanes/FileDetailsPane.tsx";
-import { ProjectDependencyVisualizer } from "../../helpers/cytoscape/projectDependencyVisualizer/index.ts";
+import { useNavigate, useSearchParams } from "react-router";
+import Controls from "../components/controls/Controls.tsx";
+import MetricsExtension from "../components/controls/ControlExtensions/MetricsExtension.tsx";
+import FileContextMenu from "../components/contextMenu/FileContextMenu.tsx";
+import type { VisualizerContext } from "../DependencyVisualizer.tsx";
+import FileDetailsPane from "../components/detailsPanes/FileDetailsPane.tsx";
+import { ProjectDependencyVisualizer } from "../cytoscape/projectDependencyVisualizer/index.ts";
 import type {
   FileAuditManifest,
   FileDependencyManifest,
   Metric,
 } from "@napi/shared";
-import { useTheme } from "../../contexts/ThemeProvider.tsx";
+import { useTheme } from "../../../contexts/ThemeProvider.tsx";
 
-export default function AuditPage() {
+export default function ProjectVisualizer(props: VisualizerContext) {
   const navigate = useNavigate();
 
   const { theme } = useTheme();
 
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const context = useOutletContext<AuditContext>();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState<boolean>(true);
@@ -62,8 +60,8 @@ export default function AuditPage() {
     setBusy(true);
     const projectDependencyVisualizer = new ProjectDependencyVisualizer(
       containerRef.current as HTMLElement,
-      context.dependencyManifest,
-      context.auditManifest,
+      props.dependencyManifest,
+      props.auditManifest,
       {
         theme,
         defaultMetric: metric,
@@ -73,14 +71,14 @@ export default function AuditPage() {
         }) => {
           setContextMenu({
             position: value.position,
-            fileDependencyManifest: context.dependencyManifest[value.filePath],
+            fileDependencyManifest: props.dependencyManifest[value.filePath],
           });
         },
         onAfterNodeDblClick: (filePath: string) => {
-          const urlEncodedFileName = encodeURIComponent(
-            filePath,
-          );
-          navigate(`/audit/${urlEncodedFileName}`);
+          const newSearchParams = new URLSearchParams(searchParams);
+          newSearchParams.set("fileId", filePath);
+          newSearchParams.delete("instanceId");
+          navigate(`?${newSearchParams.toString()}`);
         },
       },
     );
@@ -94,7 +92,7 @@ export default function AuditPage() {
       projectDependencyVisualizer?.cy.destroy();
       setProjectVisualizer(undefined);
     };
-  }, [context.dependencyManifest, context.auditManifest]);
+  }, [props.dependencyManifest, props.auditManifest]);
 
   // Hook to update the target metric in the graph
   useEffect(() => {
@@ -106,13 +104,13 @@ export default function AuditPage() {
   // Hook to update highlight node in the graph
   useEffect(() => {
     if (projectVisualizer) {
-      if (context.highlightedCytoscapeRef) {
-        projectVisualizer.highlightNode(context.highlightedCytoscapeRef);
+      if (props.highlightedCytoscapeRef) {
+        projectVisualizer.highlightNode(props.highlightedCytoscapeRef);
       } else {
         projectVisualizer.unhighlightNodes();
       }
     }
-  }, [context.highlightedCytoscapeRef]);
+  }, [props.highlightedCytoscapeRef]);
 
   // Hook to update the theme in the graph
   useEffect(() => {
@@ -130,12 +128,12 @@ export default function AuditPage() {
 
       <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
         <Controls
-          busy={context.busy || busy}
+          busy={props.busy || busy}
           cy={projectVisualizer?.cy}
           onLayout={() => projectVisualizer?.layoutGraph(projectVisualizer.cy)}
         >
           <MetricsExtension
-            busy={context.busy || busy}
+            busy={props.busy || busy}
             metricState={{
               metric,
               setMetric: handleMetricChange,
@@ -149,8 +147,8 @@ export default function AuditPage() {
         onClose={() => setContextMenu(undefined)}
         onOpenDetails={(filePath) => {
           setDetailsPane({
-            fileDependencyManifest: context.dependencyManifest[filePath],
-            fileAuditManifest: context.auditManifest[filePath],
+            fileDependencyManifest: props.dependencyManifest[filePath],
+            fileAuditManifest: props.auditManifest[filePath],
           });
         }}
       />
@@ -159,7 +157,7 @@ export default function AuditPage() {
         context={detailsPane}
         onClose={() => setDetailsPane(undefined)}
         onAddSymbolsForExtraction={(filePath, symbolIds) => {
-          context.onAddSymbolsForExtraction(filePath, symbolIds);
+          props.onAddSymbolsForExtraction(filePath, symbolIds);
         }}
       />
     </div>

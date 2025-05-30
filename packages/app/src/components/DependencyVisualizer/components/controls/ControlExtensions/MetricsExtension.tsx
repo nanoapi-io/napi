@@ -12,14 +12,14 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../../shadcn/Tooltip.tsx";
-import { Button } from "../../shadcn/Button.tsx";
+} from "../../../../shadcn/Tooltip.tsx";
+import { Button } from "../../../../shadcn/Button.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../../shadcn/Dropdownmenu.tsx";
+} from "../../../../shadcn/Dropdownmenu.tsx";
 
 // Extension for the controls in the project view
 export default function MetricsExtension(props: {

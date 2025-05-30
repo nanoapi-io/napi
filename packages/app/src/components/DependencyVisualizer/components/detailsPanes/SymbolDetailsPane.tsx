@@ -10,15 +10,20 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../shadcn/Sheet.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../shadcn/Card.tsx";
+} from "../../../shadcn/Sheet.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../shadcn/Card.tsx";
 import { Code, File, Pickaxe, SearchCode } from "lucide-react";
-import { ScrollArea } from "../shadcn/Scrollarea.tsx";
-import { Button } from "../shadcn/Button.tsx";
-import { Link } from "react-router";
+import { ScrollArea } from "../../../shadcn/Scrollarea.tsx";
+import { Button } from "../../../shadcn/Button.tsx";
+import { Link, useSearchParams } from "react-router";
 import DisplayNameWithTooltip from "../DisplayNameWithTootip.tsx";
-import Metrics from "./metrics.tsx";
-import AlertBadge from "./alertBadge.tsx";
+import Metrics from "./Metrics.tsx";
+import AlertBadge from "./AlertBadge.tsx";
 
 export default function SymbolDetailsPane(props: {
   context: {
@@ -30,6 +35,8 @@ export default function SymbolDetailsPane(props: {
   onClose: () => void;
   onAddSymbolsForExtraction: (filePath: string, symbolIds: string[]) => void;
 }) {
+  const [searchParams] = useSearchParams();
+
   function markSymbolForExtraction(symbolId: string) {
     if (!props.context?.fileDependencyManifest) {
       return;
@@ -39,6 +46,13 @@ export default function SymbolDetailsPane(props: {
       props.context.fileDependencyManifest.filePath,
       [symbolId],
     );
+  }
+
+  function getToSymbolLink(filePath: string, symbolId: string) {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("fileId", filePath);
+    newSearchParams.set("instanceId", symbolId);
+    return `?${newSearchParams.toString()}`;
   }
 
   return (
@@ -74,15 +88,10 @@ export default function SymbolDetailsPane(props: {
               onClick={props.onClose}
             >
               <Link
-                to={`/audit/${
-                  encodeURIComponent(
-                    props.context?.fileDependencyManifest.filePath || "",
-                  )
-                }/${
-                  encodeURIComponent(
-                    props.context?.symbolDependencyManifest.id || "",
-                  )
-                }`}
+                to={getToSymbolLink(
+                  props.context?.fileDependencyManifest.filePath || "",
+                  props.context?.symbolDependencyManifest.id || "",
+                )}
               >
                 <SearchCode />
                 View graph for this symbol
@@ -107,7 +116,7 @@ export default function SymbolDetailsPane(props: {
               onClick={props.onClose}
             >
               <Link
-                to={`/audit/${
+                to={`/${
                   encodeURIComponent(
                     props.context?.fileDependencyManifest.filePath || "",
                   )

@@ -1,34 +1,30 @@
 import { useEffect, useRef, useState } from "react";
-import Controls from "../../../../components/controls/Controls.tsx";
-import GraphDepthExtension from "../../../../components/controls/ControlExtensions/GraphDepthExtension.tsx";
-import SymbolContextMenu from "../../../../components/contextMenu/SymbolContextMenu.tsx";
-import {
-  useNavigate,
-  useOutletContext,
-  useParams,
-  useSearchParams,
-} from "react-router";
-import type { AuditContext } from "../../base.tsx";
-import SymbolDetailsPane from "../../../../components/detailsPanes/SymbolDetailsPane.tsx";
-import { useTheme } from "../../../../contexts/ThemeProvider.tsx";
+import Controls from "../components/controls/Controls.tsx";
+import GraphDepthExtension from "../components/controls/ControlExtensions/GraphDepthExtension.tsx";
+import SymbolContextMenu from "../components/contextMenu/SymbolContextMenu.tsx";
+import { useNavigate, useSearchParams } from "react-router";
+import type { VisualizerContext } from "../DependencyVisualizer.tsx";
+import SymbolDetailsPane from "../components/detailsPanes/SymbolDetailsPane.tsx";
+import { useTheme } from "../../../contexts/ThemeProvider.tsx";
 import type {
   FileAuditManifest,
   FileDependencyManifest,
   SymbolAuditManifest,
   SymbolDependencyManifest,
 } from "@napi/shared";
-import { SymbolDependencyVisualizer } from "../../../../helpers/cytoscape/symbolDependencyVisualizer/index.ts";
+import { SymbolDependencyVisualizer } from "../cytoscape/symbolDependencyVisualizer/index.ts";
 
-export default function AuditInstancePage() {
+export default function SymbolVisualizer(
+  props: VisualizerContext & {
+    fileId: string;
+    instanceId: string;
+  },
+) {
   const navigate = useNavigate();
 
   const { theme } = useTheme();
 
-  const params = useParams<{ file: string; instance: string }>();
-
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const context = useOutletContext<AuditContext>();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState<boolean>(true);
@@ -81,18 +77,18 @@ export default function AuditInstancePage() {
   useEffect(() => {
     setBusy(true);
 
-    if (!params.file || !params.instance) {
+    if (!props.fileId || !props.instanceId) {
       return;
     }
 
     const symbolVisualizer = new SymbolDependencyVisualizer(
       containerRef.current as HTMLElement,
-      params.file,
-      params.instance,
+      props.fileId,
+      props.instanceId,
       dependencyDepth,
       dependentDepth,
-      context.dependencyManifest,
-      context.auditManifest,
+      props.dependencyManifest,
+      props.auditManifest,
       {
         theme: theme,
         onAfterNodeRightClick: (value: {
@@ -101,7 +97,7 @@ export default function AuditInstancePage() {
           symbolId: string;
         }) => {
           const fileDependencyManifest =
-            context.dependencyManifest[value.filePath];
+            props.dependencyManifest[value.filePath];
           const symbolDependencyManifest =
             fileDependencyManifest.symbols[value.symbolId];
           setContextMenu({
@@ -118,7 +114,7 @@ export default function AuditInstancePage() {
             symbolId,
           );
           const urlEncodedSymbolName =
-            `/audit/${urlEncodedFileName}/${urlEncodedSymbolId}`;
+            `/${urlEncodedFileName}/${urlEncodedSymbolId}`;
 
           navigate(urlEncodedSymbolName);
         },
@@ -135,23 +131,23 @@ export default function AuditInstancePage() {
       setSymbolVisualizer(undefined);
     };
   }, [
-    context.dependencyManifest,
-    context.auditManifest,
-    params.file,
-    params.instance,
+    props.dependencyManifest,
+    props.auditManifest,
+    props.fileId,
+    props.instanceId,
     dependencyDepth,
     dependentDepth,
   ]);
 
   useEffect(() => {
     if (symbolVisualizer) {
-      if (context.highlightedCytoscapeRef) {
-        symbolVisualizer.highlightNode(context.highlightedCytoscapeRef);
+      if (props.highlightedCytoscapeRef) {
+        symbolVisualizer.highlightNode(props.highlightedCytoscapeRef);
       } else {
         symbolVisualizer.unhighlightNodes();
       }
     }
-  }, [context.highlightedCytoscapeRef]);
+  }, [props.highlightedCytoscapeRef]);
 
   // Hook to update the theme in the graph
   useEffect(() => {
@@ -169,12 +165,12 @@ export default function AuditInstancePage() {
 
       <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
         <Controls
-          busy={context.busy || busy}
+          busy={props.busy || busy}
           cy={symbolVisualizer?.cy}
           onLayout={() => symbolVisualizer?.layoutGraph(symbolVisualizer.cy)}
         >
           <GraphDepthExtension
-            busy={context.busy || busy}
+            busy={props.busy || busy}
             dependencyState={{
               depth: dependencyDepth,
               setDepth: handleDependencyDepthChange,
@@ -191,10 +187,10 @@ export default function AuditInstancePage() {
         context={contextMenu}
         onClose={() => setContextMenu(undefined)}
         onOpenDetails={(filePath, symbolId) => {
-          const fileDependencyManifest = context.dependencyManifest[filePath];
+          const fileDependencyManifest = props.dependencyManifest[filePath];
           const symbolDependencyManifest =
             fileDependencyManifest.symbols[symbolId];
-          const fileAuditManifest = context.auditManifest[filePath];
+          const fileAuditManifest = props.auditManifest[filePath];
           const symbolAuditManifest = fileAuditManifest.symbols[symbolId];
           setDetailsPane({
             fileDependencyManifest,
@@ -209,7 +205,7 @@ export default function AuditInstancePage() {
         context={detailsPane}
         onClose={() => setDetailsPane(undefined)}
         onAddSymbolsForExtraction={(filePath, symbolIds) => {
-          context.onAddSymbolsForExtraction(filePath, symbolIds);
+          props.onAddSymbolsForExtraction(filePath, symbolIds);
         }}
       />
     </div>

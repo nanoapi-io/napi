@@ -1,4 +1,8 @@
-import { Tooltip, TooltipContent, TooltipTrigger } from "./shadcn/Tooltip.tsx";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "../../shadcn/Tooltip.tsx";
 
 export default function DisplayNameWithTooltip(props: {
   name: string;

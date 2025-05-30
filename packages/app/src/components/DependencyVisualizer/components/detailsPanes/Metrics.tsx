@@ -11,7 +11,7 @@ import {
   type SymbolAuditManifest,
   type SymbolDependencyManifest,
 } from "@napi/shared";
-import { Alert, AlertDescription } from "../shadcn/Alert.tsx";
+import { Alert, AlertDescription } from "../../../shadcn/Alert.tsx";
 
 export default function Metrics(props: {
   dependencyManifest:
