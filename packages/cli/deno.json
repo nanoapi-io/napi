@@ -9,6 +9,7 @@
     "@types/yargs": "npm:@types/yargs@^17.0.33",
     "glob": "npm:glob@^11.0.2",
     "tree-sitter": "npm:tree-sitter@^0.22.4",
+    "tree-sitter-c": "npm:tree-sitter-c@^0.24.1",
     "tree-sitter-c-sharp": "npm:tree-sitter-c-sharp@^0.23.1",
     "tree-sitter-python": "npm:tree-sitter-python@^0.23.6",
     "yargs": "npm:yargs@^17.7.2",
