@@ -1,13 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  useNavigate,
-  useOutletContext,
-  useParams,
-  useSearchParams,
-} from "react-router";
-import Controls from "../../../components/controls/Controls.tsx";
-import type { AuditContext } from "../base.tsx";
-import { FileDependencyVisualizer } from "../../../helpers/cytoscape/fileDependencyVisualizer/index.ts";
+import { useNavigate, useSearchParams } from "react-router";
+import Controls from "../components/controls/Controls.tsx";
+import type { VisualizerContext } from "../DependencyVisualizer.tsx";
+import { FileDependencyVisualizer } from "../cytoscape/fileDependencyVisualizer/index.ts";
 import type {
   FileAuditManifest,
   FileDependencyManifest,
@@ -15,22 +10,22 @@ import type {
   SymbolAuditManifest,
   SymbolDependencyManifest,
 } from "@napi/shared";
-import MetricsExtension from "../../../components/controls/ControlExtensions/MetricsExtension.tsx";
+import MetricsExtension from "../components/controls/ControlExtensions/MetricsExtension.tsx";
 import { useTheme } from "../../../contexts/ThemeProvider.tsx";
-import FiltersExtension from "../../../components/controls/ControlExtensions/FiltersExtension.tsx";
-import SymbolContextMenu from "../../../components/contextMenu/SymbolContextMenu.tsx";
-import SymbolDetailsPane from "../../../components/detailsPanes/SymbolDetailsPane.tsx";
+import FiltersExtension from "../components/controls/ControlExtensions/FiltersExtension.tsx";
+import SymbolContextMenu from "../components/contextMenu/SymbolContextMenu.tsx";
+import SymbolDetailsPane from "../components/detailsPanes/SymbolDetailsPane.tsx";
 
-export default function AuditFilePage() {
+export default function FileVisualizer(
+  props: VisualizerContext & {
+    fileId: string;
+  },
+) {
   const navigate = useNavigate();
 
   const { theme } = useTheme();
 
-  const params = useParams<{ file: string }>();
-
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const context = useOutletContext<AuditContext>();
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [busy, setBusy] = useState<boolean>(true);
@@ -73,16 +68,11 @@ export default function AuditFilePage() {
   // On mount useEffect
   useEffect(() => {
     setBusy(true);
-
-    if (!params.file) {
-      return;
-    }
-
     const fileDependencyVisualizer = new FileDependencyVisualizer(
       containerRef.current as HTMLElement,
-      params.file,
-      context.dependencyManifest,
-      context.auditManifest,
+      props.fileId,
+      props.dependencyManifest,
+      props.auditManifest,
       {
         theme: theme,
         defaultMetric: metric,
@@ -92,7 +82,7 @@ export default function AuditFilePage() {
           symbolId: string;
         }) => {
           const fileDependencyManifest =
-            context.dependencyManifest[value.filePath];
+            props.dependencyManifest[value.filePath];
           const symbolDependencyManifest =
             fileDependencyManifest.symbols[value.symbolId];
           setContextMenu({
@@ -102,16 +92,10 @@ export default function AuditFilePage() {
           });
         },
         onAfterNodeDblClick: (filePath: string, symbolId: string) => {
-          const urlEncodedFileName = encodeURIComponent(
-            filePath,
-          );
-          const urlEncodedSymbolId = encodeURIComponent(
-            symbolId,
-          );
-          const urlEncodedSymbolName =
-            `/audit/${urlEncodedFileName}/${urlEncodedSymbolId}`;
-
-          navigate(urlEncodedSymbolName);
+          const newSearchParams = new URLSearchParams(searchParams);
+          newSearchParams.set("fileId", filePath);
+          newSearchParams.set("instanceId", symbolId);
+          navigate(`?${newSearchParams.toString()}`);
         },
       },
     );
@@ -125,7 +109,7 @@ export default function AuditFilePage() {
       fileDependencyVisualizer?.cy.destroy();
       setFileVisualizer(undefined);
     };
-  }, [context.dependencyManifest, context.auditManifest, params.file]);
+  }, [props.dependencyManifest, props.auditManifest, props.fileId]);
 
   // Hook to update the target metric in the graph
   useEffect(() => {
@@ -137,13 +121,13 @@ export default function AuditFilePage() {
   // Hook to update highlight node in the graph
   useEffect(() => {
     if (fileVisualizer) {
-      if (context.highlightedCytoscapeRef) {
-        fileVisualizer.highlightNode(context.highlightedCytoscapeRef);
+      if (props.highlightedCytoscapeRef) {
+        fileVisualizer.highlightNode(props.highlightedCytoscapeRef);
       } else {
         fileVisualizer.unhighlightNodes();
       }
     }
-  }, [context.highlightedCytoscapeRef]);
+  }, [props.highlightedCytoscapeRef]);
 
   // Hook to update the theme in the graph
   useEffect(() => {
@@ -187,13 +171,13 @@ export default function AuditFilePage() {
 
       <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
         <Controls
-          busy={context.busy || busy}
+          busy={props.busy || busy}
           cy={fileVisualizer?.cy}
           onLayout={() => fileVisualizer?.layoutGraph(fileVisualizer.cy)}
         >
           <FiltersExtension
             busy={false}
-            currentFileName={params.file}
+            currentFileName={props.fileId}
             onFilterChange={handleFilterChange}
           />
           <MetricsExtension
@@ -210,10 +194,10 @@ export default function AuditFilePage() {
         context={contextMenu}
         onClose={() => setContextMenu(undefined)}
         onOpenDetails={(filePath, symbolId) => {
-          const fileDependencyManifest = context.dependencyManifest[filePath];
+          const fileDependencyManifest = props.dependencyManifest[filePath];
           const symbolDependencyManifest =
             fileDependencyManifest.symbols[symbolId];
-          const fileAuditManifest = context.auditManifest[filePath];
+          const fileAuditManifest = props.auditManifest[filePath];
           const symbolAuditManifest = fileAuditManifest.symbols[symbolId];
           setDetailsPane({
             fileDependencyManifest,
@@ -228,7 +212,7 @@ export default function AuditFilePage() {
         context={detailsPane}
         onClose={() => setDetailsPane(undefined)}
         onAddSymbolsForExtraction={(filePath, symbolIds) => {
-          context.onAddSymbolsForExtraction(filePath, symbolIds);
+          props.onAddSymbolsForExtraction(filePath, symbolIds);
         }}
       />
     </div>

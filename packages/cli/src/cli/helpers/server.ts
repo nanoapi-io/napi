@@ -3,6 +3,10 @@ import type { localConfigSchema } from "../../config/localConfig.ts";
 import { getApi } from "../../api/index.ts";
 import { getFrontendApp } from "../../frontend/index.ts";
 import { Application } from "@oak/oak/application";
+import {
+  dependencyManifestExists,
+} from "../../manifest/dependencyManifest/index.ts";
+import type { DependencyManifest } from "@napi/shared";
 
 function findAvailablePort(port: number): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -36,30 +40,73 @@ function openInBrowser(url: string) {
     args = [url];
   }
 
-  new Deno.Command(command, { args }).spawn();
+  try {
+    new Deno.Command(command, { args }).spawn();
+    console.info("🌐 Opening browser...");
+  } catch (error) {
+    console.warn(
+      `⚠️  Could not open browser automatically: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+    console.info(`   Please open ${url} manually in your browser`);
+  }
 }
 
 export async function runServer(
   workdir: string,
   napiConfig: z.infer<typeof localConfigSchema>,
-  route: string,
+  dependencyManifest: DependencyManifest,
 ) {
-  const app = new Application();
-  const api = getApi(workdir, napiConfig);
-  app.use(api.routes());
+  try {
+    console.info("🔧 Setting up web server...");
 
-  // Keep last to handle SPA routing
-  const frontendApp = getFrontendApp();
-  app.use(frontendApp.routes());
+    const app = new Application();
 
-  const port = await findAvailablePort(3000);
+    const manifestExists = dependencyManifestExists(workdir, napiConfig);
 
-  const url = `http://localhost:${port}/${route}`;
-  console.info("Press Ctrl+C to stop the server");
-  console.info(`Server started at ${url}`);
-  if (Deno.env.get("NODE_ENV") !== "development") {
-    openInBrowser(url);
+    if (!manifestExists) {
+      console.error("❌ No dependency manifest found");
+      console.error("   Run `napi manifest generate` first.");
+      Deno.exit(1);
+    }
+
+    console.info("📡 Configuring API routes...");
+    const api = getApi(workdir, napiConfig, dependencyManifest);
+    app.use(api.routes());
+
+    console.info("🎨 Setting up frontend application...");
+    // Keep last to handle SPA routing
+    const frontendApp = getFrontendApp();
+    app.use(frontendApp.routes());
+
+    console.info("🔍 Finding available port...");
+    const port = await findAvailablePort(3000);
+
+    const url = `http://localhost:${port}`;
+    console.info("");
+    console.info("🎉 Server ready!");
+    console.info(`📍 URL: ${url}`);
+    console.info("🛑 Press Ctrl+C to stop the server");
+    console.info("");
+
+    if (Deno.env.get("NODE_ENV") !== "development") {
+      openInBrowser(url);
+    } else {
+      console.info("🔧 Development mode: Browser will not open automatically");
+    }
+
+    console.info("⚡ Starting server...");
+    app.listen({ port });
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ Failed to start server");
+    console.error(`   Error: ${errorMessage}`);
+    console.error("");
+    console.error("💡 Common solutions:");
+    console.error("   • Check if another process is using the port");
+    console.error("   • Verify you have permission to start a server");
+    console.error("   • Try restarting your terminal");
+    Deno.exit(1);
   }
-
-  app.listen({ port });
 }

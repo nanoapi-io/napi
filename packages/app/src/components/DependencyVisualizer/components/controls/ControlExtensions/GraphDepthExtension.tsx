@@ -3,17 +3,17 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "../../shadcn/Tooltip.tsx";
+} from "../../../../shadcn/Tooltip.tsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "../../shadcn/Dropdownmenu.tsx";
-import { Button } from "../../shadcn/Button.tsx";
+} from "../../../../shadcn/Dropdownmenu.tsx";
+import { Button } from "../../../../shadcn/Button.tsx";
 import { Settings2 } from "lucide-react";
-import { Slider } from "../../shadcn/Slider.tsx";
-import { Input } from "../../shadcn/Input.tsx";
-import { Label } from "../../shadcn/Label.tsx";
+import { Slider } from "../../../../shadcn/Slider.tsx";
+import { Input } from "../../../../shadcn/Input.tsx";
+import { Label } from "../../../../shadcn/Label.tsx";
 
 export default function GraphDepthExtension(props: {
   busy: boolean;

@@ -1,10 +1,11 @@
+import type { ArgumentsCamelCase } from "yargs";
 import localPackageJson from "../../../../../deno.json" with { type: "json" };
 
 export function getCurrentVersion() {
   return localPackageJson.version;
 }
 
-export async function checkVersionMiddleware() {
+export async function checkVersionMiddleware(_args: ArgumentsCamelCase) {
   const currentVersion = getCurrentVersion();
 
   try {

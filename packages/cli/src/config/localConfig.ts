@@ -59,6 +59,15 @@ export const localConfigSchema = z.object({
 
 const napiConfigFileName = ".napirc";
 
+export function isConfigExistInWorkdir(workdir: string) {
+  try {
+    const napircPath = join(workdir, napiConfigFileName);
+    return Deno.statSync(napircPath).isFile;
+  } catch {
+    return false;
+  }
+}
+
 export function getConfigFromWorkDir(workdir: string) {
   const napircPath = join(workdir, napiConfigFileName);
 

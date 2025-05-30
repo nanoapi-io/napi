@@ -14,3 +14,4 @@ auditResponse.json
 .extracted/
 napi-output/
 coverage/
+.vite

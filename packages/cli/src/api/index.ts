@@ -6,15 +6,16 @@ import {
   writeFilesToDirectory,
 } from "../helpers/fileSystem/index.ts";
 import { getExtensionsForLanguage } from "../helpers/fileSystem/index.ts";
-import { generateDependencyManifest } from "../manifest/dependencyManifest/index.ts";
 import { generateAuditManifest } from "../manifest/auditManifest/index.ts";
 import { extractSymbols } from "../symbolExtractor/index.ts";
 import { join } from "@std/path";
 import { extractSymbolPayloadSchema } from "./types.ts";
+import type { DependencyManifest } from "@napi/shared";
 
 export function getApi(
   workDir: string,
   napiConfig: z.infer<typeof localConfigSchema>,
+  dependencyManifest: DependencyManifest,
 ) {
   const fileExtensions = getExtensionsForLanguage(napiConfig.language);
 
@@ -25,7 +26,6 @@ export function getApi(
     logMessages: true,
   });
 
-  const dependencyManifest = generateDependencyManifest(files, napiConfig);
   const auditManifest = generateAuditManifest(dependencyManifest, napiConfig);
 
   const api = new Router();
@@ -71,7 +71,12 @@ export function getApi(
       napiConfig,
     );
 
-    const outputDir = join(workDir, napiConfig.outDir);
+    const unixTimestamp = Date.now();
+    const outputDir = join(
+      workDir,
+      napiConfig.outDir,
+      `extracted-${unixTimestamp}`,
+    );
     writeFilesToDirectory(extractedFileMap, outputDir);
 
     ctx.response.status = 200;

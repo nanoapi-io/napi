@@ -5,15 +5,20 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "../shadcn/Sheet.tsx";
-import { Card, CardContent, CardHeader, CardTitle } from "../shadcn/Card.tsx";
+} from "../../../shadcn/Sheet.tsx";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../../shadcn/Card.tsx";
 import { Code, File, Pickaxe, SearchCode } from "lucide-react";
-import { ScrollArea } from "../shadcn/Scrollarea.tsx";
-import { Button } from "../shadcn/Button.tsx";
-import { Link } from "react-router";
+import { ScrollArea } from "../../../shadcn/Scrollarea.tsx";
+import { Button } from "../../../shadcn/Button.tsx";
+import { Link, useSearchParams } from "react-router";
 import DisplayNameWithTooltip from "../DisplayNameWithTootip.tsx";
-import Metrics from "./metrics.tsx";
-import AlertBadge from "./alertBadge.tsx";
+import Metrics from "./Metrics.tsx";
+import AlertBadge from "./AlertBadge.tsx";
 
 export default function FileDetailsPane(props: {
   context: {
@@ -23,6 +28,8 @@ export default function FileDetailsPane(props: {
   onClose: () => void;
   onAddSymbolsForExtraction: (filePath: string, symbolIds: string[]) => void;
 }) {
+  const [searchParams] = useSearchParams();
+
   function markAllSymbolsForExtraction() {
     if (!props.context?.fileDependencyManifest) {
       return;
@@ -43,6 +50,13 @@ export default function FileDetailsPane(props: {
       props.context.fileDependencyManifest.filePath,
       [symbolId],
     );
+  }
+
+  function getToFileLink(filePath: string) {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set("fileId", filePath);
+    newSearchParams.delete("instanceId");
+    return `?${newSearchParams.toString()}`;
   }
 
   return (
@@ -70,11 +84,9 @@ export default function FileDetailsPane(props: {
               onClick={props.onClose}
             >
               <Link
-                to={`/audit/${
-                  encodeURIComponent(
-                    props.context?.fileDependencyManifest.filePath || "",
-                  )
-                }`}
+                to={getToFileLink(
+                  props.context?.fileDependencyManifest.filePath || "",
+                )}
               >
                 <SearchCode />
                 View graph for this file
@@ -161,7 +173,7 @@ export default function FileDetailsPane(props: {
                     </CardTitle>
                     <Button asChild variant="secondary" size="sm">
                       <Link
-                        to={`/audit/${
+                        to={`/${
                           encodeURIComponent(
                             props.context?.fileDependencyManifest.filePath ||
                               "",
