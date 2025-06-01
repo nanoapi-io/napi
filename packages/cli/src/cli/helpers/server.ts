@@ -72,7 +72,7 @@ export async function runServer(
     }
 
     console.info("📡 Configuring API routes...");
-    const api = getApi(workdir, napiConfig, dependencyManifest);
+    const api = getApi(napiConfig, dependencyManifest);
     app.use(api.routes());
 
     console.info("🎨 Setting up frontend application...");

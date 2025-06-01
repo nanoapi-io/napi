@@ -211,9 +211,6 @@ export default function FileVisualizer(
       <SymbolDetailsPane
         context={detailsPane}
         onClose={() => setDetailsPane(undefined)}
-        onAddSymbolsForExtraction={(filePath, symbolIds) => {
-          props.onAddSymbolsForExtraction(filePath, symbolIds);
-        }}
       />
     </div>
   );

@@ -12,6 +12,7 @@ import type {
   Metric,
 } from "@napi/shared";
 import { useTheme } from "../../../contexts/ThemeProvider.tsx";
+import { Button } from "../../shadcn/Button.tsx";
 
 export default function ProjectVisualizer(props: VisualizerContext) {
   const navigate = useNavigate();
@@ -119,6 +120,8 @@ export default function ProjectVisualizer(props: VisualizerContext) {
     }
   }, [theme]);
 
+  const [sheetOpen, setSheetOpen] = useState<boolean>(false);
+
   return (
     <div className="relative w-full h-full">
       {/* This is the container for Cytoscape */}
@@ -139,8 +142,16 @@ export default function ProjectVisualizer(props: VisualizerContext) {
               setMetric: handleMetricChange,
             }}
           />
+          <Button variant="secondary" onClick={() => setSheetOpen(!sheetOpen)}>
+            {sheetOpen ? "Close" : "Open"}
+          </Button>
         </Controls>
       </div>
+
+      <FileDetailsPane
+        context={detailsPane}
+        onClose={() => setDetailsPane(undefined)}
+      />
 
       <FileContextMenu
         context={contextMenu}
@@ -150,14 +161,6 @@ export default function ProjectVisualizer(props: VisualizerContext) {
             fileDependencyManifest: props.dependencyManifest[filePath],
             fileAuditManifest: props.auditManifest[filePath],
           });
-        }}
-      />
-
-      <FileDetailsPane
-        context={detailsPane}
-        onClose={() => setDetailsPane(undefined)}
-        onAddSymbolsForExtraction={(filePath, symbolIds) => {
-          props.onAddSymbolsForExtraction(filePath, symbolIds);
         }}
       />
     </div>
