@@ -51,11 +51,13 @@ export default function FileContextMenu(props: {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() =>
+            onClick={() => {
               props.context?.fileDependencyManifest &&
-              props.onOpenDetails(
-                props.context?.fileDependencyManifest.filePath,
-              )}
+                props.onOpenDetails(
+                  props.context?.fileDependencyManifest.filePath,
+                );
+              props.onClose();
+            }}
           >
             <div className="flex items-center space-x-2">
               <PanelRight />

@@ -24,6 +24,7 @@ import { Link, useSearchParams } from "react-router";
 import DisplayNameWithTooltip from "../DisplayNameWithTootip.tsx";
 import Metrics from "./Metrics.tsx";
 import AlertBadge from "./AlertBadge.tsx";
+import SymbolExtractionDialog from "../SymbolExtractionDialog.tsx";
 
 export default function SymbolDetailsPane(props: {
   context: {
@@ -33,20 +34,8 @@ export default function SymbolDetailsPane(props: {
     symbolAuditManifest: SymbolAuditManifest;
   } | undefined;
   onClose: () => void;
-  onAddSymbolsForExtraction: (filePath: string, symbolIds: string[]) => void;
 }) {
   const [searchParams] = useSearchParams();
-
-  function markSymbolForExtraction(symbolId: string) {
-    if (!props.context?.fileDependencyManifest) {
-      return;
-    }
-
-    props.onAddSymbolsForExtraction(
-      props.context.fileDependencyManifest.filePath,
-      [symbolId],
-    );
-  }
 
   function getToSymbolLink(filePath: string, symbolId: string) {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -62,7 +51,10 @@ export default function SymbolDetailsPane(props: {
         onOpenChange={() => props.onClose()}
       >
         <SheetTrigger />
-        <SheetContent className="flex flex-col space-y-2">
+        <SheetContent
+          className="flex flex-col space-y-2"
+          aria-describedby={undefined}
+        >
           <SheetHeader>
             <SheetTitle className="flex flex-col space-y-2">
               <div className="flex items-center space-x-2">
@@ -97,18 +89,15 @@ export default function SymbolDetailsPane(props: {
                 View graph for this symbol
               </Link>
             </Button>
-            <Button
-              onClick={() =>
-                props.context?.symbolDependencyManifest.id &&
-                markSymbolForExtraction(
-                  props.context?.symbolDependencyManifest.id,
-                )}
-              variant="secondary"
-              size="sm"
+            <SymbolExtractionDialog
+              filePath={props.context?.fileDependencyManifest.filePath || ""}
+              symbolIds={[props.context?.symbolDependencyManifest.id || ""]}
             >
-              <Pickaxe />
-              Mark symbol for extraction
-            </Button>
+              <Button variant="secondary" size="sm">
+                <Pickaxe />
+                Extract symbol via CLI
+              </Button>
+            </SymbolExtractionDialog>
             <Button
               asChild
               variant="secondary"

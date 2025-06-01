@@ -142,6 +142,11 @@ export default function ProjectVisualizer(props: VisualizerContext) {
         </Controls>
       </div>
 
+      <FileDetailsPane
+        context={detailsPane}
+        onClose={() => setDetailsPane(undefined)}
+      />
+
       <FileContextMenu
         context={contextMenu}
         onClose={() => setContextMenu(undefined)}
@@ -150,14 +155,6 @@ export default function ProjectVisualizer(props: VisualizerContext) {
             fileDependencyManifest: props.dependencyManifest[filePath],
             fileAuditManifest: props.auditManifest[filePath],
           });
-        }}
-      />
-
-      <FileDetailsPane
-        context={detailsPane}
-        onClose={() => setDetailsPane(undefined)}
-        onAddSymbolsForExtraction={(filePath, symbolIds) => {
-          props.onAddSymbolsForExtraction(filePath, symbolIds);
         }}
       />
     </div>

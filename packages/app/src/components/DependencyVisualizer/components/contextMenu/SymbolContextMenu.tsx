@@ -56,12 +56,14 @@ export default function SymbolContextMenu(props: {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() =>
+            onClick={() => {
               props.context?.fileDependencyManifest &&
-              props.onOpenDetails(
-                props.context?.fileDependencyManifest.filePath,
-                props.context?.symbolDependencyManifest.id,
-              )}
+                props.onOpenDetails(
+                  props.context?.fileDependencyManifest.filePath,
+                  props.context?.symbolDependencyManifest.id,
+                );
+              props.onClose();
+            }}
           >
             <div className="flex items-center space-x-2">
               <PanelRight />

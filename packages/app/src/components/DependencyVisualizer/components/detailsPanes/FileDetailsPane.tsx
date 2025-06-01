@@ -4,7 +4,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "../../../shadcn/Sheet.tsx";
 import {
   Card,
@@ -19,6 +18,7 @@ import { Link, useSearchParams } from "react-router";
 import DisplayNameWithTooltip from "../DisplayNameWithTootip.tsx";
 import Metrics from "./Metrics.tsx";
 import AlertBadge from "./AlertBadge.tsx";
+import SymbolExtractionDialog from "../SymbolExtractionDialog.tsx";
 
 export default function FileDetailsPane(props: {
   context: {
@@ -26,31 +26,8 @@ export default function FileDetailsPane(props: {
     fileAuditManifest: FileAuditManifest;
   } | undefined;
   onClose: () => void;
-  onAddSymbolsForExtraction: (filePath: string, symbolIds: string[]) => void;
 }) {
   const [searchParams] = useSearchParams();
-
-  function markAllSymbolsForExtraction() {
-    if (!props.context?.fileDependencyManifest) {
-      return;
-    }
-
-    props.onAddSymbolsForExtraction(
-      props.context?.fileDependencyManifest.filePath,
-      Object.keys(props.context.fileDependencyManifest.symbols),
-    );
-  }
-
-  function markSymbolForExtraction(symbolId: string) {
-    if (!props.context?.fileDependencyManifest) {
-      return;
-    }
-
-    props.onAddSymbolsForExtraction(
-      props.context.fileDependencyManifest.filePath,
-      [symbolId],
-    );
-  }
 
   function getToFileLink(filePath: string) {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -65,8 +42,7 @@ export default function FileDetailsPane(props: {
         open={props.context !== undefined}
         onOpenChange={() => props.onClose()}
       >
-        <SheetTrigger />
-        <SheetContent className="flex flex-col space-y-2">
+        <SheetContent>
           <SheetHeader>
             <SheetTitle>
               <div className="flex items-center space-x-2">
@@ -92,14 +68,17 @@ export default function FileDetailsPane(props: {
                 View graph for this file
               </Link>
             </Button>
-            <Button
-              onClick={markAllSymbolsForExtraction}
-              variant="secondary"
-              size="sm"
+            <SymbolExtractionDialog
+              filePath={props.context?.fileDependencyManifest.filePath || ""}
+              symbolIds={Object.keys(
+                props.context?.fileDependencyManifest.symbols || {},
+              )}
             >
-              <Pickaxe />
-              Mark all symbols for extraction
-            </Button>
+              <Button variant="secondary" size="sm">
+                <Pickaxe />
+                Extract all symbols via CLI
+              </Button>
+            </SymbolExtractionDialog>
           </SheetHeader>
           <ScrollArea>
             <div className="flex flex-col space-y-2">
@@ -184,14 +163,16 @@ export default function FileDetailsPane(props: {
                         View graph for this symbol
                       </Link>
                     </Button>
-                    <Button
-                      onClick={() => markSymbolForExtraction(symbol.id)}
-                      variant="secondary"
-                      size="sm"
+                    <SymbolExtractionDialog
+                      filePath={props.context?.fileDependencyManifest
+                        .filePath || ""}
+                      symbolIds={[symbol.id]}
                     >
-                      <Pickaxe />
-                      Mark for extraction
-                    </Button>
+                      <Button variant="secondary" size="sm">
+                        <Pickaxe />
+                        Extract symbol via CLI
+                      </Button>
+                    </SymbolExtractionDialog>
                   </CardHeader>
                   <CardContent>
                     <Metrics

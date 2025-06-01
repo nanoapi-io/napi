@@ -1,15 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
-import type {
-  AuditManifest,
-  DependencyManifest,
-  SymbolsToExtract,
-} from "@napi/shared";
+import type { AuditManifest, DependencyManifest } from "@napi/shared";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarRail,
 } from "../../shadcn/Sidebar.tsx";
@@ -24,26 +19,12 @@ import {
 import {
   ChevronDown,
   ChevronRight,
-  CircleMinus,
   Code,
   File,
-  Loader,
-  Pickaxe,
   ScanEye,
   SearchCode,
 } from "lucide-react";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "../../shadcn/Resizable.tsx";
 import { ScrollArea, ScrollBar } from "../../shadcn/Scrollarea.tsx";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../../shadcn/Card.tsx";
 import DisplayNameWithTooltip from "./DisplayNameWithTootip.tsx";
 
 export interface ExplorerNodeData {
@@ -60,9 +41,6 @@ export function FileExplorerSidebar(props: {
   auditManifest: AuditManifest;
   onHighlightInCytoscape: (node: ExplorerNodeData) => void;
   toDetails: (node: ExplorerNodeData) => string;
-  symbolsToExtract: SymbolsToExtract;
-  onUpdateSymbolsToExtract: (symbolsToExtract: SymbolsToExtract) => void;
-  onExtractSymbols: () => void;
 }) {
   const [search, setSearch] = useState<string>("");
 
@@ -189,25 +167,6 @@ export function FileExplorerSidebar(props: {
     return flattenTree(root);
   }
 
-  function removeSymbolsFromExtraction(filePath: string, symbolIds: string[]) {
-    const newSymbolsToExtract = props.symbolsToExtract.map(
-      (symbolToExtract) => {
-        if (symbolToExtract.filePath === filePath) {
-          // Only filter out the specific symbol IDs from this file's symbols array
-          return {
-            ...symbolToExtract,
-            symbols: symbolToExtract.symbols.filter(
-              (symbolId) => !symbolIds.includes(symbolId),
-            ),
-          };
-        }
-        return symbolToExtract;
-      },
-    ).filter((symbolToExtract) => symbolToExtract.symbols.length > 0); // Remove entries with no symbols left
-
-    props.onUpdateSymbolsToExtract(newSymbolsToExtract);
-  }
-
   return (
     <Sidebar>
       <SidebarHeader>
@@ -231,139 +190,46 @@ export function FileExplorerSidebar(props: {
             </SidebarGroup>
           )
           : (
-            <ResizablePanelGroup direction="vertical">
-              <ResizablePanel>
-                <SidebarGroup className="flex h-full">
-                  <ScrollArea>
-                    <Tooltip delayDuration={500}>
-                      <TooltipTrigger asChild>
-                        <Input
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                          placeholder="Search"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="text-sm">
-                          Search for a file or symbol.
-                          <br />
-                          The search will find partial matches in both symbol
-                          names and file paths.
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
+            <SidebarGroup className="flex h-full">
+              <ScrollArea>
+                <Tooltip delayDuration={500}>
+                  <TooltipTrigger asChild>
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-sm">
+                      Search for a file or symbol.
+                      <br />
+                      The search will find partial matches in both symbol names
+                      and file paths.
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
 
-                    <div className="pt-2">
-                      {!explorerTree
-                        ? (
-                          <div className="text-sm font-muted italic">
-                            No Matching files found
-                          </div>
-                        )
-                        : (
-                          <ExplorerNode
-                            node={explorerTree}
-                            level={0}
-                            onHighlightInCytoscape={props
-                              .onHighlightInCytoscape}
-                            toDetails={props.toDetails}
-                          />
-                        )}
-                    </div>
-                    <ScrollBar orientation="vertical" />
-                  </ScrollArea>
-                </SidebarGroup>
-              </ResizablePanel>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={20} minSize={5}>
-                <SidebarGroup className="flex h-full">
-                  <ScrollArea>
-                    <SidebarGroupLabel className="flex items-center space-x-2">
-                      <Pickaxe />
-                      <div className="text-lg font-bold">Symbol Extraction</div>
-                    </SidebarGroupLabel>
-                    <div className="flex flex-col space-y-2 pt-2">
-                      {props.symbolsToExtract.length === 0
-                        ? (
-                          <div className="text-sm font-muted italic">
-                            No symbols marked for extraction yet
-                          </div>
-                        )
-                        : (
-                          <div className="flex flex-col space-y-2">
-                            {props.symbolsToExtract.map((symbolToExtract) => (
-                              <Card key={symbolToExtract.filePath}>
-                                <CardHeader>
-                                  <div className="flex items-center justify-between">
-                                    <CardTitle className="flex items-center space-x-2 text-xs">
-                                      <File size={20} />
-                                      <DisplayNameWithTooltip
-                                        name={symbolToExtract.filePath}
-                                        maxChar={30}
-                                      />
-                                    </CardTitle>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                        removeSymbolsFromExtraction(
-                                          symbolToExtract.filePath,
-                                          symbolToExtract.symbols,
-                                        )}
-                                    >
-                                      <CircleMinus color="red" />
-                                    </Button>
-                                  </div>
-                                </CardHeader>
-                                <CardContent>
-                                  <div className="flex flex-col space-y-1">
-                                    {symbolToExtract.symbols.map((symbol) => (
-                                      <div className="flex items-center justify-between">
-                                        <div
-                                          key={symbol}
-                                          className="flex items-center gap-1 text-xs"
-                                        >
-                                          <Code size={12} />
-                                          <DisplayNameWithTooltip
-                                            name={symbol}
-                                            maxChar={30}
-                                          />
-                                        </div>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() =>
-                                            removeSymbolsFromExtraction(
-                                              symbolToExtract.filePath,
-                                              [symbol],
-                                            )}
-                                        >
-                                          <CircleMinus color="red" />
-                                        </Button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                            <Button
-                              disabled={props.busy}
-                              size="sm"
-                              onClick={props.onExtractSymbols}
-                            >
-                              {props.busy
-                                ? <Loader className="animate-spin" />
-                                : <Pickaxe />}
-                              Extract symbols
-                            </Button>
-                          </div>
-                        )}
-                    </div>
-                    <ScrollBar orientation="vertical" />
-                  </ScrollArea>
-                </SidebarGroup>
-              </ResizablePanel>
-            </ResizablePanelGroup>
+                <div className="pt-2">
+                  {!explorerTree
+                    ? (
+                      <div className="text-sm font-muted italic">
+                        No Matching files found
+                      </div>
+                    )
+                    : (
+                      <ExplorerNode
+                        node={explorerTree}
+                        level={0}
+                        onHighlightInCytoscape={props
+                          .onHighlightInCytoscape}
+                        toDetails={props.toDetails}
+                      />
+                    )}
+                </div>
+                <ScrollBar orientation="vertical" />
+              </ScrollArea>
+            </SidebarGroup>
           )}
       </SidebarContent>
       <SidebarRail />
