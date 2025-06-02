@@ -2,7 +2,7 @@
   "name": "@napi/cli",
   "exports": "./src/index.ts",
   "imports": {
-    "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.1",
+    "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.3",
     "@napi/shared": "../shared/src/index.ts",
     "@oak/oak": "jsr:@oak/oak@^17.1.4",
     "@std/path": "jsr:@std/path@^1.0.9",
