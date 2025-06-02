@@ -1,27 +1,35 @@
-import yargs from "npm:yargs";
+import yargs, { type PositionalOptionsType } from "yargs";
 import {
   checkVersionMiddleware,
   getCurrentVersion,
-} from "./helpers/checkVersion.ts";
-import { globalOptions } from "./helpers/options.ts";
+} from "./middlewares/checkVersion.ts";
 import initCommand from "./handlers/init/index.ts";
-import auditCommand from "./handlers/audit/index.ts";
+import manifestCommand from "./handlers/manifest/index.ts";
+import extractCommand from "./handlers/extract/index.ts";
 import { TelemetryEvents, trackEvent } from "../telemetry.ts";
 
+export const globalOptions = {
+  workdir: {
+    type: "string" as PositionalOptionsType,
+    default: Deno.cwd(),
+    alias: "wd",
+    description: "working directory",
+  },
+};
+
 export function initCli() {
-  trackEvent(TelemetryEvents.APP_START, {
+  trackEvent(TelemetryEvents.CLI_START, {
     message: "Napi started",
   });
 
   yargs(Deno.args)
     .scriptName("napi")
     .usage("Usage: $0 <command> [options]")
-    .middleware(async () => {
-      await checkVersionMiddleware();
-    })
+    .middleware(checkVersionMiddleware)
     .options(globalOptions)
     .command(initCommand)
-    .command(auditCommand)
+    .command(manifestCommand)
+    .command(extractCommand)
     .demandCommand(1, "You need to specify a command")
     .strict()
     .help()
