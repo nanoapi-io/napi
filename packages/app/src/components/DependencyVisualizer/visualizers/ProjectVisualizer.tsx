@@ -128,12 +128,12 @@ export default function ProjectVisualizer(props: VisualizerContext) {
 
       <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
         <Controls
-          busy={props.busy || busy}
+          busy={busy}
           cy={projectVisualizer?.cy}
           onLayout={() => projectVisualizer?.layoutGraph(projectVisualizer.cy)}
         >
           <MetricsExtension
-            busy={props.busy || busy}
+            busy={busy}
             metricState={{
               metric,
               setMetric: handleMetricChange,

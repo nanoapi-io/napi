@@ -5,12 +5,12 @@ import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router";
 import { Toaster } from "./components/shadcn/Sonner.tsx";
 import { ThemeProvider } from "./contexts/ThemeProvider.tsx";
-import DependencyVisualizer from "./components/DependencyVisualizer/DependencyVisualizer.tsx";
+import IndexPage from "./pages/index.tsx";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <DependencyVisualizer />,
+    element: <IndexPage />,
   },
 ]);
 

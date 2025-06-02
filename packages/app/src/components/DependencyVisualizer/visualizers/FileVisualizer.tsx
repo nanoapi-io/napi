@@ -171,7 +171,7 @@ export default function FileVisualizer(
 
       <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 z-20">
         <Controls
-          busy={props.busy || busy}
+          busy={busy}
           cy={fileVisualizer?.cy}
           onLayout={() => fileVisualizer?.layoutGraph(fileVisualizer.cy)}
         >
