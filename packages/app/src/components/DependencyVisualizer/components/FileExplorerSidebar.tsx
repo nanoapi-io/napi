@@ -20,6 +20,8 @@ import {
   ChevronRight,
   Code,
   File,
+  FolderClosed,
+  FolderOpen,
   ScanEye,
   SearchCode,
 } from "lucide-react";
@@ -254,7 +256,7 @@ function ExplorerNode(props: {
                 onClick={() => setShowChildren(!showChildren)}
                 className="w-full justify-start"
               >
-                {showChildren ? <ChevronDown /> : <ChevronRight />}
+                {showChildren ? <FolderOpen /> : <FolderClosed />}
                 <DisplayNameWithTooltip
                   name={props.node.displayName}
                   maxChar={Math.max(5, 30 - props.level * 2)}
@@ -263,14 +265,17 @@ function ExplorerNode(props: {
             );
           case "file":
             return (
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-1">
+              <div className="flex justify-between items-center gap-2">
+                <div className="grow flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowChildren(!showChildren)}
                     className="w-full justify-start"
                   >
+                    {showChildren
+                      ? <ChevronDown size={16} />
+                      : <ChevronRight size={16} />}
                     <File />
                     <DisplayNameWithTooltip
                       name={props.node.displayName}
@@ -278,7 +283,7 @@ function ExplorerNode(props: {
                     />
                   </Button>
                 </div>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <Tooltip delayDuration={500}>
                     <TooltipTrigger asChild>
                       <Button
@@ -310,15 +315,15 @@ function ExplorerNode(props: {
             );
           case "symbol":
             return (
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-1">
+              <div className="flex justify-between items-center gap-2">
+                <div className="grow flex items-center gap-2">
                   <Code size={12} />
                   <DisplayNameWithTooltip
                     name={props.node.displayName}
                     maxChar={Math.max(5, 30 - props.level * 2)}
                   />
                 </div>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <Tooltip delayDuration={500}>
                     <TooltipTrigger asChild>
                       <Button

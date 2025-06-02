@@ -21,12 +21,13 @@ export interface VisualizerContext {
 }
 
 export default function DependencyVisualizer(props: {
+  theme: string;
   dependencyManifest: DependencyManifest;
   auditManifest: AuditManifest;
 }) {
   const [searchParams] = useSearchParams();
 
-  const { theme, setTheme } = useTheme();
+  const { setTheme } = useTheme();
 
   const [highlightedCytoscapeRef, setHighlightedCytoscapeRef] = useState<
     {
@@ -109,10 +110,10 @@ export default function DependencyVisualizer(props: {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+            onClick={() => setTheme(props.theme === "light" ? "dark" : "light")}
             className="mr-2"
           >
-            {theme === "light" ? <Moon /> : <Sun />}
+            {props.theme === "light" ? <Moon /> : <Sun />}
           </Button>
         </div>
         <div className="grow w-full border-t">

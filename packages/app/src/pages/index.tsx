@@ -7,6 +7,7 @@ import type { AuditManifest, DependencyManifest } from "@napi/shared";
 import { toast } from "sonner";
 import DependencyVisualizer from "../components/DependencyVisualizer/DependencyVisualizer.tsx";
 import { Loader } from "lucide-react";
+import { useTheme } from "../contexts/ThemeProvider.tsx";
 
 export default function IndexPage() {
   const [auditManifest, setAuditManifest] = useState<AuditManifest | undefined>(
@@ -15,6 +16,8 @@ export default function IndexPage() {
   const [dependencyManifest, setDependencyManifest] = useState<
     DependencyManifest | undefined
   >(undefined);
+
+  const { theme } = useTheme();
 
   useEffect(() => {
     async function handleOnLoad() {
@@ -46,6 +49,7 @@ export default function IndexPage() {
       {auditManifest && dependencyManifest
         ? (
           <DependencyVisualizer
+            theme={theme}
             dependencyManifest={dependencyManifest}
             auditManifest={auditManifest}
           />
