@@ -9,7 +9,6 @@ import {
   SidebarRail,
 } from "../../shadcn/Sidebar.tsx";
 import { Button } from "../../shadcn/Button.tsx";
-import { Skeleton } from "../../shadcn/Skeleton.tsx";
 import { Input } from "../../shadcn/Input.tsx";
 import {
   Tooltip,
@@ -36,7 +35,6 @@ export interface ExplorerNodeData {
 }
 
 export function FileExplorerSidebar(props: {
-  busy: boolean;
   dependencyManifest: DependencyManifest;
   auditManifest: AuditManifest;
   onHighlightInCytoscape: (node: ExplorerNodeData) => void;
@@ -181,56 +179,46 @@ export function FileExplorerSidebar(props: {
       </SidebarHeader>
 
       <SidebarContent>
-        {props.busy
-          ? (
-            <SidebarGroup className="flex flex-col space-y-5">
-              {Array.from({ length: 10 }).map((_, index) => (
-                <Skeleton key={index} className="w-full h-6" />
-              ))}
-            </SidebarGroup>
-          )
-          : (
-            <SidebarGroup className="flex h-full">
-              <ScrollArea>
-                <Tooltip delayDuration={500}>
-                  <TooltipTrigger asChild>
-                    <Input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search"
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-sm">
-                      Search for a file or symbol.
-                      <br />
-                      The search will find partial matches in both symbol names
-                      and file paths.
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-
-                <div className="pt-2">
-                  {!explorerTree
-                    ? (
-                      <div className="text-sm font-muted italic">
-                        No Matching files found
-                      </div>
-                    )
-                    : (
-                      <ExplorerNode
-                        node={explorerTree}
-                        level={0}
-                        onHighlightInCytoscape={props
-                          .onHighlightInCytoscape}
-                        toDetails={props.toDetails}
-                      />
-                    )}
+        <SidebarGroup className="flex h-full">
+          <ScrollArea>
+            <Tooltip delayDuration={500}>
+              <TooltipTrigger asChild>
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search"
+                />
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-sm">
+                  Search for a file or symbol.
+                  <br />
+                  The search will find partial matches in both symbol names and
+                  file paths.
                 </div>
-                <ScrollBar orientation="vertical" />
-              </ScrollArea>
-            </SidebarGroup>
-          )}
+              </TooltipContent>
+            </Tooltip>
+
+            <div className="pt-2">
+              {!explorerTree
+                ? (
+                  <div className="text-sm font-muted italic">
+                    No Matching files found
+                  </div>
+                )
+                : (
+                  <ExplorerNode
+                    node={explorerTree}
+                    level={0}
+                    onHighlightInCytoscape={props
+                      .onHighlightInCytoscape}
+                    toDetails={props.toDetails}
+                  />
+                )}
+            </div>
+            <ScrollBar orientation="vertical" />
+          </ScrollArea>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
@@ -275,45 +263,49 @@ function ExplorerNode(props: {
             );
           case "file":
             return (
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowChildren(!showChildren)}
-                  className="w-full justify-start"
-                >
-                  <File />
-                  <DisplayNameWithTooltip
-                    name={props.node.displayName}
-                    maxChar={Math.max(5, 30 - props.level * 2)}
-                  />
-                </Button>
-                <Tooltip delayDuration={500}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => props.onHighlightInCytoscape(props.node)}
-                    >
-                      <ScanEye />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-xs">
-                    Highlight in graph
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip delayDuration={500}>
-                  <TooltipTrigger asChild>
-                    <Button asChild variant="secondary" size="sm">
-                      <Link to={props.toDetails(props.node)}>
-                        <SearchCode />
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-xs">
-                    View graph for this file
-                  </TooltipContent>
-                </Tooltip>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowChildren(!showChildren)}
+                    className="w-full justify-start"
+                  >
+                    <File />
+                    <DisplayNameWithTooltip
+                      name={props.node.displayName}
+                      maxChar={Math.max(5, 30 - props.level * 2)}
+                    />
+                  </Button>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Tooltip delayDuration={500}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => props.onHighlightInCytoscape(props.node)}
+                      >
+                        <ScanEye />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                      Highlight in graph
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip delayDuration={500}>
+                    <TooltipTrigger asChild>
+                      <Button asChild variant="secondary" size="sm">
+                        <Link to={props.toDetails(props.node)}>
+                          <SearchCode />
+                        </Link>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="text-xs">
+                      View graph for this file
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             );
           case "symbol":
