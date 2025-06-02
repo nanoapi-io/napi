@@ -104,7 +104,7 @@ export class CSharpProjectMapper {
       for (let j = 1; j < splitPaths.length; j++) {
         if (splitPaths[j][i] !== commonPath[i]) {
           commonPath.splice(i);
-          let rootFolder = join(...commonPath);
+          let rootFolder = join("", ...commonPath);
           if (filepaths[0].startsWith(SEPARATOR)) {
             rootFolder = SEPARATOR + rootFolder;
           }
@@ -112,7 +112,7 @@ export class CSharpProjectMapper {
         }
       }
     }
-    let rootFolder = join(...commonPath);
+    let rootFolder = join("", ...commonPath);
     if (filepaths[0].startsWith(SEPARATOR)) {
       rootFolder = SEPARATOR + rootFolder;
     }

@@ -66,6 +66,7 @@
     "npm:tree-sitter@*": "0.22.4",
     "npm:tree-sitter@~0.22.4": "0.22.4",
     "npm:tw-animate-css@^1.2.9": "1.3.3",
+    "npm:vite@*": "6.3.5_picomatch@4.0.2_@types+node@22.15.15",
     "npm:vite@^6.3.5": "6.3.5_picomatch@4.0.2_@types+node@22.15.15",
     "npm:yargs@*": "17.7.2",
     "npm:yargs@^17.7.2": "17.7.2",
