@@ -16,7 +16,7 @@ jobs:
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
-          deno-version: "2.x"
+          deno-version: "2.3.5"
 
       - name: Get new version and bump deno.json
         id: get_version
@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          deno install --allow-scripts
+          deno install --reload --allow-scripts
 
       - name: Compile
         run: |
