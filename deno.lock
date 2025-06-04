@@ -61,6 +61,8 @@
     "npm:tree-sitter-c-sharp@~0.23.1": "0.23.1_tree-sitter@0.22.4",
     "npm:tree-sitter-c@*": "0.23.6_tree-sitter@0.22.4",
     "npm:tree-sitter-c@0.23.6": "0.23.6_tree-sitter@0.22.4",
+    "npm:tree-sitter-java@*": "0.23.5_tree-sitter@0.22.4",
+    "npm:tree-sitter-java@~0.23.5": "0.23.5_tree-sitter@0.22.4",
     "npm:tree-sitter-python@*": "0.23.6_tree-sitter@0.22.4",
     "npm:tree-sitter-python@~0.23.6": "0.23.6_tree-sitter@0.22.4",
     "npm:tree-sitter@*": "0.22.4",
@@ -2310,6 +2312,18 @@
       ],
       "scripts": true
     },
+    "tree-sitter-java@0.23.5_tree-sitter@0.22.4": {
+      "integrity": "sha512-Yju7oQ0Xx7GcUT01mUglPP+bYfvqjNCGdxqigTnew9nLGoII42PNVP3bHrYeMxswiCRM0yubWmN5qk+zsg0zMA==",
+      "dependencies": [
+        "node-addon-api",
+        "node-gyp-build",
+        "tree-sitter"
+      ],
+      "optionalPeers": [
+        "tree-sitter"
+      ],
+      "scripts": true
+    },
     "tree-sitter-python@0.23.6_tree-sitter@0.22.4": {
       "integrity": "sha512-yIM9z0oxKIxT7bAtPOhgoVl6gTXlmlIhue7liFT4oBPF/lha7Ha4dQBS82Av6hMMRZoVnFJI8M6mL+SwWoLD3A==",
       "dependencies": [
@@ -2473,7 +2487,8 @@
   "workspace": {
     "dependencies": [
       "jsr:@std/expect@^1.0.16",
-      "jsr:@std/testing@^1.0.12"
+      "jsr:@std/testing@^1.0.12",
+      "npm:tree-sitter-java@~0.23.5"
     ],
     "members": {
       "packages/app": {
