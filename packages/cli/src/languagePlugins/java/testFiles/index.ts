@@ -9,7 +9,10 @@ import {
 if (!import.meta.dirname) {
   throw new Error("import.meta.dirname is not defined");
 }
-export const javaFilesFolder = join(import.meta.dirname, "napi-tests");
+export const javaFilesFolder = join(
+  import.meta.dirname,
+  "napi-tests/src/main/java/io/nanoapi/testfiles",
+);
 const javaFilesMap = new Map<
   string,
   { path: string; rootNode: Parser.SyntaxNode }

@@ -61,6 +61,7 @@
     "npm:tree-sitter-c-sharp@~0.23.1": "0.23.1_tree-sitter@0.22.4",
     "npm:tree-sitter-c@*": "0.23.6_tree-sitter@0.22.4",
     "npm:tree-sitter-c@0.23.6": "0.23.6_tree-sitter@0.22.4",
+    "npm:tree-sitter-java@*": "0.23.5_tree-sitter@0.22.4",
     "npm:tree-sitter-java@~0.23.5": "0.23.5_tree-sitter@0.22.4",
     "npm:tree-sitter-python@*": "0.23.6_tree-sitter@0.22.4",
     "npm:tree-sitter-python@~0.23.6": "0.23.6_tree-sitter@0.22.4",
