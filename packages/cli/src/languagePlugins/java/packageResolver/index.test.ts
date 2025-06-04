@@ -69,7 +69,6 @@ describe("Java Package Resolver", () => {
     expect(symbol.modifiers.length).toBe(1);
     expect(symbol.typeParamCount).toBe(0);
     expect(symbol.superclass).toBeUndefined();
-    console.log(symbol.interfaces);
     expect(symbol.interfaces.length).toBe(1);
     expect(symbol.interfaces[0]).toBe("Food");
     expect(symbol.children.length).toBe(1);
