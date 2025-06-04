@@ -2,8 +2,10 @@ import { dirname, join } from "@std/path";
 import { z } from "npm:zod";
 
 const globalConfigSchema = z.object({
+  napiHost: z.string().url(),
   userId: z.string(),
   token: z.string().optional(),
+  email: z.string().email().optional(),
 });
 
 function getConfigPath() {
@@ -46,7 +48,10 @@ function getConfigPath() {
 
 function createNewConfig(configPath: string) {
   const config = {
+    napiHost: "https://api.nanoapi.io",
     userId: crypto.randomUUID(),
+    email: "",
+    token: "",
   };
 
   try {
@@ -107,8 +112,20 @@ export function updateGlobalConfig(config: z.infer<typeof globalConfigSchema>) {
   }
 }
 
+export function setNapiHost(host: string) {
+  const config = getOrCreateGlobalConfig();
+  config.napiHost = host;
+  updateGlobalConfig(config);
+}
+
 export function setUserAuthToken(token: string) {
   const config = getOrCreateGlobalConfig();
   config.token = token;
+  updateGlobalConfig(config);
+}
+
+export function setUserEmail(email: string) {
+  const config = getOrCreateGlobalConfig();
+  config.email = email;
   updateGlobalConfig(config);
 }

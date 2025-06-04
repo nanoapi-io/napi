@@ -15,6 +15,12 @@ export const globalOptions = {
     alias: "wd",
     description: "working directory",
   },
+  host: {
+    type: "string" as PositionalOptionsType,
+    default: "https://api.nanoapi.io",
+    alias: "h",
+    description: "NanoAPI host",
+  },
 };
 
 export function initCli() {

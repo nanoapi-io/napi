@@ -1,4 +1,7 @@
-import { getOrCreateGlobalConfig, setUserAuthToken } from "../../config/globalConfig.ts";
+import {
+  getOrCreateGlobalConfig,
+  setUserAuthToken,
+} from "../../config/globalConfig.ts";
 
 export default async function fetchWithAuth(url: string, options: RequestInit) {
   const config = getOrCreateGlobalConfig();
@@ -9,7 +12,7 @@ export default async function fetchWithAuth(url: string, options: RequestInit) {
     return;
   }
 
-  const resposne = await fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers: {
       ...options.headers,
@@ -19,12 +22,12 @@ export default async function fetchWithAuth(url: string, options: RequestInit) {
 
   // If the token is expired, remove it and prompt the user to login again
   // TODO: Improve this error handling based on the response body
-  if (resposne.status === 401) {
+  if (response.status === 401) {
     config.token = "";
     setUserAuthToken("");
     console.error("Token expired, please login again");
     return;
   }
 
-  return resposne;
+  return response;
 }

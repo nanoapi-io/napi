@@ -1,14 +1,21 @@
-import {
-  setUserAuthToken
-} from "../../../config/globalConfig.ts";
+import { confirm, input } from "npm:@inquirer/prompts";
+import { z } from "npm:zod";
+import type { ArgumentsCamelCase, InferredOptionTypes } from "npm:yargs";
+import { setUserAuthToken } from "../../../config/globalConfig.ts";
 import { TelemetryEvents, trackEvent } from "../../../telemetry.ts";
-import { input } from "npm:@inquirer/prompts";
+import type { globalOptions } from "../../index.ts";
+import {
+  getOrCreateGlobalConfig,
+  setUserEmail,
+} from "../../../config/globalConfig.ts";
 
 function isValidEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return z.string().email().safeParse(email).success;
 }
 
-async function handler() {
+async function handler(
+  argv: ArgumentsCamelCase<InferredOptionTypes<typeof globalOptions>>,
+) {
   console.info("🔑 Logging in to NanoAPI...");
 
   trackEvent(TelemetryEvents.CLI_LOGIN_COMMAND, {
@@ -28,7 +35,11 @@ async function handler() {
     },
   });
 
-  const response = await fetch("https://api.nanoapi.io/v1/auth/requestOtp", {
+  const globalConfig = getOrCreateGlobalConfig();
+
+  const host = globalConfig.napiHost || argv.host;
+
+  const response = await fetch(`${host}/v1/auth/requestOtp`, {
     method: "POST",
     body: JSON.stringify({ email }),
   });
@@ -40,19 +51,24 @@ async function handler() {
 
   console.info(`Thank you. We have sent a verification code to ${email}`);
 
-  console.info('(The email may take a moment to arrive, please wait up to 60 seconds before resending)');
+  console.info(
+    "(The email may take a moment to arrive, please wait up to 60 seconds before resending)",
+  );
 
   const code = await input({
     message: "Please enter the verification code:",
   });
 
-  const tokenResponse = await fetch("https://api.nanoapi.io/v1/auth/verifyOtp", {
-    method: "POST",
-    body: JSON.stringify({ email, code }),
-  });
+  const tokenResponse = await fetch(
+    `${host}/v1/auth/verifyOtp`,
+    {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+    },
+  );
 
   if (!tokenResponse.ok) {
-    console.error('Failed to verify OTP');
+    console.error("Failed to verify OTP");
     return;
   }
 
@@ -61,6 +77,16 @@ async function handler() {
   await setUserAuthToken(tokenBody.token);
 
   console.info("🔑 Login successful!");
+
+  const confirmEmail = await confirm({
+    message: "Would you like to store the email for future login?",
+    default: false,
+  });
+
+  if (confirmEmail) {
+    setUserEmail(email);
+    console.info("Email stored successfully for future logins.");
+  }
 }
 
 export default handler;
