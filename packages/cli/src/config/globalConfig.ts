@@ -3,6 +3,7 @@ import { z } from "npm:zod";
 
 const globalConfigSchema = z.object({
   userId: z.string(),
+  token: z.string().optional(),
 });
 
 function getConfigPath() {
@@ -95,4 +96,19 @@ export function getOrCreateGlobalConfig() {
   }
 
   return config;
+}
+
+export function updateGlobalConfig(config: z.infer<typeof globalConfigSchema>) {
+  try {
+    const configPath = getConfigPath();
+    Deno.writeTextFileSync(configPath, JSON.stringify(config, null, 2));
+  } catch (error) {
+    console.error(`Failed to update config: ${error}`);
+  }
+}
+
+export function setUserAuthToken(token: string) {
+  const config = getOrCreateGlobalConfig();
+  config.token = token;
+  updateGlobalConfig(config);
 }
