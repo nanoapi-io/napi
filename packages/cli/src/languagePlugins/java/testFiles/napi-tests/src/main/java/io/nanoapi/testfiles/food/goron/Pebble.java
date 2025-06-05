@@ -17,6 +17,6 @@ public class Pebble implements Food {
     }
 
     public class Sandworm {
-        // Gorons get tapeworms to ?!
+        // Gorons get tapeworms too ?!
     }
 }
