@@ -33,9 +33,11 @@ describe("Java Package Mapper", () => {
     expect(classes).toContain("DoubleBurger");
     expect(classes).toContain("Food");
     expect(classes).toContain("Steak");
-    expect(Array.from(food.children.get("Steak")!.children.keys())).toContain(
-      "Tapeworm",
-    );
+    expect(classes).toContain("goron");
+    const goron = food.children.get("goron")!;
+    expect(goron.children.get("Pebble")).toBeDefined();
+    expect(goron.children.get("Pebble")!.children.get("Sandworm"))
+      .toBeDefined();
   });
 
   test("finds nodes", () => {
@@ -52,10 +54,12 @@ describe("Java Package Mapper", () => {
     expect(tree.getNode("io.nanoapi.testfiles.food.Food")).toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.Steak")).toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.Steak.Tapeworm"))
-      .toBeDefined();
+      .toBeUndefined(); // Private nested classes aren't registered
     expect(tree.getNode("io.nanoapi.testfiles.food.Screws")).toBeUndefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.goron")).toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.goron.Pebble"))
+      .toBeDefined();
+    expect(tree.getNode("io.nanoapi.testfiles.food.goron.Pebble.Sandworm"))
       .toBeDefined();
   });
 
@@ -72,5 +76,7 @@ describe("Java Package Mapper", () => {
     expect(foodimport.get("Pebble")).toBeUndefined();
     const burgerimport = tree.getImport("io.nanoapi.testfiles.food.Burger")!;
     expect(burgerimport.size).toBe(1);
+
+    expect(tree.getImport("io.nanoapi.testfiles")).toBeUndefined();
   });
 });

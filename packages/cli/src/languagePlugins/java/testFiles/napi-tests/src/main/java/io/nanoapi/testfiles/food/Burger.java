@@ -1,6 +1,6 @@
 package io.nanoapi.testfiles.food;
 
-import java.io;
+import java.io.File;
 import java.lang.System;
 
 public class Burger<T> implements Food {
@@ -10,20 +10,10 @@ public class Burger<T> implements Food {
     }
 
     public double getPrice() {
-        T t = new T();
-        if (t instanceof Food) {
-            return t.getPrice() + 2.0;
-        } else {
-            return 2.0;
-        }
+        return 2.0;
     }
 
     public double getCalories() {
-        T t = new T();
-        if (t instanceof Food) {
-            return t.getCalories + 50.0;
-        } else {
-            return 50.0;
-        }
+        return 500.0;
     }
 }

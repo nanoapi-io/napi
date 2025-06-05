@@ -16,3 +16,6 @@ napi-output/
 coverage/
 .vite/
 .mvn/
+target/
+.settings/
+.classpath

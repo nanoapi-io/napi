@@ -5,13 +5,20 @@ export interface JavaNode {
   children: Map<string, JavaNode>;
 }
 
-export class AbstractNode {
+export class AbstractNode implements JavaNode {
   name: string;
   children: Map<string, JavaNode>;
   constructor(name: string) {
     this.name = name;
     this.children = new Map();
   }
+}
+
+export interface ConcreteNode extends JavaNode {
+  name: string;
+  children: Map<string, NestedSymbol>;
+  declaration: ExportedSymbol;
+  file: JavaFile;
 }
 
 export class JavaTree extends AbstractNode {
@@ -50,11 +57,11 @@ export class JavaTree extends AbstractNode {
     }
   }
 
-  getImport(name: string): Map<string, JavaNode> | undefined {
+  getImport(name: string): Map<string, FileNode> | undefined {
     if (name.endsWith("*")) {
       const node = this.getNode(name.substring(0, name.length - 2));
       if (node) {
-        const map = new Map<string, JavaNode>();
+        const map = new Map<string, FileNode>();
         for (const v of node.children.values()) {
           if (v instanceof FileNode) {
             map.set(v.name, v);
@@ -64,8 +71,8 @@ export class JavaTree extends AbstractNode {
       }
     } else {
       const node = this.getNode(name);
-      if (node) {
-        const map = new Map<string, JavaNode>();
+      if (node && node instanceof FileNode) {
+        const map = new Map<string, FileNode>();
         map.set(node.name, node);
         return map;
       }
@@ -74,7 +81,7 @@ export class JavaTree extends AbstractNode {
   }
 }
 
-export class FileNode implements JavaNode {
+export class FileNode implements ConcreteNode {
   name: string;
   children: Map<string, NestedSymbol>;
   declaration: ExportedSymbol;
@@ -85,12 +92,14 @@ export class FileNode implements JavaNode {
     this.declaration = file.symbol;
     this.children = new Map();
     for (const c of this.declaration.children) {
-      this.children.set(c.name, new NestedSymbol(c, file));
+      if (!c.modifiers.includes("private")) {
+        this.children.set(c.name, new NestedSymbol(c, file));
+      }
     }
   }
 }
 
-export class NestedSymbol implements JavaNode {
+export class NestedSymbol implements ConcreteNode {
   name: string;
   children: Map<string, NestedSymbol>;
   declaration: ExportedSymbol;
@@ -101,7 +110,9 @@ export class NestedSymbol implements JavaNode {
     this.file = file;
     this.children = new Map();
     for (const c of this.declaration.children) {
-      this.children.set(c.name, new NestedSymbol(c, file));
+      if (!c.modifiers.includes("private")) {
+        this.children.set(c.name, new NestedSymbol(c, file));
+      }
     }
   }
 }

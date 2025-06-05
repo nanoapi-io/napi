@@ -15,4 +15,8 @@ public class Pebble implements Food {
     public double getCalories() {
         return 1;
     }
+
+    public class Sandworm {
+        // Gorons get tapeworms to ?!
+    }
 }
