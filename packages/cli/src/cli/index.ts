@@ -18,7 +18,7 @@ export const globalOptions = {
   host: {
     type: "string" as PositionalOptionsType,
     default: "https://api.nanoapi.io",
-    alias: "h",
+    alias: "H",
     description: "NanoAPI host",
   },
 };
