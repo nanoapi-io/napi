@@ -10,3 +10,7 @@ export const FOOD = join(javaFilesFolder, "food/Food.java");
 export const STEAK = join(javaFilesFolder, "food/Steak.java");
 export const BURGER = join(javaFilesFolder, "food/Burger.java");
 export const DOUBLEBURGER = join(javaFilesFolder, "food/DoubleBurger.java");
+export const PEBBLE = join(javaFilesFolder, "food/goron/Pebble.java");
+
+// Medication package
+export const WORMKILLER = join(javaFilesFolder, "medication/Wormkiller.java");
