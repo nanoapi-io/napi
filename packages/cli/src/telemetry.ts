@@ -3,6 +3,7 @@ import denoJson from "../../../deno.json" with { type: "json" };
 
 export enum TelemetryEvents {
   CLI_START = "app_start",
+  CLI_LOGIN_COMMAND = "cli_login_command",
   CLI_INIT_COMMAND = "cli_init_command",
   CLI_MANIFEST_GENERATE_COMMAND = "cli_manifest_generate_command",
   CLI_MANIFEST_VIEW_COMMAND = "cli_manifest_view_command",
