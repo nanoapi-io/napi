@@ -16,3 +16,4 @@ napi-output/
 coverage/
 .vite/
 .mvn/
+napi-tests/target/
