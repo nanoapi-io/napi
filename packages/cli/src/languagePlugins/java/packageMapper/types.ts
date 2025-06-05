@@ -92,7 +92,9 @@ export class FileNode implements ConcreteNode {
     this.declaration = file.symbol;
     this.children = new Map();
     for (const c of this.declaration.children) {
-      this.children.set(c.name, new NestedSymbol(c, file));
+      if (!c.modifiers.includes("private")) {
+        this.children.set(c.name, new NestedSymbol(c, file));
+      }
     }
   }
 }
@@ -108,7 +110,9 @@ export class NestedSymbol implements ConcreteNode {
     this.file = file;
     this.children = new Map();
     for (const c of this.declaration.children) {
-      this.children.set(c.name, new NestedSymbol(c, file));
+      if (!c.modifiers.includes("private")) {
+        this.children.set(c.name, new NestedSymbol(c, file));
+      }
     }
   }
 }
