@@ -49,6 +49,29 @@ export class JavaTree extends AbstractNode {
       return current;
     }
   }
+
+  getImport(name: string): Map<string, JavaNode> | undefined {
+    if (name.endsWith("*")) {
+      const node = this.getNode(name.substring(0, name.length - 2));
+      if (node) {
+        const map = new Map<string, JavaNode>();
+        for (const v of node.children.values()) {
+          if (v instanceof FileNode) {
+            map.set(v.name, v);
+          }
+        }
+        return map;
+      }
+    } else {
+      const node = this.getNode(name);
+      if (node) {
+        const map = new Map<string, JavaNode>();
+        map.set(node.name, node);
+        return map;
+      }
+    }
+    return undefined;
+  }
 }
 
 export class FileNode implements JavaNode {

@@ -54,5 +54,23 @@ describe("Java Package Mapper", () => {
     expect(tree.getNode("io.nanoapi.testfiles.food.Steak.Tapeworm"))
       .toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.Screws")).toBeUndefined();
+    expect(tree.getNode("io.nanoapi.testfiles.food.goron")).toBeDefined();
+    expect(tree.getNode("io.nanoapi.testfiles.food.goron.Pebble"))
+      .toBeDefined();
+  });
+
+  test("resolves imports", () => {
+    const ioimport = tree.getImport("io.*");
+    expect(ioimport).toBeDefined();
+    if (!ioimport) {
+      throw Error("dummy error, not supposed to happen");
+    }
+    expect(ioimport.size).toBe(0);
+    const foodimport = tree.getImport("io.nanoapi.testfiles.food.*")!;
+    expect(foodimport.size >= 5).toBe(true);
+    expect(foodimport.get("goron")).toBeUndefined();
+    expect(foodimport.get("Pebble")).toBeUndefined();
+    const burgerimport = tree.getImport("io.nanoapi.testfiles.food.Burger")!;
+    expect(burgerimport.size).toBe(1);
   });
 });
