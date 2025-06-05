@@ -72,5 +72,7 @@ describe("Java Package Mapper", () => {
     expect(foodimport.get("Pebble")).toBeUndefined();
     const burgerimport = tree.getImport("io.nanoapi.testfiles.food.Burger")!;
     expect(burgerimport.size).toBe(1);
+
+    expect(tree.getImport("io.nanoapi.testfiles")).toBeUndefined();
   });
 });
