@@ -16,6 +16,6 @@ napi-output/
 coverage/
 .vite/
 .mvn/
-napi-tests/target/
-napi-tests/.settings/
-napi-tests/.classpath/
+target/
+.settings/
+.classpath
