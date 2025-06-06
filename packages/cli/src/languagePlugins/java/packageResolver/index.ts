@@ -14,7 +14,9 @@ export class JavaPackageResolver {
     const packagename = captures.find((c) => c.name === "package")?.node.text ??
       "";
     const imports = captures.filter((c) => c.name === "import").map((c) =>
-      c.node.text
+      // Unholy string manipulation because wildcard imports break tree-sitter queries.
+      c.node.text.split(" ").findLast((s) => s.length > 0 && s !== ";")!
+        .replace(";", "")
     );
     const declaration = captures.find((c) =>
       !["package", "import"].includes(c.name)

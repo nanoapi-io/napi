@@ -5,7 +5,7 @@ export const JAVA_PROGRAM_QUERY = new Parser.Query(
   javaParser.getLanguage(),
   `(program [
   (package_declaration (_) @package)
-  (import_declaration (_) @import)
+  (import_declaration) @import
   (class_declaration) @class
   (interface_declaration) @interface
   (enum_declaration) @enum
