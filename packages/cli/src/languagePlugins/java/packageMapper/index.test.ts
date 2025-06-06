@@ -48,6 +48,10 @@ describe("Java Package Mapper", () => {
     expect(tree.getNode("io.nanoapi.testfiles.App")).toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food")).toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.Burger")).toBeDefined();
+    expect(tree.getNode("io.nanoapi.testfiles.food.Burger.advertisement"))
+      .toBeDefined();
+    expect(tree.getNode("io.nanoapi.testfiles.food.Burger.restaurantCount"))
+      .toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.Condiment")).toBeDefined();
     expect(tree.getNode("io.nanoapi.testfiles.food.DoubleBurger"))
       .toBeDefined();

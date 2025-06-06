@@ -13,3 +13,11 @@ export const JAVA_PROGRAM_QUERY = new Parser.Query(
   (annotation_type_declaration) @annotation
   ])`,
 );
+
+export const JAVA_STATIC_MEMBERS_QUERY = new Parser.Query(
+  javaParser.getLanguage(),
+  `
+  (field_declaration (modifiers "public" "static")) @field
+  (method_declaration (modifiers "public" "static")) @method
+  `,
+);

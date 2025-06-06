@@ -9,6 +9,7 @@ import {
   STEAK,
 } from "../testFiles/constants.ts";
 import { JavaPackageResolver } from "./index.ts";
+import type { JavaClass } from "./types.ts";
 
 describe("Java Package Resolver", () => {
   const files = getJavaFilesMap();
@@ -25,7 +26,7 @@ describe("Java Package Resolver", () => {
     expect(result.path).toStrictEqual(FOOD);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
     expect(result.imports.length).toBe(0);
-    const symbol = result.symbol;
+    const symbol = result.symbol as JavaClass;
     expect(symbol).toBeDefined();
     expect(symbol.name).toBe("Food");
     expect(symbol.type).toBe("interface");
@@ -43,7 +44,7 @@ describe("Java Package Resolver", () => {
     expect(result.path).toStrictEqual(CONDIMENT);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
     expect(result.imports.length).toBe(0);
-    const symbol = result.symbol;
+    const symbol = result.symbol as JavaClass;
     expect(symbol).toBeDefined();
     expect(symbol.name).toBe("Condiment");
     expect(symbol.type).toBe("enum");
@@ -61,7 +62,7 @@ describe("Java Package Resolver", () => {
     expect(result.path).toStrictEqual(STEAK);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
     expect(result.imports.length).toBe(0);
-    const symbol = result.symbol;
+    const symbol = result.symbol as JavaClass;
     expect(symbol).toBeDefined();
     expect(symbol.name).toBe("Steak");
     expect(symbol.type).toBe("class");
@@ -72,7 +73,7 @@ describe("Java Package Resolver", () => {
     expect(symbol.interfaces.length).toBe(1);
     expect(symbol.interfaces[0]).toBe("Food");
     expect(symbol.children.length).toBe(1);
-    const child = symbol.children[0];
+    const child = symbol.children[0] as JavaClass;
     expect(child).toBeDefined();
     expect(child.name).toBe("Tapeworm");
     expect(child.type).toBe("class");
@@ -91,13 +92,20 @@ describe("Java Package Resolver", () => {
     expect(result.path).toStrictEqual(BURGER);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
     expect(result.imports.length).toBe(2);
-    const symbol = result.symbol;
+    const symbol = result.symbol as JavaClass;
     expect(symbol).toBeDefined();
     expect(symbol.name).toBe("Burger");
     expect(symbol.type).toBe("class");
     expect(symbol.typeParamCount).toBe(1);
     expect(symbol.superclass).toBeUndefined();
     expect(symbol.interfaces.length).toBe(1);
+    expect(symbol.children.length).toBe(2);
+    expect(symbol.children.filter((c) => c.name === "restaurantCount"))
+      .toHaveLength(1);
+    expect(symbol.children.filter((c) => c.type === "field")).toHaveLength(1);
+    expect(symbol.children.filter((c) => c.name === "advertisement"))
+      .toHaveLength(1);
+    expect(symbol.children.filter((c) => c.type === "method")).toHaveLength(1);
   });
 
   test("parses DoubleBurger.java", () => {
@@ -105,7 +113,7 @@ describe("Java Package Resolver", () => {
     expect(result).toBeDefined();
     expect(result.path).toStrictEqual(DOUBLEBURGER);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
-    const symbol = result.symbol;
+    const symbol = result.symbol as JavaClass;
     expect(symbol).toBeDefined();
     expect(symbol.name).toBe("DoubleBurger");
     expect(symbol.type).toBe("class");
