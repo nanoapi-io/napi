@@ -30,6 +30,14 @@ export class JavaImportResolver {
         }
       }
     }
+    const currentPackageImports = this.mapper.tree.getImport(
+      file.package + ".*",
+    );
+    if (currentPackageImports) {
+      for (const [key, dep] of currentPackageImports) {
+        imports.resolved.set(key, dep);
+      }
+    }
     return imports;
   }
 }
