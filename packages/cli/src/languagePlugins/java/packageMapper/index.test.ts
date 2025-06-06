@@ -80,6 +80,16 @@ describe("Java Package Mapper", () => {
     expect(foodimport.get("Pebble")).toBeUndefined();
     const burgerimport = tree.getImport("io.nanoapi.testfiles.food.Burger")!;
     expect(burgerimport.size).toBe(1);
+    const burgerstarimport = tree.getImport(
+      "io.nanoapi.testfiles.food.Burger.*",
+    );
+    expect(burgerstarimport).toBeDefined();
+    expect(burgerstarimport!.size).toBe(2);
+    const advertisementimport = tree.getImport(
+      "io.nanoapi.testfiles.food.Burger.advertisement",
+    )!;
+    expect(advertisementimport).toBeDefined();
+    expect(advertisementimport.size).toBe(1);
 
     expect(tree.getImport("io.nanoapi.testfiles")).toBeUndefined();
   });
