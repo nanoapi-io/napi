@@ -52,6 +52,7 @@ export interface ExportedSymbol {
   type: SymbolType;
   modifiers: Modifier[];
   children: ExportedSymbol[];
+  filepath: string;
   node: Parser.SyntaxNode;
   idNode: Parser.SyntaxNode;
 }
@@ -61,13 +62,14 @@ export class JavaClass implements ExportedSymbol {
   type: SymbolType;
   modifiers: Modifier[];
   children: ExportedSymbol[];
+  filepath: string;
   node: Parser.SyntaxNode;
   idNode: Parser.SyntaxNode;
   typeParamCount: number;
   superclass?: string;
   interfaces: string[];
 
-  constructor(node: Parser.SyntaxNode, type: SymbolType) {
+  constructor(node: Parser.SyntaxNode, type: SymbolType, filepath: string) {
     const modifiersNode = node.children.find((c) => c.type === "modifiers");
     this.modifiers = [];
     if (modifiersNode) {
@@ -106,16 +108,19 @@ export class JavaClass implements ExportedSymbol {
             "record_declaration",
             "annotation_type_declaration",
           ].includes(c.type)
-        ).map((c) => new JavaClass(c, c.type.split("_")[0] as SymbolType)),
+        ).map((c) =>
+          new JavaClass(c, c.type.split("_")[0] as SymbolType, filepath)
+        ),
       );
       this.children.push(
         ...JAVA_STATIC_MEMBERS_QUERY.captures(bodyNode).map((c) =>
-          new JavaMember(c)
+          new JavaMember(c, filepath)
         ),
       );
     }
     this.type = type;
     this.node = node;
+    this.filepath = filepath;
   }
 }
 
@@ -126,10 +131,12 @@ export class JavaMember implements ExportedSymbol {
   children: ExportedSymbol[];
   node: Parser.SyntaxNode;
   idNode: Parser.SyntaxNode;
+  filepath: string;
 
-  constructor(capture: Parser.QueryCapture) {
+  constructor(capture: Parser.QueryCapture, filepath: string) {
     this.type = capture.name as SymbolType;
     this.node = capture.node;
+    this.filepath = filepath;
     const modifiersNode = this.node.children.find((c) =>
       c.type === "modifiers"
     )!;
