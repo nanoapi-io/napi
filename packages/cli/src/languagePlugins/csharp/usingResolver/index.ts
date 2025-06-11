@@ -1,4 +1,4 @@
-import Parser from "npm:tree-sitter";
+import Parser from "tree-sitter";
 import type {
   CSharpNamespaceMapper,
   NamespaceNode,

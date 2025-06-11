@@ -1,4 +1,4 @@
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 
 /**
  * Represents an explicitly imported item within an import statement.

@@ -1,12 +1,6 @@
-import type { ArgumentsCamelCase, Argv, InferredOptionTypes } from "npm:yargs";
-import type { globalOptions } from "../../index.ts";
-import { TelemetryEvents, trackEvent } from "../../../telemetry.ts";
-import type { localConfigSchema } from "../../../config/localConfig.ts";
-import {
-  dependencyManifestExists,
-  getDependencyManifest,
-  getDependencyManifestPath,
-} from "../../../manifest/dependencyManifest/index.ts";
+import type { Arguments } from "yargs-types";
+import type { localConfigSchema } from "../../middlewares/napiConfig.ts";
+
 import type { z } from "zod";
 import { extractSymbols } from "../../../symbolExtractor/index.ts";
 import {
@@ -16,78 +10,116 @@ import {
 } from "../../../helpers/fileSystem/index.ts";
 import { join } from "@std/path";
 import { napiConfigMiddleware } from "../../middlewares/napiConfig.ts";
+import { ApiService } from "../../../apiService/index.ts";
+import type { globalConfigSchema } from "../../middlewares/globalConfig.ts";
+import type { DependencyManifest } from "../../../manifest/dependencyManifest/types.ts";
+import { isAuthenticatedMiddleware } from "../../middlewares/isAuthenticated.ts";
 
 // Type for the symbol option
-const extractOptions = {
-  symbol: {
-    type: "array" as const,
-    description:
-      "Symbols to extract (format: file|symbol where file is absolute path from .napirc and symbol is the symbol name)",
-    string: true,
-    requiresArg: true,
-    demandOption: true,
-  },
-} as const;
 
 function builderFunction(
-  yargs: Argv<InferredOptionTypes<typeof globalOptions>>,
+  yargs: Arguments & {
+    globalConfig: z.infer<typeof globalConfigSchema>;
+  },
 ) {
   return yargs
     .middleware(napiConfigMiddleware)
-    .option("symbol", extractOptions.symbol)
-    .check((argv) => {
-      const symbols = argv.symbol;
+    .middleware(isAuthenticatedMiddleware)
+    .option("symbol", {
+      type: "array" as const,
+      description:
+        "Symbols to extract (format: file|symbol where file is absolute path from .napirc and symbol is the symbol name)",
+      string: true,
+      requiresArg: true,
+      demandOption: true,
+    })
+    .option("manifestId", {
+      type: "string",
+      description: "The manifest ID to use for the extraction",
+      requiresArg: true,
+      demandOption: true,
+    })
+    .check(
+      (
+        argv: Arguments & {
+          globalConfig: z.infer<typeof globalConfigSchema>;
+        } & {
+          symbol: string[];
+        },
+      ) => {
+        const symbols = argv.symbol;
 
-      if (!symbols || symbols.length === 0) {
-        throw new Error("At least one symbol must be specified");
-      }
-
-      // Validate each symbol format
-      for (const symbolSpec of symbols) {
-        const splitSymbol = symbolSpec.split("|");
-        if (splitSymbol.length !== 2) {
-          throw new Error(
-            `Invalid symbol format: "${symbolSpec}". Expected format: file|symbol (e.g., "src/main.py|myFunction")`,
-          );
+        if (!symbols || symbols.length === 0) {
+          throw new Error("At least one symbol must be specified");
         }
-      }
 
-      return true;
-    });
+        // Validate each symbol format
+        for (const symbolSpec of symbols) {
+          const splitSymbol = symbolSpec.split("|");
+          if (splitSymbol.length !== 2) {
+            throw new Error(
+              `Invalid symbol format: "${symbolSpec}". Expected format: file|symbol (e.g., "src/main.py|myFunction")`,
+            );
+          }
+        }
+
+        return true;
+      },
+    );
 }
 
-function handler(
-  argv: ArgumentsCamelCase<
-    InferredOptionTypes<typeof globalOptions> & {
-      symbol: string[];
-    }
-  >,
+async function handler(
+  argv: Arguments & {
+    globalConfig: z.infer<typeof globalConfigSchema>;
+  } & {
+    symbol: string[];
+    manifestId: string;
+  },
 ) {
   const napiConfig = argv.napiConfig as z.infer<typeof localConfigSchema>;
+  const globalConfig = argv.globalConfig as z.infer<typeof globalConfigSchema>;
   const start = Date.now();
 
   console.info("🎯 Starting symbol extraction...");
 
-  trackEvent(TelemetryEvents.CLI_EXTRACT_COMMAND, {
-    message: "`napi extract` command started",
-  });
-
   try {
-    const manifestPath = getDependencyManifestPath(argv.workdir, napiConfig);
-    const manifestExists = dependencyManifestExists(argv.workdir, napiConfig);
+    console.info(`📄 Fetching manifest from API (ID: ${argv.manifestId})...`);
 
-    if (!manifestExists) {
-      console.error("❌ No dependency manifest found");
-      console.error(`   Looking for: ${manifestPath}`);
+    // Create API service instance
+    const apiService = new ApiService(
+      globalConfig.apiHost,
+      globalConfig.jwt,
+      undefined,
+    );
+
+    // Fetch manifest from API
+    const response = await apiService.performRequest(
+      "GET",
+      `/manifests/${argv.manifestId}`,
+    );
+
+    if (response.status !== 200) {
+      console.error("❌ Failed to fetch manifest from API");
+      console.error(`   Status: ${response.status}`);
+      try {
+        const errorBody = await response.json();
+        if (errorBody.error) {
+          console.error(`   Error: ${errorBody.error}`);
+        }
+      } catch {
+        // Ignore JSON parsing errors
+      }
       console.error("");
-      console.error("💡 To generate a manifest:");
-      console.error("   1. Run: napi manifest generate");
-      console.error("   2. Then try your extract command again");
+      console.error("💡 Common solutions:");
+      console.error("   • Check that the manifest ID is correct");
+      console.error("   • Verify the project exists and you have access");
       Deno.exit(1);
     }
 
-    console.info(`📄 Loading manifest from: ${manifestPath}`);
-    const dependencyManifest = getDependencyManifest(argv.workdir, napiConfig);
+    const responseData = await response.json() as {
+      manifest: DependencyManifest;
+    };
+    const dependencyManifest = responseData.manifest;
 
     console.info("🔍 Validating symbol specifications...");
     const symbolsToExtract = new Map<
@@ -163,13 +195,7 @@ function handler(
     console.info(`📄 Extracted files:`);
     console.info(`   • ${extractedFiles.size} files generated`);
     console.info(`   • Output directory: ${outputDir}`);
-
-    trackEvent(TelemetryEvents.CLI_EXTRACT_COMMAND, {
-      message: "`napi extract` command finished",
-      duration: duration,
-    });
   } catch (error: unknown) {
-    const duration = Date.now() - start;
     const errorMessage = error instanceof Error ? error.message : String(error);
 
     console.error("❌ Symbol extraction failed");
@@ -185,12 +211,6 @@ function handler(
     console.error(
       "   • Verify the specified files contain the requested symbols",
     );
-
-    trackEvent(TelemetryEvents.CLI_EXTRACT_COMMAND, {
-      message: "`napi extract` command failed",
-      duration: duration,
-      error: errorMessage,
-    });
 
     Deno.exit(1);
   }

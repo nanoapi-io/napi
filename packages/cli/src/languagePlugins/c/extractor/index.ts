@@ -1,16 +1,16 @@
-import type { DependencyManifest } from "@napi/shared";
 import { CSymbolRegistry } from "../symbolRegistry/index.ts";
 import { CIncludeResolver } from "../includeResolver/index.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 import type { CFile, Symbol } from "../symbolRegistry/types.ts";
 import type { ExportedFile } from "./types.ts";
 import { C_DECLARATION_QUERY } from "../headerResolver/queries.ts";
 import { C_IFDEF_QUERY } from "./queries.ts";
 import { CInvocationResolver } from "../invocationResolver/index.ts";
-import type z from "npm:zod";
-import type { localConfigSchema } from "../../../config/localConfig.ts";
+import type z from "zod";
+import type { localConfigSchema } from "../../../cli/middlewares/napiConfig.ts";
 import { join } from "@std/path";
+import type { DependencyManifest } from "../../../manifest/dependencyManifest/types.ts";
 
 export class CExtractor {
   manifest: DependencyManifest;

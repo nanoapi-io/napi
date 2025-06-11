@@ -1,4 +1,4 @@
-import Parser from "npm:tree-sitter";
+import Parser from "tree-sitter";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 // Constants representing different types of symbols in C#

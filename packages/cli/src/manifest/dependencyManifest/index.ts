@@ -1,18 +1,14 @@
 import { generatePythonDependencyManifest } from "./python/index.ts";
 import { generateCSharpDependencyManifest } from "./csharp/index.ts";
 import { generateCDependencyManifest } from "./c/index.ts";
-import type { localConfigSchema } from "../../config/localConfig.ts";
-import type z from "npm:zod";
-import type {
-  DependencyManifest,
-  SymbolDependencyManifest,
-} from "@napi/shared";
+import type { localConfigSchema } from "../../cli/middlewares/napiConfig.ts";
+import type z from "zod";
+import type { DependencyManifest, SymbolDependencyManifest } from "./types.ts";
 import {
   cLanguage,
   csharpLanguage,
   pythonLanguage,
 } from "../../helpers/treeSitter/parsers.ts";
-import { join } from "@std/path";
 
 const handlerMap: Record<
   string,
@@ -73,39 +69,4 @@ export function generateDependencyManifest(
   }
 
   return sortedDepMap;
-}
-
-export function getDependencyManifestPath(
-  workDir: string,
-  napiConfig: z.infer<typeof localConfigSchema>,
-) {
-  return join(workDir, napiConfig.outDir, "napi-manifest.json");
-}
-
-export function dependencyManifestExists(
-  workDir: string,
-  napiConfig: z.infer<typeof localConfigSchema>,
-) {
-  const manifestPath = getDependencyManifestPath(workDir, napiConfig);
-  try {
-    const stat = Deno.statSync(manifestPath);
-    return stat.isFile;
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      return false;
-    }
-    throw error;
-  }
-}
-
-export function getDependencyManifest(
-  workDir: string,
-  napiConfig: z.infer<typeof localConfigSchema>,
-): DependencyManifest {
-  const manifestPath = getDependencyManifestPath(workDir, napiConfig);
-
-  const manifest = JSON.parse(
-    Deno.readTextFileSync(manifestPath),
-  ) as DependencyManifest;
-  return manifest;
 }

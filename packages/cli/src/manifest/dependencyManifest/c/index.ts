@@ -9,14 +9,14 @@ import {
   metricLinesCount,
   type SymbolDependencyManifest,
   type SymbolType,
-} from "@napi/shared";
+} from "../types.ts";
 import { CDependencyFormatter } from "../../../languagePlugins/c/dependencyFormatting/index.ts";
 import { CMetricsAnalyzer } from "../../../languagePlugins/c/metrics/index.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.ts";
 import { CWarningManager } from "../../../languagePlugins/c/warnings/index.ts";
-import type { localConfigSchema } from "../../../config/localConfig.ts";
-import type z from "npm:zod";
+import type { localConfigSchema } from "../../../cli/middlewares/napiConfig.ts";
+import type z from "zod";
 
 export function generateCDependencyManifest(
   files: Map<string, { path: string; content: string }>,

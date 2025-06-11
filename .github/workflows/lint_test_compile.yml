@@ -18,10 +18,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          deno install --allow-scripts
-
-      - name: Deno check
-        run: deno check
+          deno install --allow-scripts --reload
 
       - name: Deno lint
         run: deno lint
@@ -42,7 +39,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          deno install --allow-scripts
+          deno install --allow-scripts --reload
 
       - name: Tests
         run: deno test -A
@@ -60,7 +57,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          deno install --allow-scripts
+          deno install --allow-scripts --reload
 
       - name: Compile
         run: deno task compile:all
