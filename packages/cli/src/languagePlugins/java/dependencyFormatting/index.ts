@@ -18,10 +18,18 @@ export class JavaDependencyFormatter {
       { path: string; rootNode: Parser.SyntaxNode }
     > = new Map();
     for (const [k, f] of files) {
-      parsedFiles.set(k, {
-        path: f.path,
-        rootNode: javaParser.parse(f.content).rootNode,
-      });
+      try {
+        const rootNode = javaParser.parse(f.content, undefined, {
+          bufferSize: f.content.length + 10,
+        }).rootNode;
+        parsedFiles.set(k, {
+          path: f.path,
+          rootNode: rootNode,
+        });
+      } catch (e) {
+        console.error(`Failed to parse ${f.path}, skipping`);
+        console.error(e);
+      }
     }
     this.mapper = new JavaPackageMapper(parsedFiles);
     this.importResolver = new JavaImportResolver(this.mapper);

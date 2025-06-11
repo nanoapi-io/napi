@@ -6,13 +6,14 @@ import pythonStdlibList from "../scripts/generate_python_stdlib_list/output.json
 import {
   cLanguage,
   csharpLanguage,
+  javaLanguage,
   pythonLanguage,
 } from "../helpers/treeSitter/parsers.ts";
 
 const pythonVersions = Object.keys(pythonStdlibList);
 
 export const localConfigSchema = z.object({
-  language: z.enum([pythonLanguage, csharpLanguage, cLanguage]),
+  language: z.enum([pythonLanguage, csharpLanguage, cLanguage, javaLanguage]),
   [pythonLanguage]: z
     .object({
       version: z
