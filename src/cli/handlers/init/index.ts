@@ -908,19 +908,25 @@ export async function generateConfig(
   // C-specific config
   let cConfig: z.infer<typeof localConfigSchema>["c"] | undefined = undefined;
   if (language === cLanguage) {
-    const includeDirs = await search<string[]>({
-      message:
-        `Enter the include directories containing header files, separated by commas (usually specified in Makefile, if none leave blank)`,
-      source: (term) => {
-        if (!term) return [];
-        return term.split(/, ?/);
-      },
+    const hasIncludeDirs = await confirm({
+      message: "Does your project have include directories for headers?",
     });
+    if (hasIncludeDirs) {
+      const includeDirsInput = await input({
+        message: "Enter the include directories, separated by commas:",
+        validate: (value) => {
+          if (!value.trim()) return "Include directories cannot be empty";
+          return true;
+        },
+      });
 
-    if (includeDirs) {
-      cConfig = {
-        includedirs: includeDirs,
-      };
+      const includeDirs = includeDirsInput.split(",").map((dir) => dir.trim());
+
+      if (includeDirs.length > 0) {
+        cConfig = {
+          includedirs: includeDirs,
+        };
+      }
     }
   }
 
