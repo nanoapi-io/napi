@@ -14,6 +14,7 @@ import { globSync } from "glob";
 import {
   cLanguage,
   csharpLanguage,
+  javaLanguage,
   pythonLanguage,
 } from "../../../helpers/treeSitter/parsers.ts";
 import { ApiService } from "../../../apiService/index.ts";
@@ -815,6 +816,7 @@ export async function generateConfig(
       { name: "Python", value: pythonLanguage },
       { name: "C#", value: csharpLanguage },
       { name: "C", value: cLanguage },
+      { name: "Java", value: javaLanguage },
     ],
   });
 
