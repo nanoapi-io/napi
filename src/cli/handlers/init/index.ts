@@ -531,6 +531,55 @@ function suggestIncludePatterns(
     if (suggestions.length === 0) {
       suggestions.push("**/*.cs");
     }
+  } else if (language === cLanguage) {
+    // Check for common C project structures
+    if (projectStructure.some((entry) => entry.includes("📂 src/"))) {
+      suggestions.push("src/**/*.c");
+      suggestions.push("src/**/*.h");
+    }
+    if (projectStructure.some((entry) => entry.includes("📂 lib/"))) {
+      suggestions.push("lib/**/*.c");
+      suggestions.push("lib/**/*.h");
+    }
+    if (suggestions.length === 0) {
+      if (projectStructure.some((entry) => entry.includes("📂 include/"))) {
+        suggestions.push("include/**/*.c");
+        suggestions.push("include/**/*.h");
+      }
+    }
+    if (suggestions.length === 0) {
+      suggestions.push("**/*.c");
+      suggestions.push("**/*.h");
+    }
+  } else if (language === javaLanguage) {
+    // Check for common Java project structures
+    if (projectStructure.some((entry) => entry.includes("📂 src/"))) {
+      suggestions.push("src/**/*.java");
+    }
+    if (projectStructure.some((entry) => entry.includes("📂 lib/"))) {
+      suggestions.push("lib/**/*.java");
+    }
+    if (suggestions.length === 0) {
+      if (projectStructure.some((entry) => entry.includes("📂 buildSrc/"))) {
+        suggestions.push("buildSrc/**/*.java");
+      }
+      if (projectStructure.some((entry) => entry.includes("📂 app/"))) {
+        suggestions.push("app/**/*.java");
+      }
+      if (projectStructure.some((entry) => entry.includes("📂 core/"))) {
+        suggestions.push("core/**/*.java");
+      }
+      if (projectStructure.some((entry) => entry.includes("📂 util/"))) {
+        suggestions.push("util/**/*.java");
+      }
+      if (projectStructure.some((entry) => entry.includes("📂 libs/"))) {
+        suggestions.push("libs/**/*.java");
+      }
+    }
+    if (suggestions.length === 0) {
+      suggestions.push("**/*.c");
+      suggestions.push("**/*.h");
+    }
   }
 
   return suggestions;
@@ -577,6 +626,22 @@ function suggestExcludePatterns(
     suggestions.push("**/.nuget/**");
     suggestions.push("**/artifacts/**");
     suggestions.push("**/packages/**");
+  } else if (language === cLanguage) {
+    suggestions.push("**/bin/**");
+    suggestions.push("**/obj/**");
+    suggestions.push("**/.bin/**");
+    suggestions.push("**/.obj/**");
+    suggestions.push("**/target/**");
+    suggestions.push("**/.vscode/**");
+  } else if (language === javaLanguage) {
+    suggestions.push("**/bin/**");
+    suggestions.push("**/obj/**");
+    suggestions.push("**/.bin/**");
+    suggestions.push("**/.obj/**");
+    suggestions.push("**/target/**");
+    suggestions.push("**/.vscode/**");
+    suggestions.push("**/.mvn/**");
+    suggestions.push("**/.svn/**");
   }
 
   return suggestions;
@@ -840,6 +905,31 @@ export async function generateConfig(
     }
   }
 
+  // C-specific config
+  let cConfig: z.infer<typeof localConfigSchema>["c"] | undefined = undefined;
+  if (language === cLanguage) {
+    const hasIncludeDirs = await confirm({
+      message: "Does your project have include directories for headers?",
+    });
+    if (hasIncludeDirs) {
+      const includeDirsInput = await input({
+        message: "Enter the include directories, separated by commas:",
+        validate: (value) => {
+          if (!value.trim()) return "Include directories cannot be empty";
+          return true;
+        },
+      });
+
+      const includeDirs = includeDirsInput.split(",").map((dir) => dir.trim());
+
+      if (includeDirs.length > 0) {
+        cConfig = {
+          includedirs: includeDirs,
+        };
+      }
+    }
+  }
+
   // Output directory - must be a valid directory name within the project
   const outDir = await input({
     message: "Enter the output directory for NanoAPI artifacts",
@@ -906,6 +996,11 @@ export async function generateConfig(
   // Add python config if it exists
   if (pythonConfig) {
     config.python = pythonConfig;
+  }
+
+  // Add C config if it exists
+  if (cConfig) {
+    config.c = cConfig;
   }
 
   return config;
