@@ -1,5 +1,5 @@
 import type { Arguments } from "yargs-types";
-import localPackageJson from "../../../../../deno.json" with { type: "json" };
+import localPackageJson from "../../../deno.json" with { type: "json" };
 
 export function getCurrentVersion() {
   return localPackageJson.version;
