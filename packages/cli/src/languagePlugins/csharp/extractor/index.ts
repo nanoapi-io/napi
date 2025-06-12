@@ -1,4 +1,4 @@
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import {
   CSharpProjectMapper,
   type DotNetProject,
@@ -11,8 +11,8 @@ import {
   CSharpUsingResolver,
   type UsingDirective,
 } from "../usingResolver/index.ts";
-import type { DependencyManifest } from "@napi/shared";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
+import type { DependencyManifest } from "../../../manifest/dependencyManifest/types.ts";
 
 /**
  * Represents an extracted file containing a symbol.

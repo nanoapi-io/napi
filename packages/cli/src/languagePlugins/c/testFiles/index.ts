@@ -2,6 +2,8 @@ import * as fs from "node:fs";
 import { extname, join } from "@std/path";
 import type Parser from "tree-sitter";
 import { cLanguage, cParser } from "../../../helpers/treeSitter/parsers.ts";
+import type z from "zod";
+import type { localConfigSchema } from "../../../cli/middlewares/napiConfig.ts";
 
 if (!import.meta.dirname) {
   throw new Error("import.meta.dirname is not defined");
@@ -64,6 +66,7 @@ export function getCFilesContentMap(): Map<
 }
 
 export const dummyLocalConfig = {
+  projectIds: [1],
   language: cLanguage,
   project: {
     include: [],
@@ -73,4 +76,4 @@ export const dummyLocalConfig = {
   c: {
     includedirs: [],
   },
-};
+} as z.infer<typeof localConfigSchema>;

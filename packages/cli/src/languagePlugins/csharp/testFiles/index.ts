@@ -1,5 +1,5 @@
 import { extname, join } from "@std/path";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export const csharpFilesFolder = join(

@@ -4,7 +4,7 @@ import type {
   SymbolNode,
 } from "../namespaceMapper/index.ts";
 import { csharpParser } from "../../../helpers/treeSitter/parsers.ts";
-import Parser from "npm:tree-sitter";
+import Parser from "tree-sitter";
 
 const extensionMethodQuery = new Parser.Query(
   csharpParser.getLanguage(),

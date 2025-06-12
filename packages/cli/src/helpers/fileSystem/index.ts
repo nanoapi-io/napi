@@ -1,4 +1,4 @@
-import { globSync } from "npm:glob";
+import { globSync } from "glob";
 import { dirname, join } from "@std/path";
 import {
   cLanguage,

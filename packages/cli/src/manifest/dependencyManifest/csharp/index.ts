@@ -9,12 +9,12 @@ import {
   metricLinesCount,
   type SymbolDependencyManifest,
   type SymbolType,
-} from "@napi/shared";
+} from "../types.ts";
 import {
   CSharpDependencyFormatter,
   type CSharpFile,
 } from "../../../languagePlugins/csharp/dependencyFormatting/index.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import {
   csharpLanguage,
   csharpParser,

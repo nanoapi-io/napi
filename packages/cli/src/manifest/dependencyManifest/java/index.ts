@@ -9,7 +9,7 @@ import {
   metricLinesCount,
   type SymbolDependencyManifest,
   type SymbolType,
-} from "@napi/shared";
+} from "../types.ts";
 import { JavaDependencyFormatter } from "../../../languagePlugins/java/dependencyFormatting/index.ts";
 // import { JavaMetricsAnalyzer } from "../../../languagePlugins/java/metrics/index.ts";
 import { javaLanguage } from "../../../helpers/treeSitter/parsers.ts";

@@ -1,14 +1,14 @@
-import type { z } from "npm:zod";
+import type { z } from "zod";
 import { join, SEPARATOR } from "@std/path";
-import type { localConfigSchema } from "../../config/localConfig.ts";
+import type { localConfigSchema } from "../../cli/middlewares/napiConfig.ts";
 import type { ExtractedFilesMap } from "../types.ts";
 import {
   CSharpExtractor,
   type ExtractedFile,
 } from "../../languagePlugins/csharp/extractor/index.ts";
-import type { DependencyManifest } from "@napi/shared";
+import type { DependencyManifest } from "../../manifest/dependencyManifest/types.ts";
 import type { DotNetProject } from "../../languagePlugins/csharp/projectMapper/index.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import { csharpParser } from "../../helpers/treeSitter/parsers.ts";
 import { CSharpNamespaceMapper } from "../../languagePlugins/csharp/namespaceMapper/index.ts";
 import { CSharpProjectMapper } from "../../languagePlugins/csharp/projectMapper/index.ts";

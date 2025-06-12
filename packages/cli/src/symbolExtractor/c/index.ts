@@ -1,8 +1,8 @@
 import type { ExtractedFilesMap } from "../types.ts";
 import { CExtractor } from "../../languagePlugins/c/extractor/index.ts";
-import type { DependencyManifest } from "@napi/shared";
-import type { z } from "npm:zod";
-import type { localConfigSchema } from "../../config/localConfig.ts";
+import type { DependencyManifest } from "../../manifest/dependencyManifest/types.ts";
+import type { z } from "zod";
+import type { localConfigSchema } from "../../cli/middlewares/napiConfig.ts";
 
 export function extractCSymbols(
   files: Map<string, { path: string; content: string }>,

@@ -1,9 +1,9 @@
-import type z from "npm:zod";
-import type { localConfigSchema } from "../../config/localConfig.ts";
+import type z from "zod";
+import type { localConfigSchema } from "../../cli/middlewares/napiConfig.ts";
 import type { ExtractedFilesMap } from "../types.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import { pythonParser } from "../../helpers/treeSitter/parsers.ts";
-import type { DependencyManifest } from "@napi/shared";
+import type { DependencyManifest } from "../../manifest/dependencyManifest/types.ts";
 import { PythonExportExtractor } from "../../languagePlugins/python/exportExtractor/index.ts";
 import { PythonImportExtractor } from "../../languagePlugins/python/importExtractor/index.ts";
 import { PythonModuleResolver } from "../../languagePlugins/python/moduleResolver/index.ts";

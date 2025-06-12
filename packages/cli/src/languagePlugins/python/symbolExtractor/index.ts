@@ -1,10 +1,10 @@
-import Parser from "npm:tree-sitter";
+import Parser from "tree-sitter";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";
 import { PythonModuleResolver } from "../moduleResolver/index.ts";
 import { PythonItemResolver } from "../itemResolver/index.ts";
 import { PythonImportExtractor } from "../importExtractor/index.ts";
 import { PythonUsageResolver } from "../usageResolver/index.ts";
-import type { DependencyManifest } from "@napi/shared";
+import type { DependencyManifest } from "../../../manifest/dependencyManifest/types.ts";
 import { removeIndexesFromSourceCode } from "../../../helpers/sourceCode/index.ts";
 import {
   FROM_IMPORT_STATEMENT_TYPE,

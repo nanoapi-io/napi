@@ -2,9 +2,9 @@ import type { ExtractedFilesMap } from "./types.ts";
 import { extractPythonSymbols } from "./python/index.ts";
 import { extractCSharpSymbols } from "./csharp/index.ts";
 import { extractCSymbols } from "./c/index.ts";
-import type { localConfigSchema } from "../config/localConfig.ts";
-import type z from "npm:zod";
-import type { DependencyManifest } from "@napi/shared";
+import type { localConfigSchema } from "../cli/middlewares/napiConfig.ts";
+import type z from "zod";
+import type { DependencyManifest } from "../manifest/dependencyManifest/types.ts";
 
 const handlerMap: Record<
   string,

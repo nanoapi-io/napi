@@ -1,4 +1,4 @@
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 
 export interface ManifestDiagnostics {
   filename: string;

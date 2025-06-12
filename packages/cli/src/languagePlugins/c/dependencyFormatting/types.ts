@@ -5,7 +5,7 @@ import type {
   C_UNION_TYPE,
   C_VARIABLE_TYPE,
 } from "../headerResolver/types.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 
 /**
  * Represents a dependency in a C file
