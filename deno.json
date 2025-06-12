@@ -1,18 +1,31 @@
 {
   "version": "1.0.10",
-  "workspace": [
-    "./packages/cli"
-  ],
+  "name": "@napi/cli",
+  "exports": "./src/index.ts",
   "nodeModulesDir": "auto",
   "lock": false,
-  "tasks": {
-    "dev": "deno task --config packages/cli/deno.json dev",
-    "compile": "deno task --config packages/cli/deno.json compile",
-    "compile:all": "deno task --config packages/cli/deno.json 'compile-*'",
-    "test": "deno test -A --coverage"
-  },
   "imports": {
+    "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.3",
+    "@oak/oak": "jsr:@oak/oak@^17.1.4",
     "@std/expect": "jsr:@std/expect@^1.0.16",
-    "@std/testing": "jsr:@std/testing@^1.0.12"
+    "@std/path": "jsr:@std/path@^1.0.9",
+    "@std/testing": "jsr:@std/testing@^1.0.14",
+    "glob": "npm:glob@^11.0.2",
+    "tree-sitter": "npm:tree-sitter@^0.22.4",
+    "tree-sitter-c": "npm:tree-sitter-c@0.23.6",
+    "tree-sitter-c-sharp": "npm:tree-sitter-c-sharp@^0.23.1",
+    "tree-sitter-python": "npm:tree-sitter-python@^0.23.6",
+    "yargs": "https://deno.land/x/yargs@v18.0.0-deno/deno.ts",
+    "yargs-types": "https://deno.land/x/yargs@v18.0.0-deno/deno-types.ts",
+    "zod": "npm:zod@^3.24.4"
+  },
+  "tasks": {
+    "dev": "deno run -A src/index.ts",
+    "compile": "deno compile -A --output=dist/napi src/index.ts",
+    "compile-linux": "deno compile -A --output=dist/napi.linux --target=x86_64-unknown-linux-gnu src/index.ts",
+    "compile-macos": "deno compile -A --output=dist/napi.macos --target=x86_64-apple-darwin src/index.ts",
+    "compile-windows": "deno compile -A --output=dist/napi.exe --target=x86_64-pc-windows-msvc src/index.ts",
+    "compile-all": "deno task compile-linux && deno task compile-macos && deno task compile-windows",
+    "test": "deno test -A"
   }
 }
