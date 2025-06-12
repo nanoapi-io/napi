@@ -27,6 +27,7 @@ export class JavaPackageResolver {
     const symbol = new JavaClass(
       declaration.node,
       declaration.name as SymbolType,
+      file.path,
     );
     return {
       path: file.path,
