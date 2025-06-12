@@ -1,7 +1,7 @@
-import Parser, { type Language } from "npm:tree-sitter";
+import Parser, { type Language } from "tree-sitter";
 import Python from "npm:tree-sitter-python";
 import CSharp from "npm:tree-sitter-c-sharp";
-import C from "npm:tree-sitter-c";
+import C from "tree-sitter-c";
 import Java from "npm:tree-sitter-java";
 
 const pythonParser = new Parser();
