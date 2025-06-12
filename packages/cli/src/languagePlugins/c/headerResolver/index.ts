@@ -6,7 +6,7 @@ import type {
 } from "./types.ts";
 import { C_DECLARATION_QUERY } from "./queries.ts";
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 
 export class CHeaderResolver {
   parser: Parser = cParser;

@@ -1,4 +1,4 @@
-import Parser from "npm:tree-sitter";
+import Parser from "tree-sitter";
 import { cParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export const C_INCLUDE_QUERY = new Parser.Query(

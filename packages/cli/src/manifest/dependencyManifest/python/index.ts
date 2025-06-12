@@ -1,4 +1,4 @@
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import {
   type DependencyInfo,
   type DependencyManifest,
@@ -12,7 +12,7 @@ import {
   metricDependentCount,
   metricLinesCount,
   type SymbolDependencyManifest,
-} from "@napi/shared";
+} from "../types.ts";
 import { PythonExportExtractor } from "../../../languagePlugins/python/exportExtractor/index.ts";
 import { pythonParser } from "../../../helpers/treeSitter/parsers.ts";
 import { PythonModuleResolver } from "../../../languagePlugins/python/moduleResolver/index.ts";
@@ -20,8 +20,8 @@ import { PythonUsageResolver } from "../../../languagePlugins/python/usageResolv
 import { PythonDependencyResolver } from "../../../languagePlugins/python/dependencyResolver/index.ts";
 import { PythonItemResolver } from "../../../languagePlugins/python/itemResolver/index.ts";
 import { PythonImportExtractor } from "../../../languagePlugins/python/importExtractor/index.ts";
-import type { localConfigSchema } from "../../../config/localConfig.ts";
-import type z from "npm:zod";
+import type { localConfigSchema } from "../../../cli/middlewares/napiConfig.ts";
+import type z from "zod";
 import { PythonMetricsAnalyzer } from "../../../languagePlugins/python/metricAnalyzer/index.ts";
 
 /**

@@ -1,7 +1,7 @@
 import type { InclusionNode, Inclusions } from "./types.ts";
 import { C_INCLUDE_QUERY, C_STANDARD_INCLUDE_QUERY } from "./queries.ts";
 import type { CSymbolRegistry } from "../symbolRegistry/index.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import {
   type CFile,
   FunctionDefinition,

@@ -1,14 +1,80 @@
-import type { ArgumentsCamelCase } from "yargs";
-import {
-  getConfigFromWorkDir,
-  isConfigExistInWorkdir,
-} from "../../config/localConfig.ts";
 import { join } from "@std/path";
+import type { Arguments } from "yargs-types";
+import z from "zod";
+import pythonStdlibList from "../../scripts/generate_python_stdlib_list/output.json" with {
+  type: "json",
+};
+import {
+  cLanguage,
+  csharpLanguage,
+  pythonLanguage,
+} from "../../helpers/treeSitter/parsers.ts";
+
+const pythonVersions = Object.keys(pythonStdlibList);
+
+export const localConfigSchema = z.object({
+  projectIds: z.array(z.number().int()),
+  language: z.enum([pythonLanguage, csharpLanguage, cLanguage]),
+  [pythonLanguage]: z
+    .object({
+      version: z
+        .string()
+        .refine((val) => pythonVersions.includes(val), {
+          message: `Python version must be one of: ${
+            pythonVersions.join(", ")
+          }`,
+        })
+        .optional(),
+    })
+    .optional(), // python specific config
+  [cLanguage]: z
+    .object({
+      includedirs: z.array(z.string()).optional(),
+    })
+    .optional(), // c specific config
+  project: z.object({
+    include: z.array(z.string()),
+    exclude: z.array(z.string()).optional(),
+  }),
+  outDir: z.string(),
+});
+
+const napiConfigFileName = ".napirc";
+
+export function getConfigFromWorkDir(workdir: string) {
+  const napircPath = join(workdir, napiConfigFileName);
+
+  try {
+    Deno.statSync(napircPath);
+  } catch {
+    throw new Error(`${napiConfigFileName} not found in ${workdir}`);
+  }
+
+  const napircContent = Deno.readTextFileSync(napircPath);
+
+  const result = localConfigSchema.safeParse(JSON.parse(napircContent));
+
+  if (!result.success) {
+    throw new Error("Invalid NapiConfig: " + result.error);
+  }
+
+  if (result.data) {
+    return result.data;
+  }
+}
+
+export function createConfig(
+  napiConfig: z.infer<typeof localConfigSchema>,
+  workdir: string,
+) {
+  const napircPath = join(workdir, napiConfigFileName);
+  Deno.writeTextFileSync(napircPath, JSON.stringify(napiConfig, null, 2));
+}
 
 export function napiConfigMiddleware(
-  args: ArgumentsCamelCase<{
+  args: Arguments & {
     workdir: string;
-  }>,
+  },
 ) {
   try {
     // First, check if the workdir itself exists
@@ -40,7 +106,13 @@ export function napiConfigMiddleware(
     }
 
     // Check if .napirc config file exists
-    const isConfigExist = isConfigExistInWorkdir(args.workdir);
+    let isConfigExist = false;
+    try {
+      const stat = Deno.statSync(join(args.workdir, napiConfigFileName));
+      isConfigExist = stat.isFile;
+    } catch {
+      isConfigExist = false;
+    }
 
     if (!isConfigExist) {
       console.error("❌ No .napirc configuration file found");

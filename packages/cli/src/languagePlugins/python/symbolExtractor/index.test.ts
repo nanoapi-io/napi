@@ -1,20 +1,20 @@
 import { describe, test } from "@std/testing/bdd";
 import { expect } from "@std/expect";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import { PythonSymbolExtractor } from "./index.ts";
 import { PythonExportExtractor } from "../exportExtractor/index.ts";
 import { PythonModuleResolver } from "../moduleResolver/index.ts";
 import { PythonItemResolver } from "../itemResolver/index.ts";
 import { PythonImportExtractor } from "../importExtractor/index.ts";
 import { PythonUsageResolver } from "../usageResolver/index.ts";
-import type { DependencyManifest } from "@napi/shared";
 import {
   pythonLanguage,
   pythonParser,
 } from "../../../helpers/treeSitter/parsers.ts";
-import type { localConfigSchema } from "../../../config/localConfig.ts";
-import type z from "npm:zod";
+import type { localConfigSchema } from "../../../cli/middlewares/napiConfig.ts";
+import type z from "zod";
 import { generatePythonDependencyManifest } from "../../../manifest/dependencyManifest/python/index.ts";
+import type { DependencyManifest } from "../../../manifest/dependencyManifest/types.ts";
 
 describe("PythonSymbolExtractor", () => {
   // Helper to create a map of parsed files
@@ -41,6 +41,7 @@ describe("PythonSymbolExtractor", () => {
     files: Map<string, { path: string; content: string }>,
   ): DependencyManifest {
     const dependencyManifest = generatePythonDependencyManifest(files, {
+      projectIds: [1],
       language: pythonLanguage,
       python: {
         version: "3.10",

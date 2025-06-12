@@ -1,4 +1,4 @@
-import Parser from "npm:tree-sitter";
+import Parser from "tree-sitter";
 import {
   PYTHON_CLASS_TYPE,
   PYTHON_FUNCTION_TYPE,
