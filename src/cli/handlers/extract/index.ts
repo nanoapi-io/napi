@@ -87,9 +87,7 @@ async function handler(
 
     // Create API service instance
     const apiService = new ApiService(
-      globalConfig.apiHost,
-      globalConfig.jwt,
-      undefined,
+      globalConfig,
     );
 
     // Fetch manifest from API

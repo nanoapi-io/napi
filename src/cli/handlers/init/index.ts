@@ -35,7 +35,6 @@ async function handler(
   },
 ) {
   const globalConfig = argv.globalConfig as z.infer<typeof globalConfigSchema>;
-  const apiHost = globalConfig.apiHost;
 
   try {
     // Check if config already exists
@@ -64,7 +63,6 @@ async function handler(
     // Generate the config using the interactive prompts
     const napiConfig = await generateConfig(
       argv.workdir,
-      apiHost,
       globalConfig,
     );
 
@@ -703,10 +701,9 @@ async function createNewProject(apiService: ApiService): Promise<number> {
  */
 export async function generateConfig(
   workDir: string,
-  apiHost: string,
   globalConfig: z.infer<typeof globalConfigSchema>,
 ): Promise<z.infer<typeof localConfigSchema>> {
-  const apiService = new ApiService(apiHost, globalConfig.jwt, undefined);
+  const apiService = new ApiService(globalConfig);
 
   // Project selection/creation
   console.info("\n🏗️  PROJECT SETUP");

@@ -2,7 +2,7 @@ import type { Arguments } from "yargs-types";
 import {
   defaultApiHost,
   type globalConfigSchema,
-  setJwt,
+  setConfig,
 } from "../../middlewares/globalConfig.ts";
 import z from "zod";
 import { input } from "@inquirer/prompts";
@@ -15,6 +15,12 @@ const builder = {
     alias: "H",
     default: defaultApiHost,
   },
+  "api-token": {
+    type: "string" as const,
+    describe:
+      "API token to use for authentication. Can be generated here: https://app.nanoapi.io/profile",
+    alias: "T",
+  },
 };
 
 async function handler(
@@ -22,11 +28,33 @@ async function handler(
     globalConfig: z.infer<typeof globalConfigSchema>;
   } & {
     apiHost: string;
+    apiToken: string | undefined;
   },
 ) {
   const globalConfig = argv.globalConfig as z.infer<typeof globalConfigSchema>;
+  globalConfig.apiHost = argv.apiHost;
+  globalConfig.token = argv.apiToken;
 
-  console.info(`🔑 You are about to login to NanoAPI (${argv.apiHost})`);
+  if (globalConfig.token) {
+    const apiService = new ApiService(
+      globalConfig,
+    );
+    const response = await apiService.performRequest("GET", "/auth/me");
+    if (response.status !== 200) {
+      console.error("❌ Authentication failed");
+      console.error(`   Status: ${response.status}`);
+      console.error("   Make sure the API token is valid");
+      Deno.exit(1);
+    }
+
+    setConfig(globalConfig);
+    console.info("🔑 You are already logged in using an API token");
+    Deno.exit(0);
+  }
+
+  console.info(
+    `🎫 You are about to login to NanoAPI (${globalConfig.apiHost})`,
+  );
 
   const email = await input({
     message: "Enter your email:",
@@ -40,9 +68,7 @@ async function handler(
   });
 
   const apiService = new ApiService(
-    argv.apiHost,
-    undefined,
-    undefined,
+    globalConfig,
   );
 
   const requestOtpResponse = await apiService.performRequest(
@@ -101,7 +127,8 @@ async function handler(
     token: string;
   };
 
-  setJwt(globalConfig, argv.apiHost, responseBody.token);
+  globalConfig.jwt = responseBody.token;
+  setConfig(globalConfig);
 
   console.info(`🚀 You are now logged in as ${email}!`);
 }

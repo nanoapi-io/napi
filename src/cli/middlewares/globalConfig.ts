@@ -3,15 +3,14 @@ import { join } from "@std/path";
 import z from "zod";
 
 export const globalConfigSchema = z.object({
-  userId: z.string(),
   jwt: z.string().optional(),
+  token: z.string().optional(),
   apiHost: z.string(),
 });
 
 export const defaultApiHost = "https://api.nanoapi.io";
 
 const defaultConfig: z.infer<typeof globalConfigSchema> = {
-  userId: crypto.randomUUID(),
   apiHost: defaultApiHost,
 };
 
@@ -95,12 +94,8 @@ export function globalConfigMiddleware(
   args.globalConfig = config;
 }
 
-export function setJwt(
+export function setConfig(
   config: z.infer<typeof globalConfigSchema>,
-  apiHost: string,
-  jwt: string,
 ) {
-  config.jwt = jwt;
-  config.apiHost = apiHost;
   Deno.writeTextFileSync(getConfigPath(), JSON.stringify(config, null, 2));
 }

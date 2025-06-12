@@ -12,7 +12,10 @@ import {
 } from "../../../manifest/dependencyManifest/index.ts";
 import type { z } from "zod";
 import { ApiService } from "../../../apiService/index.ts";
-import type { globalConfigSchema } from "../../middlewares/globalConfig.ts";
+import {
+  defaultApiHost,
+  type globalConfigSchema,
+} from "../../middlewares/globalConfig.ts";
 import { isAuthenticatedMiddleware } from "../../middlewares/isAuthenticated.ts";
 
 function builder(
@@ -218,9 +221,7 @@ async function handler(
 
     // Upload manifest to API instead of writing to disk
     const apiService = new ApiService(
-      globalConfig.apiHost,
-      globalConfig.jwt,
-      undefined,
+      globalConfig,
     );
 
     for (const projectId of napiConfig.projectIds) {
@@ -257,9 +258,20 @@ async function handler(
           }
           Deno.exit(1);
         }
+
+        const duration = Date.now() - start;
         console.info(
-          `✅ Manifest uploaded successfully for project id: ${projectId}`,
+          `✅ Manifest uploaded successfully for project id: ${projectId} in ${duration}ms`,
         );
+        console.info(`📄 Generated manifest contains:`);
+        console.info(`   • ${Object.keys(dependencyManifest).length} files`);
+        console.info(`   • Dependencies and relationships mapped`);
+
+        if (globalConfig.apiHost === defaultApiHost) {
+          console.info(
+            `\nView it here: https://app.nanoapi.io/projects/${projectId}/manifests`,
+          );
+        }
       } catch (error) {
         console.error(
           `❌ Failed to upload manifest to API for project id: ${projectId}`,
@@ -270,13 +282,6 @@ async function handler(
         Deno.exit(1);
       }
     }
-
-    const duration = Date.now() - start;
-
-    console.info(`✅ Manifest generated successfully in ${duration}ms`);
-    console.info(`📄 Generated manifest contains:`);
-    console.info(`   • ${Object.keys(dependencyManifest).length} files`);
-    console.info(`   • Dependencies and relationships mapped`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
