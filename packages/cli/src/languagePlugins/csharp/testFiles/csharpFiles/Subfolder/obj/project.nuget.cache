@@ -1,8 +1,0 @@
-{
-  "version": 2,
-  "dgSpecHash": "5W02hWoZlJRKlLoCKYk4/87nr78B3RHOrtzsoeheMf5A9U/iC1s3jS6Yd59Dv2/qCZDJEt8aYkUO4Djs5Mw/QQ==",
-  "success": true,
-  "projectFilePath": "/Users/radghost/dev/@napi/napi/packages/cli/src/languagePlugins/csharp/testFiles/csharpFiles/Subfolder/TestFiles.Subfolder.csproj",
-  "expectedPackageFiles": [],
-  "logs": []
-}
