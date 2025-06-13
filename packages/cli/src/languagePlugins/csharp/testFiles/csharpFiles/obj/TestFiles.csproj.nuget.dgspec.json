@@ -1,0 +1,43 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/radghost/dev/@napi/napi/packages/cli/src/languagePlugins/csharp/testFiles/csharpFiles/TestFiles.csproj": {}
+  },
+  "projects": {
+    "/Users/radghost/dev/@napi/napi/packages/cli/src/languagePlugins/csharp/testFiles/csharpFiles/TestFiles.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/Users/radghost/dev/@napi/napi/packages/cli/src/languagePlugins/csharp/testFiles/csharpFiles/TestFiles.csproj",
+        "projectName": "TestFiles",
+        "projectPath": "/Users/radghost/dev/@napi/napi/packages/cli/src/languagePlugins/csharp/testFiles/csharpFiles/TestFiles.csproj",
+        "packagesPath": "/Users/radghost/.nuget/packages/",
+        "outputPath": "/Users/radghost/dev/@napi/napi/packages/cli/src/languagePlugins/csharp/testFiles/csharpFiles/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/Users/radghost/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net9.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net9.0": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net9.0": {
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/3.1.300/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

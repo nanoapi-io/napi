@@ -65,20 +65,21 @@ For the latest updates, visit our [project board](/projects).
 
 ## Installation
 
-`napi` works out of the box on both mac and linux systems.
-
-To use this tool on Windows, you will need to install and run the CLI commands
-from there.
-
-[WSL (Windows Subsystem for Linux)](https://learn.microsoft.com/en-us/windows/wsl/install)
+`napi` works out of the box on both mac, linux, and windows systems.
 
 To install `napi`, you can use our installation script:
 
+### Unix Systems (MacOS, Linux)
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.sh | bash
 ```
 
-Our download and install manually from:
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.ps1 | iex
+```
+If you prefer not to use the installation script, you can also
+download the latest release directly from our GitHub repository:
 
 https://github.com/nanoapi-io/napi/releases/latest
 
