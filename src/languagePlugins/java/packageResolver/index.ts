@@ -3,9 +3,22 @@ import { JavaClass, type JavaFile, type SymbolType } from "./types.ts";
 import { JAVA_PROGRAM_QUERY } from "./queries.ts";
 import { javaParser } from "../../../helpers/treeSitter/parsers.ts";
 
+/**
+ * Resolves Java package and import information from a parsed Java file.
+ */
 export class JavaPackageResolver {
+  /**
+   * The Tree-sitter parser instance for Java.
+   */
   parser: Parser = javaParser;
 
+  /**
+   * Resolves the package, imports, and main declaration of a Java file.
+   *
+   * @param file - An object containing the file path and the root syntax node of the parsed Java file.
+   * @returns A JavaFile object containing the file's path, root node, package name, imports, and main symbol declaration.
+   * @throws Will throw an error if no declaration is found in the file.
+   */
   resolveFile(file: {
     path: string;
     rootNode: Parser.SyntaxNode;

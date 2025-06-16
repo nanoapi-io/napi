@@ -6,9 +6,20 @@ import { JavaPackageMapper } from "../packageMapper/index.ts";
 import { JavaImportResolver } from "../importResolver/index.ts";
 import { ExportedFile } from "./types.ts";
 
+/**
+ * Responsible for extracting and managing Java symbols
+ * from a set of files, using dependency resolution and package mapping.
+ */
 export class JavaExtractor {
   manifest: DependencyManifest;
   resolver: JavaInvocationResolver;
+
+  /**
+   * Constructs a new instance of `JavaExtractor`.
+   *
+   * @param files - A map of file paths to their respective content and metadata.
+   * @param manifest - The dependency manifest containing information about project dependencies.
+   */
   constructor(
     files: Map<string, { path: string; content: string }>,
     manifest: DependencyManifest,
@@ -29,6 +40,14 @@ export class JavaExtractor {
     this.resolver = new JavaInvocationResolver(importresolver);
   }
 
+  /**
+   * Extracts symbols from the provided symbol map and returns a map of files
+   * that should be kept, including their paths and content.
+   *
+   * @param symbolsMap - A map where keys are symbol names and values contain file paths
+   * and sets of symbols associated with those files.
+   * @returns A map of file paths to their respective content and metadata for files to keep.
+   */
   extractSymbols(
     symbolsMap: Map<
       string,
