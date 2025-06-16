@@ -13,6 +13,7 @@ import {
 import { JavaDependencyFormatter } from "../../../languagePlugins/java/dependencyFormatting/index.ts";
 // import { JavaMetricsAnalyzer } from "../../../languagePlugins/java/metrics/index.ts";
 import { javaLanguage } from "../../../helpers/treeSitter/parsers.ts";
+import { JavaMetricsAnalyzer } from "../../../languagePlugins/java/metrics/index.ts";
 
 export function generateJavaDependencyManifest(
   files: Map<string, { path: string; content: string }>,
@@ -20,6 +21,7 @@ export function generateJavaDependencyManifest(
   console.time("generateJavaDependencyManifest");
   console.info("Processing project...");
   const formatter = new JavaDependencyFormatter(files);
+  const metricsAnalyzer = new JavaMetricsAnalyzer();
   const manifest: DependencyManifest = {};
   const filecount = files.size;
   let i = 0;
@@ -31,34 +33,36 @@ export function generateJavaDependencyManifest(
     for (const [symName, symbol] of Object.entries(cSyms)) {
       const symType = symbol.type;
       const dependencies = symbol.dependencies;
+      const metrics = metricsAnalyzer.analyzeNode(symbol.node);
       symbols[symName] = {
         id: symName,
         type: symType as SymbolType,
         metrics: {
-          [metricCharacterCount]: symbol.characterCount,
-          [metricCodeCharacterCount]: 0, // TODO : metrics
-          [metricLinesCount]: symbol.lineCount,
-          [metricCodeLineCount]: 0, // TODO : metrics
+          [metricCharacterCount]: metrics.characterCount,
+          [metricCodeCharacterCount]: metrics.codeCharacterCount,
+          [metricLinesCount]: metrics.linesCount,
+          [metricCodeLineCount]: metrics.codeLinesCount,
           [metricDependencyCount]: Object.keys(dependencies).length,
           [metricDependentCount]: 0,
-          [metricCyclomaticComplexity]: 0, // TODO : metrics
+          [metricCyclomaticComplexity]: metrics.cyclomaticComplexity,
         },
         dependencies: dependencies,
         dependents: {},
       };
     }
+    const metrics = metricsAnalyzer.analyzeNode(fm.rootNode);
     manifest[path] = {
       id: fm.id,
       filePath: fm.filePath,
       language: javaLanguage,
       metrics: {
-        [metricCharacterCount]: fm.characterCount,
-        [metricCodeCharacterCount]: 0, // TODO : metrics
-        [metricLinesCount]: fm.lineCount,
-        [metricCodeLineCount]: 0, // TODO : metrics
+        [metricCharacterCount]: metrics.characterCount,
+        [metricCodeCharacterCount]: metrics.codeCharacterCount,
+        [metricLinesCount]: metrics.linesCount,
+        [metricCodeLineCount]: metrics.codeLinesCount,
         [metricDependencyCount]: Object.keys(fm.dependencies).length,
         [metricDependentCount]: 0,
-        [metricCyclomaticComplexity]: 0, // TODO : metrics
+        [metricCyclomaticComplexity]: metrics.cyclomaticComplexity,
       },
       dependencies: fm.dependencies,
       symbols: symbols,
