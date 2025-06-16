@@ -17,6 +17,7 @@ export const JAVA_COMPLEXITY_QUERY = new Parser.Query(
 export const JAVA_COMMENT_QUERY = new Parser.Query(
   javaParser.getLanguage(),
   `
-    (comment) @comment
+    (block_comment) @comment
+    (line_comment) @comment
   `,
 );
