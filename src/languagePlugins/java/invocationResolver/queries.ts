@@ -1,6 +1,10 @@
 import Parser from "npm:tree-sitter";
 import { javaParser } from "../../../helpers/treeSitter/parsers.ts";
 
+/**
+ * A Tree-sitter query to match Java method or type invocations.
+ * This query captures scoped type identifiers, type identifiers, and identifiers.
+ */
 export const JAVA_INVOCATION_QUERY = new Parser.Query(
   javaParser.getLanguage(),
   `
@@ -12,6 +16,10 @@ export const JAVA_INVOCATION_QUERY = new Parser.Query(
   `,
 );
 
+/**
+ * A Tree-sitter query to match Java variable declarations and formal parameters.
+ * This query captures variable declarators and formal parameter names.
+ */
 export const JAVA_VARIABLES_QUERY = new Parser.Query(
   javaParser.getLanguage(),
   `

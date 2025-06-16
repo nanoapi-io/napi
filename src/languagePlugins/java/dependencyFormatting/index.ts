@@ -7,11 +7,20 @@ import type { JavaDependency, JavaDepFile, JavaDepSymbol } from "./types.ts";
 import type { Invocations } from "../invocationResolver/types.ts";
 import type { ExportedSymbol } from "../packageResolver/types.ts";
 
+/**
+ * Class responsible for formatting Java dependencies by analyzing parsed files,
+ * resolving imports, invocations, and symbols.
+ */
 export class JavaDependencyFormatter {
   mapper: JavaPackageMapper;
   importResolver: JavaImportResolver;
   invocationResolver: JavaInvocationResolver;
 
+  /**
+   * Constructs a JavaDependencyFormatter instance.
+   *
+   * @param files - A map of file identifiers to their path and content.
+   */
   constructor(files: Map<string, { path: string; content: string }>) {
     const parsedFiles: Map<
       string,
@@ -36,6 +45,12 @@ export class JavaDependencyFormatter {
     this.invocationResolver = new JavaInvocationResolver(this.importResolver);
   }
 
+  /**
+   * Formats the dependencies of a file based on its invocations.
+   *
+   * @param fileDependencies - The invocations of the file to process.
+   * @returns A record of Java dependencies.
+   */
   #formatDependencies(
     fileDependencies: Invocations,
   ): Record<string, JavaDependency> {
@@ -57,6 +72,12 @@ export class JavaDependencyFormatter {
     return dependencies;
   }
 
+  /**
+   * Formats standard library imports into dependency records.
+   *
+   * @param stdimports - An array of unresolved standard imports.
+   * @returns A record of Java dependencies for standard imports.
+   */
   #formatStandardImports(stdimports: string[]): Record<string, JavaDependency> {
     const dependencies: Record<string, JavaDependency> = {};
     for (const id of stdimports) {
@@ -71,6 +92,12 @@ export class JavaDependencyFormatter {
     return dependencies;
   }
 
+  /**
+   * Formats a symbol exported by a file into a dependency symbol record.
+   *
+   * @param fileSymbol - The exported symbol to format.
+   * @returns A record containing the formatted dependency symbol.
+   */
   #formatSymbol(fileSymbol: ExportedSymbol): Record<string, JavaDepSymbol> {
     // Record despite files only having 1 symbol since it's needed for manifest
     const symbol: Record<string, JavaDepSymbol> = {};
@@ -92,6 +119,12 @@ export class JavaDependencyFormatter {
     return symbol;
   }
 
+  /**
+   * Formats a file into a JavaDepFile object, including its dependencies and symbols.
+   *
+   * @param filepath - The path of the file to format.
+   * @returns A formatted JavaDepFile object.
+   */
   formatFile(filepath: string): JavaDepFile {
     const file = this.mapper.files.get(filepath)!;
     const imports = this.importResolver.imports.get(filepath)!;

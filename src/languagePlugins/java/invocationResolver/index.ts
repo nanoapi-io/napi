@@ -6,11 +6,19 @@ import type { JavaFile } from "../packageResolver/types.ts";
 import { JAVA_INVOCATION_QUERY, JAVA_VARIABLES_QUERY } from "./queries.ts";
 import type { Invocations } from "./types.ts";
 
+/**
+ * Resolves Java method invocations and maps them to their corresponding imports or project nodes.
+ */
 export class JavaInvocationResolver {
   mapper: JavaPackageMapper;
   imports: Map<string, JavaImports>;
   invocations: Map<string, Invocations>;
 
+  /**
+   * Constructs a new JavaInvocationResolver.
+   *
+   * @param resolver - An instance of JavaImportResolver containing the package mapper and imports.
+   */
   constructor(resolver: JavaImportResolver) {
     this.mapper = resolver.mapper;
     this.imports = resolver.imports;
@@ -20,6 +28,12 @@ export class JavaInvocationResolver {
     }
   }
 
+  /**
+   * Extracts and resolves method invocations from a given Java file.
+   *
+   * @param file - The Java file to analyze for method invocations.
+   * @returns An object containing resolved and unresolved method invocations.
+   */
   getInvocations(file: JavaFile): Invocations {
     const variables = new Set(
       JAVA_VARIABLES_QUERY.captures(file.symbol.node).map((c) => c.node.text),
