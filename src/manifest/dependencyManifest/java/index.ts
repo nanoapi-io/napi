@@ -23,9 +23,10 @@ export function generateJavaDependencyManifest(
   const formatter = new JavaDependencyFormatter(files);
   const metricsAnalyzer = new JavaMetricsAnalyzer();
   const manifest: DependencyManifest = {};
-  const filecount = files.size;
+  const newfiles = formatter.mapper.files;
+  const filecount = newfiles.size;
   let i = 0;
-  for (const [, { path }] of files) {
+  for (const [, { path }] of newfiles) {
     console.info(`Processing ${path} (${++i}/${filecount})`);
     const fm = formatter.formatFile(path);
     const cSyms = fm.symbols;

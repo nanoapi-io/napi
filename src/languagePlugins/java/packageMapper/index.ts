@@ -27,6 +27,9 @@ export class JavaPackageMapper {
     const resolver = new JavaPackageResolver();
     for (const f of files.values()) {
       const resolvedFile = resolver.resolveFile(f);
+      if (!resolvedFile) {
+        continue;
+      }
       this.tree.addFile(resolvedFile);
       this.files.set(f.path, resolvedFile);
     }

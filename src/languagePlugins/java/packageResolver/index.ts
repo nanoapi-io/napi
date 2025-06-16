@@ -22,7 +22,7 @@ export class JavaPackageResolver {
   resolveFile(file: {
     path: string;
     rootNode: Parser.SyntaxNode;
-  }): JavaFile {
+  }): JavaFile | undefined {
     const captures = JAVA_PROGRAM_QUERY.captures(file.rootNode);
     const packagename = captures.find((c) => c.name === "package")?.node.text ??
       "";
@@ -35,7 +35,7 @@ export class JavaPackageResolver {
       !["package", "import"].includes(c.name)
     );
     if (!declaration) {
-      throw Error(`No declaration found for ${file.path}`);
+      return undefined;
     }
     const symbol = new JavaClass(
       declaration.node,

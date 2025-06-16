@@ -21,7 +21,7 @@ describe("Java Package Resolver", () => {
   const packageResolver = new JavaPackageResolver();
 
   test("parses Food.java", () => {
-    const result = packageResolver.resolveFile(food);
+    const result = packageResolver.resolveFile(food)!;
     expect(result).toBeDefined();
     expect(result.path).toStrictEqual(FOOD);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
@@ -39,7 +39,7 @@ describe("Java Package Resolver", () => {
   });
 
   test("parses Condiment.java", () => {
-    const result = packageResolver.resolveFile(condiment);
+    const result = packageResolver.resolveFile(condiment)!;
     expect(result).toBeDefined();
     expect(result.path).toStrictEqual(CONDIMENT);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
@@ -57,7 +57,7 @@ describe("Java Package Resolver", () => {
   });
 
   test("parses Steak.java", () => {
-    const result = packageResolver.resolveFile(steak);
+    const result = packageResolver.resolveFile(steak)!;
     expect(result).toBeDefined();
     expect(result.path).toStrictEqual(STEAK);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
@@ -87,7 +87,7 @@ describe("Java Package Resolver", () => {
   });
 
   test("parses Burger.java", () => {
-    const result = packageResolver.resolveFile(burger);
+    const result = packageResolver.resolveFile(burger)!;
     expect(result).toBeDefined();
     expect(result.path).toStrictEqual(BURGER);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
@@ -109,7 +109,7 @@ describe("Java Package Resolver", () => {
   });
 
   test("parses DoubleBurger.java", () => {
-    const result = packageResolver.resolveFile(doubleburger);
+    const result = packageResolver.resolveFile(doubleburger)!;
     expect(result).toBeDefined();
     expect(result.path).toStrictEqual(DOUBLEBURGER);
     expect(result.package).toBe("io.nanoapi.testfiles.food");
