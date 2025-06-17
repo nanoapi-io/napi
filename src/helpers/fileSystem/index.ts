@@ -52,11 +52,6 @@ export function getFilesFromDirectory(
     );
   }
 
-  // Ensure the directory is in UNIX format
-  if (Deno.build.os === "windows") {
-    dir = dir.replace(/\\/g, "/");
-  }
-
   const files = new Map<string, { path: string; content: string }>();
 
   relativeFilePaths.forEach((relativeFilePath) => {
@@ -68,16 +63,18 @@ export function getFilesFromDirectory(
       }
     }
 
-    // Convert relativeFilePath to UNIX format
-    if (Deno.build.os === "windows") {
-      relativeFilePath = relativeFilePath.replace(/\\/g, "/");
-    }
-
     if (include) {
       const fullPath = join(dir, relativeFilePath);
       const fileContent = Deno.readTextFileSync(fullPath);
-      files.set(relativeFilePath, {
-        path: relativeFilePath,
+
+      let unixPath = relativeFilePath;
+      // ensure the file content is in UNIX format
+      if (Deno.build.os === "windows") {
+        unixPath = relativeFilePath.replace(/\\/g, "/");
+      }
+
+      files.set(unixPath, {
+        path: unixPath,
         content: fileContent,
       });
     } else {
