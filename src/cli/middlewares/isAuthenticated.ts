@@ -18,9 +18,7 @@ export async function isAuthenticatedMiddleware(
 
   try {
     const apiService = new ApiService(
-      globalConfig.apiHost,
-      globalConfig.jwt,
-      undefined,
+      globalConfig,
     );
     const response = await apiService.performRequest("GET", "/auth/me");
 
