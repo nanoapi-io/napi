@@ -67,11 +67,8 @@ export function getFilesFromDirectory(
       const fullPath = join(dir, relativeFilePath);
       const fileContent = Deno.readTextFileSync(fullPath);
 
-      let unixPath = relativeFilePath;
       // ensure the file content is in UNIX format
-      if (Deno.build.os === "windows") {
-        unixPath = relativeFilePath.replace(/\\/g, "/");
-      }
+      const unixPath = relativeFilePath.replace(/\\/g, "/");
 
       files.set(unixPath, {
         path: unixPath,
