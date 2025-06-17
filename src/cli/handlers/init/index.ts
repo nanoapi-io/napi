@@ -281,7 +281,8 @@ Examples:
 
     while (continueAdding) {
       const pattern = await input({
-        message: `Enter glob pattern (e.g., '**${SEPARATOR}*.py', 'src${SEPARATOR}**')`,
+        message:
+          `Enter glob pattern (e.g., '**${SEPARATOR}*.py', 'src${SEPARATOR}**')`,
         validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
@@ -410,7 +411,8 @@ Examples:
 
     while (continueAdding) {
       const pattern = await input({
-        message: `Enter glob pattern (e.g., 'node_modules${SEPARATOR}**', '**${SEPARATOR}*.test.js')`,
+        message:
+          `Enter glob pattern (e.g., 'node_modules${SEPARATOR}**', '**${SEPARATOR}*.test.js')`,
         validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
@@ -488,14 +490,20 @@ function suggestIncludePatterns(
   // Language-specific suggestions
   if (language === pythonLanguage) {
     // Check for common Python project structures
-    if (projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))) {
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
+    ) {
       suggestions.push(`src${SEPARATOR}**${SEPARATOR}*.py`);
     }
-    if (projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))) {
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))
+    ) {
       suggestions.push(`lib${SEPARATOR}**${SEPARATOR}*.py`);
     }
     if (suggestions.length === 0) {
-      if (projectStructure.some((entry) => entry.includes(`📂 app${SEPARATOR}`))) {
+      if (
+        projectStructure.some((entry) => entry.includes(`📂 app${SEPARATOR}`))
+      ) {
         suggestions.push(`app${SEPARATOR}**${SEPARATOR}*.py`);
       }
     }
@@ -506,20 +514,36 @@ function suggestIncludePatterns(
     }
   } else if (language === csharpLanguage) {
     // Check for common C# project structures
-    if (projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))) {
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
+    ) {
       suggestions.push("src/**/*.cs");
     }
-    if (projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))) {
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))
+    ) {
       suggestions.push(`lib${SEPARATOR}**${SEPARATOR}*.cs`);
     }
     if (suggestions.length === 0) {
-      if (projectStructure.some((entry) => entry.includes(`📂 Controllers${SEPARATOR}`))) {
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 Controllers${SEPARATOR}`)
+        )
+      ) {
         suggestions.push(`Controllers${SEPARATOR}**${SEPARATOR}*.cs`);
       }
-      if (projectStructure.some((entry) => entry.includes(`📂 Models${SEPARATOR}`))) {
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 Models${SEPARATOR}`)
+        )
+      ) {
         suggestions.push(`Models${SEPARATOR}**${SEPARATOR}*.cs`);
       }
-      if (projectStructure.some((entry) => entry.includes(`📂 Services${SEPARATOR}`))) {
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 Services${SEPARATOR}`)
+        )
+      ) {
         suggestions.push(`Services${SEPARATOR}**${SEPARATOR}*.cs`);
       }
     }
