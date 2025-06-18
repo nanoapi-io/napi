@@ -3,7 +3,7 @@ import {
   createConfig,
   getConfigFromWorkDir,
 } from "../../middlewares/napiConfig.ts";
-import { join, normalize, relative } from "@std/path";
+import { join, normalize, relative, SEPARATOR } from "@std/path";
 import type z from "zod";
 import type { localConfigSchema } from "../../middlewares/napiConfig.ts";
 import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with {
@@ -80,7 +80,7 @@ async function handler(
     if (confirmSave) {
       createConfig(napiConfig, argv.workdir);
       console.info("\n✅ Configuration saved successfully!");
-      console.info(`📄 Created: ${argv.workdir}/.napirc`);
+      console.info(`📄 Created: ${argv.workdir}${SEPARATOR}.napirc`);
       console.info("🎉 Your NanoAPI project is ready!");
     } else {
       console.info("❌ Configuration not saved");
@@ -238,8 +238,8 @@ async function collectIncludePatterns(
 Include patterns define which files NanoAPI will process and analyze.
 
 Examples:
-- '**/*.py' for all Python files
-- 'src/**' for all files in src directory
+- '**${SEPARATOR}*.py' for all Python files
+- 'src${SEPARATOR}**' for all files in src directory
 - '*.py' for all Python files in the root directory
 `,
   );
@@ -281,7 +281,8 @@ Examples:
 
     while (continueAdding) {
       const pattern = await input({
-        message: "Enter glob pattern (e.g., '**/*.py', 'src/**')",
+        message:
+          `Enter glob pattern (e.g., '**${SEPARATOR}*.py', 'src${SEPARATOR}**')`,
         validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
@@ -363,9 +364,9 @@ async function collectExcludePatterns(
 Exclude patterns define which files NanoAPI will ignore during processing.
 
 Examples:
-- 'node_modules/**' to exclude all node modules
-- '**/*.test.js' to exclude all JavaScript test files
-- '.git/**' to exclude git directory
+- 'node_modules${SEPARATOR}**' to exclude all node modules
+- '**${SEPARATOR}*.test.js' to exclude all JavaScript test files
+- '.git${SEPARATOR}**' to exclude git directory
 `,
   );
 
@@ -410,7 +411,8 @@ Examples:
 
     while (continueAdding) {
       const pattern = await input({
-        message: "Enter glob pattern (e.g., 'node_modules/**', '**/*.test.js')",
+        message:
+          `Enter glob pattern (e.g., 'node_modules${SEPARATOR}**', '**${SEPARATOR}*.test.js')`,
         validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
@@ -488,45 +490,67 @@ function suggestIncludePatterns(
   // Language-specific suggestions
   if (language === pythonLanguage) {
     // Check for common Python project structures
-    if (projectStructure.some((entry) => entry.includes("📂 src/"))) {
-      suggestions.push("src/**/*.py");
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
+    ) {
+      suggestions.push(`src${SEPARATOR}**${SEPARATOR}*.py`);
     }
-    if (projectStructure.some((entry) => entry.includes("📂 lib/"))) {
-      suggestions.push("lib/**/*.py");
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))
+    ) {
+      suggestions.push(`lib${SEPARATOR}**${SEPARATOR}*.py`);
     }
     if (suggestions.length === 0) {
-      if (projectStructure.some((entry) => entry.includes("📂 app/"))) {
-        suggestions.push("app/**/*.py");
+      if (
+        projectStructure.some((entry) => entry.includes(`📂 app${SEPARATOR}`))
+      ) {
+        suggestions.push(`app${SEPARATOR}**${SEPARATOR}*.py`);
       }
     }
 
     // If no specific directories found, suggest all Python files
     if (suggestions.length === 0) {
-      suggestions.push("**/*.py");
+      suggestions.push(`**${SEPARATOR}*.py`);
     }
   } else if (language === csharpLanguage) {
     // Check for common C# project structures
-    if (projectStructure.some((entry) => entry.includes("📂 src/"))) {
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
+    ) {
       suggestions.push("src/**/*.cs");
     }
-    if (projectStructure.some((entry) => entry.includes("📂 lib/"))) {
-      suggestions.push("lib/**/*.cs");
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))
+    ) {
+      suggestions.push(`lib${SEPARATOR}**${SEPARATOR}*.cs`);
     }
     if (suggestions.length === 0) {
-      if (projectStructure.some((entry) => entry.includes("📂 Controllers/"))) {
-        suggestions.push("Controllers/**/*.cs");
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 Controllers${SEPARATOR}`)
+        )
+      ) {
+        suggestions.push(`Controllers${SEPARATOR}**${SEPARATOR}*.cs`);
       }
-      if (projectStructure.some((entry) => entry.includes("📂 Models/"))) {
-        suggestions.push("Models/**/*.cs");
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 Models${SEPARATOR}`)
+        )
+      ) {
+        suggestions.push(`Models${SEPARATOR}**${SEPARATOR}*.cs`);
       }
-      if (projectStructure.some((entry) => entry.includes("📂 Services/"))) {
-        suggestions.push("Services/**/*.cs");
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 Services${SEPARATOR}`)
+        )
+      ) {
+        suggestions.push(`Services${SEPARATOR}**${SEPARATOR}*.cs`);
       }
     }
 
     // If no specific directories found, suggest all C# files
     if (suggestions.length === 0) {
-      suggestions.push("**/*.cs");
+      suggestions.push(`**${SEPARATOR}*.cs`);
     }
   }
 
@@ -544,36 +568,36 @@ function suggestExcludePatterns(
   const suggestions: string[] = [];
 
   // add outDir to the suggestions
-  suggestions.push(`${outDir}/**`);
+  suggestions.push(`${outDir}${SEPARATOR}**`);
 
   // Common exclusions for all languages
-  suggestions.push(".git/**");
-  suggestions.push("**/dist/**");
-  suggestions.push("**/build/**");
+  suggestions.push(`.git${SEPARATOR}**`);
+  suggestions.push(`**${SEPARATOR}dist${SEPARATOR}**`);
+  suggestions.push(`**${SEPARATOR}build${SEPARATOR}**`);
 
   // Language-specific suggestions
   if (language === pythonLanguage) {
-    suggestions.push("**/__pycache__/**");
-    suggestions.push("**/*.pyc");
-    suggestions.push("**/.pytest_cache/**");
-    suggestions.push("**/venv/**");
-    suggestions.push("**/.env/**");
-    suggestions.push("**/*.egg-info/**");
-    suggestions.push("**/.tox/**");
-    suggestions.push("**/.coverage");
-    suggestions.push("**/htmlcov/**");
-    suggestions.push("**/.mypy_cache/**");
+    suggestions.push(`**${SEPARATOR}__pycache__${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}*.pyc`);
+    suggestions.push(`**${SEPARATOR}.pytest_cache${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}venv${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.env${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}*.egg-info${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.tox${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.coverage`);
+    suggestions.push(`**${SEPARATOR}htmlcov${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.mypy_cache${SEPARATOR}**`);
   } else if (language === csharpLanguage) {
-    suggestions.push("**/bin/**");
-    suggestions.push("**/obj/**");
-    suggestions.push("**/packages/**");
-    suggestions.push("**/.vs/**");
-    suggestions.push("**/TestResults/**");
-    suggestions.push("**/*.user");
-    suggestions.push("**/*.suo");
-    suggestions.push("**/.nuget/**");
-    suggestions.push("**/artifacts/**");
-    suggestions.push("**/packages/**");
+    suggestions.push(`**${SEPARATOR}bin${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}obj${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}packages${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.vs${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}TestResults${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}*.user`);
+    suggestions.push(`**${SEPARATOR}*.suo`);
+    suggestions.push(`**${SEPARATOR}.nuget${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}artifacts${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}packages${SEPARATOR}**`);
   }
 
   return suggestions;

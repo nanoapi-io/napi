@@ -1,4 +1,4 @@
-import { basename, dirname, join, SEPARATOR } from "@std/path";
+import { basename, dirname, join } from "@std/path";
 import type {
   ExternalSymbol,
   InternalSymbol,
@@ -76,8 +76,8 @@ export class CSharpProjectMapper {
     const subprojects: DotNetProject[] = [];
     for (const [csprojPath, csprojContent] of csprojFiles) {
       const subproject: DotNetProject = {
-        rootFolder: dirname(csprojPath),
-        name: basename(csprojPath, ".csproj"),
+        rootFolder: dirname(csprojPath).replace(/\\/g, "/"), // Ensure UNIX format
+        name: basename(csprojPath, ".csproj").replace(/\\/g, "/"), // Ensure UNIX format
         csprojPath,
         csprojContent: csprojContent.content,
         globalUsings: { internal: [], external: [], directives: [] },
@@ -98,23 +98,23 @@ export class CSharpProjectMapper {
         "No .csproj files found. Make sure to include .csproj files along with .cs files in .napirc and that such files exist in your project.",
       );
     }
-    const splitPaths = filepaths.map((filepath) => filepath.split(SEPARATOR));
+    const splitPaths = filepaths.map((filepath) => filepath.split("/"));
     const commonPath = splitPaths[0].slice();
     for (let i = 0; i < commonPath.length; i++) {
       for (let j = 1; j < splitPaths.length; j++) {
         if (splitPaths[j][i] !== commonPath[i]) {
           commonPath.splice(i);
-          let rootFolder = join("", ...commonPath);
-          if (filepaths[0].startsWith(SEPARATOR)) {
-            rootFolder = SEPARATOR + rootFolder;
+          let rootFolder = join("", ...commonPath).replace(/\\/g, "/");
+          if (filepaths[0].startsWith("/")) {
+            rootFolder = "/" + rootFolder;
           }
           return rootFolder;
         }
       }
     }
-    let rootFolder = join("", ...commonPath);
-    if (filepaths[0].startsWith(SEPARATOR)) {
-      rootFolder = SEPARATOR + rootFolder;
+    let rootFolder = join("", ...commonPath).replace(/\\/g, "/");
+    if (filepaths[0].startsWith("/")) {
+      rootFolder = "/" + rootFolder;
     }
     return rootFolder;
   }

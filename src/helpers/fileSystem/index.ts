@@ -66,8 +66,12 @@ export function getFilesFromDirectory(
     if (include) {
       const fullPath = join(dir, relativeFilePath);
       const fileContent = Deno.readTextFileSync(fullPath);
-      files.set(relativeFilePath, {
-        path: relativeFilePath,
+
+      // ensure the file content is in UNIX format
+      const unixPath = relativeFilePath.replace(/\\/g, "/");
+
+      files.set(unixPath, {
+        path: unixPath,
         content: fileContent,
       });
     } else {
@@ -86,8 +90,13 @@ export function getFilesFromDirectory(
 
 export function writeFilesToDirectory(
   files: Map<string, { path: string; content: string }>,
-  dir: string,
+  dir: string, // Always in UNIX format
 ) {
+  // As dir is always in UNIX format, we need to map it to windows format when writing files
+  if (Deno.build.os === "windows") {
+    dir = dir.replace(/\//g, "\\");
+  }
+
   // empty the directory first
   try {
     Deno.removeSync(dir, { recursive: true });
@@ -96,7 +105,11 @@ export function writeFilesToDirectory(
   }
   Deno.mkdirSync(dir, { recursive: true });
 
-  for (const { path, content } of files.values()) {
+  for (let { path, content } of files.values()) {
+    if (Deno.build.os === "windows") {
+      // Convert path to Windows format if necessary
+      path = path.replace(/\//g, "\\");
+    }
     const fullPath = join(dir, path);
     Deno.mkdirSync(dirname(fullPath), { recursive: true });
     Deno.writeTextFileSync(fullPath, content);

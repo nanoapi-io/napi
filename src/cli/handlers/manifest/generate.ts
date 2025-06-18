@@ -259,6 +259,8 @@ async function handler(
           Deno.exit(1);
         }
 
+        const responseBody = await response.json() as { id: number };
+
         const duration = Date.now() - start;
         console.info(
           `✅ Manifest uploaded successfully for project id: ${projectId} in ${duration}ms`,
@@ -269,7 +271,7 @@ async function handler(
 
         if (globalConfig.apiHost === defaultApiHost) {
           console.info(
-            `\nView it here: https://app.nanoapi.io/projects/${projectId}/manifests`,
+            `\nView it here: https://app.nanoapi.io/projects/${projectId}/manifests/${responseBody.id}`,
           );
         }
       } catch (error) {
