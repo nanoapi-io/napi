@@ -15,6 +15,7 @@
     "tree-sitter-c": "npm:tree-sitter-c@0.23.6",
     "tree-sitter-c-sharp": "npm:tree-sitter-c-sharp@^0.23.1",
     "tree-sitter-python": "npm:tree-sitter-python@^0.23.6",
+    "tree-sitter-java": "npm:tree-sitter-java@^0.23.5",
     "yargs": "https://deno.land/x/yargs@v18.0.0-deno/deno.ts",
     "yargs-types": "https://deno.land/x/yargs@v18.0.0-deno/deno-types.ts",
     "zod": "npm:zod@^3.24.4"

@@ -59,8 +59,8 @@ status:
 | ------------------ | -------------- |
 | Python             | ✅ Supported   |
 | C#                 | ✅ Supported   |
-| C                  | ✅ In Progress |
-| Java               | 🚧 In Progress |
+| C                  | ✅ Supported   |
+| Java               | ✅ Supported   |
 | C++                | 🚧 In Progress |
 | PHP                | 🚧 In Progress |
 | JavaScript         | 🚧 In Progress |

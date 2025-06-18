@@ -1,7 +1,8 @@
 import Parser, { type Language } from "tree-sitter";
-import Python from "tree-sitter-python";
-import CSharp from "tree-sitter-c-sharp";
+import Python from "npm:tree-sitter-python";
+import CSharp from "npm:tree-sitter-c-sharp";
 import C from "tree-sitter-c";
+import Java from "npm:tree-sitter-java";
 
 const pythonParser = new Parser();
 pythonParser.setLanguage(Python as Language);
@@ -15,11 +16,17 @@ const cParser = new Parser();
 cParser.setLanguage(C as Language);
 const cLanguage = C.name as "c";
 
+const javaParser = new Parser();
+javaParser.setLanguage(Java as Language);
+const javaLanguage = Java.name as "java";
+
 export {
   cLanguage,
   cParser,
   csharpLanguage,
   csharpParser,
+  javaLanguage,
+  javaParser,
   pythonLanguage,
   pythonParser,
 };
