@@ -39,7 +39,9 @@ export class CExtractor {
     const outDir = napiConfig.outDir;
     const includeDirs = napiConfig["c"]?.includedirs ?? [];
     if (outDir) {
-      includeDirs.push(...includeDirs.map((i) => join(outDir, i)));
+      includeDirs.push(
+        ...includeDirs.map((i) => join(outDir, i).replace(/\\/g, "/")),
+      );
     }
     this.includeResolver = new CIncludeResolver(symbolRegistry, includeDirs);
     this.invocationResolver = new CInvocationResolver(this.includeResolver);

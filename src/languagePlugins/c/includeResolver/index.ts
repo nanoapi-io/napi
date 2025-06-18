@@ -30,14 +30,14 @@ export class CIncludeResolver {
     const filepaths = Array.from(this.symbolRegistry.keys());
     // 1. Check current file's directory
     const sourceDir = dirname(sourcepath);
-    const pathfromrelative = join(sourceDir, filepath);
+    const pathfromrelative = join(sourceDir, filepath).replace(/\\/g, "/");
     const corresponding1 = filepaths.find((f) => f === pathfromrelative);
     if (corresponding1) {
       return this.symbolRegistry.get(corresponding1);
     }
     // 2. Check include directories
     for (const dir of this.includeDirs) {
-      const pathfrominclude = join(dir, filepath);
+      const pathfrominclude = join(dir, filepath).replace(/\\/g, "/");
       const corresponding = filepaths.find((f) => f === pathfrominclude);
       if (corresponding) {
         return this.symbolRegistry.get(corresponding);

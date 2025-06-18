@@ -1,4 +1,3 @@
-import { SEPARATOR } from "@std/path";
 import pythonStdLib from "../../../scripts/generate_python_stdlib_list/output.json" with {
   type: "json",
 };
@@ -139,7 +138,7 @@ export class PythonModuleResolver {
 
     filePaths.forEach((filePath) => {
       // Split the file path into directories and file name.
-      const parts = filePath.split(SEPARATOR);
+      const parts = filePath.split("/");
 
       // Default to a normal module unless it is an __init__.py file.
       let endModuleType: PythonModuleType = PYTHON_MODULE_TYPE;
@@ -160,7 +159,7 @@ export class PythonModuleResolver {
       // Traverse or create the module tree based on each part of the path.
       parts.forEach((part) => {
         currentFullName = currentFullName ? `${currentFullName}.${part}` : part;
-        currentPath = currentPath ? `${currentPath}${SEPARATOR}${part}` : part;
+        currentPath = currentPath ? `${currentPath}/${part}` : part;
 
         const existingModule = currentModule.children.get(part);
         if (existingModule) {
@@ -211,11 +210,11 @@ export class PythonModuleResolver {
     }
 
     // Treat __init__.py as indicating the package's directory.
-    if (filePath.endsWith(`${SEPARATOR}__init__.py`)) {
+    if (filePath.endsWith(`/__init__.py`)) {
       filePath = filePath.slice(0, -"__init__.py".length);
       // Remove trailing separator if it exists.
-      if (filePath.endsWith(SEPARATOR)) {
-        filePath = filePath.slice(0, -SEPARATOR.length);
+      if (filePath.endsWith("/")) {
+        filePath = filePath.slice(0, -"/".length);
       }
     } else if (filePath.endsWith(".py")) {
       // Remove the .py extension from module files.
@@ -223,7 +222,7 @@ export class PythonModuleResolver {
     }
 
     let currentNode = this.pythonModule;
-    for (const part of filePath.split(SEPARATOR)) {
+    for (const part of filePath.split("/")) {
       if (part === "") continue; // Skip empty segments.
       const candidateNode = currentNode.children.get(part);
       if (!candidateNode) {
