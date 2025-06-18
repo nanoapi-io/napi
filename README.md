@@ -36,9 +36,9 @@ determinstic tool.
 
 ## Why `napi`?
 
-- **Application Library**: `napi` is not just a CLI tool; it is a
-  comprehensive application library of all projects and their interactions within 
-  your organization.
+- **Application Library**: `napi` is not just a CLI tool; it is a comprehensive
+  application library of all projects and their interactions within your
+  organization.
 - **Enables discovery into legacy systems**: indentify problematic code and
   potential improvements early.
 - **Modular Monoliths**: Simplifies the process of extracting functionality
@@ -95,7 +95,7 @@ This will download and install the latest version of `napi` to your system.
 
 ### Troubleshooting
 
-If you encounter any issues during installation, please refer to our 
+If you encounter any issues during installation, please refer to our
 [Troubleshooting Guide](https://docs.nanoapi.io/default-guide/troubleshooting)
 
 ## CLI Usage

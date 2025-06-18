@@ -98,23 +98,23 @@ export class CSharpProjectMapper {
         "No .csproj files found. Make sure to include .csproj files along with .cs files in .napirc and that such files exist in your project.",
       );
     }
-    const splitPaths = filepaths.map((filepath) => filepath.split('/'));
+    const splitPaths = filepaths.map((filepath) => filepath.split("/"));
     const commonPath = splitPaths[0].slice();
     for (let i = 0; i < commonPath.length; i++) {
       for (let j = 1; j < splitPaths.length; j++) {
         if (splitPaths[j][i] !== commonPath[i]) {
           commonPath.splice(i);
           let rootFolder = join("", ...commonPath).replace(/\\/g, "/");
-          if (filepaths[0].startsWith('/')) {
-            rootFolder = '/' + rootFolder;
+          if (filepaths[0].startsWith("/")) {
+            rootFolder = "/" + rootFolder;
           }
           return rootFolder;
         }
       }
     }
     let rootFolder = join("", ...commonPath).replace(/\\/g, "/");
-    if (filepaths[0].startsWith('/')) {
-      rootFolder = '/' + rootFolder;
+    if (filepaths[0].startsWith("/")) {
+      rootFolder = "/" + rootFolder;
     }
     return rootFolder;
   }
