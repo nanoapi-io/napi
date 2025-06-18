@@ -4,7 +4,7 @@ import {
   getConfigFromWorkDir,
 } from "../../middlewares/napiConfig.ts";
 import { join, normalize, relative, SEPARATOR } from "@std/path";
-import type z from "zod";
+import z from "zod";
 import type { localConfigSchema } from "../../middlewares/napiConfig.ts";
 import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with {
   type: "json",
@@ -749,12 +749,25 @@ async function createNewProject(apiService: ApiService): Promise<number> {
     },
   });
 
+  const projectRepoUrl = await input({
+    message: "Enter the URL of your project repository:",
+    validate: (value) => {
+      if (!value.trim()) return "Project repository URL cannot be empty";
+      const result = z.string().url().safeParse(value);
+      if (!result.success) {
+        return result.error.message;
+      }
+      return true;
+    },
+  });
+
   try {
     const createProjectResponse = await apiService.performRequest(
       "POST",
       "/projects",
       {
         name: projectName,
+        repoUrl: projectRepoUrl,
         workspaceId: selectedWorkspaceId,
         maxCodeCharPerSymbol: 100,
         maxCodeCharPerFile: 1000,
