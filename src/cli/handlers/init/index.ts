@@ -14,6 +14,7 @@ import { globSync } from "glob";
 import {
   cLanguage,
   csharpLanguage,
+  javaLanguage,
   pythonLanguage,
 } from "../../../helpers/treeSitter/parsers.ts";
 import { ApiService } from "../../../apiService/index.ts";
@@ -517,7 +518,7 @@ function suggestIncludePatterns(
     if (
       projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
     ) {
-      suggestions.push("src/**/*.cs");
+      suggestions.push(`src${SEPARATOR}**${SEPARATOR}*.cs`);
     }
     if (
       projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))
@@ -551,6 +552,78 @@ function suggestIncludePatterns(
     // If no specific directories found, suggest all C# files
     if (suggestions.length === 0) {
       suggestions.push(`**${SEPARATOR}*.cs`);
+    }
+  } else if (language === cLanguage) {
+    // Check for common C project structures
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
+    ) {
+      suggestions.push(`src${SEPARATOR}**${SEPARATOR}*.c`);
+      suggestions.push(`src${SEPARATOR}**${SEPARATOR}*.h`);
+    }
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))
+    ) {
+      suggestions.push(`lib${SEPARATOR}**${SEPARATOR}*.c`);
+      suggestions.push(`lib${SEPARATOR}**${SEPARATOR}*.h`);
+    }
+    if (suggestions.length === 0) {
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 include${SEPARATOR}`)
+        )
+      ) {
+        suggestions.push(`include${SEPARATOR}**${SEPARATOR}*.c`);
+        suggestions.push(`include${SEPARATOR}**${SEPARATOR}*.h`);
+      }
+    }
+    if (suggestions.length === 0) {
+      suggestions.push(`**${SEPARATOR}*.c`);
+      suggestions.push(`**${SEPARATOR}*.h`);
+    }
+  } else if (language === javaLanguage) {
+    // Check for common Java project structures
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
+    ) {
+      suggestions.push(`src${SEPARATOR}**${SEPARATOR}*.java`);
+    }
+    if (
+      projectStructure.some((entry) => entry.includes(`📂 lib${SEPARATOR}`))
+    ) {
+      suggestions.push(`lib${SEPARATOR}**${SEPARATOR}*.java`);
+    }
+    if (suggestions.length === 0) {
+      if (
+        projectStructure.some((entry) =>
+          entry.includes(`📂 buildSrc${SEPARATOR}`)
+        )
+      ) {
+        suggestions.push(`buildSrc${SEPARATOR}**${SEPARATOR}*.java`);
+      }
+      if (
+        projectStructure.some((entry) => entry.includes(`📂 app${SEPARATOR}`))
+      ) {
+        suggestions.push(`app${SEPARATOR}**${SEPARATOR}*.java`);
+      }
+      if (
+        projectStructure.some((entry) => entry.includes(`📂 core${SEPARATOR}`))
+      ) {
+        suggestions.push(`core${SEPARATOR}**${SEPARATOR}*.java`);
+      }
+      if (
+        projectStructure.some((entry) => entry.includes(`📂 util${SEPARATOR}`))
+      ) {
+        suggestions.push(`util${SEPARATOR}**${SEPARATOR}*.java`);
+      }
+      if (
+        projectStructure.some((entry) => entry.includes(`📂 libs${SEPARATOR}`))
+      ) {
+        suggestions.push(`libs${SEPARATOR}**${SEPARATOR}*.java`);
+      }
+    }
+    if (suggestions.length === 0) {
+      suggestions.push(`**${SEPARATOR}*.java`);
     }
   }
 
@@ -598,6 +671,14 @@ function suggestExcludePatterns(
     suggestions.push(`**${SEPARATOR}.nuget${SEPARATOR}**`);
     suggestions.push(`**${SEPARATOR}artifacts${SEPARATOR}**`);
     suggestions.push(`**${SEPARATOR}packages${SEPARATOR}**`);
+  } else if (language === javaLanguage) {
+    suggestions.push(`**${SEPARATOR}bin${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}obj${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.bin${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.obj${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}target${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.mvn${SEPARATOR}**`);
+    suggestions.push(`**${SEPARATOR}.svn${SEPARATOR}**`);
   }
 
   return suggestions;
@@ -849,6 +930,7 @@ export async function generateConfig(
       { name: "Python", value: pythonLanguage },
       { name: "C#", value: csharpLanguage },
       { name: "C", value: cLanguage },
+      { name: "Java", value: javaLanguage },
     ],
   });
 
@@ -869,6 +951,31 @@ export async function generateConfig(
       pythonConfig = {
         version: pythonVersion,
       };
+    }
+  }
+
+  // C-specific config
+  let cConfig: z.infer<typeof localConfigSchema>["c"] | undefined = undefined;
+  if (language === cLanguage) {
+    const hasIncludeDirs = await confirm({
+      message: "Does your project have include directories for headers?",
+    });
+    if (hasIncludeDirs) {
+      const includeDirsInput = await input({
+        message: "Enter the include directories, separated by commas:",
+        validate: (value) => {
+          if (!value.trim()) return "Include directories cannot be empty";
+          return true;
+        },
+      });
+
+      const includeDirs = includeDirsInput.split(",").map((dir) => dir.trim());
+
+      if (includeDirs.length > 0) {
+        cConfig = {
+          includedirs: includeDirs,
+        };
+      }
     }
   }
 
@@ -938,6 +1045,11 @@ export async function generateConfig(
   // Add python config if it exists
   if (pythonConfig) {
     config.python = pythonConfig;
+  }
+
+  // Add C config if it exists
+  if (cConfig) {
+    config.c = cConfig;
   }
 
   return config;

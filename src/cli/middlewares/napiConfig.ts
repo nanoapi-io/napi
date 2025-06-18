@@ -7,6 +7,7 @@ import pythonStdlibList from "../../scripts/generate_python_stdlib_list/output.j
 import {
   cLanguage,
   csharpLanguage,
+  javaLanguage,
   pythonLanguage,
 } from "../../helpers/treeSitter/parsers.ts";
 
@@ -14,7 +15,7 @@ const pythonVersions = Object.keys(pythonStdlibList);
 
 export const localConfigSchema = z.object({
   projectIds: z.array(z.number().int()),
-  language: z.enum([pythonLanguage, csharpLanguage, cLanguage]),
+  language: z.enum([pythonLanguage, csharpLanguage, cLanguage, javaLanguage]),
   [pythonLanguage]: z
     .object({
       version: z

@@ -3,6 +3,7 @@ import { dirname, join } from "@std/path";
 import {
   cLanguage,
   csharpLanguage,
+  javaLanguage,
   pythonLanguage,
 } from "../treeSitter/parsers.ts";
 
@@ -11,6 +12,7 @@ export function getExtensionsForLanguage(language: string) {
     [pythonLanguage]: ["py"],
     [csharpLanguage]: ["cs", "csproj"],
     [cLanguage]: ["c", "h"],
+    [javaLanguage]: ["java"],
   };
 
   const supportedLanguage = supportedLanguages[language];

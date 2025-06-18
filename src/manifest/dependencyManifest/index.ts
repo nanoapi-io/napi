@@ -7,8 +7,10 @@ import type { DependencyManifest, SymbolDependencyManifest } from "./types.ts";
 import {
   cLanguage,
   csharpLanguage,
+  javaLanguage,
   pythonLanguage,
 } from "../../helpers/treeSitter/parsers.ts";
+import { generateJavaDependencyManifest } from "./java/index.ts";
 
 const handlerMap: Record<
   string,
@@ -20,6 +22,7 @@ const handlerMap: Record<
   [pythonLanguage]: generatePythonDependencyManifest,
   [csharpLanguage]: generateCSharpDependencyManifest,
   [cLanguage]: generateCDependencyManifest,
+  [javaLanguage]: generateJavaDependencyManifest,
 };
 
 export class UnsupportedLanguageError extends Error {
