@@ -24,7 +24,7 @@ jobs:
         run: deno lint
 
       - name: Deno fmt (check)
-        run: deno fmt --check --ignore=examples/java/websocket/**/*.html
+        run: deno fmt --check
 
   tests:
     runs-on: ubuntu-latest
