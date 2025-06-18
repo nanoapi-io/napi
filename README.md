@@ -76,22 +76,23 @@ To install `napi`, you can use our installation script:
 
 ### Unix Systems (MacOS, Linux)
 
+Wyou to install napi using our convenience script:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.sh | bash
 ```
 
-### Windows (PowerShell)
-
-```powershell
-irm https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.ps1 | iex
-```
-
-If you prefer not to use the installation script, you can also download the
-latest release directly from our GitHub repository:
+You can also download and install the latest release manually directly from our
+GitHub repository:
 
 https://github.com/nanoapi-io/napi/releases/latest
 
-This will download and install the latest version of `napi` to your system.
+### Windows
+
+You can run napi using Windows Subsystem for Linux (WSL)
+https://learn.microsoft.com/en-us/windows/wsl/install
+
+We are actively working on supporting windows natievely.
 
 ### Troubleshooting
 
