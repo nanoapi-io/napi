@@ -14,6 +14,7 @@
     "tree-sitter": "npm:tree-sitter@^0.22.4",
     "tree-sitter-c": "npm:tree-sitter-c@0.23.6",
     "tree-sitter-c-sharp": "npm:tree-sitter-c-sharp@^0.23.1",
+    "tree-sitter-php": "npm:tree-sitter-php@^0.23.12",
     "tree-sitter-python": "npm:tree-sitter-python@^0.23.6",
     "tree-sitter-java": "npm:tree-sitter-java@^0.23.5",
     "yargs": "https://deno.land/x/yargs@v18.0.0-deno/deno.ts",
