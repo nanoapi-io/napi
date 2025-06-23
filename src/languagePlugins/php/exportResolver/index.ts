@@ -1,5 +1,9 @@
 import type Parser from "tree-sitter";
-import type { ExportedNamespace, ExportedSymbol } from "./types.ts";
+import {
+  type ExportedNamespace,
+  type ExportedSymbol,
+  PHP_VARIABLE,
+} from "./types.ts";
 import { INTERESTING_NODES, PHP_IDNODE_QUERY } from "./queries.ts";
 
 export class PHPExportResolver {
@@ -34,9 +38,15 @@ export class PHPExportResolver {
       if (INTERESTING_NODES.has(child.type)) {
         const idNode = PHP_IDNODE_QUERY.captures(child).at(0);
         if (!idNode) {
-          continue;
+          continue; // Root out false positives for variables and constants
         }
         const symType = INTERESTING_NODES.get(child.type)!;
+        if (
+          symType === PHP_VARIABLE &&
+          exports.find((e) => e.name === idNode.node.text)
+        ) {
+          continue; // No duplicate variables
+        }
         exports.push({
           name: idNode.node.text,
           type: symType,
@@ -53,7 +63,7 @@ export class PHPExportResolver {
       )
     ) {
       const fullnsname = (nsname !== "" ? nsname + "\\" : "") +
-        ns.childForFieldName("name")!;
+        ns.childForFieldName("name")!.text;
       const nsnode = ns.childForFieldName("body")!;
       exports.push(...this.#resolveNode(nsnode, fullnsname));
     }

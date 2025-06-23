@@ -5,17 +5,19 @@ import {
   PHP_CONSTANT,
   PHP_FUNCTION,
   PHP_INTERFACE,
+  PHP_TRAIT,
   PHP_VARIABLE,
   type SymbolType,
 } from "./types.ts";
 
 export const INTERESTING_NODES = new Map<string, SymbolType>([
   ["const_declaration", PHP_CONSTANT],
-  ["function_declaration", PHP_FUNCTION],
+  ["function_definition", PHP_FUNCTION],
   ["class_declaration", PHP_CLASS],
   ["interface_declaration", PHP_INTERFACE],
   ["expression_statement", PHP_VARIABLE],
   ["function_call_expression", PHP_CONSTANT],
+  ["trait_declaration", PHP_TRAIT],
 ]);
 
 export const PHP_IDNODE_QUERY = new Parser.Query(
@@ -40,6 +42,9 @@ export const PHP_IDNODE_QUERY = new Parser.Query(
   name: (name) @name)
 
   (class_declaration
+  name: (name) @name)
+
+  (trait_declaration
   name: (name) @name)
 
   (interface_declaration

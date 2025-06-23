@@ -5,12 +5,14 @@ export const PHP_CONSTANT = "constant";
 export const PHP_FUNCTION = "function";
 export const PHP_CLASS = "class";
 export const PHP_INTERFACE = "interface";
+export const PHP_TRAIT = "trait";
 export type SymbolType =
   | typeof PHP_VARIABLE
   | typeof PHP_CONSTANT
   | typeof PHP_FUNCTION
   | typeof PHP_CLASS
-  | typeof PHP_INTERFACE;
+  | typeof PHP_INTERFACE
+  | typeof PHP_TRAIT;
 
 export interface ExportedNamespace {
   name: string;
