@@ -15,12 +15,11 @@ describe("PHP Export resolver", () => {
     const mynamespace = namespaces.get("My\\Namespace")!;
     expect(mynamespace.name).toBe("My\\Namespace");
     const symbols = mynamespace.symbols;
-    expect(symbols.length >= 60).toBe(true);
+    expect(symbols.length).toBe(66);
   });
 
   test("resolves nested.php", () => {
     const namespaces = resolver.resolveFile(files.get(NESTED)!);
-    console.log(namespaces);
     expect(namespaces.get("")).toBeDefined();
     expect(namespaces.get("All")).toBeDefined();
     expect(namespaces.get("All\\My")).toBeDefined();
