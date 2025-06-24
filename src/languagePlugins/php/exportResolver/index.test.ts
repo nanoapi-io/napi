@@ -3,12 +3,7 @@ import { expect } from "@std/expect";
 import { getPHPFilesMap } from "../testFiles/index.ts";
 import { LEARN_PHP, NESTED } from "../testFiles/constants.ts";
 import { PHPExportResolver } from "./index.ts";
-import {
-  PHP_CLASS,
-  PHP_FUNCTION,
-  PHP_INTERFACE,
-  PHP_VARIABLE,
-} from "./types.ts";
+import { PHP_FUNCTION, PHP_INTERFACE, PHP_VARIABLE } from "./types.ts";
 
 describe("PHP Export resolver", () => {
   const resolver = new PHPExportResolver();
