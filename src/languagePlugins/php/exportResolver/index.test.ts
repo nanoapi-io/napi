@@ -3,7 +3,12 @@ import { expect } from "@std/expect";
 import { getPHPFilesMap } from "../testFiles/index.ts";
 import { LEARN_PHP, NESTED } from "../testFiles/constants.ts";
 import { PHPExportResolver } from "./index.ts";
-import { PHP_CLASS, PHP_VARIABLE } from "./types.ts";
+import {
+  PHP_CLASS,
+  PHP_FUNCTION,
+  PHP_INTERFACE,
+  PHP_VARIABLE,
+} from "./types.ts";
 
 describe("PHP Export resolver", () => {
   const resolver = new PHPExportResolver();
@@ -20,24 +25,25 @@ describe("PHP Export resolver", () => {
 
   test("resolves nested.php", () => {
     const namespaces = resolver.resolveFile(files.get(NESTED)!);
-    expect(namespaces.get("")).toBeDefined();
+    expect(namespaces.get("")).toBeUndefined();
     expect(namespaces.get("All")).toBeDefined();
     expect(namespaces.get("All\\My")).toBeDefined();
     expect(namespaces.get("All\\My\\Fellas")).toBeDefined();
-    const rootns = namespaces.get("")!;
-    expect(rootns.symbols.length).toBe(2);
-    const x = rootns.symbols.find((s) => s.name === "x")!;
-    expect(x.filepath).toBe(NESTED);
-    expect(x.idNode).toBeDefined();
-    expect(x.name).toBe("x");
-    expect(x.namespace).toBe("");
-    expect(x.node).toBeDefined();
-    expect(x.type).toBe(PHP_VARIABLE);
-    const rootClass = rootns.symbols.find((s) => s.name === "RootClass")!;
-    expect(rootClass.namespace).toBe("");
-    expect(rootClass.type).toBe(PHP_CLASS);
     expect(namespaces.get("All")!.symbols.length).toBe(1);
+    const a = namespaces.get("All")!.symbols[0];
+    expect(a.filepath).toBe(NESTED);
+    expect(a.idNode).toBeDefined();
+    expect(a.name).toBe("a");
+    expect(a.namespace).toBe("All");
+    expect(a.node).toBeDefined();
+    expect(a.type).toBe(PHP_VARIABLE);
     expect(namespaces.get("All\\My")!.symbols.length).toBe(1);
+    const m = namespaces.get("All\\My")!.symbols[0];
+    expect(m.name).toBe("m");
+    expect(m.type).toBe(PHP_FUNCTION);
     expect(namespaces.get("All\\My\\Fellas")!.symbols.length).toBe(1);
+    const f = namespaces.get("All\\My\\Fellas")!.symbols[0];
+    expect(f.name).toBe("f");
+    expect(f.type).toBe(PHP_INTERFACE);
   });
 });
