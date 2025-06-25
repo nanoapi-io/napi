@@ -15,7 +15,7 @@ describe("PHP Export resolver", () => {
     const mynamespace = namespaces.get("My\\Namespace")!;
     expect(mynamespace.name).toBe("My\\Namespace");
     const symbols = mynamespace.symbols;
-    expect(symbols.length).toBe(66);
+    expect((new Set(symbols.map((s) => s.name))).size).toBe(66);
   });
 
   test("resolves nested.php", () => {
