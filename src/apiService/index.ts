@@ -29,9 +29,14 @@ export class ApiService {
     path: string,
     body?: object,
   ) {
+    const headers = this.getHeaders();
+    if (body) {
+      headers.set("Content-Type", "application/json");
+    }
+
     const response = await fetch(`${this.apiHost}${path}`, {
       method,
-      headers: this.getHeaders(),
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     });
     return response;
