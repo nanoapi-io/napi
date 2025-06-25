@@ -45,6 +45,10 @@ function builder(
         }
         return value;
       },
+    }).option("upload-batch", {
+      type: "number",
+      description: "Number of files to process in parallel batches",
+      default: 20,
     });
 }
 
@@ -128,6 +132,7 @@ async function handler(
     branch?: string;
     commitSha?: string;
     commitShaDate?: string;
+    "upload-batch": number;
   },
 ) {
   const napiConfig = argv.napiConfig as z.infer<typeof localConfigSchema>;
@@ -274,6 +279,15 @@ async function handler(
             `\nView it here: https://app.nanoapi.io/projects/${projectId}/manifests/${responseBody.id}`,
           );
         }
+
+        console.info("🔍 Requesting labeling...");
+        await requestLabeling(
+          files,
+          responseBody.id,
+          apiService,
+          argv["upload-batch"],
+        );
+        console.info("✅ Labeling requested successfully");
       } catch (error) {
         console.error(
           `❌ Failed to upload manifest to API for project id: ${projectId}`,
@@ -305,3 +319,141 @@ export default {
   builder,
   handler,
 };
+
+async function requestLabeling(
+  files: Map<string, { path: string; content: string }>,
+  manifestId: number,
+  apiService: ApiService,
+  batchSize: number,
+) {
+  // Prepare for labeling
+  console.info("🔍 Preparing for labeling...");
+  const filesArray = Array.from(files.values());
+
+  // Upload files in configurable batches
+  const allUploadResults: { path: string; bucketName: string | null }[] = [];
+
+  for (let i = 0; i < filesArray.length; i += batchSize) {
+    const batch = filesArray.slice(i, i + batchSize);
+    const batchNumber = Math.floor(i / batchSize) + 1;
+    const totalBatches = Math.ceil(filesArray.length / batchSize);
+
+    console.info(
+      `📝 Processing batch ${batchNumber}/${totalBatches} (${batch.length} files)...`,
+    );
+
+    // Separate empty files from files that need uploading
+    const filesToUpload = batch.filter((file) =>
+      file.content && file.content.trim() !== ""
+    );
+    const emptyFiles = batch.filter((file) =>
+      !file.content || file.content.trim() === ""
+    );
+
+    // Add empty files to results with null bucket names
+    emptyFiles.forEach((file) => {
+      allUploadResults.push({ path: file.path, bucketName: null });
+    });
+
+    // Upload non-empty files in parallel
+    if (filesToUpload.length > 0) {
+      const batchPromises = filesToUpload.map(async (file) => {
+        try {
+          const response = await apiService.performRequest(
+            "POST",
+            "/labeling/temp",
+            { path: file.path, content: file.content },
+          );
+
+          if (response.status !== 200) {
+            const errorText = await response.text();
+            throw new Error(
+              `Failed to upload file ${file.path}: ${errorText} ${response.status}`,
+            );
+          }
+
+          const { bucketName } = await response.json() as {
+            bucketName: string;
+          };
+          return { path: file.path, bucketName };
+        } catch (error) {
+          console.error(
+            `❌ Failed to upload ${file.path}: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
+          );
+          return null;
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      const successfulResults = batchResults.filter((
+        result,
+      ): result is { path: string; bucketName: string } => result !== null);
+      allUploadResults.push(...successfulResults);
+
+      const skippedCount = emptyFiles.length;
+      const failedCount = filesToUpload.length - successfulResults.length;
+
+      if (failedCount > 0) {
+        console.warn(
+          `⚠️ Batch ${batchNumber} completed (${successfulResults.length} uploaded, ${failedCount} failed, ${skippedCount} skipped)`,
+        );
+      } else {
+        console.info(
+          `✅ Batch ${batchNumber} completed (${successfulResults.length} files uploaded, ${skippedCount} skipped)`,
+        );
+      }
+    } else {
+      console.info(
+        `✅ Batch ${batchNumber} completed (${emptyFiles.length} files skipped)`,
+      );
+    }
+  }
+
+  const labelingMap = Object.fromEntries(
+    allUploadResults.map(({ path, bucketName }) => [path, bucketName]),
+  );
+
+  // Upload labeling payload as a temp file
+  const labelingMapFile = await apiService.performRequest(
+    "POST",
+    "/labeling/temp",
+    {
+      path: "labelingMapFile.json",
+      content: JSON.stringify(labelingMap, null, 2),
+    },
+  );
+
+  if (labelingMapFile.status !== 200) {
+    console.error(`❌ Failed to upload labeling payload`);
+    Deno.exit(1);
+  }
+
+  const labelingFileMapFileResponse = await labelingMapFile.json() as {
+    bucketName: string;
+  };
+
+  console.info(`✅ Labeling preparation completed successfully`);
+
+  // request labeling to API with the temp file
+  const labelingResponse = await apiService.performRequest(
+    "POST",
+    "/labeling/request",
+    {
+      manifestId,
+      fileMapName: labelingFileMapFileResponse.bucketName,
+    },
+  );
+
+  if (labelingResponse.status !== 200) {
+    console.error(`❌ Failed to request labeling`);
+    console.error(
+      `   Error: ${labelingResponse.statusText} ${labelingResponse.status} ${await labelingResponse
+        .text()}`,
+    );
+    Deno.exit(1);
+  }
+
+  console.info(`✅ Labeling request completed successfully`);
+}
