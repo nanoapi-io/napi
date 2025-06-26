@@ -1,9 +1,5 @@
 import type Parser from "tree-sitter";
-import {
-  type ExportedNamespace,
-  type ExportedSymbol,
-  PHP_VARIABLE,
-} from "./types.ts";
+import type { ExportedNamespace, ExportedSymbol } from "./types.ts";
 import { INTERESTING_NODES, PHP_IDNODE_QUERY } from "./queries.ts";
 
 export class PHPExportResolver {
@@ -41,12 +37,6 @@ export class PHPExportResolver {
           continue; // Root out false positives for variables and constants
         }
         const symType = INTERESTING_NODES.get(child.type)!;
-        if (
-          symType === PHP_VARIABLE &&
-          exports.find((e) => e.name === idNode.node.text)
-        ) {
-          continue; // No duplicate variables
-        }
         exports.push({
           name: idNode.node.text,
           type: symType,
