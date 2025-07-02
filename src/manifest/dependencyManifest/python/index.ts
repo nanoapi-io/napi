@@ -253,6 +253,8 @@ export function generatePythonDependencyManifest(
       symbols[symbol.id] = {
         id: symbol.id,
         type: symbol.type,
+        positions: symbol.positions,
+        description: "",
         metrics: {
           [metricLinesCount]: symbol.metrics.linesCount,
           [metricCodeLineCount]: symbol.metrics.codeLineCount,

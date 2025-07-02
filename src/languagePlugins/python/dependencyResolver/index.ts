@@ -126,6 +126,18 @@ export class PythonDependencyResolver {
       const symbolDependencies: SymbolDependency = {
         id: symbol.id,
         type: symbol.type,
+        positions: symbol.nodes.map((node) => ({
+          start: {
+            index: node.startIndex,
+            row: node.startPosition.row,
+            column: node.startPosition.column,
+          },
+          end: {
+            index: node.endIndex,
+            row: node.endPosition.row,
+            column: node.endPosition.column,
+          },
+        })),
         metrics: {
           characterCount: complexityMetrics.characterCount,
           codeCharacterCount: complexityMetrics.codeCharacterCount,

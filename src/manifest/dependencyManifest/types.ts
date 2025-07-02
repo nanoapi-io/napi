@@ -107,6 +107,19 @@ export interface SymbolDependencyManifest {
   id: string;
   /** The type of this symbol: "class", "function", or "variable". */
   type: SymbolType;
+  /** The start position of the symbol. */
+  positions: {
+    start: {
+      index: number;
+      row: number;
+      column: number;
+    };
+    end: {
+      index: number;
+      row: number;
+      column: number;
+    };
+  }[];
   /** Metrics for the symbol. */
   metrics: {
     /** The number of lines in the symbol. */
@@ -124,6 +137,8 @@ export interface SymbolDependencyManifest {
     /** The cyclomatic complexity of the symbol. */
     [metricCyclomaticComplexity]: number;
   };
+  /** A short description of the symbol. */
+  description: string;
   /** Other modules/files on which this symbol depends.
    * Keyed by the dependency's unique ID (often a file path). */
   dependencies: Record<string, DependencyInfo>;

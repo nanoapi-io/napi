@@ -65,6 +65,19 @@ export function generateCDependencyManifest(
       symbols[symName] = {
         id: symName,
         type: symType as SymbolType,
+        positions: [{
+          start: {
+            index: symbol.node.startIndex,
+            row: symbol.node.startPosition.row,
+            column: symbol.node.startPosition.column,
+          },
+          end: {
+            index: symbol.node.endIndex,
+            row: symbol.node.endPosition.row,
+            column: symbol.node.endPosition.column,
+          },
+        }],
+        description: "",
         metrics: {
           [metricCharacterCount]: metrics.characterCount,
           [metricCodeCharacterCount]: metrics.codeCharacterCount,
