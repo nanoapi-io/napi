@@ -20,6 +20,11 @@ import {
 import { ApiService } from "../../../apiService/index.ts";
 import type { globalConfigSchema } from "../../middlewares/globalConfig.ts";
 import { isAuthenticatedMiddleware } from "../../middlewares/isAuthenticated.ts";
+import {
+  ANTHROPIC_PROVIDER,
+  GOOGLE_PROVIDER,
+  OPENAI_PROVIDER,
+} from "../../../manifest/dependencyManifest/labeling/model.ts";
 
 function builder(
   yargs: Arguments & {
@@ -1031,6 +1036,61 @@ export async function generateConfig(
   // Show final file selection to the user
   showFinalFileSelection(workDir, includePatterns, excludePatterns);
 
+  // Labeling configuration
+  console.info("\n🏷️  LABELING CONFIGURATION");
+  console.info(
+    "Labeling helps categorize and organize your code dependencies using AI models.",
+  );
+
+  const enableLabeling = await confirm({
+    message: "Would you like to enable AI-powered labeling?",
+    default: false,
+  });
+
+  let labelingConfig:
+    | z.infer<typeof localConfigSchema>["labeling"]
+    | undefined = undefined;
+
+  if (enableLabeling) {
+    console.info("\n🤖 AI MODEL SELECTION");
+    console.info(
+      "Choose an AI provider for labeling your dependencies:",
+    );
+
+    const modelProvider = await select({
+      message: "Select AI model provider:",
+      choices: [
+        { name: "OpenAI (GPT-4o-mini)", value: OPENAI_PROVIDER },
+        { name: "Google (Gemini 2.5 Flash)", value: GOOGLE_PROVIDER },
+        { name: "Anthropic (Claude 3.5 Sonnet)", value: ANTHROPIC_PROVIDER },
+      ],
+    }) as
+      | typeof OPENAI_PROVIDER
+      | typeof GOOGLE_PROVIDER
+      | typeof ANTHROPIC_PROVIDER;
+
+    const maxConcurrency = await input({
+      message: "Enter maximum concurrent requests (leave empty for unlimited):",
+      validate: (value) => {
+        if (!value.trim()) return true; // Allow empty for unlimited
+        const num = parseInt(value);
+        if (isNaN(num) || num <= 0) {
+          return "Please enter a positive number or leave empty for unlimited";
+        }
+        return true;
+      },
+    });
+
+    labelingConfig = {
+      modelProvider,
+      maxConcurrency: maxConcurrency.trim()
+        ? parseInt(maxConcurrency)
+        : undefined,
+    };
+
+    console.info("✅ Labeling configuration added");
+  }
+
   // Build the config object
   const config: z.infer<typeof localConfigSchema> = {
     language: language,
@@ -1050,6 +1110,11 @@ export async function generateConfig(
   // Add C config if it exists
   if (cConfig) {
     config.c = cConfig;
+  }
+
+  // Add labeling config if it exists
+  if (labelingConfig) {
+    config.labeling = labelingConfig;
   }
 
   return config;

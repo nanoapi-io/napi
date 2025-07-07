@@ -6,6 +6,13 @@ export const globalConfigSchema = z.object({
   jwt: z.string().optional(),
   token: z.string().optional(),
   apiHost: z.string(),
+  labeling: z.object({
+    apiKeys: z.object({
+      google: z.string().optional(),
+      openai: z.string().optional(),
+      anthropic: z.string().optional(),
+    }),
+  }).optional(),
 });
 
 export const defaultApiHost = "https://api.nanoapi.io";

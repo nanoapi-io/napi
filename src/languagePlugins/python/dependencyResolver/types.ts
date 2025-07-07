@@ -27,6 +27,19 @@ export interface SymbolDependency {
   id: string;
   /** Symbol type (class, function, variable) */
   type: PythonSymbolType;
+  /** Positions of the symbol in the file */
+  positions: {
+    start: {
+      index: number;
+      row: number;
+      column: number;
+    };
+    end: {
+      index: number;
+      row: number;
+      column: number;
+    };
+  }[];
   /** Size metrics for the symbol */
   metrics: {
     /** Total character count in the symbol */

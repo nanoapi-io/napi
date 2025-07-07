@@ -11,6 +11,13 @@ import {
   pythonLanguage,
 } from "../../helpers/treeSitter/parsers.ts";
 import { generateJavaDependencyManifest } from "./java/index.ts";
+import { generateSymbolDescriptions } from "./labeling/index.ts";
+import type { globalConfigSchema } from "../../cli/middlewares/globalConfig.ts";
+import {
+  ANTHROPIC_PROVIDER,
+  GOOGLE_PROVIDER,
+  OPENAI_PROVIDER,
+} from "./labeling/model.ts";
 
 const handlerMap: Record<
   string,
@@ -34,10 +41,12 @@ export class UnsupportedLanguageError extends Error {
   }
 }
 
-export function generateDependencyManifest(
+export async function generateDependencyManifest(
   files: Map<string, { path: string; content: string }>,
   napiConfig: z.infer<typeof localConfigSchema>,
-): DependencyManifest {
+  globalConfig: z.infer<typeof globalConfigSchema>,
+  labelingApiKey: string | undefined,
+): Promise<DependencyManifest> {
   const languageName = napiConfig.language;
 
   const handler = handlerMap[languageName];
@@ -71,5 +80,39 @@ export function generateDependencyManifest(
     sortedDepMap[key].symbols = sortedSymbolsMap;
   }
 
-  return sortedDepMap;
+  if (napiConfig.labeling) {
+    let apiKey: string | undefined;
+    if (labelingApiKey) {
+      apiKey = labelingApiKey;
+    } else {
+      if (napiConfig.labeling.modelProvider === GOOGLE_PROVIDER) {
+        apiKey = globalConfig.labeling?.apiKeys.google;
+      }
+      if (napiConfig.labeling.modelProvider === OPENAI_PROVIDER) {
+        apiKey = globalConfig.labeling?.apiKeys.openai;
+      }
+      if (napiConfig.labeling.modelProvider === ANTHROPIC_PROVIDER) {
+        apiKey = globalConfig.labeling?.apiKeys.anthropic;
+      }
+    }
+
+    if (!apiKey) {
+      console.warn(
+        "No API key found for the selected model provider. Please run `napi set apiKey` to set an API key.",
+      );
+      return sortedDepMap;
+    }
+
+    const labeledDependencyManifest = await generateSymbolDescriptions(
+      files,
+      sortedDepMap,
+      apiKey,
+      napiConfig.labeling.modelProvider,
+      napiConfig.labeling.maxConcurrency,
+    );
+
+    return labeledDependencyManifest;
+  } else {
+    return sortedDepMap;
+  }
 }

@@ -45,6 +45,9 @@ function builder(
         }
         return value;
       },
+    }).option("labelingApiKey", {
+      type: "string",
+      description: "The API key to use for the labeling",
     });
 }
 
@@ -128,6 +131,7 @@ async function handler(
     branch?: string;
     commitSha?: string;
     commitShaDate?: string;
+    labelingApiKey?: string;
   },
 ) {
   const napiConfig = argv.napiConfig as z.infer<typeof localConfigSchema>;
@@ -217,7 +221,12 @@ async function handler(
 
     console.info(`📊 Processing ${files.size} files...`);
 
-    const dependencyManifest = generateDependencyManifest(files, napiConfig);
+    const dependencyManifest = await generateDependencyManifest(
+      files,
+      napiConfig,
+      globalConfig,
+      argv.labelingApiKey,
+    );
 
     // Upload manifest to API instead of writing to disk
     const apiService = new ApiService(

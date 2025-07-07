@@ -10,6 +10,11 @@ import {
   javaLanguage,
   pythonLanguage,
 } from "../../helpers/treeSitter/parsers.ts";
+import {
+  ANTHROPIC_PROVIDER,
+  GOOGLE_PROVIDER,
+  OPENAI_PROVIDER,
+} from "../../manifest/dependencyManifest/labeling/model.ts";
 
 const pythonVersions = Object.keys(pythonStdlibList);
 
@@ -38,6 +43,14 @@ export const localConfigSchema = z.object({
     exclude: z.array(z.string()).optional(),
   }),
   outDir: z.string(),
+  labeling: z.object({
+    modelProvider: z.enum([
+      GOOGLE_PROVIDER,
+      OPENAI_PROVIDER,
+      ANTHROPIC_PROVIDER,
+    ]),
+    maxConcurrency: z.number().optional(),
+  }).optional(),
 });
 
 const napiConfigFileName = ".napirc";

@@ -69,6 +69,19 @@ export function generateCSharpDependencyManifest(
       symbols[symbolName] = {
         id: symbolName,
         type: symbol.type as SymbolType,
+        positions: [{
+          start: {
+            index: symbol.node.startIndex,
+            row: symbol.node.startPosition.row,
+            column: symbol.node.startPosition.column,
+          },
+          end: {
+            index: symbol.node.endIndex,
+            row: symbol.node.endPosition.row,
+            column: symbol.node.endPosition.column,
+          },
+        }],
+        description: "",
         metrics: {
           [metricCharacterCount]: symbol.characterCount,
           [metricCodeCharacterCount]: metrics.codeCharacterCount,

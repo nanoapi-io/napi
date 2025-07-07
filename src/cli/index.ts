@@ -5,6 +5,7 @@ import {
 } from "./middlewares/checkVersion.ts";
 import loginCommand from "./handlers/login/index.ts";
 import initCommand from "./handlers/init/index.ts";
+import setCommand from "./handlers/set/index.ts";
 import manifestCommand from "./handlers/manifest/index.ts";
 import extractCommand from "./handlers/extract/index.ts";
 import { globalConfigMiddleware } from "./middlewares/globalConfig.ts";
@@ -27,6 +28,7 @@ export function initCli() {
     .middleware(globalConfigMiddleware)
     .command(loginCommand)
     .command(initCommand)
+    .command(setCommand)
     .command(manifestCommand)
     .command(extractCommand)
     .demandCommand(1, "You need to specify a command")
