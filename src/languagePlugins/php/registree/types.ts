@@ -4,6 +4,7 @@ import type {
   ExportedSymbol,
 } from "../exportResolver/types.ts";
 import { PHPExportResolver } from "../exportResolver/index.ts";
+import { dirname, join } from "@std/path";
 
 export interface PHPNode {
   name: string;
@@ -40,6 +41,21 @@ export class PHPTree extends NamespaceNode {
     for (const [, file] of files) {
       this.addNamespaces(Array.from(resolver.resolveFile(file).values()));
     }
+  }
+
+  findNode(name: string): PHPNode | undefined {
+    const parts = name.split("\\");
+    let current: Map<string, PHPNode> = this.children;
+    for (const part of parts) {
+      if (part === "") {
+        continue;
+      }
+      if (!current.has(part)) {
+        return undefined;
+      }
+      current = current.get(part)!.children;
+    }
+    return current.get(parts[parts.length - 1]);
   }
 
   addNamespaces(namespaces: ExportedNamespace[]) {
@@ -105,5 +121,21 @@ export class PHPRegistry {
       rootNode: file.rootNode,
       symbols,
     });
+  }
+
+  getFile(path: string, origin: string): PHPFile | undefined {
+    const filepaths = Array.from(this.files.keys());
+    // 1. Check current file's directory
+    const sourceDir = dirname(origin);
+    const pathFromRelative = join(sourceDir, path).replace(/\\/g, "/");
+    const corresponding1 = filepaths.find((f) => f === pathFromRelative);
+    if (corresponding1) {
+      return this.files.get(corresponding1);
+    }
+    // 2. Check from workspace root
+    const corresponding2 = filepaths.find((f) => f === path);
+    if (corresponding2) {
+      return this.files.get(corresponding2);
+    }
   }
 }
