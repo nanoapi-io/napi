@@ -4,6 +4,7 @@ import type {
   ExportedSymbol,
 } from "../exportResolver/types.ts";
 import { PHPExportResolver } from "../exportResolver/index.ts";
+import { dirname, join } from "@std/path";
 
 export interface PHPNode {
   name: string;
@@ -39,6 +40,29 @@ export class PHPTree extends NamespaceNode {
     const resolver = new PHPExportResolver();
     for (const [, file] of files) {
       this.addNamespaces(Array.from(resolver.resolveFile(file).values()));
+    }
+  }
+
+  findNode(name: string): PHPNode | undefined {
+    if (name === "") {
+      return this;
+    } else {
+      const packageparts = name.split("\\").reverse();
+      let part = packageparts.pop()!;
+      if (part === "") {
+        part = packageparts.pop()!;
+      }
+      let current = this.children.get(part);
+      if (!current) {
+        return undefined;
+      }
+      while (packageparts.length > 0) {
+        if (!current) {
+          return undefined;
+        }
+        current = current.children.get(packageparts.pop()!);
+      }
+      return current;
     }
   }
 
@@ -105,5 +129,21 @@ export class PHPRegistry {
       rootNode: file.rootNode,
       symbols,
     });
+  }
+
+  getFile(path: string, origin: string): PHPFile | undefined {
+    const filepaths = Array.from(this.files.keys());
+    // 1. Check current file's directory
+    const sourceDir = dirname(origin);
+    const pathFromRelative = join(sourceDir, path).replace(/\\/g, "/");
+    const corresponding1 = filepaths.find((f) => f === pathFromRelative);
+    if (corresponding1) {
+      return this.files.get(corresponding1);
+    }
+    // 2. Check from workspace root
+    const corresponding2 = filepaths.find((f) => f === path);
+    if (corresponding2) {
+      return this.files.get(corresponding2);
+    }
   }
 }
