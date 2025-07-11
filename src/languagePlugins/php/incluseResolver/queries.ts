@@ -4,17 +4,9 @@ import { phpParser } from "../../../helpers/treeSitter/parsers.ts";
 export const PHP_USE_DETECTION_QUERY = new Parser.Query(
   phpParser.getLanguage(),
   `
-  (namespace_use_declaration)
-  `,
-);
-
-export const PHP_USE_QUERY = new Parser.Query(
-  phpParser.getLanguage(),
-  `
   (namespace_use_declaration
-  (namespace_use_clause
-  . (_) @ns (namespace_aliasing_clause (_) @alias)?
-  ))
+    (namespace_use_clause) @use
+  )
   `,
 );
 

@@ -1,13 +1,9 @@
 import type { PHPRegistree } from "../registree/index.ts";
 import { type PHPFile, type PHPNode, SymbolNode } from "../registree/types.ts";
 import type { PHPImports } from "./types.ts";
-import {
-  PHP_INCLUDE_QUERY,
-  PHP_USE_DETECTION_QUERY,
-  PHP_USE_QUERY,
-} from "./queries.ts";
+import { PHP_INCLUDE_QUERY, PHP_USE_DETECTION_QUERY } from "./queries.ts";
 import type Parser from "tree-sitter";
-import { dirname } from "@std/path";
+import { dirname, join } from "@std/path";
 
 export class PHPIncluseResolver {
   registree: PHPRegistree;
@@ -57,19 +53,17 @@ export class PHPIncluseResolver {
       },
     };
     for (const use of useDirectives) {
-      const useClause = PHP_USE_QUERY.captures(use.node);
-      if (!useClause) continue;
       let name: string | undefined = undefined;
       let node: PHPNode | undefined = undefined;
-      for (const clause of useClause) {
-        if (clause.name === "alias") {
-          name = clause.node.text;
+      for (const clause of use.node.namedChildren) {
+        if (clause.type === "namespace_aliasing_clause") {
+          name = clause.text;
         } else {
-          node = this.registree.tree.findNode(clause.node.text);
+          node = this.registree.tree.findNode(clause.text);
           if (node && !name) {
             name = node.name;
           } else if (!node && !name) {
-            name = clause.node.text;
+            name = clause.text;
           }
         }
       }
@@ -136,11 +130,11 @@ export class PHPIncluseResolver {
           imports.unresolved.paths.push(path);
         }
       } else if (include.name === "includebin") {
-        const filepath = this.#splitBinary(include.node)
+        const fileparts = this.#splitBinary(include.node)
           .map((n) => n.text === "__DIR__" ? dirname(file.path) : n.text)
           .filter((n) => n !== "")
-          .map((n) => n.replace(/['"]/g, ""))
-          .join("/");
+          .map((n) => n.replace(/['"]/g, ""));
+        const filepath = join(fileparts[0], ...fileparts.slice(1));
         const importedfile = this.registree.registry.getFile(
           filepath,
           file.path,

@@ -44,18 +44,26 @@ export class PHPTree extends NamespaceNode {
   }
 
   findNode(name: string): PHPNode | undefined {
-    const parts = name.split("\\");
-    let current: Map<string, PHPNode> = this.children;
-    for (const part of parts) {
+    if (name === "") {
+      return this;
+    } else {
+      const packageparts = name.split("\\").reverse();
+      let part = packageparts.pop()!;
       if (part === "") {
-        continue;
+        part = packageparts.pop()!;
       }
-      if (!current.has(part)) {
+      let current = this.children.get(part);
+      if (!current) {
         return undefined;
       }
-      current = current.get(part)!.children;
+      while (packageparts.length > 0) {
+        if (!current) {
+          return undefined;
+        }
+        current = current.children.get(packageparts.pop()!);
+      }
+      return current;
     }
-    return current.get(parts[parts.length - 1]);
   }
 
   addNamespaces(namespaces: ExportedNamespace[]) {
