@@ -26,14 +26,12 @@ export class PHPIncluseResolver {
         ...includeImports.resolved,
       ]),
       unresolved: {
-        paths: [
-          ...useImports.unresolved.paths,
-          ...includeImports.unresolved.paths,
-        ],
-        namespaces: [
-          ...useImports.unresolved.namespaces,
-          ...includeImports.unresolved.namespaces,
-        ],
+        paths: useImports.unresolved.paths.union(
+          includeImports.unresolved.paths,
+        ),
+        namespaces: useImports.unresolved.namespaces.union(
+          includeImports.unresolved.namespaces,
+        ),
       },
     };
     this.imports.set(file.path, imports);
@@ -48,8 +46,8 @@ export class PHPIncluseResolver {
     const imports: PHPImports = {
       resolved: new Map(),
       unresolved: {
-        paths: [],
-        namespaces: [],
+        paths: new Set(),
+        namespaces: new Set(),
       },
     };
     for (const use of useDirectives) {
@@ -78,7 +76,7 @@ export class PHPIncluseResolver {
           }
         }
       } else if (name) {
-        imports.unresolved.namespaces.push(name);
+        imports.unresolved.namespaces.add(name);
       }
     }
     return imports;
@@ -102,7 +100,7 @@ export class PHPIncluseResolver {
     return [...leftArr, ...rightArr];
   }
 
-  #resolveIncludeDirectives(file: PHPFile) {
+  #resolveIncludeDirectives(file: PHPFile, visitedFiles = new Set<string>()) {
     const includeDirectives = PHP_INCLUDE_QUERY.captures(file.rootNode);
     if (!includeDirectives) {
       throw new Error(`Error when parsing include directives for ${file.path}`);
@@ -110,15 +108,19 @@ export class PHPIncluseResolver {
     const imports: PHPImports = {
       resolved: new Map(),
       unresolved: {
-        paths: [],
-        namespaces: [],
+        paths: new Set(),
+        namespaces: new Set(),
       },
     };
+
+    // Add the current file to the visited set to prevent infinite recursion
+    visitedFiles.add(file.path);
+
     for (const include of includeDirectives) {
       if (include.name === "includestr") {
         const path = include.node.text;
         const importedfile = this.registree.registry.getFile(path, file.path);
-        if (importedfile) {
+        if (importedfile && !visitedFiles.has(importedfile.path)) {
           for (const [k, v] of importedfile.symbols) {
             if (imports.resolved.has(k)) {
               imports.resolved.get(k)!.push(...v);
@@ -126,8 +128,22 @@ export class PHPIncluseResolver {
               imports.resolved.set(k, v);
             }
           }
-        } else {
-          imports.unresolved.paths.push(path);
+          const nestedImports = this.#resolveIncludeDirectives(
+            importedfile,
+            visitedFiles,
+          );
+          for (const [k, v] of nestedImports.resolved) {
+            if (imports.resolved.has(k)) {
+              imports.resolved.get(k)!.push(...v);
+            } else {
+              imports.resolved.set(k, v);
+            }
+          }
+          imports.unresolved.paths = imports.unresolved.paths.union(
+            nestedImports.unresolved.paths,
+          );
+        } else if (!importedfile) {
+          imports.unresolved.paths.add(path);
         }
       } else if (include.name === "includebin") {
         const fileparts = this.#splitBinary(include.node)
@@ -139,7 +155,7 @@ export class PHPIncluseResolver {
           filepath,
           file.path,
         );
-        if (importedfile) {
+        if (importedfile && !visitedFiles.has(importedfile.path)) {
           for (const [k, v] of importedfile.symbols) {
             if (imports.resolved.has(k)) {
               imports.resolved.get(k)!.push(...v);
@@ -147,11 +163,26 @@ export class PHPIncluseResolver {
               imports.resolved.set(k, v);
             }
           }
-        } else {
-          imports.unresolved.paths.push(filepath);
+          const nestedImports = this.#resolveIncludeDirectives(
+            importedfile,
+            visitedFiles,
+          );
+          for (const [k, v] of nestedImports.resolved) {
+            if (imports.resolved.has(k)) {
+              imports.resolved.get(k)!.push(...v);
+            } else {
+              imports.resolved.set(k, v);
+            }
+          }
+          imports.unresolved.paths = imports.unresolved.paths.union(
+            nestedImports.unresolved.paths,
+          );
+        } else if (!importedfile) {
+          imports.unresolved.paths.add(filepath);
         }
       }
     }
+
     return imports;
   }
 }

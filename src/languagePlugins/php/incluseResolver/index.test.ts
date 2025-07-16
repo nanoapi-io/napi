@@ -12,7 +12,7 @@ describe("PHP Incluse resolver", () => {
 
   test("resolves use directives", () => {
     const imports = resolver.resolveImports(registree.registry.files.get(USE)!);
-    expect(imports.unresolved.namespaces.length).toBe(1);
+    expect(imports.unresolved.namespaces.size).toBe(1);
     expect(imports.unresolved.namespaces).toContainEqual("I\\Do\\Not\\Exist");
     expect(imports.resolved.get("f")).toBeDefined(); // nested.php
     expect(imports.resolved.get("my_function")).toBeDefined(); // learnphp function
@@ -24,7 +24,8 @@ describe("PHP Incluse resolver", () => {
     const imports = resolver.resolveImports(
       registree.registry.files.get(INCLUDE)!,
     );
-    expect(imports.unresolved.paths.length).toBe(1);
+    console.log(Array.from(imports.unresolved.paths.values()));
+    expect(imports.unresolved.paths.size).toBe(4);
     expect(imports.unresolved.paths).toContainEqual("unresolved.php");
     expect(imports.resolved.get("f")).toBeDefined(); // nested.php
     expect(imports.resolved.get("defined_in_used_file")).toBeDefined(); // use.php
