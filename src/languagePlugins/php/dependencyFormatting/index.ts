@@ -19,8 +19,8 @@ export class PHPDependencyFormatter {
   ) {
     const parsedFiles: Map<
       string,
-      { path: string; rootNode: Parser.SyntaxNode }>
-      = new Map();
+      { path: string; rootNode: Parser.SyntaxNode }
+    > = new Map();
     for (const [k, v] of files) {
       parsedFiles.set(k, {
         path: v.path,
