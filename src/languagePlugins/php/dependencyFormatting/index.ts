@@ -22,7 +22,7 @@ export class PHPDependencyFormatter {
       parsedFiles.set(k, {
         path: v.path,
         rootNode: phpParser.parse(v.content).rootNode,
-      })
+      });
     }
     this.registree = new PHPRegistree(parsedFiles);
     this.#registry = this.registree.registry.files;
