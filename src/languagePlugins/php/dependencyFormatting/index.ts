@@ -6,6 +6,7 @@ import { PHPInvocationResolver } from "../invocationResolver/index.ts";
 import type { Invocations } from "../invocationResolver/types.ts";
 import type Parser from "tree-sitter";
 import type { PHPFile } from "../registree/types.ts";
+import { phpParser } from "../../../helpers/treeSitter/parsers.ts";
 
 export class PHPDependencyFormatter {
   registree: PHPRegistree;
@@ -14,9 +15,16 @@ export class PHPDependencyFormatter {
   #registry: Map<string, PHPFile>;
 
   constructor(
-    files: Map<string, { path: string; rootNode: Parser.SyntaxNode }>,
+    files: Map<string, { path: string; content: string }>,
   ) {
-    this.registree = new PHPRegistree(files);
+    const parsedFiles: Map<string, { path: string; rootNode: Parser.SyntaxNode }> = new Map();
+    for (const [k, v] of files) {
+      parsedFiles.set(k, {
+        path: v.path,
+        rootNode: phpParser.parse(v.content).rootNode,
+      })
+    }
+    this.registree = new PHPRegistree(parsedFiles);
     this.#registry = this.registree.registry.files;
     this.incluseResolver = new PHPIncluseResolver(
       this.registree,
