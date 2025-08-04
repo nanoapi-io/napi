@@ -1,11 +1,17 @@
 {
-  "version": "1.0.11",
+  "version": "1.0.14",
   "name": "@napi/cli",
   "exports": "./src/index.ts",
   "nodeModulesDir": "auto",
   "lock": false,
   "imports": {
     "@inquirer/prompts": "npm:@inquirer/prompts@^7.5.3",
+    "@langchain/anthropic": "npm:@langchain/anthropic@^0.3.23",
+    "@langchain/core": "npm:@langchain/core@^0.3.61",
+    "@langchain/google-genai": "npm:@langchain/google-genai@^0.2.14",
+    "@langchain/google-vertexai": "npm:@langchain/google-vertexai@^0.2.14",
+    "@langchain/langgraph": "npm:@langchain/langgraph@^0.3.5",
+    "@langchain/openai": "npm:@langchain/openai@^0.5.15",
     "@oak/oak": "jsr:@oak/oak@^17.1.4",
     "@std/expect": "jsr:@std/expect@^1.0.16",
     "@std/path": "jsr:@std/path@^1.0.9",

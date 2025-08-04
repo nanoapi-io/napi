@@ -1,11 +1,18 @@
 import type { Arguments } from "yargs-types";
-import { join } from "@std/path";
+import { dirname, join } from "@std/path";
 import z from "zod";
 
 export const globalConfigSchema = z.object({
   jwt: z.string().optional(),
   token: z.string().optional(),
   apiHost: z.string(),
+  labeling: z.object({
+    apiKeys: z.object({
+      google: z.string().optional(),
+      openai: z.string().optional(),
+      anthropic: z.string().optional(),
+    }),
+  }).optional(),
 });
 
 export const defaultApiHost = "https://api.nanoapi.io";
@@ -74,28 +81,44 @@ export function globalConfigMiddleware(
       const result = globalConfigSchema.safeParse(JSON.parse(content));
       if (!result.success) {
         // wrong config, generate a new one
-        config = defaultConfig;
-        Deno.writeTextFileSync(configPath, JSON.stringify(config, null, 2));
+        setConfig(config);
+        args.globalConfig = config;
+        return;
       }
-      if (result.data) {
-        config = result.data;
-      }
+
+      // config is valid, use it
+      config = result.data;
+      args.globalConfig = config;
+      return;
     } else {
       // no config, generate a new one
-      config = defaultConfig;
-      Deno.writeTextFileSync(configPath, JSON.stringify(config, null, 2));
+      setConfig(config);
+      args.globalConfig = config;
+      return;
     }
   } catch (_error) {
     // failed to read or create config, generate a new one
     config = defaultConfig;
-    Deno.writeTextFileSync(configPath, JSON.stringify(config, null, 2));
+    setConfig(config);
+    args.globalConfig = config;
+    return;
   }
-
-  args.globalConfig = config;
 }
 
 export function setConfig(
   config: z.infer<typeof globalConfigSchema>,
 ) {
-  Deno.writeTextFileSync(getConfigPath(), JSON.stringify(config, null, 2));
+  const configPath = getConfigPath();
+  const dir = dirname(configPath);
+  let dirExists = false;
+  try {
+    Deno.statSync(dir);
+    dirExists = true;
+  } catch {
+    dirExists = false;
+  }
+  if (!dirExists) {
+    Deno.mkdirSync(dir, { recursive: true });
+  }
+  Deno.writeTextFileSync(configPath, JSON.stringify(config, null, 2));
 }
