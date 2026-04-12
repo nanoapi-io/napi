@@ -58,10 +58,10 @@
     "dev:viewer": "cd viewer && deno run -A npm:vite",
     "build:viewer": "cd viewer && deno run -A npm:vite build",
     "compile": "deno task build:viewer && deno compile -A --include=viewer/dist --output=dist/napi src/index.ts",
-    "compile-linux": "deno task build:viewer && deno compile -A --include=viewer/dist --output=dist/napi.linux --target=x86_64-unknown-linux-gnu src/index.ts",
-    "compile-macos": "deno task build:viewer && deno compile -A --include=viewer/dist --output=dist/napi.macos --target=x86_64-apple-darwin src/index.ts",
-    "compile-windows": "deno task build:viewer && deno compile -A --include=viewer/dist --output=dist/napi.exe --target=x86_64-pc-windows-msvc src/index.ts",
-    "compile:all": "deno task 'compile-*'",
+    "compile-linux": "deno compile -A --include=viewer/dist --output=dist/napi.linux --target=x86_64-unknown-linux-gnu src/index.ts",
+    "compile-macos": "deno compile -A --include=viewer/dist --output=dist/napi.macos --target=x86_64-apple-darwin src/index.ts",
+    "compile-windows": "deno compile -A --include=viewer/dist --output=dist/napi.exe --target=x86_64-pc-windows-msvc src/index.ts",
+    "compile:all": "deno task build:viewer && deno task 'compile-*'",
     "test": "deno test -A"
   },
   "compilerOptions": {
