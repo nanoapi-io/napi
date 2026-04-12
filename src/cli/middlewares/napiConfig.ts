@@ -19,7 +19,6 @@ import {
 const pythonVersions = Object.keys(pythonStdlibList);
 
 export const localConfigSchema = z.object({
-  projectIds: z.array(z.number().int()),
   language: z.enum([pythonLanguage, csharpLanguage, cLanguage, javaLanguage]),
   [pythonLanguage]: z
     .object({
@@ -50,6 +49,26 @@ export const localConfigSchema = z.object({
       ANTHROPIC_PROVIDER,
     ]),
     maxConcurrency: z.number().optional(),
+  }).optional(),
+  audit: z.object({
+    file: z.object({
+      maxCodeChar: z.number().optional(),
+      maxChar: z.number().optional(),
+      maxCodeLine: z.number().optional(),
+      maxLine: z.number().optional(),
+      maxDependency: z.number().optional(),
+      maxDependent: z.number().optional(),
+      maxCyclomaticComplexity: z.number().optional(),
+    }).optional(),
+    symbol: z.object({
+      maxCodeChar: z.number().optional(),
+      maxChar: z.number().optional(),
+      maxCodeLine: z.number().optional(),
+      maxLine: z.number().optional(),
+      maxDependency: z.number().optional(),
+      maxDependent: z.number().optional(),
+      maxCyclomaticComplexity: z.number().optional(),
+    }).optional(),
   }).optional(),
 });
 

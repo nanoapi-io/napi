@@ -4,7 +4,7 @@ import {
   getConfigFromWorkDir,
 } from "../../middlewares/napiConfig.ts";
 import { join, normalize, relative, SEPARATOR } from "@std/path";
-import z from "zod";
+import type z from "zod";
 import type { localConfigSchema } from "../../middlewares/napiConfig.ts";
 import pythonStdlibList from "../../../scripts/generate_python_stdlib_list/output.json" with {
   type: "json",
@@ -17,22 +17,20 @@ import {
   javaLanguage,
   pythonLanguage,
 } from "../../../helpers/treeSitter/parsers.ts";
-import { ApiService } from "../../../apiService/index.ts";
 import type { globalConfigSchema } from "../../middlewares/globalConfig.ts";
-import { isAuthenticatedMiddleware } from "../../middlewares/isAuthenticated.ts";
 import {
   ANTHROPIC_PROVIDER,
   GOOGLE_PROVIDER,
   OPENAI_PROVIDER,
 } from "../../../manifest/dependencyManifest/labeling/model.ts";
+import { defaultAuditConfig } from "../../../manifest/auditManifest/types.ts";
 
 function builder(
   yargs: Arguments & {
     globalConfig: z.infer<typeof globalConfigSchema>;
   },
 ) {
-  return yargs
-    .middleware(isAuthenticatedMiddleware);
+  return yargs;
 }
 
 async function handler(
@@ -40,10 +38,7 @@ async function handler(
     globalConfig: z.infer<typeof globalConfigSchema>;
   },
 ) {
-  const globalConfig = argv.globalConfig as z.infer<typeof globalConfigSchema>;
-
   try {
-    // Check if config already exists
     try {
       if (getConfigFromWorkDir(argv.workdir)) {
         const confirmOverwrite = await confirm({
@@ -58,7 +53,6 @@ async function handler(
         console.info("🔄 Proceeding with configuration overwrite");
       }
     } catch {
-      // Config doesn't exist, continue with initialization
       console.info(
         "📝 No existing valid configuration found, creating new one",
       );
@@ -66,13 +60,8 @@ async function handler(
 
     console.info("\n🔧 Starting interactive configuration...");
 
-    // Generate the config using the interactive prompts
-    const napiConfig = await generateConfig(
-      argv.workdir,
-      globalConfig,
-    );
+    const napiConfig = await generateConfig(argv.workdir);
 
-    // Confirm and show the config
     console.info("\n📋 Generated configuration:");
     console.info("─".repeat(50));
     console.info(JSON.stringify(napiConfig, null, 2));
@@ -88,6 +77,9 @@ async function handler(
       console.info("\n✅ Configuration saved successfully!");
       console.info(`📄 Created: ${argv.workdir}${SEPARATOR}.napirc`);
       console.info("🎉 Your NanoAPI project is ready!");
+      console.info("\n💡 Next steps:");
+      console.info("   1. Run: napi generate");
+      console.info("   2. Run: napi view");
     } else {
       console.info("❌ Configuration not saved");
       console.info("   Run 'napi init' again when you're ready to configure");
@@ -114,16 +106,12 @@ export default {
   handler,
 };
 
-/**
- * Shows files that match a given glob pattern
- */
 function showMatchingFiles(
   workDir: string,
   pattern: string,
   maxFilesToShow = 10,
 ) {
   try {
-    // Find matching files using glob
     const files = globSync(pattern, {
       cwd: workDir,
       nodir: true,
@@ -148,9 +136,6 @@ function showMatchingFiles(
   }
 }
 
-/**
- * Shows the final set of files that will be included after applying include and exclude patterns
- */
 function showFinalFileSelection(
   workDir: string,
   includePatterns: string[],
@@ -158,14 +143,12 @@ function showFinalFileSelection(
   maxFilesToShow = 20,
 ) {
   try {
-    // Get all included files
     const files = globSync(includePatterns, {
       cwd: workDir,
       nodir: true,
-      ignore: excludePatterns, // Default ignores
+      ignore: excludePatterns,
     });
 
-    // Display results
     console.info("\n🔍 FINAL FILE SELECTION");
     console.info(
       `After applying all patterns, ${files.length} files will be processed:`,
@@ -188,9 +171,6 @@ function showFinalFileSelection(
   }
 }
 
-/**
- * Get an overview of the project structure
- */
 function getProjectStructureOverview(workDir: string): string[] {
   const overview: string[] = [];
 
@@ -215,7 +195,6 @@ function getProjectStructureOverview(workDir: string): string[] {
             traverseDirectory(fullPath, depth + 1);
           }
         } catch (error) {
-          // Skip entries we can't access
           console.info(`Could not access ${fullPath}: ${error}`);
         }
       }
@@ -229,14 +208,10 @@ function getProjectStructureOverview(workDir: string): string[] {
   return overview;
 }
 
-/**
- * Utility function to collect glob patterns for include patterns
- */
 async function collectIncludePatterns(
   workDir: string,
   language: string,
 ): Promise<string[]> {
-  // Show project structure overview
   const projectStructure = getProjectStructureOverview(workDir);
 
   console.info(
@@ -250,18 +225,15 @@ Examples:
 `,
   );
 
-  // Suggest intelligent defaults based on project structure
   const suggestedIncludes = suggestIncludePatterns(projectStructure, language);
   console.info("\nSuggested include patterns (based on project structure):");
   suggestedIncludes.forEach((pattern) => console.info(`- ${pattern}`));
 
-  // Show preview of files that would be included with suggested patterns
   console.info("\nPreview of files that would be included:");
   for (const pattern of suggestedIncludes) {
     showMatchingFiles(workDir, pattern);
   }
 
-  // Prompt user to use suggested includes or customize
   const useSuggested = await confirm({
     message: "Do you want to use the suggested include patterns?",
     default: true,
@@ -276,7 +248,6 @@ Examples:
     "Please enter the glob patterns for files to include (one per line):",
   );
 
-  // Start with empty pattern list
   let includePatterns: string[] = [];
   let continueAdding = true;
   let validSelection = false;
@@ -292,10 +263,8 @@ Examples:
         validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
-            // Basic validation - a more thorough validation could use a glob validation library
             new RegExp(value.replace(/\*\*/g, "*").replace(/\*/g, ".*"));
 
-            // Show preview of files that match this pattern
             console.info(`\nPreviewing files matching '${value}':`);
             const files = globSync(value, {
               cwd: workDir,
@@ -338,10 +307,8 @@ Examples:
     console.info("\nSelected include patterns:");
     includePatterns.forEach((pattern) => console.info(`- ${pattern}`));
 
-    // Show a preview of all files that match the patterns collectively
     showFinalFileSelection(workDir, includePatterns, []);
 
-    // Ask user to validate the selection
     validSelection = await confirm({
       message: "Are you satisfied with this file selection?",
       default: true,
@@ -355,9 +322,6 @@ Examples:
   return includePatterns;
 }
 
-/**
- * Utility function to collect glob patterns for exclude patterns
- */
 async function collectExcludePatterns(
   workDir: string,
   includePatterns: string[],
@@ -376,7 +340,6 @@ Examples:
 `,
   );
 
-  // Suggest intelligent defaults based on include patterns
   const suggestedExcludes = suggestExcludePatterns(
     includePatterns,
     language,
@@ -385,13 +348,11 @@ Examples:
   console.info("\nSuggested exclude patterns (based on included files):");
   suggestedExcludes.forEach((pattern) => console.info(`- ${pattern}`));
 
-  // Show preview of files that would be excluded with suggested patterns
   console.info("\nPreview of files that would be excluded:");
   for (const pattern of suggestedExcludes) {
     showMatchingFiles(workDir, pattern);
   }
 
-  // Prompt user to use suggested excludes or customize
   const useSuggested = await confirm({
     message: "Do you want to use the suggested exclude patterns?",
     default: true,
@@ -406,7 +367,6 @@ Examples:
     "Please enter the glob patterns for files to exclude (one per line):",
   );
 
-  // Start with empty pattern list
   let excludePatterns: string[] = [];
   let continueAdding = true;
   let validSelection = false;
@@ -422,10 +382,8 @@ Examples:
         validate: (value) => {
           if (!value.trim()) return "Pattern cannot be empty";
           try {
-            // Basic validation - a more thorough validation could use a glob validation library
             new RegExp(value.replace(/\*\*/g, "*").replace(/\*/g, ".*"));
 
-            // Show preview of files that match this pattern
             console.info(`\nPreviewing files matching '${value}':`);
             const files = globSync(value, {
               cwd: workDir,
@@ -436,7 +394,6 @@ Examples:
               console.info(
                 `Note: No files currently match the pattern '${value}'`,
               );
-              // Allow empty matches for exclude patterns as they may be preventative
               return true;
             }
 
@@ -467,10 +424,8 @@ Examples:
     console.info("\nSelected exclude patterns:");
     excludePatterns.forEach((pattern) => console.info(`- ${pattern}`));
 
-    // Show final file selection after applying include and exclude patterns
     showFinalFileSelection(workDir, includePatterns, excludePatterns);
 
-    // Ask user to validate the selection
     validSelection = await confirm({
       message: "Are you satisfied with this file selection?",
       default: true,
@@ -484,18 +439,13 @@ Examples:
   return excludePatterns;
 }
 
-/**
- * Suggest include patterns based on project structure and language
- */
 function suggestIncludePatterns(
   projectStructure: string[],
   language: string,
 ): string[] {
   const suggestions: string[] = [];
 
-  // Language-specific suggestions
   if (language === pythonLanguage) {
-    // Check for common Python project structures
     if (
       projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
     ) {
@@ -513,13 +463,10 @@ function suggestIncludePatterns(
         suggestions.push(`app${SEPARATOR}**${SEPARATOR}*.py`);
       }
     }
-
-    // If no specific directories found, suggest all Python files
     if (suggestions.length === 0) {
       suggestions.push(`**${SEPARATOR}*.py`);
     }
   } else if (language === csharpLanguage) {
-    // Check for common C# project structures
     if (
       projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
     ) {
@@ -553,13 +500,10 @@ function suggestIncludePatterns(
         suggestions.push(`Services${SEPARATOR}**${SEPARATOR}*.cs`);
       }
     }
-
-    // If no specific directories found, suggest all C# files
     if (suggestions.length === 0) {
       suggestions.push(`**${SEPARATOR}*.cs`);
     }
   } else if (language === cLanguage) {
-    // Check for common C project structures
     if (
       projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
     ) {
@@ -587,7 +531,6 @@ function suggestIncludePatterns(
       suggestions.push(`**${SEPARATOR}*.h`);
     }
   } else if (language === javaLanguage) {
-    // Check for common Java project structures
     if (
       projectStructure.some((entry) => entry.includes(`📂 src${SEPARATOR}`))
     ) {
@@ -635,9 +578,6 @@ function suggestIncludePatterns(
   return suggestions;
 }
 
-/**
- * Suggest exclude patterns based on include patterns and language
- */
 function suggestExcludePatterns(
   _includePatterns: string[],
   language: string,
@@ -645,15 +585,12 @@ function suggestExcludePatterns(
 ): string[] {
   const suggestions: string[] = [];
 
-  // add outDir to the suggestions
   suggestions.push(`${outDir}${SEPARATOR}**`);
-
-  // Common exclusions for all languages
+  suggestions.push(`.napi${SEPARATOR}**`);
   suggestions.push(`.git${SEPARATOR}**`);
   suggestions.push(`**${SEPARATOR}dist${SEPARATOR}**`);
   suggestions.push(`**${SEPARATOR}build${SEPARATOR}**`);
 
-  // Language-specific suggestions
   if (language === pythonLanguage) {
     suggestions.push(`**${SEPARATOR}__pycache__${SEPARATOR}**`);
     suggestions.push(`**${SEPARATOR}*.pyc`);
@@ -675,7 +612,6 @@ function suggestExcludePatterns(
     suggestions.push(`**${SEPARATOR}*.suo`);
     suggestions.push(`**${SEPARATOR}.nuget${SEPARATOR}**`);
     suggestions.push(`**${SEPARATOR}artifacts${SEPARATOR}**`);
-    suggestions.push(`**${SEPARATOR}packages${SEPARATOR}**`);
   } else if (language === javaLanguage) {
     suggestions.push(`**${SEPARATOR}bin${SEPARATOR}**`);
     suggestions.push(`**${SEPARATOR}obj${SEPARATOR}**`);
@@ -689,246 +625,9 @@ function suggestExcludePatterns(
   return suggestions;
 }
 
-/**
- * Create a new project via the API
- */
-async function createNewProject(apiService: ApiService): Promise<number> {
-  // Workspace selection with dynamic search
-  console.info("\n🏢 WORKSPACE SELECTION");
-  const selectedWorkspaceId = await search<number>({
-    message: "Search for the workspace to create your project in:",
-    source: async (term) => {
-      try {
-        const workspacesResponse = await apiService.performRequest(
-          "GET",
-          `/workspaces?search=${
-            encodeURIComponent(term || "")
-          }&page=1&limit=10`,
-        );
-
-        if (workspacesResponse.status !== 200) {
-          return [];
-        }
-
-        const response = await workspacesResponse.json() as {
-          results: Array<{ id: number; name: string }>;
-          total: number;
-        };
-
-        if (response.results.length === 0) {
-          return [
-            {
-              name: `No workspaces found matching "${term}"`,
-              value: -1,
-              disabled: true,
-            },
-          ];
-        }
-
-        return response.results.map((w) => ({
-          name: w.name,
-          value: w.id,
-        }));
-      } catch {
-        return [
-          {
-            name: "Error fetching workspaces",
-            value: -1,
-            disabled: true,
-          },
-        ];
-      }
-    },
-  });
-
-  console.info(`✅ Selected workspace ID: ${selectedWorkspaceId}`);
-
-  const projectName = await input({
-    message: "Enter a name for your new project:",
-    validate: (value) => {
-      if (!value.trim()) return "Project name cannot be empty";
-      if (value.length > 100) {
-        return "Project name must be less than 100 characters";
-      }
-      return true;
-    },
-  });
-
-  const projectRepoUrl = await input({
-    message: "Enter the URL of your project repository:",
-    validate: (value) => {
-      if (!value.trim()) return "Project repository URL cannot be empty";
-      const result = z.string().url().safeParse(value);
-      if (!result.success) {
-        return result.error.message;
-      }
-      return true;
-    },
-  });
-
-  try {
-    const createProjectResponse = await apiService.performRequest(
-      "POST",
-      "/projects",
-      {
-        name: projectName,
-        repoUrl: projectRepoUrl,
-        workspaceId: selectedWorkspaceId,
-        maxCodeCharPerSymbol: 100,
-        maxCodeCharPerFile: 1000,
-        maxCharPerSymbol: 100,
-        maxCharPerFile: 1000,
-        maxCodeLinePerSymbol: 10,
-        maxCodeLinePerFile: 100,
-        maxLinePerSymbol: 10,
-        maxLinePerFile: 100,
-        maxDependencyPerSymbol: 10,
-        maxDependencyPerFile: 100,
-        maxDependentPerSymbol: 10,
-        maxDependentPerFile: 100,
-        maxCyclomaticComplexityPerSymbol: 10,
-        maxCyclomaticComplexityPerFile: 100,
-      },
-    );
-
-    if (createProjectResponse.status !== 201) {
-      let errorMessage = "Unknown error";
-      try {
-        const responseBody = await createProjectResponse.json();
-        if (responseBody.error) {
-          errorMessage = responseBody.error;
-        }
-      } catch {
-        errorMessage = `HTTP ${createProjectResponse.status}`;
-      }
-      console.error(`❌ Failed to create project: ${errorMessage}`);
-      Deno.exit(1);
-    }
-
-    const newProject = await createProjectResponse.json() as {
-      id: number;
-    };
-    console.info(`✅ Created new project: ${projectName}`);
-    return newProject.id;
-  } catch (error) {
-    console.error("❌ Failed to create project");
-    console.error(
-      `   Error: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    Deno.exit(1);
-  }
-}
-
-/**
- * Generate a configuration object based on user input
- */
 export async function generateConfig(
   workDir: string,
-  globalConfig: z.infer<typeof globalConfigSchema>,
 ): Promise<z.infer<typeof localConfigSchema>> {
-  const apiService = new ApiService(globalConfig);
-
-  // Project selection/creation
-  console.info("\n🏗️  PROJECT SETUP");
-  const projectChoice = await select({
-    message:
-      "Would you like to connect to an existing project or create a new one?",
-    choices: [
-      { name: "Create a new project", value: "create" },
-      { name: "Chose to an existing project", value: "existing" },
-    ],
-  });
-
-  let selectedProjectId: number;
-
-  if (projectChoice === "existing") {
-    // Fetch and select existing project with dynamic search
-    try {
-      const selectedProject = await search<number>({
-        message: "Search for your project:",
-        source: async (term) => {
-          if (!term || term.length < 1) {
-            // Show recent/popular projects when no search term
-            try {
-              const projectsResponse = await apiService.performRequest(
-                "GET",
-                `/projects?page=1&limit=10`,
-              );
-
-              if (projectsResponse.status !== 200) {
-                return [];
-              }
-
-              const response = await projectsResponse.json() as {
-                results: Array<{ id: number; name: string }>;
-                total: number;
-              };
-
-              return response.results.map((p) => ({
-                name: p.name,
-                value: p.id,
-              }));
-            } catch {
-              return [];
-            }
-          }
-
-          try {
-            const projectsResponse = await apiService.performRequest(
-              "GET",
-              `/projects?search=${encodeURIComponent(term)}&page=1&limit=10`,
-            );
-
-            if (projectsResponse.status !== 200) {
-              return [];
-            }
-
-            const response = await projectsResponse.json() as {
-              results: Array<{ id: number; name: string }>;
-              total: number;
-            };
-
-            if (response.results.length === 0) {
-              return [
-                {
-                  name: `No projects found matching "${term}"`,
-                  value: -1,
-                  disabled: true,
-                },
-              ];
-            }
-
-            return response.results.map((p) => ({
-              name: p.name,
-              value: p.id,
-            }));
-          } catch {
-            return [
-              {
-                name: "Error fetching projects",
-                value: -1,
-                disabled: true,
-              },
-            ];
-          }
-        },
-      });
-
-      selectedProjectId = selectedProject;
-      console.info(`✅ Selected project ID: ${selectedProject}`);
-    } catch (error) {
-      console.error("❌ Failed to search projects");
-      console.error(
-        `   Error: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      Deno.exit(1);
-    }
-  } else {
-    // Create new project
-    selectedProjectId = await createNewProject(apiService);
-  }
-
-  // Language selection
   const language = await select({
     message: "Select the language of your project",
     choices: [
@@ -939,7 +638,6 @@ export async function generateConfig(
     ],
   });
 
-  // Python-specific config (if Python is selected)
   let pythonConfig: z.infer<typeof localConfigSchema>["python"] | undefined =
     undefined;
   if (language === pythonLanguage) {
@@ -959,7 +657,6 @@ export async function generateConfig(
     }
   }
 
-  // C-specific config
   let cConfig: z.infer<typeof localConfigSchema>["c"] | undefined = undefined;
   if (language === cLanguage) {
     const hasIncludeDirs = await confirm({
@@ -984,7 +681,6 @@ export async function generateConfig(
     }
   }
 
-  // Output directory - must be a valid directory name within the project
   const outDir = await input({
     message: "Enter the output directory for NanoAPI artifacts",
     default: "napi_out",
@@ -992,15 +688,12 @@ export async function generateConfig(
       if (!value.trim()) return "Output directory cannot be empty";
 
       try {
-        // Check if the path is valid by attempting to normalize it
         const normalizedPath = normalize(join(workDir, value));
 
-        // Ensure the path is within the project directory (prevent directory traversal)
         if (!normalizedPath.startsWith(normalize(workDir))) {
           return "Output directory must be within the project directory";
         }
 
-        // Check if the directory exists but is a file
         try {
           const stat = Deno.statSync(normalizedPath);
           if (stat && !stat.isDirectory) {
@@ -1022,10 +715,8 @@ export async function generateConfig(
 
   console.info("\n🔍 ANALYZING PROJECT STRUCTURE...");
 
-  // Collect include patterns
   const includePatterns = await collectIncludePatterns(workDir, language);
 
-  // Collect exclude patterns
   const excludePatterns = await collectExcludePatterns(
     workDir,
     includePatterns,
@@ -1033,10 +724,8 @@ export async function generateConfig(
     outDir,
   );
 
-  // Show final file selection to the user
   showFinalFileSelection(workDir, includePatterns, excludePatterns);
 
-  // Labeling configuration
   console.info("\n🏷️  LABELING CONFIGURATION");
   console.info(
     "Labeling helps categorize and organize your code dependencies using AI models.",
@@ -1072,7 +761,7 @@ export async function generateConfig(
     const maxConcurrency = await input({
       message: "Enter maximum concurrent requests (leave empty for unlimited):",
       validate: (value) => {
-        if (!value.trim()) return true; // Allow empty for unlimited
+        if (!value.trim()) return true;
         const num = parseInt(value);
         if (isNaN(num) || num <= 0) {
           return "Please enter a positive number or leave empty for unlimited";
@@ -1091,7 +780,116 @@ export async function generateConfig(
     console.info("✅ Labeling configuration added");
   }
 
-  // Build the config object
+  console.info("\n📊 AUDIT THRESHOLDS");
+  console.info(
+    "Audit thresholds flag files and symbols that exceed size or complexity limits.",
+  );
+
+  const enableAudit = await confirm({
+    message: "Would you like to configure custom audit thresholds?",
+    default: false,
+  });
+
+  let auditConfig:
+    | z.infer<typeof localConfigSchema>["audit"]
+    | undefined = undefined;
+
+  if (enableAudit) {
+    console.info(
+      "\n📄 File-level thresholds (defaults shown, press Enter to keep):",
+    );
+
+    const fileMaxCodeLine = await input({
+      message:
+        `Max code lines per file [${defaultAuditConfig.file.maxCodeLine}]:`,
+    });
+    const fileMaxCodeChar = await input({
+      message:
+        `Max code characters per file [${defaultAuditConfig.file.maxCodeChar}]:`,
+    });
+    const fileMaxDependency = await input({
+      message:
+        `Max dependencies per file [${defaultAuditConfig.file.maxDependency}]:`,
+    });
+    const fileMaxDependent = await input({
+      message:
+        `Max dependents per file [${defaultAuditConfig.file.maxDependent}]:`,
+    });
+    const fileMaxCyclomaticComplexity = await input({
+      message:
+        `Max cyclomatic complexity per file [${defaultAuditConfig.file.maxCyclomaticComplexity}]:`,
+    });
+
+    console.info(
+      "\n🔤 Symbol-level thresholds (defaults shown, press Enter to keep):",
+    );
+
+    const symbolMaxCodeLine = await input({
+      message:
+        `Max code lines per symbol [${defaultAuditConfig.symbol.maxCodeLine}]:`,
+    });
+    const symbolMaxCodeChar = await input({
+      message:
+        `Max code characters per symbol [${defaultAuditConfig.symbol.maxCodeChar}]:`,
+    });
+    const symbolMaxDependency = await input({
+      message:
+        `Max dependencies per symbol [${defaultAuditConfig.symbol.maxDependency}]:`,
+    });
+    const symbolMaxDependent = await input({
+      message:
+        `Max dependents per symbol [${defaultAuditConfig.symbol.maxDependent}]:`,
+    });
+    const symbolMaxCyclomaticComplexity = await input({
+      message:
+        `Max cyclomatic complexity per symbol [${defaultAuditConfig.symbol.maxCyclomaticComplexity}]:`,
+    });
+
+    const parseOptionalInt = (val: string): number | undefined => {
+      const trimmed = val.trim();
+      if (!trimmed) return undefined;
+      const num = parseInt(trimmed, 10);
+      return isNaN(num) ? undefined : num;
+    };
+
+    const fileOverrides = {
+      maxCodeLine: parseOptionalInt(fileMaxCodeLine),
+      maxCodeChar: parseOptionalInt(fileMaxCodeChar),
+      maxDependency: parseOptionalInt(fileMaxDependency),
+      maxDependent: parseOptionalInt(fileMaxDependent),
+      maxCyclomaticComplexity: parseOptionalInt(fileMaxCyclomaticComplexity),
+    };
+
+    const symbolOverrides = {
+      maxCodeLine: parseOptionalInt(symbolMaxCodeLine),
+      maxCodeChar: parseOptionalInt(symbolMaxCodeChar),
+      maxDependency: parseOptionalInt(symbolMaxDependency),
+      maxDependent: parseOptionalInt(symbolMaxDependent),
+      maxCyclomaticComplexity: parseOptionalInt(symbolMaxCyclomaticComplexity),
+    };
+
+    const cleanObj = (obj: Record<string, number | undefined>) => {
+      const result: Record<string, number> = {};
+      for (const [k, v] of Object.entries(obj)) {
+        if (v !== undefined) result[k] = v;
+      }
+      return Object.keys(result).length > 0 ? result : undefined;
+    };
+
+    const fileClean = cleanObj(fileOverrides);
+    const symbolClean = cleanObj(symbolOverrides);
+
+    if (fileClean || symbolClean) {
+      auditConfig = {};
+      if (fileClean) auditConfig.file = fileClean as typeof auditConfig.file;
+      if (symbolClean) {
+        auditConfig.symbol = symbolClean as typeof auditConfig.symbol;
+      }
+    }
+
+    console.info("✅ Audit threshold configuration added");
+  }
+
   const config: z.infer<typeof localConfigSchema> = {
     language: language,
     project: {
@@ -1099,22 +897,22 @@ export async function generateConfig(
       exclude: excludePatterns.length > 0 ? excludePatterns : undefined,
     },
     outDir: outDir ? outDir : "napi_out",
-    projectIds: [selectedProjectId],
   };
 
-  // Add python config if it exists
   if (pythonConfig) {
     config.python = pythonConfig;
   }
 
-  // Add C config if it exists
   if (cConfig) {
     config.c = cConfig;
   }
 
-  // Add labeling config if it exists
   if (labelingConfig) {
     config.labeling = labelingConfig;
+  }
+
+  if (auditConfig) {
+    config.audit = auditConfig;
   }
 
   return config;

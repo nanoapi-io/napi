@@ -10,12 +10,48 @@ import {
 } from "../../../helpers/fileSystem/index.ts";
 import { join } from "@std/path";
 import { napiConfigMiddleware } from "../../middlewares/napiConfig.ts";
-import { ApiService } from "../../../apiService/index.ts";
-import type { globalConfigSchema } from "../../middlewares/globalConfig.ts";
 import type { DependencyManifest } from "../../../manifest/dependencyManifest/types.ts";
-import { isAuthenticatedMiddleware } from "../../middlewares/isAuthenticated.ts";
+import type { globalConfigSchema } from "../../middlewares/globalConfig.ts";
 
-// Type for the symbol option
+const NAPI_DIR = ".napi";
+const MANIFESTS_DIR = "manifests";
+
+interface ManifestEnvelope {
+  id: string;
+  branch: string;
+  commitSha: string;
+  commitShaDate: string;
+  createdAt: string;
+  manifest: DependencyManifest;
+}
+
+function getLatestManifestId(workdir: string): string | null {
+  const manifestsDir = join(workdir, NAPI_DIR, MANIFESTS_DIR);
+  try {
+    const entries: { name: string }[] = [];
+    for (const entry of Deno.readDirSync(manifestsDir)) {
+      if (entry.isFile && entry.name.endsWith(".json")) {
+        entries.push(entry);
+      }
+    }
+    if (entries.length === 0) return null;
+    entries.sort((a, b) => b.name.localeCompare(a.name));
+    return entries[0].name.replace(".json", "");
+  } catch {
+    return null;
+  }
+}
+
+function loadManifest(workdir: string, manifestId: string): ManifestEnvelope {
+  const manifestPath = join(
+    workdir,
+    NAPI_DIR,
+    MANIFESTS_DIR,
+    `${manifestId}.json`,
+  );
+  const content = Deno.readTextFileSync(manifestPath);
+  return JSON.parse(content) as ManifestEnvelope;
+}
 
 function builderFunction(
   yargs: Arguments & {
@@ -24,7 +60,6 @@ function builderFunction(
 ) {
   return yargs
     .middleware(napiConfigMiddleware)
-    .middleware(isAuthenticatedMiddleware)
     .option("symbol", {
       type: "array" as const,
       description:
@@ -35,9 +70,9 @@ function builderFunction(
     })
     .option("manifestId", {
       type: "string",
-      description: "The manifest ID to use for the extraction",
+      description:
+        "The manifest ID to use for the extraction (defaults to latest)",
       requiresArg: true,
-      demandOption: true,
     })
     .check(
       (
@@ -53,7 +88,6 @@ function builderFunction(
           throw new Error("At least one symbol must be specified");
         }
 
-        // Validate each symbol format
         for (const symbolSpec of symbols) {
           const splitSymbol = symbolSpec.split("|");
           if (splitSymbol.length !== 2) {
@@ -68,56 +102,52 @@ function builderFunction(
     );
 }
 
-async function handler(
+function handler(
   argv: Arguments & {
     globalConfig: z.infer<typeof globalConfigSchema>;
   } & {
     symbol: string[];
-    manifestId: string;
+    manifestId?: string;
   },
 ) {
   const napiConfig = argv.napiConfig as z.infer<typeof localConfigSchema>;
-  const globalConfig = argv.globalConfig as z.infer<typeof globalConfigSchema>;
   const start = Date.now();
 
   console.info("🎯 Starting symbol extraction...");
 
   try {
-    console.info(`📄 Fetching manifest from API (ID: ${argv.manifestId})...`);
+    let manifestId = argv.manifestId;
 
-    // Create API service instance
-    const apiService = new ApiService(
-      globalConfig,
-    );
-
-    // Fetch manifest from API
-    const response = await apiService.performRequest(
-      "GET",
-      `/manifests/${argv.manifestId}`,
-    );
-
-    if (response.status !== 200) {
-      console.error("❌ Failed to fetch manifest from API");
-      console.error(`   Status: ${response.status}`);
-      try {
-        const errorBody = await response.json();
-        if (errorBody.error) {
-          console.error(`   Error: ${errorBody.error}`);
-        }
-      } catch {
-        // Ignore JSON parsing errors
+    if (!manifestId) {
+      manifestId = getLatestManifestId(argv.workdir);
+      if (!manifestId) {
+        console.error("❌ No manifests found in .napi/manifests/");
+        console.error("   Run 'napi generate' first to create a manifest.");
+        Deno.exit(1);
       }
-      console.error("");
-      console.error("💡 Common solutions:");
-      console.error("   • Check that the manifest ID is correct");
-      console.error("   • Verify the project exists and you have access");
+      console.info(`📄 Using latest manifest: ${manifestId}`);
+    } else {
+      console.info(`📄 Using manifest: ${manifestId}`);
+    }
+
+    let envelope: ManifestEnvelope;
+    try {
+      envelope = loadManifest(argv.workdir, manifestId);
+    } catch (error) {
+      console.error(`❌ Failed to load manifest: ${manifestId}`);
+      if (error instanceof Deno.errors.NotFound) {
+        console.error(
+          `   File not found: .napi/manifests/${manifestId}.json`,
+        );
+      } else {
+        console.error(
+          `   Error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
       Deno.exit(1);
     }
 
-    const responseData = await response.json() as {
-      manifest: DependencyManifest;
-    };
-    const dependencyManifest = responseData.manifest;
+    const dependencyManifest = envelope.manifest;
 
     console.info("🔍 Validating symbol specifications...");
     const symbolsToExtract = new Map<
@@ -128,7 +158,6 @@ async function handler(
     for (const symbolSpec of argv.symbol) {
       const [filePath, symbolName] = symbolSpec.split("|", 2);
 
-      // Check if the file exists in the manifest
       if (!dependencyManifest[filePath]) {
         console.warn(`⚠️  File not found in manifest: ${filePath}`);
         console.warn(
@@ -136,16 +165,12 @@ async function handler(
         );
       }
 
-      // Get existing entry or create new one
       const existingEntry = symbolsToExtract.get(filePath) || {
         filePath,
         symbols: new Set<string>(),
       };
 
-      // Add the symbol to the set
       existingEntry.symbols.add(symbolName);
-
-      // Set/update the entry
       symbolsToExtract.set(filePath, existingEntry);
     }
 
@@ -163,7 +188,7 @@ async function handler(
       includes: napiConfig.project.include,
       excludes: napiConfig.project.exclude,
       extensions: fileExtensions,
-      logMessages: false, // We'll handle our own logging
+      logMessages: false,
     });
 
     console.info(`📁 Found ${files.size} files to process`);
@@ -204,7 +229,7 @@ async function handler(
       "   • Check your symbol specifications (format: file|symbol)",
     );
     console.error(
-      "   • Ensure the manifest is up to date: napi manifest generate",
+      "   • Ensure the manifest is up to date: napi generate",
     );
     console.error(
       "   • Verify the specified files contain the requested symbols",

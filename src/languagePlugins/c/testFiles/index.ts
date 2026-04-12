@@ -66,7 +66,6 @@ export function getCFilesContentMap(): Map<
 }
 
 export const dummyLocalConfig = {
-  projectIds: [1],
   language: cLanguage,
   project: {
     include: [],
