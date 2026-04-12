@@ -119,7 +119,7 @@ function handler(
     let manifestId = argv.manifestId;
 
     if (!manifestId) {
-      manifestId = getLatestManifestId(argv.workdir);
+      manifestId = getLatestManifestId(argv.workdir) ?? undefined;
       if (!manifestId) {
         console.error("❌ No manifests found in .napi/manifests/");
         console.error("   Run 'napi generate' first to create a manifest.");
