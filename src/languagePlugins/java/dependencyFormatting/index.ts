@@ -1,4 +1,4 @@
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 import { javaParser } from "../../../helpers/treeSitter/parsers.ts";
 import { JavaImportResolver } from "../importResolver/index.ts";
 import { JavaInvocationResolver } from "../invocationResolver/index.ts";

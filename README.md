@@ -1,154 +1,281 @@
 ![NanoAPI Banner](/media/github-banner.png)
 
-- [Documentation](https://docs.nanoapi.io)
-
 # napi - Better Software Architecture for the AI Age
 
-`napi` is a versatile tool built by NanoAPI and designed to automatically
-provide insights into the architectural complexity of your software, while
-allowing for the novel extraction of functionality from codebases into smaller
-units. With both a powerful CLI and an intuitive UI, `napi` is compatible with
-all major CI/CD platforms, allowing seamless integration into your development
-and deployment pipelines.
+`napi` is a fully offline CLI that analyzes your codebase's architecture --
+dependencies, complexity, and structure -- then lets you visualize and refactor
+it, all without sending your code anywhere.
 
-Historically, tools like this have only been built by large consulting firms or
-contractors and kept behind the paywalls of consulting fees. `napi` aims to make
-these tools accessible to developers of all skill levels, without the cost. Our
-vision is to help you gain deeper insights into system architecture-level
-concerns before they become hundred-million-dollar problems. The added benefit?
-No more black-box tools running on your code and the confidence of a 100%
-determinstic tool.
+It generates dependency manifests from your source code, stores them locally,
+and serves an interactive graph visualizer directly from the CLI.
 
 ![NanoAPI UI Overview](/media/hero-app.png)
 
 ## Features
 
-- **🚨 Audit**: Pinpoint areas of your code that need refactoring or cleanup.
-- **📝 Refactor**: Extract functionality using the UI to improve architecture.
-- **🏗️ Build**: Generate modular microservices ready for deployment.
-- **⚙️ Integrate**: Use CLI commands compatible with all CI/CD workflows for
-  automation.
-- **🔍 Architecture**: Get a live view of all your software and their
-  interactions; scoped to a specific moment in time.
-
-<!-- - **📖 History**: Track changes to architecture through time using a git-history-style tool.
-- **📈 Graphs**: Understand if your software is improving or degrading over time. -->
-
-## Why `napi`?
-
-- **Application Library**: `napi` is not just a CLI tool; it is a comprehensive
-  application library of all projects and their interactions within your
-  organization.
-- **Enables discovery into legacy systems**: indentify problematic code and
-  potential improvements early.
-- **Modular Monoliths**: Simplifies the process of extracting functionality
-  using non-AI strangler refactoring.
-- **Risk assessment**: Improve understanding, maintainability, and robustness at
-  both the architecture and code level.
-- **Refactoring ROI**: Reduces dependency on outside sources for complex
-  refactoring tasks.
-- **From black box to open-book**: Gain a deeper trust of what your system is
-  doing today - even in the face of AI-generated code.
+- **🔍 Dependency Analysis**: Map every file, symbol, and dependency in your
+  codebase automatically.
+- **🚨 Audit**: Detect files and symbols that exceed complexity, size, or
+  coupling thresholds.
+- **📊 Interactive Visualizer**: Explore your architecture through Cytoscape.js
+  graphs served locally in your browser.
+- **📝 Symbol Extraction**: Extract specific functions, classes, or symbols into
+  standalone files for refactoring.
+- **🏷️ AI Labeling** (optional): Use OpenAI, Google, or Anthropic models to
+  auto-label dependencies.
+- **⚙️ CI/CD Ready**: Integrates into any pipeline -- generate manifests on
+  every push and track architecture over time.
+- **🔒 Fully Offline**: No accounts, no servers, no data leaves your machine.
 
 ## Supported Languages
 
-`napi` aims to support all major programming languages. Here is the current
-status:
-
-| Language/Framework | Status         |
-| ------------------ | -------------- |
-| Python             | ✅ Supported   |
-| C#                 | ✅ Supported   |
-| C                  | ✅ Supported   |
-| Java               | ✅ Supported   |
-| C++                | 🚧 In Progress |
-| PHP                | 🚧 In Progress |
-| JavaScript         | 🚧 In Progress |
-| TypeScript         | 🚧 In Progress |
-
-For the latest updates, visit our [project board](/projects).
+| Language | Status         |
+| -------- | -------------- |
+| Python   | ✅ Supported   |
+| C#       | ✅ Supported   |
+| C        | ✅ Supported   |
+| Java     | ✅ Supported   |
+| C++      | 🚧 In Progress |
+| PHP      | 🚧 In Progress |
+| JS/TS    | 🚧 In Progress |
 
 ## Installation
 
-`napi` works out of the box on both mac, linux, and windows systems.
-
-To install `napi`, you can use our installation script:
-
-### Unix Systems (MacOS, Linux)
-
-Wyou to install napi using our convenience script:
+### Unix (macOS, Linux)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.sh | bash
 ```
 
-You can also download and install the latest release manually directly from our
-GitHub repository:
-
-https://github.com/nanoapi-io/napi/releases/latest
+Or download a binary directly from
+[GitHub Releases](https://github.com/nanoapi-io/napi/releases/latest).
 
 ### Windows
 
-You can run napi using Windows Subsystem for Linux (WSL)
-https://learn.microsoft.com/en-us/windows/wsl/install
+Use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) to run napi.
+Native Windows support is in progress.
 
-We are actively working on supporting windows natievely.
-
-### Troubleshooting
-
-If you encounter any issues during installation, please refer to our
-[Troubleshooting Guide](https://docs.nanoapi.io/default-guide/troubleshooting)
-
-## CLI Usage
-
-`napi` provides a streamlined Command-Line Interface (CLI) to interact with and
-refactor your software projects quickly and efficiently.
-
-For a full list of commands, run:
+## Quick Start
 
 ```bash
-napi --help
+# 1. Initialize your project (creates .napirc)
+napi init
+
+# 2. Generate a dependency manifest
+napi generate
+
+# 3. Open the visualizer in your browser
+napi view
 ```
 
-## Overview of all commands
+That's it. Your manifest is saved locally in `.napi/manifests/` and the
+visualizer opens at `http://localhost:3000`.
 
-### `napi login`
-
-Authenticate with the NanoAPI service. This step is required to access the
-NanoAPI UI and to use certain features of `napi`.
+## CLI Commands
 
 ### `napi init`
 
-Initialize the project. This step is required before running any other command.
+Interactive setup that creates a `.napirc` configuration file in your project
+root.
 
-This will create a .napirc configuration file in the project root, storing paths
-and settings necessary for further commands.
+Prompts you for:
 
-### `napi manifest generate`
+- **Language** -- Python, C#, C, or Java
+- **Include/exclude patterns** -- which files to analyze
+- **Output directory** -- where extracted symbols are written
+- **AI labeling** (optional) -- provider and concurrency settings
 
-Generate a manifest of your codebase that captures its structure, dependencies,
-and relationships and pushes it to your NanoAPI workspace in the app.
+```bash
+napi init
+```
+
+### `napi generate`
+
+Analyzes your codebase and generates a dependency manifest. The manifest
+captures every file, symbol, dependency, and metric (lines, complexity,
+coupling).
+
+Manifests are saved as JSON files in `.napi/manifests/` with the naming pattern
+`{timestamp}-{commitSha}.json`.
+
+```bash
+# Interactive (prompts for branch/commit if not in git)
+napi generate
+
+# Non-interactive (for CI)
+napi generate --branch main --commit-sha abc1234 --commit-sha-date 2026-01-01T00:00:00Z
+```
+
+Options:
+
+- `--branch` -- Git branch name (auto-detected if omitted)
+- `--commit-sha` -- Git commit hash (auto-detected if omitted)
+- `--commit-sha-date` -- Commit date in ISO 8601 format (auto-detected if
+  omitted)
+- `--labelingApiKey` -- API key for AI labeling (overrides global config)
+
+### `napi view`
+
+Starts a local web server and opens an interactive dependency visualizer in your
+browser.
+
+```bash
+napi view
+napi view --port 8080
+```
+
+The viewer provides:
+
+- **Manifest list** -- browse all locally stored manifests by branch, commit,
+  and date
+- **Project graph** -- file-level dependency map with Cytoscape.js
+- **File graph** -- symbol-level view within a file (functions, classes,
+  variables)
+- **Symbol graph** -- transitive dependency chain for a specific symbol
+- **File explorer sidebar** -- navigate your codebase structure
+- **Audit alerts** -- visual indicators for files/symbols exceeding thresholds
 
 ### `napi extract`
 
-Extract specific symbols (functions, classes, etc.) from your codebase into
-separate files. Use the format `--symbol file|symbol` where file is the path
-relative to your project root and symbol is the name to extract. The UI can
-generate these commands for convenient copy-pasting when browsing your code.
+Extracts specific symbols from your codebase into separate files using a local
+manifest.
 
-> **Important**: Run `napi manifest generate` whenever you make significant
-> changes to your codebase to ensure your manifest stays up-to-date. The
-> manifest data can be integrated into CI/CD workflows to track architectural
-> changes over time.
+```bash
+# Extract a function from a specific file
+napi extract --symbol "src/auth/login.py|authenticate"
+
+# Extract multiple symbols
+napi extract --symbol "src/models.py|User" --symbol "src/models.py|Session"
+
+# Use a specific manifest (defaults to latest)
+napi extract --symbol "src/main.py|run" --manifestId 1712500000000-a1b2c3d
+```
+
+Output is written to `{outDir}/extracted-{timestamp}/`.
+
+### `napi set apiKey`
+
+Configure API keys for AI-powered dependency labeling. Keys are stored in the
+global config (not in your project).
+
+```bash
+napi set apiKey
+```
+
+Prompts for:
+
+- **Provider** -- Google, OpenAI, or Anthropic
+- **API key** -- your provider API key
+
+## Local Manifest Storage
+
+All manifests are stored in `.napi/manifests/` relative to your project root.
+Each manifest is a self-contained JSON file:
+
+```json
+{
+  "id": "1712500000000-a1b2c3d",
+  "branch": "main",
+  "commitSha": "a1b2c3d4e5f6...",
+  "commitShaDate": "2026-04-07T10:00:00Z",
+  "createdAt": "2026-04-07T10:01:00Z",
+  "manifest": {}
+}
+```
+
+Add `.napi/` to your `.gitignore` or commit it to track architecture history in
+version control -- your choice.
 
 ## CI/CD Integration
 
-`napi` works seamlessly with CI/CD platforms like GitHub Actions, GitLab CI/CD,
-and Jenkins. This allows us to build the code manifest needed for visualization
-and refactoring in the background, without needing to wait for it to run locally
-in the case of very large codebases (>1M lines of code).
+Generate manifests automatically on every push:
 
-More information
+```yaml
+# .github/workflows/napi.yml
+name: Generate Manifest
+on: [push]
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install napi
+        run: curl -fsSL https://raw.githubusercontent.com/nanoapi-io/napi/refs/heads/main/install_scripts/install.sh | bash
+
+      - name: Generate manifest
+        run: napi generate --branch ${{ github.ref_name }} --commit-sha ${{ github.sha }} --commit-sha-date "$(git log -1 --format=%cI)"
+```
+
+## Configuration Reference
+
+### `.napirc`
+
+Project-level configuration created by `napi init`:
+
+```json
+{
+  "language": "python",
+  "python": { "version": "3.10" },
+  "project": {
+    "include": ["src/**/*.py"],
+    "exclude": [".git/**", "**/__pycache__/**", "napi_out/**"]
+  },
+  "outDir": "napi_out",
+  "labeling": {
+    "modelProvider": "openai",
+    "maxConcurrency": 5
+  }
+}
+```
+
+### Global Config
+
+Stored in your OS config directory (`~/.config/napi/config.json` on Linux,
+`~/Library/Application Support/napi/config.json` on macOS). Managed via
+`napi set apiKey`.
+
+```json
+{
+  "labeling": {
+    "apiKeys": {
+      "openai": "sk-...",
+      "google": "AIza...",
+      "anthropic": "sk-ant-..."
+    }
+  }
+}
+```
+
+## Development
+
+Requires [Deno](https://deno.land/) v2.4+.
+
+```bash
+# Install dependencies
+deno install --allow-scripts
+
+# Run CLI in dev mode
+deno task dev
+
+# Run viewer dev server (hot-reload)
+deno task dev:viewer
+
+# Build viewer for production
+deno task build:viewer
+
+# Compile binary (includes viewer)
+deno task compile
+
+# Run tests
+deno task test
+
+# Lint
+deno lint
+
+# Format
+deno fmt
+```
 
 ## Contributing
 

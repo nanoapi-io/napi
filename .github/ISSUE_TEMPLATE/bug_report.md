@@ -3,7 +3,7 @@ name: Bug report
 about: Create a report for a bug, regression, or unexpected behavior
 title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 <!--- Provide a general summary of the issue in the Title above -->

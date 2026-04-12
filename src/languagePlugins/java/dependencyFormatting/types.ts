@@ -1,5 +1,5 @@
 import type { SymbolType } from "../packageResolver/types.ts";
-import type Parser from "npm:tree-sitter";
+import type Parser from "tree-sitter";
 
 /**
  * Represents a dependency in a Java file

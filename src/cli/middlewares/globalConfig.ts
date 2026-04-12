@@ -3,9 +3,6 @@ import { dirname, join } from "@std/path";
 import z from "zod";
 
 export const globalConfigSchema = z.object({
-  jwt: z.string().optional(),
-  token: z.string().optional(),
-  apiHost: z.string(),
   labeling: z.object({
     apiKeys: z.object({
       google: z.string().optional(),
@@ -15,11 +12,7 @@ export const globalConfigSchema = z.object({
   }).optional(),
 });
 
-export const defaultApiHost = "https://api.nanoapi.io";
-
-const defaultConfig: z.infer<typeof globalConfigSchema> = {
-  apiHost: defaultApiHost,
-};
+const defaultConfig: z.infer<typeof globalConfigSchema> = {};
 
 function getConfigPath() {
   const appName = "napi";

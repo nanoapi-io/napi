@@ -11,12 +11,11 @@ import {
   generateDependencyManifest,
 } from "../../../manifest/dependencyManifest/index.ts";
 import type { z } from "zod";
-import { ApiService } from "../../../apiService/index.ts";
-import {
-  defaultApiHost,
-  type globalConfigSchema,
-} from "../../middlewares/globalConfig.ts";
-import { isAuthenticatedMiddleware } from "../../middlewares/isAuthenticated.ts";
+import type { globalConfigSchema } from "../../middlewares/globalConfig.ts";
+import { join } from "@std/path";
+
+const NAPI_DIR = ".napi";
+const MANIFESTS_DIR = "manifests";
 
 function builder(
   yargs: Arguments & {
@@ -25,7 +24,6 @@ function builder(
 ) {
   return yargs
     .middleware(napiConfigMiddleware)
-    .middleware(isAuthenticatedMiddleware)
     .option("branch", {
       type: "string",
       description: "The branch to use for the manifest",
@@ -36,7 +34,6 @@ function builder(
       type: "string",
       description: "The commit SHA date to use for the manifest",
       coerce: (value: string) => {
-        // Validate date format
         const date = new Date(value);
         if (isNaN(date.getTime())) {
           throw new Error(
@@ -51,9 +48,6 @@ function builder(
     });
 }
 
-/**
- * Get the current Git branch name
- */
 async function getGitBranch(workDir: string): Promise<string> {
   try {
     const command = new Deno.Command("git", {
@@ -67,18 +61,15 @@ async function getGitBranch(workDir: string): Promise<string> {
 
     if (code === 0) {
       const branch = new TextDecoder().decode(stdout).trim();
-      return branch || "main"; // fallback to 'main' if branch name is empty
+      return branch || "main";
     }
 
-    return "main"; // fallback branch name
+    return "main";
   } catch {
-    return "main"; // fallback if git command fails
+    return "main";
   }
 }
 
-/**
- * Get the current Git commit hash
- */
 async function getGitCommitSha(workDir: string): Promise<string> {
   try {
     const command = new Deno.Command("git", {
@@ -94,15 +85,12 @@ async function getGitCommitSha(workDir: string): Promise<string> {
       return new TextDecoder().decode(stdout).trim();
     }
 
-    return ""; // return empty string if no commit found
+    return "";
   } catch {
-    return ""; // return empty string if git command fails
+    return "";
   }
 }
 
-/**
- * Get the current Git commit date in ISO format
- */
 async function getGitCommitDate(workDir: string): Promise<string> {
   try {
     const command = new Deno.Command("git", {
@@ -118,10 +106,22 @@ async function getGitCommitDate(workDir: string): Promise<string> {
       return new TextDecoder().decode(stdout).trim();
     }
 
-    return new Date().toISOString(); // fallback to current date
+    return new Date().toISOString();
   } catch {
-    return new Date().toISOString(); // fallback to current date if git command fails
+    return new Date().toISOString();
   }
+}
+
+function ensureManifestsDir(workdir: string): string {
+  const manifestsDir = join(workdir, NAPI_DIR, MANIFESTS_DIR);
+  try {
+    Deno.mkdirSync(manifestsDir, { recursive: true });
+  } catch (error) {
+    if (!(error instanceof Deno.errors.AlreadyExists)) {
+      throw error;
+    }
+  }
+  return manifestsDir;
 }
 
 async function handler(
@@ -141,7 +141,6 @@ async function handler(
   let commitSha: string;
   let commitShaDate: string;
 
-  // Handle branch
   if (argv.branch) {
     branch = argv.branch;
     console.info(`🌿 Using provided branch: ${branch}`);
@@ -156,7 +155,6 @@ async function handler(
     console.info(`🌿 Branch: ${branch}`);
   }
 
-  // Handle commit SHA
   if (argv.commitSha) {
     commitSha = argv.commitSha;
     console.info(`📝 Using provided commit: ${commitSha.substring(0, 8)}...`);
@@ -173,7 +171,6 @@ async function handler(
     }
   }
 
-  // Handle commit SHA date
   if (argv.commitShaDate) {
     commitShaDate = argv.commitShaDate;
     console.info(`📅 Using provided commit date: ${commitShaDate}`);
@@ -228,71 +225,37 @@ async function handler(
       argv.labelingApiKey,
     );
 
-    // Upload manifest to API instead of writing to disk
-    const apiService = new ApiService(
-      globalConfig,
+    const manifestsDir = ensureManifestsDir(argv.workdir);
+
+    const timestamp = Date.now();
+    const shortSha = commitSha ? commitSha.substring(0, 7) : "unknown";
+    const manifestId = `${timestamp}-${shortSha}`;
+    const manifestFileName = `${manifestId}.json`;
+
+    const manifestEnvelope = {
+      id: manifestId,
+      branch,
+      commitSha,
+      commitShaDate,
+      createdAt: new Date().toISOString(),
+      manifest: dependencyManifest,
+    };
+
+    const manifestPath = join(manifestsDir, manifestFileName);
+    Deno.writeTextFileSync(
+      manifestPath,
+      JSON.stringify(manifestEnvelope, null, 2),
     );
 
-    for (const projectId of napiConfig.projectIds) {
-      try {
-        const response = await apiService.performRequest(
-          "POST",
-          "/manifests",
-          {
-            projectId,
-            branch,
-            commitSha,
-            commitShaDate,
-            manifest: dependencyManifest,
-          },
-        );
-        if (response.status !== 201) {
-          console.error(
-            `❌ Failed to upload manifest to API for project id: ${projectId}`,
-          );
-          const responseBody = await response.json();
-          if (responseBody.error) {
-            if (responseBody.error.includes("access_disabled")) {
-              console.error(
-                "\n💳 Your workspace has been disabled you need to add or change your payment method to continue uploading manifests",
-              );
-              console.error(
-                "Go to your workspace settings and add or update a payment method: https://app.nanoapi.io",
-              );
-            } else {
-              console.error(`   Error: ${responseBody.error}`);
-            }
-          } else {
-            console.error(`   Status: ${response.status}`);
-          }
-          Deno.exit(1);
-        }
-
-        const responseBody = await response.json() as { id: number };
-
-        const duration = Date.now() - start;
-        console.info(
-          `✅ Manifest uploaded successfully for project id: ${projectId} in ${duration}ms`,
-        );
-        console.info(`📄 Generated manifest contains:`);
-        console.info(`   • ${Object.keys(dependencyManifest).length} files`);
-        console.info(`   • Dependencies and relationships mapped`);
-
-        if (globalConfig.apiHost === defaultApiHost) {
-          console.info(
-            `\nView it here: https://app.nanoapi.io/projects/${projectId}/manifests/${responseBody.id}`,
-          );
-        }
-      } catch (error) {
-        console.error(
-          `❌ Failed to upload manifest to API for project id: ${projectId}`,
-        );
-        console.error(
-          `   Error: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        Deno.exit(1);
-      }
-    }
+    const duration = Date.now() - start;
+    console.info(
+      `✅ Manifest saved successfully in ${duration}ms`,
+    );
+    console.info(`📄 Generated manifest contains:`);
+    console.info(`   • ${Object.keys(dependencyManifest).length} files`);
+    console.info(`   • Dependencies and relationships mapped`);
+    console.info(`\n💾 Saved to: ${manifestPath}`);
+    console.info(`🔍 View it with: napi view`);
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
@@ -302,7 +265,6 @@ async function handler(
     console.error("💡 Common solutions:");
     console.error("   • Check that your project files are accessible");
     console.error("   • Verify your .napirc configuration");
-    console.error("   • Ensure you're logged in (run 'napi login')");
 
     Deno.exit(1);
   }
@@ -310,7 +272,7 @@ async function handler(
 
 export default {
   command: "generate",
-  describe: "generate a manifest for your program",
+  describe: "generate a dependency manifest for your program",
   builder,
   handler,
 };
